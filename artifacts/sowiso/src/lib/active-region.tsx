@@ -29,8 +29,12 @@ export const COMPASS_REGIONS: CompassRegion[] = [
   { code: "PT", flag: "PT", names: { en: "Portugal", nl: "Portugal", fr: "Portugal", de: "Portugal", es: "Portugal", pt: "Portugal", it: "Portogallo", hi: "पुर्तगाल" } },
 ];
 
-/** Regions that currently have full etiquette data and AI counsel support. */
-export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "US", "AE"]);
+/**
+ * Regions that currently have a baseline dataset across all three modules:
+ * The Atelier (scenarios), The Cultural Compass, and The Counsel.
+ * Update this set when new region data is seeded into the database.
+ */
+export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "CN", "CA"]);
 
 export function isRegionActive(code: RegionCode): boolean {
   return ACTIVE_REGIONS.has(code);

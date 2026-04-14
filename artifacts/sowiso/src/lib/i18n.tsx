@@ -193,7 +193,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Operating in",
     "region.choose": "Select your etiquette region",
     "region.in_preparation": "In Preparation",
-    "counsel.region_unavailable": "This region is presently being curated. Counsel is available for the United Kingdom, the United States, and the UAE.",
+    "counsel.region_unavailable": "This region is presently being curated. Counsel is available for the United Kingdom, China, and Canada.",
     "region.current": "Current region",
 
     "level.the_aware": "The Aware",
@@ -315,7 +315,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Actieve regio",
     "region.choose": "Kies uw etiquetteregio",
     "region.in_preparation": "In Opmaak",
-    "counsel.region_unavailable": "Deze regio wordt momenteel samengesteld. Raadpleging is beschikbaar voor het Verenigd Koninkrijk, de Verenigde Staten en de VAE.",
+    "counsel.region_unavailable": "Deze regio wordt momenteel samengesteld. Raadpleging is beschikbaar voor het Verenigd Koninkrijk, China en Canada.",
     "region.current": "Huidige regio",
 
     "level.the_aware": "De Bewuste",
@@ -437,7 +437,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Région active",
     "region.choose": "Choisissez votre région d'étiquette",
     "region.in_preparation": "En Préparation",
-    "counsel.region_unavailable": "Cette région est actuellement en cours de préparation. Le conseil est disponible pour le Royaume-Uni, les États-Unis et les Émirats Arabes Unis.",
+    "counsel.region_unavailable": "Cette région est actuellement en cours de préparation. Le conseil est disponible pour le Royaume-Uni, la Chine et le Canada.",
     "region.current": "Région actuelle",
 
     "level.the_aware": "L'Éveillé",
@@ -559,7 +559,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Aktive Region",
     "region.choose": "Wählen Sie Ihre Etikette-Region",
     "region.in_preparation": "In Vorbereitung",
-    "counsel.region_unavailable": "Diese Region wird derzeit zusammengestellt. Beratung ist für das Vereinigte Königreich, die Vereinigten Staaten und die VAE verfügbar.",
+    "counsel.region_unavailable": "Diese Region wird derzeit zusammengestellt. Beratung ist für das Vereinigte Königreich, China und Kanada verfügbar.",
     "region.current": "Aktuelle Region",
 
     "level.the_aware": "Der Bewusste",
@@ -681,7 +681,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Región activa",
     "region.choose": "Elija su región de etiqueta",
     "region.in_preparation": "En Elaboración",
-    "counsel.region_unavailable": "Esta región está siendo elaborada con esmero. El consejo está disponible para el Reino Unido, los Estados Unidos y los EAU.",
+    "counsel.region_unavailable": "Esta región está siendo elaborada con esmero. El consejo está disponible para el Reino Unido, China y Canadá.",
     "region.current": "Región actual",
 
     "level.the_aware": "El Consciente",
@@ -803,7 +803,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Região ativa",
     "region.choose": "Escolha a sua região de etiqueta",
     "region.in_preparation": "Em Preparação",
-    "counsel.region_unavailable": "Esta região está presentemente a ser preparada. O aconselhamento está disponível para o Reino Unido, os Estados Unidos e os EAU.",
+    "counsel.region_unavailable": "Esta região está presentemente a ser preparada. O aconselhamento está disponível para o Reino Unido, a China e o Canadá.",
     "region.current": "Região atual",
 
     "level.the_aware": "O Consciente",
@@ -925,7 +925,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Regione attiva",
     "region.choose": "Scelga la sua regione d'etichetta",
     "region.in_preparation": "In Preparazione",
-    "counsel.region_unavailable": "Questa regione è attualmente in fase di attenta preparazione. Il consiglio è disponibile per il Regno Unito, gli Stati Uniti e gli EAU.",
+    "counsel.region_unavailable": "Questa regione è attualmente in fase di attenta preparazione. Il consiglio è disponibile per il Regno Unito, la Cina e il Canada.",
     "region.current": "Regione attuale",
 
     "level.the_aware": "Il Consapevole",
@@ -1047,7 +1047,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "सक्रिय क्षेत्र",
     "region.choose": "अपना शिष्टाचार क्षेत्र चुनें",
     "region.in_preparation": "तैयारी में",
-    "counsel.region_unavailable": "यह क्षेत्र अभी सावधानीपूर्वक तैयार किया जा रहा है। परामर्श यूनाइटेड किंगडम, संयुक्त राज्य और यूएई के लिए उपलब्ध है।",
+    "counsel.region_unavailable": "यह क्षेत्र अभी सावधानीपूर्वक तैयार किया जा रहा है। परामर्श यूनाइटेड किंगडम, चीन और कनाडा के लिए उपलब्ध है।",
     "region.current": "वर्तमान क्षेत्र",
 
     "level.the_aware": "जागरूक",

@@ -5,10 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Compass, Shield, ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 
 export default function Home() {
   const { t } = useLanguage();
+  const { userId } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
@@ -16,16 +18,16 @@ export default function Home() {
   const createProfile = useCreateProfile();
 
   useEffect(() => {
-    if (profileError && "status" in profileError && profileError.status === 404) {
+    if (profileError && "status" in profileError && profileError.status === 404 && userId) {
       createProfile.mutate({
         data: {
-          id: "default-user",
+          id: userId,
           language_code: "en",
-          ambition_level: "professional"
-        }
+          ambition_level: "professional",
+        },
       });
     }
-  }, [profileError, createProfile]);
+  }, [profileError, userId, createProfile]);
 
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;
 

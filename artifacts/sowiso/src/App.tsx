@@ -1,11 +1,13 @@
 import { Shell } from "./components/layout/Shell";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider, useLanguage } from "@/lib/i18n";
 import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { useEffect } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
@@ -19,6 +21,8 @@ import Profile from "@/pages/Profile";
 import Register from "@/pages/Register";
 import SignIn from "@/pages/SignIn";
 import EmailVerify from "@/pages/EmailVerify";
+import Onboarding from "@/pages/Onboarding";
+import Admin from "@/pages/Admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +40,15 @@ function AppWithRegion({ children }: { children: React.ReactNode }) {
       {children}
     </ActiveRegionProvider>
   );
+}
+
+/** Keeps the api-client-react auth token in sync with the auth context. */
+function AuthTokenSync() {
+  const { sessionToken } = useAuth();
+  useEffect(() => {
+    setAuthTokenGetter(() => sessionToken);
+  }, [sessionToken]);
+  return null;
 }
 
 function HomeRoute() {
@@ -57,6 +70,8 @@ function Router() {
         <Route path="/register" component={Register} />
         <Route path="/signin" component={SignIn} />
         <Route path="/verify-email" component={EmailVerify} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Shell>
@@ -67,6 +82,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <AuthTokenSync />
         <LanguageProvider>
           <AppWithRegion>
             <TooltipProvider>

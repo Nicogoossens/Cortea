@@ -14,6 +14,7 @@ export default function EmailVerify() {
   const { login } = useAuth();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<Status>("loading");
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -38,6 +39,8 @@ export default function EmailVerify() {
           if (body.user_id) {
             login(body.user_id, { name: body.full_name, sessionToken: body.session_token });
           }
+          const newUser = !body.already_verified;
+          setIsNewUser(newUser);
           setStatus(body.already_verified ? "already_verified" : "success");
         } else if (res.status === 410) {
           setStatus("expired");
@@ -51,7 +54,7 @@ export default function EmailVerify() {
   }, []);
 
   function handleEnter() {
-    navigate("/");
+    navigate(isNewUser ? "/onboarding" : "/");
   }
 
   const views: Record<Status, { icon: React.ReactNode; heading: string; body: string; cta?: React.ReactNode }> = {
@@ -66,7 +69,7 @@ export default function EmailVerify() {
       body: t("verify.success_body"),
       cta: (
         <Button
-          onClick={handleEnter}
+          onClick={() => handleEnter()}
           className="font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
         >
           {t("verify.enter_sowiso")}

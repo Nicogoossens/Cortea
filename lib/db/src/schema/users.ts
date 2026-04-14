@@ -22,6 +22,20 @@ export const usersTable = pgTable("users", {
   is_admin: boolean("is_admin").notNull().default(false),
   suspended_at: timestamp("suspended_at"),
   session_token: text("session_token"),
+  // Onboarding & profile enrichment
+  country_of_origin: text("country_of_origin"),
+  objectives: json("objectives").$type<string[]>().notNull().default([]),
+  interests_sports: json("interests_sports").$type<string[]>().notNull().default([]),
+  interests_cuisine: json("interests_cuisine").$type<string[]>().notNull().default([]),
+  interests_dress_code: json("interests_dress_code").$type<string[]>().notNull().default([]),
+  onboarding_completed: boolean("onboarding_completed").notNull().default(false),
+  // OAuth / social login
+  oauth_provider: text("oauth_provider"),
+  oauth_provider_id: text("oauth_provider_id"),
+  // Stripe-ready payment fields
+  payment_customer_id: text("payment_customer_id"),
+  subscription_status: text("subscription_status").notNull().default("active"),
+  trial_ends_at: timestamp("trial_ends_at"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

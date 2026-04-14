@@ -34,11 +34,7 @@ export function setBaseUrl(url: string | null): void {
  * the getter is invoked; when it returns a non-null string, an
  * `Authorization: Bearer <token>` header is attached to the request.
  *
- * Useful for Expo bundles making token-gated API calls.
  * Pass `null` to clear the getter.
- *
- * NOTE: This function should never be used in web applications where session
- * token cookies are automatically associated with API calls by the browser.
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
@@ -359,15 +355,9 @@ export async function customFetch<T = unknown>(
   }
 
   const url = resolveUrl(input);
-  
-  // Append user_id=default-user to all requests for the prototype
-  const urlObj = new URL(url.startsWith("http") ? url : `http://localhost${url.startsWith("/") ? url : `/${url}`}`);
-  urlObj.searchParams.set("user_id", "default-user");
-  const modifiedUrl = url.startsWith("http") ? urlObj.toString() : `${urlObj.pathname}${urlObj.search}`;
-  
-  const requestInfo = { method, url: modifiedUrl };
+  const requestInfo = { method, url };
 
-  const response = await fetch(input instanceof Request ? new Request(modifiedUrl, input) : modifiedUrl, { ...init, method, headers });
+  const response = await fetch(input, { ...init, method, headers });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

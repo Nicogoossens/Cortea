@@ -8,6 +8,7 @@ import translationsRouter from "./translations";
 import counselRouter from "./counsel";
 import detectRegionRouter from "./detect-region";
 import authRouter from "./auth";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(nobleScoreRouter);
 router.use(translationsRouter);
 router.use(counselRouter);
 router.use(detectRegionRouter);
+router.use(adminRouter);
 
 export default router;

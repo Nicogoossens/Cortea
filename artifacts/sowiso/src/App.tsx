@@ -14,6 +14,8 @@ import Counsel from "@/pages/Counsel";
 import Compass from "@/pages/Compass";
 import CompassRegion from "@/pages/CompassRegion";
 import Profile from "@/pages/Profile";
+import Register from "@/pages/Register";
+import EmailVerify from "@/pages/EmailVerify";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +46,8 @@ function Router() {
         <Route path="/compass" component={Compass} />
         <Route path="/compass/:code" component={CompassRegion} />
         <Route path="/profile" component={Profile} />
+        <Route path="/register" component={Register} />
+        <Route path="/verify-email" component={EmailVerify} />
         <Route component={NotFound} />
       </Switch>
     </Shell>

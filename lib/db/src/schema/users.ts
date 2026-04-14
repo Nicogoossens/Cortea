@@ -1,9 +1,13 @@
-import { pgTable, text, integer, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, json, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
+  email: text("email"),
+  email_verified: boolean("email_verified").notNull().default(false),
+  verification_token: text("verification_token"),
+  token_expires_at: timestamp("token_expires_at"),
   birth_year: integer("birth_year"),
   gender_identity: text("gender_identity"),
   gender_expression: text("gender_expression"),

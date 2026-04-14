@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -113,8 +113,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-6 border-t border-sidebar-border/50">
-          <div className="text-xs text-sidebar-foreground/50 text-center font-mono uppercase tracking-widest">
+        <div className="p-6 border-t border-sidebar-border/50 space-y-3">
+          <Link href="/register" className="block">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
+              <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+              <span className="font-mono tracking-wide">{t("register.title")}</span>
+            </div>
+          </Link>
+          <div className="text-xs text-sidebar-foreground/40 text-center font-mono uppercase tracking-widest">
             {t("app.established")}
           </div>
         </div>

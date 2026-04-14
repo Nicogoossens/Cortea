@@ -40,9 +40,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API routes**: All mounted at `/api` prefix in `app.ts`. Route handlers use paths WITHOUT `/api/` prefix
 - **Counsel AI**: `artifacts/api-server/src/routes/counsel.ts` — POST `/api/counsel` calls Anthropic; uses `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` + `AI_INTEGRATIONS_ANTHROPIC_API_KEY` env vars
 - **Region detection**: GET `/api/detect-region` returns IP-guessed region (session-only, GDPR-safe; no persistence unless user confirms)
-- **i18n**: 108+ keys × 8 languages in `artifacts/sowiso/src/lib/i18n.tsx`. Use `useLanguage()` for translated strings
+- **i18n**: 144+ keys × 8 languages in `artifacts/sowiso/src/lib/i18n.tsx`. Use `useLanguage()` for translated strings. Includes `register.*` and `verify.*` key groups.
 - **Content labels**: `pillarDomainKey()`, `levelKey()`, `triggerLabel()` in `artifacts/sowiso/src/lib/content-labels.ts`
 - **Noble Score**: 5 levels (Aware 0–19, Composed 20–39, Refined 40–59, Distinguished 60–79, Sovereign 80–100)
 - **Default user**: `"default-user"` (prototype; `custom-fetch.ts` appends `user_id=default-user` to all requests)
+- **Email service**: `artifacts/api-server/src/lib/email.ts` — builds branded HTML activation email; sends via SMTP if `SMTP_HOST/SMTP_USER/SMTP_PASS` env vars are set, otherwise logs token + link to console for development
+- **Auth routes**: `artifacts/api-server/src/routes/auth.ts` — `POST /api/auth/register`, `GET /api/auth/verify`, `POST /api/auth/resend`
+- **Registration pages**: `/register` (Register.tsx) and `/verify-email` (EmailVerify.tsx) — full locale-aware UI
+- **Users schema**: includes `email`, `email_verified`, `verification_token`, `token_expires_at` columns (added Task #13)
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

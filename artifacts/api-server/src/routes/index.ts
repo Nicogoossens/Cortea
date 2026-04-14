@@ -7,10 +7,12 @@ import nobleScoreRouter from "./noble_score";
 import translationsRouter from "./translations";
 import counselRouter from "./counsel";
 import detectRegionRouter from "./detect-region";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use(usersRouter);
 router.use(cultureRouter);
 router.use(scenariosRouter);

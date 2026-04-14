@@ -92,7 +92,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   en: {
     "app.name": "SOWISO",
     "app.tagline": "The art of conduct",
-    "app.established": "Est. 2024",
+    "app.established": "Est. 2026",
 
     "nav.dashboard": "The Dashboard",
     "nav.atelier": "The Atelier",
@@ -300,7 +300,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   nl: {
     "app.name": "SOWISO",
     "app.tagline": "De kunst van gedrag",
-    "app.established": "Opgericht 2024",
+    "app.established": "Opgericht 2026",
 
     "nav.dashboard": "Het Dashboard",
     "nav.atelier": "Het Atelier",
@@ -352,6 +352,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_prompt": "U vraagt advies over etiquette in",
     "counsel.change_region": "wijzigen",
     "counsel.region_hint": "Wijzigen via de regioselector rechtsboven",
+    "counsel.session_override_label": "Voor dit consult",
+    "counsel.session_override_change": "Andere regio gebruiken",
+    "counsel.session_override_reset": "Terug naar profielregio",
+    "counsel.session_override_hint": "Deze regio geldt alleen voor dit consult — uw profielregio blijft ongewijzigd.",
 
     "compass.title": "Het Culturele Kompas",
     "compass.subtitle": "Navigeer de gebruiken van de wereld met precisie en vertrouwen.",
@@ -479,7 +483,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   fr: {
     "app.name": "SOWISO",
     "app.tagline": "L'art de la conduite",
-    "app.established": "Fondé en 2024",
+    "app.established": "Fondé en 2026",
 
     "nav.dashboard": "Le Tableau de Bord",
     "nav.atelier": "L'Atelier",
@@ -658,7 +662,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   de: {
     "app.name": "SOWISO",
     "app.tagline": "Die Kunst des Benehmens",
-    "app.established": "Gegründet 2024",
+    "app.established": "Gegründet 2026",
 
     "nav.dashboard": "Das Dashboard",
     "nav.atelier": "Das Atelier",
@@ -837,7 +841,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   es: {
     "app.name": "SOWISO",
     "app.tagline": "El arte del comportamiento",
-    "app.established": "Fundado en 2024",
+    "app.established": "Fundado en 2026",
 
     "nav.dashboard": "El Panel",
     "nav.atelier": "El Atelier",
@@ -1016,7 +1020,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   pt: {
     "app.name": "SOWISO",
     "app.tagline": "A arte do comportamento",
-    "app.established": "Fundado em 2024",
+    "app.established": "Fundado em 2026",
 
     "nav.dashboard": "O Painel",
     "nav.atelier": "O Atelier",
@@ -1195,7 +1199,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   it: {
     "app.name": "SOWISO",
     "app.tagline": "L'arte del comportamento",
-    "app.established": "Fondato nel 2024",
+    "app.established": "Fondato nel 2026",
 
     "nav.dashboard": "Il Cruscotto",
     "nav.atelier": "L'Atelier",
@@ -1247,6 +1251,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_prompt": "Chiede consiglio sull'etichetta in",
     "counsel.change_region": "modificare",
     "counsel.region_hint": "Modificare tramite il selettore di regione in alto a destra",
+    "counsel.session_override_label": "Per questa consulenza",
+    "counsel.session_override_change": "Modifica la regione",
+    "counsel.session_override_reset": "Ripristina regione del profilo",
+    "counsel.session_override_hint": "Questa regione si applica solo a questa consulenza — la regione del profilo rimane invariata.",
 
     "compass.title": "La Bussola Culturale",
     "compass.subtitle": "Navighi le usanze del mondo con precisione e fiducia.",
@@ -1374,7 +1382,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
   hi: {
     "app.name": "SOWISO",
     "app.tagline": "आचरण की कला",
-    "app.established": "स्थापित 2024",
+    "app.established": "स्थापित 2026",
 
     "nav.dashboard": "डैशबोर्ड",
     "nav.atelier": "एटेलियर",

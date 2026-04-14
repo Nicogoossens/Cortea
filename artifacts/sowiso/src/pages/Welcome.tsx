@@ -108,8 +108,9 @@ export default function Welcome() {
             <span className="text-primary">are you?</span>
           </h1>
           <p className="text-lg text-muted-foreground font-light leading-relaxed max-w-xl mx-auto">
-            Three scenarios. Three moments of truth. Discover where you stand
-            before the world's most exacting standards of conduct.
+            Elevate your communication and etiquette across cultures. Learn the
+            traditions of different regions and build stronger, more meaningful
+            relationships — wherever in the world you find yourself.
           </p>
         </div>
 
@@ -126,7 +127,7 @@ export default function Welcome() {
           {[
             { icon: BookOpen, label: "The Atelier", desc: "Scenario-based etiquette training" },
             { icon: Shield,   label: "The Counsel", desc: "Discreet AI guidance in 30 seconds" },
-            { icon: Compass,  label: "The Compass", desc: "Cultural guides for 14 world regions" },
+            { icon: Compass,  label: "The Compass", desc: "Worldwide insight into traditions & customs" },
           ].map(({ icon: Icon, label, desc }) => (
             <div key={label} className="text-center space-y-2">
               <Icon className="w-6 h-6 mx-auto text-primary/60" aria-hidden="true" />
@@ -264,7 +265,7 @@ export default function Welcome() {
           {[
             { label: "The Atelier", desc: "Scenario training" },
             { label: "The Counsel", desc: "Instant AI guidance" },
-            { label: "The Compass", desc: "14 world regions" },
+            { label: "The Compass", desc: "Global traditions & customs" },
           ].map(({ label, desc }) => (
             <div key={label} className="space-y-1">
               <div className="font-serif text-foreground">{label}</div>

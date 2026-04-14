@@ -1,0 +1,69 @@
+Om etiquette hanteerbaar te maken in een app, is het essentieel om de wereld niet per land, maar per cultuurcluster in te delen. Veel landen delen namelijk dezelfde wortels in hun omgangsvormen.
+
+Hier is een voorstel voor een onderverdeling in 8 hoofdregio's, gebaseerd op sociale dynamiek, communicatiestijl en tradities:
+
+1. De Angelsaksische Wereld (Individualistisch & Informeel)
+Focus: Directe communicatie, persoonlijke ruimte, punctualiteit en "pokerface" zakendoen.
+
+Landen: o.a. Verenigd Koninkrijk, VS, Canada, Australië.
+
+Nuance: Er is een groot verschil tussen de Britse gereserveerdheid en de Amerikaanse "hyper-beleefdheid".
+
+2. Continentaal West-Europa (Formeel & Gestructureerd)
+Focus: Hiërarchie, scheiding tussen privé en werk, tafelmanieren (mes en vork!), en kledingvoorschriften.
+
+Landen: o.a. Frankrijk, Duitsland, Benelux, Monaco.
+
+Nuance: Monaco vereist een extra module voor de "High Society" etiquette (jachten, galadiners).
+
+3. Het Mediterrane Cluster (Relationeel & Expressief)
+Focus: Gastvrijheid, fysiek contact, belang van familie, en een lossere omgang met tijd.
+
+Landen: o.a. Italië, Spanje, Griekenland.
+
+4. De Arabische Wereld & Noord-Afrika (Eer & Religie)
+Focus: Gastvrijheid als heilige plicht, religieuze taboes (voeding/alcohol), gender-interactie en de "rechterhand-regel".
+
+Landen: o.a. Saudi-Arabië, VAE, Marokko, Jordanië.
+
+5. Oost-Aziatische Confuciaanse Culturen (Groepsharmonie)
+Focus: "Gezichtsverlies" vermijden, buigingen, visitekaartjes-rituelen, en indirecte communicatie.
+
+Landen: o.a. China, Japan, Zuid-Korea.
+
+Nuance: Japan is extreem rigide; China is iets pragmatischer maar zeer hiërarchisch.
+
+6. Latijns-Amerika (Passie & Nabijheid)
+Focus: Warmte, langdurige begroetingen, informele sfeer maar met diep respect voor status.
+
+Landen: o.a. Brazilië, Mexico, Argentinië.
+
+7. Zuid-Azië (Traditie & Gastvrijheid)
+Focus: Kastensysteem-invloeden (vaak subtiel), eetgewoonten (met de hand), en religieuze diversiteit.
+
+Landen: o.a. India, Pakistan, Thailand.
+
+8. Sub-Sahara Afrika (Community & Respect)
+Focus: Respect voor ouderen (Ubuntu), gemeenschapszin en specifieke verbale groetrituelen.
+
+Landen: o.a. Nigeria, Zuid-Afrika, Kenia.
+
+Strategische indeling voor de App
+Om de gebruiker niet te overweldigen, zou ik in de interface werken met lagen:
+
+De Wereldlaag: De 8 bovenstaande regio's voor de algemene "do's and don'ts".
+
+De Landspecifieke laag: Specifieke triggers (bijv. "In Thailand raak je nooit iemands hoofd aan").
+
+De Situatielaag: "In een restaurant", "Op een bruiloft", "In een boardroom".
+
+Het Betaalmodel (Monetization)
+Voor een app die "begeestert", werkt een Freemium-model het best:
+
+Gratis (Basic): Algemene etiquette (hoe houd ik mijn bestek vast?) en 1 regio naar keuze.
+
+Premium (The Voyager): Toegang tot alle 8 regio's, AI-spraakcoaching (uitspraak begroetingen), en real-time locatie-notificaties.
+
+Business (The Diplomat): Specifieke modules voor hoogwaardige kringen (Monaco, diplomatiek protocol) en de "luisterfunctie" voor subtiele bijsturing.
+
+Opmerking over de "luisterfunctie": Dit is technisch briljant, maar juridisch gevoelig (privacy/GDPR). Het zou slimmer zijn dit te positioneren als een "Active Assistant" die de gebruiker zelf activeert ("SOWISO, ik ga nu een Chinees diner in, help me").

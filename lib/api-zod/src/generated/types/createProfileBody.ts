@@ -8,7 +8,6 @@
 import type { CreateProfileBodyAmbitionLevel } from "./createProfileBodyAmbitionLevel";
 
 export interface CreateProfileBody {
-  id: string;
   birth_year?: number | null;
   gender_identity?: string | null;
   gender_expression?: string | null;

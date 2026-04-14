@@ -467,8 +467,6 @@ components:
     CreateProfileBody:
       type: object
       properties:
-        id:
-          type: string
         birth_year:
           type: integer
           nullable: true

@@ -21,7 +21,6 @@ export default function Home() {
     if (profileError && "status" in profileError && profileError.status === 404 && userId) {
       createProfile.mutate({
         data: {
-          id: userId,
           language_code: "en",
           ambition_level: "professional",
         },

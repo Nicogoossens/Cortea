@@ -36,7 +36,6 @@ export const GetProfileResponse = zod.object({
  * @summary Create or update user profile
  */
 export const CreateProfileBody = zod.object({
-  id: zod.string(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
   gender_expression: zod.string().nullish(),

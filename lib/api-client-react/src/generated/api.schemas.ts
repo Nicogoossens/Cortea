@@ -55,7 +55,6 @@ export const CreateProfileBodyAmbitionLevel = {
 } as const;
 
 export interface CreateProfileBody {
-  id: string;
   birth_year?: number | null;
   gender_identity?: string | null;
   gender_expression?: string | null;

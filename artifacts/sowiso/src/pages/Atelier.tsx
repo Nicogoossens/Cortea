@@ -49,7 +49,7 @@ export default function Atelier() {
                   </div>
                   <div className="flex items-center gap-1 text-primary">
                     <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>+{scenario.noble_score_impact} pt</span>
+                    <span className="font-serif italic text-xs">{t("atelier.refines")}</span>
                   </div>
                 </CardFooter>
               </Card>

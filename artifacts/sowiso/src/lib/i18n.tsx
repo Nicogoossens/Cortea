@@ -116,6 +116,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pillar",
     "atelier.difficulty": "Difficulty",
     "atelier.duration": "min",
+    "atelier.refines": "Refines standing",
     "atelier.empty": "No scenarios available.",
     "atelier.region": "Region",
 
@@ -226,6 +227,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pijler",
     "atelier.difficulty": "Moeilijkheid",
     "atelier.duration": "min",
+    "atelier.refines": "Verfijnt standing",
     "atelier.empty": "Geen scenario's beschikbaar.",
     "atelier.region": "Regio",
 
@@ -336,6 +338,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pilier",
     "atelier.difficulty": "Difficulté",
     "atelier.duration": "min",
+    "atelier.refines": "Affine le rang",
     "atelier.empty": "Aucun scénario disponible.",
     "atelier.region": "Région",
 
@@ -446,6 +449,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Säule",
     "atelier.difficulty": "Schwierigkeit",
     "atelier.duration": "Min.",
+    "atelier.refines": "Verfeinert den Rang",
     "atelier.empty": "Keine Szenarien verfügbar.",
     "atelier.region": "Region",
 
@@ -556,6 +560,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pilar",
     "atelier.difficulty": "Dificultad",
     "atelier.duration": "min",
+    "atelier.refines": "Refina el rango",
     "atelier.empty": "No hay escenarios disponibles.",
     "atelier.region": "Región",
 
@@ -666,6 +671,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pilar",
     "atelier.difficulty": "Dificuldade",
     "atelier.duration": "min",
+    "atelier.refines": "Refina o nível",
     "atelier.empty": "Nenhum cenário disponível.",
     "atelier.region": "Região",
 
@@ -776,6 +782,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pilastro",
     "atelier.difficulty": "Difficoltà",
     "atelier.duration": "min",
+    "atelier.refines": "Affina il rango",
     "atelier.empty": "Nessuno scenario disponibile.",
     "atelier.region": "Regione",
 
@@ -886,6 +893,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "स्तंभ",
     "atelier.difficulty": "कठिनाई",
     "atelier.duration": "मिनट",
+    "atelier.refines": "स्तर परिष्कृत करता है",
     "atelier.empty": "कोई परिदृश्य उपलब्ध नहीं है।",
     "atelier.region": "क्षेत्र",
 

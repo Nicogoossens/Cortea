@@ -8,9 +8,15 @@ const router = Router();
 
 const DEFAULT_USER_ID = "default-user";
 
+const UserIdQuerySchema = z.object({
+  user_id: z.string().min(1).default(DEFAULT_USER_ID),
+});
+
 router.get("/users/profile", async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const parsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
@@ -41,16 +47,16 @@ router.post("/users/profile", async (req, res) => {
     }
 
     const data = parsed.data;
-    const existing = await db.select().from(usersTable).where(eq(usersTable.id, data.id)).limit(1);
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, data.id)).limit(1);
 
-    if (existing.length > 0) {
+    if (existing) {
       const [updated] = await db.update(usersTable)
         .set({
-          birth_year: data.birth_year ?? existing[0].birth_year,
-          gender_identity: data.gender_identity ?? existing[0].gender_identity,
-          ambition_level: data.ambition_level ?? existing[0].ambition_level,
-          language_code: data.language_code ?? existing[0].language_code,
-          active_region: data.active_region ?? existing[0].active_region,
+          birth_year: data.birth_year ?? existing.birth_year,
+          gender_identity: data.gender_identity ?? existing.gender_identity,
+          ambition_level: data.ambition_level ?? existing.ambition_level,
+          language_code: data.language_code ?? existing.language_code,
+          active_region: data.active_region ?? existing.active_region,
         })
         .where(eq(usersTable.id, data.id))
         .returning();
@@ -76,29 +82,74 @@ router.post("/users/profile", async (req, res) => {
   }
 });
 
+const UpdateProfileBodySchema = z.object({
+  birth_year: z.number().int().min(1900).max(2010).optional().nullable(),
+  gender_identity: z.string().optional().nullable(),
+  ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional(),
+  language_code: z.string().optional(),
+  active_region: z.string().optional(),
+  subscription_tier: z.enum(["guest", "traveller", "ambassador"]).optional(),
+});
+
+router.put("/users/profile", async (req, res) => {
+  try {
+    const queryParsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+
+    const bodyParsed = UpdateProfileBodySchema.safeParse(req.body);
+    if (!bodyParsed.success) {
+      return res.status(400).json({ message: "The information provided does not meet the required form. Please review and resubmit." });
+    }
+
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    const data = bodyParsed.data;
+    const [updated] = await db.update(usersTable)
+      .set({
+        ...(data.birth_year !== undefined && { birth_year: data.birth_year }),
+        ...(data.gender_identity !== undefined && { gender_identity: data.gender_identity }),
+        ...(data.ambition_level !== undefined && { ambition_level: data.ambition_level }),
+        ...(data.language_code !== undefined && { language_code: data.language_code }),
+        ...(data.active_region !== undefined && { active_region: data.active_region }),
+        ...(data.subscription_tier !== undefined && { subscription_tier: data.subscription_tier }),
+      })
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    return res.json(updated);
+  } catch (err) {
+    req.log.error({ err }, "Failed to update user profile");
+    return res.status(500).json({ message: "A difficulty arose while updating your profile. Please try again." });
+  }
+});
+
 const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),
 });
 
 router.patch("/users/profile/region", async (req, res) => {
   try {
-    const parsed = UpdateRegionBodySchema.safeParse(req.body);
-    if (!parsed.success) {
+    const queryParsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+
+    const bodyParsed = UpdateRegionBodySchema.safeParse(req.body);
+    if (!bodyParsed.success) {
       return res.status(400).json({ message: "The region code provided is not recognised. Please verify and resubmit." });
     }
 
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-
     if (!existing) {
       return res.status(404).json({ message: "Your profile has not yet been established." });
     }
 
-    const newHistory = Array.from(new Set([...existing.region_history, parsed.data.region_code]));
+    const newHistory = Array.from(new Set([...existing.region_history, bodyParsed.data.region_code]));
 
     const [updated] = await db.update(usersTable)
       .set({
-        active_region: parsed.data.region_code,
+        active_region: bodyParsed.data.region_code,
         region_history: newHistory,
       })
       .where(eq(usersTable.id, userId))
@@ -108,6 +159,25 @@ router.patch("/users/profile/region", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to update region");
     return res.status(500).json({ message: "The region update encountered a difficulty. Please try again." });
+  }
+});
+
+router.delete("/users/profile", async (req, res) => {
+  try {
+    const queryParsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    await db.delete(usersTable).where(eq(usersTable.id, userId));
+
+    return res.json({ message: "Your profile has been gracefully removed from our records." });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete user profile");
+    return res.status(500).json({ message: "A difficulty arose while removing your profile. Please try again." });
   }
 });
 

@@ -14,7 +14,7 @@ export default function Home() {
   const createProfile = useCreateProfile();
 
   useEffect(() => {
-    if (profileError && (profileError as any)?.status === 404) {
+    if (profileError && "status" in profileError && profileError.status === 404) {
       createProfile.mutate({
         data: {
           id: "default-user",

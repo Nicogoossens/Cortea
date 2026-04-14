@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { cultureProtocolsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 
 const router = Router();
 
@@ -91,22 +92,32 @@ const COMPASS_DATA: Record<string, {
   }
 };
 
+const ProtocolsQuerySchema = z.object({
+  region_code: z.string().min(1),
+  pillar: z.coerce.number().int().min(1).max(5).optional(),
+  context: z.string().optional(),
+});
+
+const RegionCodeParamSchema = z.object({
+  regionCode: z.string().min(1).max(10),
+});
+
 router.get("/culture/protocols", async (req, res) => {
   try {
-    const { region_code, pillar, context } = req.query;
-
-    if (!region_code) {
+    const parsed = ProtocolsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
       return res.status(400).json({ message: "A region must be specified to retrieve cultural protocols." });
     }
 
-    const conditions = [eq(cultureProtocolsTable.region_code, region_code as string)];
+    const { region_code, pillar, context } = parsed.data;
+    const conditions = [eq(cultureProtocolsTable.region_code, region_code)];
 
-    if (pillar) {
-      conditions.push(eq(cultureProtocolsTable.pillar, parseInt(pillar as string)));
+    if (pillar !== undefined) {
+      conditions.push(eq(cultureProtocolsTable.pillar, pillar));
     }
 
-    if (context) {
-      conditions.push(eq(cultureProtocolsTable.context, context as string));
+    if (context !== undefined) {
+      conditions.push(eq(cultureProtocolsTable.context, context));
     }
 
     const protocols = await db.select()
@@ -131,22 +142,27 @@ router.get("/culture/compass", async (_req, res) => {
     }));
     return res.json(entries);
   } catch (err) {
-    res.log?.error({ err }, "Failed to fetch compass");
+    req.log.error({ err }, "Failed to fetch compass");
     return res.status(500).json({ message: "The Cultural Compass is momentarily unavailable." });
   }
 });
 
 router.get("/culture/compass/:regionCode", (req, res) => {
   try {
-    const { regionCode } = req.params;
-    const data = COMPASS_DATA[regionCode.toUpperCase()];
+    const paramParsed = RegionCodeParamSchema.safeParse(req.params);
+    if (!paramParsed.success) {
+      return res.status(400).json({ message: "The region code provided is not valid." });
+    }
+
+    const regionCode = paramParsed.data.regionCode.toUpperCase();
+    const data = COMPASS_DATA[regionCode];
 
     if (!data) {
       return res.status(404).json({ message: `The region '${regionCode}' is not yet within our compass. Further regions are being added in due course.` });
     }
 
     return res.json({
-      region_code: regionCode.toUpperCase(),
+      region_code: regionCode,
       ...data,
     });
   } catch (err) {

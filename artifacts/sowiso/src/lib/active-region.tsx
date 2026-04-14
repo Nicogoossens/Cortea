@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { SupportedLanguage } from "./i18n";
 
 export type RegionCode =
@@ -68,8 +68,8 @@ function resolveActiveRegion(language: SupportedLanguage): RegionCode {
   if (session && validCodes.includes(session)) return session;
   const stored = localStorage.getItem(REGION_PREF_KEY) as RegionCode | null;
   if (stored && validCodes.includes(stored)) return stored;
-  const defaultCode = LANGUAGE_DEFAULTS[language] ?? "GB";
-  return isRegionActive(defaultCode) ? defaultCode : "GB";
+  // Fall back to the language-appropriate default — all regions are selectable.
+  return (LANGUAGE_DEFAULTS[language] ?? "GB") as RegionCode;
 }
 
 interface ActiveRegionContextValue {
@@ -94,6 +94,26 @@ export function ActiveRegionProvider({
   const [activeRegion, setActiveRegionState] = useState<RegionCode>(() =>
     resolveActiveRegion(language)
   );
+
+  // Hydrate active region from the user profile on first load if no explicit
+  // preference is stored yet (localStorage key absent).
+  useEffect(() => {
+    if (localStorage.getItem(REGION_PREF_KEY)) return;
+    const userId = localStorage.getItem("sowiso_user_id");
+    if (!userId) return;
+    const apiBase = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL?.replace(/\/$/, "") ?? "";
+    fetch(`${apiBase}/api/users/profile?user_id=${encodeURIComponent(userId)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { active_region?: string } | null) => {
+        if (!data?.active_region) return;
+        const validCodes = COMPASS_REGIONS.map((r) => r.code);
+        if (validCodes.includes(data.active_region as RegionCode)) {
+          setActiveRegionState(data.active_region as RegionCode);
+        }
+      })
+      .catch(() => undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setActiveRegion = useCallback((code: RegionCode) => {
     setActiveRegionState(code);

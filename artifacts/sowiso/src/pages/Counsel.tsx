@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Send, Loader2, MapPin, RotateCcw } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, FlagEmoji, isRegionActive } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -23,13 +23,19 @@ export default function Counsel() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
 
-  const regionActive = isRegionActive(activeRegion);
-
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  /** Session-only region override — does NOT mutate the stored profile region. */
+  const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(null);
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
+
+  /** The effective region for this consultation. */
+  const effectiveRegion: RegionCode = sessionRegion ?? activeRegion;
+  const isOverriding = sessionRegion !== null;
 
   const handleSubmit = async () => {
     if (!query.trim() && !selectedDomain) return;
@@ -45,7 +51,7 @@ export default function Counsel() {
         body: JSON.stringify({
           query: query.trim() || undefined,
           domain: domainLabel,
-          region_code: activeRegion,
+          region_code: effectiveRegion,
         }),
       });
 
@@ -68,6 +74,7 @@ export default function Counsel() {
     setSelectedDomain(null);
     setResponse(null);
     setError(null);
+    setShowRegionPicker(false);
   };
 
   return (
@@ -82,33 +89,68 @@ export default function Counsel() {
         </p>
       </div>
 
-      {/* Etiquette region — read-only context note, changed via top-right bar */}
-      <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/40 border border-border/40 rounded-sm text-sm">
-        <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          {t("counsel.region_context")}
-        </span>
-        <FlagEmoji code={activeRegion} />
-        <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
-        <span className="ml-auto text-[10px] text-muted-foreground/60 hidden sm:block">
-          {t("counsel.region_hint")}
-        </span>
+      {/* ── Region context strip with session override ── */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/40 border border-border/40 rounded-sm text-sm flex-wrap gap-y-1.5">
+          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            {isOverriding ? t("counsel.session_override_label") : t("counsel.region_context")}
+          </span>
+          <FlagEmoji code={effectiveRegion} />
+          <span className="font-medium text-foreground/80">{getRegionName(effectiveRegion)}</span>
+          {isOverriding && (
+            <button
+              onClick={() => { setSessionRegion(null); setShowRegionPicker(false); }}
+              className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/70 border border-primary/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
+              aria-label={t("counsel.session_override_reset")}
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              {t("counsel.session_override_reset")}
+            </button>
+          )}
+          {!isOverriding && (
+            <button
+              onClick={() => setShowRegionPicker((v) => !v)}
+              aria-expanded={showRegionPicker}
+              className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 hover:text-primary border border-muted-foreground/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
+            >
+              {t("counsel.session_override_change")}
+              <ChevronDown className={`w-3 h-3 transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+
+        {/* Session region picker — appears inline when requested */}
+        {showRegionPicker && (
+          <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
+            {COMPASS_REGIONS.map((region) => {
+              const isSelected = region.code === effectiveRegion;
+              return (
+                <button
+                  key={region.code}
+                  onClick={() => { setSessionRegion(region.code); setShowRegionPicker(false); }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
+                    isSelected
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                  }`}
+                >
+                  <FlagEmoji code={region.flag} />
+                  {getRegionName(region.code)}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {isOverriding && (
+          <p className="text-[10px] text-muted-foreground/50 font-mono px-1">
+            {t("counsel.session_override_hint")}
+          </p>
+        )}
       </div>
 
-      {!regionActive ? (
-        <Card className="border-border/50 bg-muted/20 shadow-sm">
-          <CardContent className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground border border-muted-foreground/20 rounded-[2px] px-2.5 py-1.5">
-              <FlagEmoji code={activeRegion} />
-              <span>{getRegionName(activeRegion)}</span>
-              <span className="border-l border-current/20 pl-2 ml-0.5">{t("region.in_preparation")}</span>
-            </div>
-            <p className="text-muted-foreground font-light leading-relaxed max-w-lg">
-              {t("counsel.region_unavailable")}
-            </p>
-          </CardContent>
-        </Card>
-      ) : !response ? (
+      {!response ? (
         <Card className="border-border bg-card shadow-sm">
           <CardContent className="p-6 md:p-8 space-y-8">
             <fieldset className="space-y-4">

@@ -144,6 +144,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_prompt": "You are seeking counsel for etiquette in",
     "counsel.change_region": "change",
     "counsel.region_hint": "Change via the region selector top right",
+    "counsel.session_override_label": "For this consultation",
+    "counsel.session_override_change": "Use different region",
+    "counsel.session_override_reset": "Reset to profile region",
+    "counsel.session_override_hint": "This region applies to this consultation only — your profile region is unchanged.",
 
     "compass.title": "The Cultural Compass",
     "compass.subtitle": "Navigate the customs of the world with precision and confidence.",

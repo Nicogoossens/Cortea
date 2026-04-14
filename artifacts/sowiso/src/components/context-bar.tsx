@@ -47,16 +47,6 @@ function Item({
   );
 }
 
-function InactiveRegionItem({ children }: { children: React.ReactNode }) {
-  return (
-    <DropdownMenuPrimitive.Item
-      disabled
-      className="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-sm mx-1 opacity-40 cursor-default select-none outline-none"
-    >
-      {children}
-    </DropdownMenuPrimitive.Item>
-  );
-}
 
 export function ContextBar() {
   const { locale, setLocale, t } = useLocale();
@@ -133,18 +123,7 @@ export function ContextBar() {
 
           <div className="py-1">
             {COMPASS_REGIONS.map((region) => {
-              const active = isRegionActive(region.code);
-              if (!active) {
-                return (
-                  <InactiveRegionItem key={region.code}>
-                    <FlagEmoji code={region.flag} />
-                    <span className="flex-1">{getRegionName(region.code)}</span>
-                    <span className="text-[9px] font-mono uppercase tracking-widest border border-current/30 rounded-[2px] px-1 py-0.5 leading-none shrink-0">
-                      {t("region.in_preparation")}
-                    </span>
-                  </InactiveRegionItem>
-                );
-              }
+              const fullContent = isRegionActive(region.code);
               return (
                 <Item
                   key={region.code}
@@ -153,6 +132,11 @@ export function ContextBar() {
                 >
                   <FlagEmoji code={region.flag} />
                   <span className="flex-1">{getRegionName(region.code)}</span>
+                  {!fullContent && (
+                    <span className="text-[9px] font-mono uppercase tracking-widest border border-current/20 rounded-[2px] px-1 py-0.5 leading-none shrink-0 opacity-50">
+                      {t("region.in_preparation")}
+                    </span>
+                  )}
                 </Item>
               );
             })}

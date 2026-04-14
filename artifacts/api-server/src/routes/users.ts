@@ -58,8 +58,21 @@ const UserIdQuerySchema = z.object({
 
 router.get("/users/profile", async (req, res) => {
   try {
-    const parsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+    // Session token takes precedence over the user_id query param.
+    // This prevents one user from reading another's PII.
+    let userId: string;
+    const tokenUserId = await resolveUserId(req);
+    if (tokenUserId === null) {
+      return res.status(401).json({ error: "The authorisation token provided is not recognised." });
+    }
+    if (tokenUserId !== DEFAULT_USER_ID) {
+      // Authenticated via session token — ignore any user_id query param.
+      userId = tokenUserId;
+    } else {
+      // No session token presented; fall back to query param (prototype/dev usage).
+      const parsed = UserIdQuerySchema.safeParse(req.query);
+      userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+    }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 

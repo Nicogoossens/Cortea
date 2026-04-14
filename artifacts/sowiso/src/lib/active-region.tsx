@@ -120,6 +120,20 @@ export function ActiveRegionProvider({
     localStorage.setItem(REGION_PREF_KEY, code);
     // Explicit user choice supersedes any session-scoped detection.
     sessionStorage.removeItem(REGION_SESSION_KEY);
+
+    // Sync to profile API whenever a session token is available.
+    // This ensures the active region is persisted globally (not just in localStorage)
+    // regardless of which UI control triggered the change (context bar, profile page, etc.).
+    const sessionToken = localStorage.getItem("sowiso_session_token");
+    const apiBase = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL?.replace(/\/$/, "") ?? "";
+    fetch(`${apiBase}/api/users/profile/region`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+      },
+      body: JSON.stringify({ region_code: code }),
+    }).catch(() => undefined); // Fire-and-forget; localStorage is the source of truth for UI
   }, []);
 
   const setDetectedRegion = useCallback((code: RegionCode) => {

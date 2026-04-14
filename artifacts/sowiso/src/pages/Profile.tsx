@@ -116,12 +116,14 @@ export default function Profile() {
 
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
-    fetch(`${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`)
+    fetch(`${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`, {
+      headers: getAuthHeaders(),
+    })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => setProfileData(data))
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
-  }, [userId]);
+  }, [userId, getAuthHeaders]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 

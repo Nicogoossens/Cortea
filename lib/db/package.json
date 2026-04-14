@@ -11,7 +11,8 @@
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
     "seed": "tsx src/seed.ts",
-    "seed-translations": "tsx src/seed-translations.ts"
+    "seed-translations": "tsx src/seed-translations.ts",
+    "seed-compass": "tsx src/seed-compass.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

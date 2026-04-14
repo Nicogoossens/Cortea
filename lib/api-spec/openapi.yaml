@@ -184,6 +184,13 @@ paths:
       operationId: getCultureCompass
       tags: [culture]
       summary: Get cultural compass summary for all available regions
+      parameters:
+        - name: locale
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB."
       responses:
         "200":
           description: Cultural compass data
@@ -205,6 +212,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: locale
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB."
       responses:
         "200":
           description: Cultural compass detail

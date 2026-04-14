@@ -1,13 +1,20 @@
-import { useGetCultureCompass, getGetCultureCompassQueryKey } from "@workspace/api-client-react";
+import {
+  useGetCultureCompass,
+  getGetCultureCompassQueryKey,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Compass as CompassIcon, Globe } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
 
 export default function Compass() {
-  const { t } = useLanguage();
-  const { data: regions, isLoading } = useGetCultureCompass({ query: { queryKey: getGetCultureCompassQueryKey() } });
+  const { t, locale } = useLocale();
+
+  const { data: regions, isLoading } = useGetCultureCompass(
+    { locale },
+    { query: { queryKey: [...getGetCultureCompassQueryKey(), locale] } }
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

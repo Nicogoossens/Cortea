@@ -24,6 +24,8 @@ import type {
   CultureProtocol,
   DeleteProfileParams,
   ErrorResponse,
+  GetCultureCompassParams,
+  GetCultureCompassRegionParams,
   GetCultureProtocolsParams,
   GetNobleScoreLogParams,
   GetScenariosParams,
@@ -672,41 +674,60 @@ export function useGetCultureProtocols<
 /**
  * @summary Get cultural compass summary for all available regions
  */
-export const getGetCultureCompassUrl = () => {
-  return `/api/culture/compass`;
+export const getGetCultureCompassUrl = (params?: GetCultureCompassParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/culture/compass?${stringifiedParams}`
+    : `/api/culture/compass`;
 };
 
 export const getCultureCompass = async (
+  params?: GetCultureCompassParams,
   options?: RequestInit,
 ): Promise<CultureCompassEntry[]> => {
-  return customFetch<CultureCompassEntry[]>(getGetCultureCompassUrl(), {
+  return customFetch<CultureCompassEntry[]>(getGetCultureCompassUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetCultureCompassQueryKey = () => {
-  return [`/api/culture/compass`] as const;
+export const getGetCultureCompassQueryKey = (
+  params?: GetCultureCompassParams,
+) => {
+  return [`/api/culture/compass`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetCultureCompassQueryOptions = <
   TData = Awaited<ReturnType<typeof getCultureCompass>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCultureCompass>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetCultureCompassParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCultureCompass>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetCultureCompassQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetCultureCompassQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getCultureCompass>>
-  > = ({ signal }) => getCultureCompass({ signal, ...requestOptions });
+  > = ({ signal }) => getCultureCompass(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getCultureCompass>>,
@@ -727,15 +748,18 @@ export type GetCultureCompassQueryError = ErrorType<unknown>;
 export function useGetCultureCompass<
   TData = Awaited<ReturnType<typeof getCultureCompass>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getCultureCompass>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetCultureCompassQueryOptions(options);
+>(
+  params?: GetCultureCompassParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCultureCompass>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCultureCompassQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -747,16 +771,32 @@ export function useGetCultureCompass<
 /**
  * @summary Get detailed cultural compass for a specific region
  */
-export const getGetCultureCompassRegionUrl = (regionCode: string) => {
-  return `/api/culture/compass/${regionCode}`;
+export const getGetCultureCompassRegionUrl = (
+  regionCode: string,
+  params?: GetCultureCompassRegionParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/culture/compass/${regionCode}?${stringifiedParams}`
+    : `/api/culture/compass/${regionCode}`;
 };
 
 export const getCultureCompassRegion = async (
   regionCode: string,
+  params?: GetCultureCompassRegionParams,
   options?: RequestInit,
 ): Promise<CultureCompassDetail> => {
   return customFetch<CultureCompassDetail>(
-    getGetCultureCompassRegionUrl(regionCode),
+    getGetCultureCompassRegionUrl(regionCode, params),
     {
       ...options,
       method: "GET",
@@ -764,8 +804,14 @@ export const getCultureCompassRegion = async (
   );
 };
 
-export const getGetCultureCompassRegionQueryKey = (regionCode: string) => {
-  return [`/api/culture/compass/${regionCode}`] as const;
+export const getGetCultureCompassRegionQueryKey = (
+  regionCode: string,
+  params?: GetCultureCompassRegionParams,
+) => {
+  return [
+    `/api/culture/compass/${regionCode}`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getGetCultureCompassRegionQueryOptions = <
@@ -773,6 +819,7 @@ export const getGetCultureCompassRegionQueryOptions = <
   TError = ErrorType<ErrorResponse>,
 >(
   regionCode: string,
+  params?: GetCultureCompassRegionParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getCultureCompassRegion>>,
@@ -785,12 +832,13 @@ export const getGetCultureCompassRegionQueryOptions = <
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getGetCultureCompassRegionQueryKey(regionCode);
+    queryOptions?.queryKey ??
+    getGetCultureCompassRegionQueryKey(regionCode, params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getCultureCompassRegion>>
   > = ({ signal }) =>
-    getCultureCompassRegion(regionCode, { signal, ...requestOptions });
+    getCultureCompassRegion(regionCode, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -818,6 +866,7 @@ export function useGetCultureCompassRegion<
   TError = ErrorType<ErrorResponse>,
 >(
   regionCode: string,
+  params?: GetCultureCompassRegionParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getCultureCompassRegion>>,
@@ -829,6 +878,7 @@ export function useGetCultureCompassRegion<
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCultureCompassRegionQueryOptions(
     regionCode,
+    params,
     options,
   );
 

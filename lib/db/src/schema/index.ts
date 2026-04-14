@@ -4,3 +4,4 @@ export * from "./scenarios";
 export * from "./zuil_voortgang";
 export * from "./translations";
 export * from "./noble_score_log";
+export * from "./compass_regions";

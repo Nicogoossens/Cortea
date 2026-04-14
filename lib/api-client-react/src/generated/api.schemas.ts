@@ -255,6 +255,20 @@ export const GetCultureProtocolsContext = {
   general: "general",
 } as const;
 
+export type GetCultureCompassParams = {
+  /**
+   * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
+   */
+  locale?: string;
+};
+
+export type GetCultureCompassRegionParams = {
+  /**
+   * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
+   */
+  locale?: string;
+};
+
 export type GetScenariosParams = {
   region_code?: string;
   /**

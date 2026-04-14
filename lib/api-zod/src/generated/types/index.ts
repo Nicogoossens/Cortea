@@ -16,6 +16,8 @@ export * from "./cultureProtocolContext";
 export * from "./cultureProtocolGenderApplicability";
 export * from "./deleteProfileParams";
 export * from "./errorResponse";
+export * from "./getCultureCompassParams";
+export * from "./getCultureCompassRegionParams";
 export * from "./getCultureProtocolsContext";
 export * from "./getCultureProtocolsParams";
 export * from "./getNobleScoreLogParams";

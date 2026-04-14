@@ -156,6 +156,15 @@ export const GetCultureProtocolsResponse = zod.array(
 /**
  * @summary Get cultural compass summary for all available regions
  */
+export const GetCultureCompassQueryParams = zod.object({
+  locale: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.",
+    ),
+});
+
 export const GetCultureCompassResponseItem = zod.object({
   region_code: zod.string(),
   region_name: zod.string(),
@@ -172,6 +181,15 @@ export const GetCultureCompassResponse = zod.array(
  */
 export const GetCultureCompassRegionParams = zod.object({
   regionCode: zod.coerce.string(),
+});
+
+export const GetCultureCompassRegionQueryParams = zod.object({
+  locale: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.",
+    ),
 });
 
 export const GetCultureCompassRegionResponse = zod.object({

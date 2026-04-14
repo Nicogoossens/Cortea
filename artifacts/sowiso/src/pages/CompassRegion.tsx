@@ -1,18 +1,28 @@
-import { useGetCultureCompassRegion, getGetCultureCompassRegionQueryKey } from "@workspace/api-client-react";
+import {
+  useGetCultureCompassRegion,
+  getGetCultureCompassRegionQueryKey,
+} from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
 
 export default function CompassRegion() {
   const { code } = useParams<{ code: string }>();
-  const { t } = useLanguage();
+  const { t, locale } = useLocale();
   const regionCode = code || "";
 
-  const { data: detail, isLoading } = useGetCultureCompassRegion(regionCode, {
-    query: { enabled: !!regionCode, queryKey: getGetCultureCompassRegionQueryKey(regionCode) }
-  });
+  const { data: detail, isLoading } = useGetCultureCompassRegion(
+    regionCode,
+    { locale },
+    {
+      query: {
+        enabled: !!regionCode,
+        queryKey: [...getGetCultureCompassRegionQueryKey(regionCode), locale],
+      },
+    }
+  );
 
   if (isLoading) {
     return (
@@ -87,7 +97,7 @@ export default function CompassRegion() {
       </div>
 
       <div className="space-y-6 pt-4">
-        <h2 className="font-serif text-2xl border-b border-border pb-2">Essential Protocols</h2>
+        <h2 className="font-serif text-2xl border-b border-border pb-2">{t("compass.protocols")}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-border shadow-sm">

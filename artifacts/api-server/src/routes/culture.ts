@@ -1,96 +1,12 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { cultureProtocolsTable } from "@workspace/db";
+import { cultureProtocolsTable, compassRegionsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
 
-const COMPASS_DATA: Record<string, {
-  region_name: string;
-  flag_emoji: string;
-  core_value: string;
-  biggest_taboo: string;
-  dining_etiquette: string;
-  language_notes: string;
-  gift_protocol: string;
-  dress_code: string;
-  dos: string[];
-  donts: string[];
-}> = {
-  GB: {
-    region_name: "United Kingdom",
-    flag_emoji: "🇬🇧",
-    core_value: "Understatement & Tradition",
-    biggest_taboo: "Being too direct about money or personal matters",
-    dining_etiquette: "Continental style: fork in left hand, knife in right. Soup spoon moves away from you. Do not begin eating until the host does.",
-    language_notes: "Titles are strictly observed. 'Mr', 'Mrs', 'Dr' followed by surname. Avoid first names until explicitly invited.",
-    gift_protocol: "Modest, thoughtful gifts are appropriate. Avoid overly expensive presents which may cause discomfort. Wine or flowers for a dinner invitation.",
-    dress_code: "Err on the side of formality. Business formal for meetings. Smart casual for social occasions. Black Tie requires a dinner jacket.",
-    dos: [
-      "Queue with patience and dignity",
-      "Offer and accept tea graciously",
-      "Use understatement when expressing opinions",
-      "Observe punctuality — five minutes early is on time",
-      "Thank the host the following day"
-    ],
-    donts: [
-      "Ask directly about salary or personal wealth",
-      "Skip a queue under any circumstance",
-      "Speak loudly in public spaces",
-      "Inquire about family matters until invited to do so",
-      "Refuse a cup of tea without good reason"
-    ]
-  },
-  CN: {
-    region_name: "China",
-    flag_emoji: "🇨🇳",
-    core_value: "Mianzi (Face) & Guanxi (Relationships)",
-    biggest_taboo: "Causing someone to lose face publicly",
-    dining_etiquette: "Wait to be seated according to seniority. The host orders and pays. Never place chopsticks vertically in rice. Pouring tea for others before yourself shows respect.",
-    language_notes: "Address by family name followed by title. Seniority dictates speaking order in meetings. Business cards are exchanged with both hands and a slight bow.",
-    gift_protocol: "Present and receive gifts with both hands. Gifts are not opened immediately. Avoid clocks (association with death) and green hats. Red envelopes for money are appropriate.",
-    dress_code: "Conservative and formal for business. Avoid white or black for celebratory occasions. Modest dress for temple visits.",
-    dos: [
-      "Present business cards with both hands",
-      "Allow the host to order at meals",
-      "Accept all food and drink offered",
-      "Show deference to seniority in all interactions",
-      "Build relationships before discussing business"
-    ],
-    donts: [
-      "Cause anyone to lose face publicly",
-      "Refuse food or drink without explanation",
-      "Give clocks or shoes as gifts",
-      "Point with your index finger",
-      "Discuss Taiwan, Tibet, or Tiananmen"
-    ]
-  },
-  CA: {
-    region_name: "Canada",
-    flag_emoji: "🇨🇦",
-    core_value: "Equality, Inclusivity & Courtesy",
-    biggest_taboo: "Assuming someone's cultural background or language",
-    dining_etiquette: "Informally professional. The bill is often split. Tipping 15-20% is expected. Dietary preferences are respected and commonly accommodated.",
-    language_notes: "Bilingual (English and French) in many contexts. In Quebec, French is the primary language. Inclusive language is valued. First names are used relatively quickly.",
-    gift_protocol: "Thoughtful but not excessive. Wine, local specialties, or a book are appropriate. Host gifts are appreciated. Not expected at business meetings.",
-    dress_code: "Smart casual for most business contexts. Formal when specified. Outdoor casual is acceptable in many social situations.",
-    dos: [
-      "Acknowledge the land's Indigenous heritage when appropriate",
-      "Hold doors for those behind you",
-      "Apologise readily — it is a cultural courtesy",
-      "Respect personal space (roughly an arm's length)",
-      "Acknowledge both French and English cultural contexts"
-    ],
-    donts: [
-      "Assume everyone speaks English or French exclusively",
-      "Compare Canada to the United States unfavourably",
-      "Ignore personal boundaries",
-      "Arrive late without notice",
-      "Make assumptions about cultural or national identity"
-    ]
-  }
-};
+const DEFAULT_LOCALE = "en-GB";
 
 const ProtocolsQuerySchema = z.object({
   region_code: z.string().min(1),
@@ -100,6 +16,10 @@ const ProtocolsQuerySchema = z.object({
 
 const RegionCodeParamSchema = z.object({
   regionCode: z.string().min(1).max(10),
+});
+
+const CompassQuerySchema = z.object({
+  locale: z.string().default(DEFAULT_LOCALE),
 });
 
 router.get("/culture/protocols", async (req, res) => {
@@ -133,13 +53,24 @@ router.get("/culture/protocols", async (req, res) => {
 
 router.get("/culture/compass", async (req, res) => {
   try {
-    const entries = Object.entries(COMPASS_DATA).map(([region_code, data]) => ({
-      region_code,
-      region_name: data.region_name,
-      flag_emoji: data.flag_emoji,
-      core_value: data.core_value,
-      biggest_taboo: data.biggest_taboo,
-    }));
+    const queryParsed = CompassQuerySchema.safeParse(req.query);
+    const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
+
+    const rows = await db.select().from(compassRegionsTable);
+
+    const entries = rows.map((row) => {
+      const content = (row.content as Record<string, Record<string, string>>);
+      const localeContent = content[locale] ?? content[DEFAULT_LOCALE] ?? {};
+
+      return {
+        region_code: row.region_code,
+        flag_emoji: row.flag_emoji,
+        region_name: localeContent.region_name ?? row.region_code,
+        core_value: localeContent.core_value ?? "",
+        biggest_taboo: localeContent.biggest_taboo ?? "",
+      };
+    });
+
     return res.json(entries);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass");
@@ -147,23 +78,44 @@ router.get("/culture/compass", async (req, res) => {
   }
 });
 
-router.get("/culture/compass/:regionCode", (req, res) => {
+router.get("/culture/compass/:regionCode", async (req, res) => {
   try {
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
     if (!paramParsed.success) {
       return res.status(400).json({ message: "The region code provided is not valid." });
     }
 
-    const regionCode = paramParsed.data.regionCode.toUpperCase();
-    const data = COMPASS_DATA[regionCode];
+    const queryParsed = CompassQuerySchema.safeParse(req.query);
+    const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
 
-    if (!data) {
-      return res.status(404).json({ message: `The region '${regionCode}' is not yet within our compass. Further regions are being added in due course.` });
+    const regionCode = paramParsed.data.regionCode.toUpperCase();
+
+    const rows = await db.select()
+      .from(compassRegionsTable)
+      .where(eq(compassRegionsTable.region_code, regionCode));
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        message: `The region '${regionCode}' is not yet within our compass. Further regions are being added in due course.`,
+      });
     }
 
+    const row = rows[0];
+    const content = (row.content as Record<string, Record<string, unknown>>);
+    const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
+
     return res.json({
-      region_code: regionCode,
-      ...data,
+      region_code: row.region_code,
+      flag_emoji: row.flag_emoji,
+      region_name: localeContent.region_name ?? row.region_code,
+      core_value: localeContent.core_value ?? "",
+      biggest_taboo: localeContent.biggest_taboo ?? "",
+      dining_etiquette: localeContent.dining_etiquette ?? "",
+      language_notes: localeContent.language_notes ?? "",
+      gift_protocol: localeContent.gift_protocol ?? "",
+      dress_code: localeContent.dress_code ?? "",
+      dos: localeContent.dos ?? [],
+      donts: localeContent.donts ?? [],
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass region");

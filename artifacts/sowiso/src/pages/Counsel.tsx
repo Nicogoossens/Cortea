@@ -9,11 +9,12 @@ import { useActiveRegion, FlagEmoji, isRegionActive } from "@/lib/active-region"
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
-  "counsel.domains.greetings",
+  "counsel.domains.introductions",
   "counsel.domains.dress_code",
-  "counsel.domains.conversation",
   "counsel.domains.gifting",
-  "counsel.domains.other",
+  "counsel.domains.digital_protocol",
+  "counsel.domains.hosting",
+  "counsel.domains.apologies",
 ] as const;
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");

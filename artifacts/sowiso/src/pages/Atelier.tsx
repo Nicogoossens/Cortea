@@ -121,9 +121,21 @@ export default function Atelier() {
             </Link>
           ))}
           {(!scenarios || scenarios.length === 0) && (
-            <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/10">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-20" aria-hidden="true" />
+            <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/10 space-y-4">
+              <BookOpen className="w-12 h-12 mx-auto opacity-20" aria-hidden="true" />
               <p className="font-serif text-xl">{t("atelier.empty")}</p>
+              <p className="text-sm max-w-sm mx-auto">
+                {t("atelier.empty_region_hint")}
+                <span className="font-medium inline-flex items-center gap-1 ml-1">
+                  <FlagEmoji code={activeRegion} />
+                  {getRegionName(activeRegion)}
+                </span>.
+              </p>
+              <Link href="/compass">
+                <button className="text-sm underline underline-offset-2 text-primary/70 hover:text-primary transition-colors">
+                  {t("atelier.change_region")}
+                </button>
+              </Link>
             </div>
           )}
         </div>

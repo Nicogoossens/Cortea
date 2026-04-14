@@ -118,6 +118,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Refines standing",
     "atelier.empty": "No scenarios available.",
+    "atelier.empty_region_hint": "No training scenarios are currently available for",
+    "atelier.change_region": "Change your active region",
     "atelier.region": "Region",
     "atelier.all_pillars": "All Pillars",
 
@@ -250,6 +252,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Verfijnt de rang",
     "atelier.empty": "Geen scenario's beschikbaar.",
+    "atelier.empty_region_hint": "Er zijn momenteel geen trainingsscenario's beschikbaar voor",
+    "atelier.change_region": "Wijzig uw actieve regio",
     "atelier.region": "Regio",
     "atelier.all_pillars": "Alle Pijlers",
 
@@ -382,6 +386,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Affine le rang",
     "atelier.empty": "Aucun scénario disponible.",
+    "atelier.empty_region_hint": "Aucun scénario de formation n'est disponible pour",
+    "atelier.change_region": "Modifier votre région active",
     "atelier.region": "Région",
     "atelier.all_pillars": "Tous les Piliers",
 
@@ -514,6 +520,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "Min.",
     "atelier.refines": "Verfeinert den Rang",
     "atelier.empty": "Keine Szenarien verfügbar.",
+    "atelier.empty_region_hint": "Für diese Region sind derzeit keine Trainingsszenarien verfügbar:",
+    "atelier.change_region": "Ihre aktive Region ändern",
     "atelier.region": "Region",
     "atelier.all_pillars": "Alle Säulen",
 
@@ -646,6 +654,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Refina el rango",
     "atelier.empty": "No hay escenarios disponibles.",
+    "atelier.empty_region_hint": "Actualmente no hay escenarios de entrenamiento disponibles para",
+    "atelier.change_region": "Cambiar su región activa",
     "atelier.region": "Región",
     "atelier.all_pillars": "Todos los Pilares",
 
@@ -778,6 +788,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Refina o nível",
     "atelier.empty": "Nenhum cenário disponível.",
+    "atelier.empty_region_hint": "Não existem atualmente cenários de treino disponíveis para",
+    "atelier.change_region": "Alterar a sua região ativa",
     "atelier.region": "Região",
     "atelier.all_pillars": "Todos os Pilares",
 
@@ -910,6 +922,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "min",
     "atelier.refines": "Affina il rango",
     "atelier.empty": "Nessuno scenario disponibile.",
+    "atelier.empty_region_hint": "Al momento non sono disponibili scenari di formazione per",
+    "atelier.change_region": "Cambiare la propria regione attiva",
     "atelier.region": "Regione",
     "atelier.all_pillars": "Tutti i Pilastri",
 
@@ -1042,6 +1056,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.duration": "मिनट",
     "atelier.refines": "स्तर परिष्कृत करता है",
     "atelier.empty": "कोई परिदृश्य उपलब्ध नहीं है।",
+    "atelier.empty_region_hint": "इस क्षेत्र के लिए अभी कोई प्रशिक्षण परिदृश्य उपलब्ध नहीं है:",
+    "atelier.change_region": "अपना सक्रिय क्षेत्र बदलें",
     "atelier.region": "क्षेत्र",
     "atelier.all_pillars": "सभी स्तंभ",
 

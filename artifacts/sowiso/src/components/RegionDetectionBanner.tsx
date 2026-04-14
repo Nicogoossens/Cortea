@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, MapPin, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useActiveRegion, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { useLanguage } from "@/lib/i18n";
 
 const SESSION_DISMISSED_KEY = "sowiso_region_detect_dismissed";
@@ -74,7 +74,7 @@ export default function RegionDetectionBanner() {
     if (sessionStorage.getItem(SESSION_DISMISSED_KEY)) return;
 
     detectViaIp().then((region) => {
-      if (region && region !== activeRegion) {
+      if (region && region !== activeRegion && isRegionActive(region)) {
         setSuggestedRegion(region);
       } else {
         sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
@@ -94,7 +94,7 @@ export default function RegionDetectionBanner() {
     setGpsState("requesting");
     const gpsRegion = await detectViaGps();
     setGpsState("done");
-    if (gpsRegion) setSuggestedRegion(gpsRegion);
+    if (gpsRegion && isRegionActive(gpsRegion)) setSuggestedRegion(gpsRegion);
   };
 
   const handleDismiss = () => {

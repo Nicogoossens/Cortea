@@ -13,9 +13,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Award, Calendar, Globe, Target, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/lib/i18n";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useState } from "react";
+
+function logStatusKey(delta: number): string {
+  if (delta > 0) return "profile.log.refined";
+  if (delta < 0) return "profile.log.reconsidered";
+  return "profile.log.observed";
+}
 
 export default function Profile() {
   const { t } = useLanguage();
+  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
+
   const { data: profile, isLoading: profileLoading } = useGetProfile({ query: { queryKey: getGetProfileQueryKey() } });
   const { data: nobleScore, isLoading: scoreLoading } = useGetNobleScore({ query: { queryKey: getGetNobleScoreQueryKey() } });
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
@@ -62,15 +73,65 @@ export default function Profile() {
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4" aria-hidden="true" />
-              <span>{t("profile.active_region")}: <span className="uppercase">{profile?.active_region}</span></span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">{t("profile.active_region")}:</span>
+                <button
+                  onClick={() => setShowRegionPicker((v) => !v)}
+                  className="flex items-center gap-1 hover:text-foreground transition-colors group"
+                  aria-expanded={showRegionPicker}
+                >
+                  <FlagEmoji code={activeRegion} />
+                  <span className="font-medium text-foreground group-hover:underline underline-offset-2">
+                    {getRegionName(activeRegion)}
+                  </span>
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" aria-hidden="true" />
-              <span>{t("profile.member_since")} {profile?.created_at ? format(new Date(profile.created_at), "MMMM yyyy") : "Recently"}</span>
+              <span>
+                {t("profile.member_since")}{" "}
+                {profile?.created_at
+                  ? format(new Date(profile.created_at), "MMMM yyyy")
+                  : t("profile.member_since.recently")}
+              </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Inline region picker */}
+      {showRegionPicker && (
+        <Card className="border-border bg-card shadow-sm animate-in fade-in duration-200">
+          <CardContent className="p-4">
+            <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+              {t("region.choose")}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {COMPASS_REGIONS.map((region) => {
+                const isSelected = region.code === activeRegion;
+                return (
+                  <button
+                    key={region.code}
+                    onClick={() => {
+                      setActiveRegion(region.code as RegionCode);
+                      setShowRegionPicker(false);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs border transition-all ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/40"
+                    }`}
+                  >
+                    <FlagEmoji code={region.flag} />
+                    {getRegionName(region.code)}
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -182,11 +243,11 @@ export default function Profile() {
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-1">
                     <div className="text-sm font-medium text-foreground">{log.trigger}</div>
                     <div className="text-xs font-mono text-muted-foreground">
-                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "MMM d, yyyy HH:mm")}</time>
+                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "d MMM yyyy HH:mm")}</time>
                     </div>
                   </div>
                   <div className={`text-xs font-mono uppercase tracking-widest ${log.score_delta > 0 ? "text-green-600" : log.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                    {log.score_delta > 0 ? "Refined" : log.score_delta < 0 ? "Reconsidered" : "Observed"}
+                    {t(logStatusKey(log.score_delta))}
                   </div>
                 </div>
               ))}

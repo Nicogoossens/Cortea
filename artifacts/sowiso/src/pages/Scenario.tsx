@@ -8,6 +8,12 @@ import { ArrowLeft, Check, X, ShieldAlert } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 
+function scoreDeltaKey(delta: number): string {
+  if (delta > 0) return "profile.log.refined";
+  if (delta < 0) return "profile.log.reconsidered";
+  return "profile.log.observed";
+}
+
 export default function Scenario() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -187,7 +193,7 @@ export default function Scenario() {
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground uppercase tracking-widest font-mono">{t("scenario.impact")}</span>
                 <div className={`text-sm font-mono uppercase tracking-widest ${result.score_delta > 0 ? "text-green-600" : result.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                  {result.score_delta > 0 ? "Refined" : result.score_delta < 0 ? "Reconsidered" : "Observed"}
+                  {t(scoreDeltaKey(result.score_delta))}
                 </div>
               </div>
 

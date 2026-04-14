@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { BookOpen, Compass, Shield, User, Menu, X, Landmark } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -23,7 +23,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
 
-      {/* Skip to main content */}
       <a
         href={`#${MAIN_CONTENT_ID}`}
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-sm focus:font-medium"
@@ -79,9 +78,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          <div className="mt-6 px-4">
-            <LanguageSwitcher />
-          </div>
         </div>
       )}
 
@@ -117,8 +113,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-6 border-t border-sidebar-border/50 space-y-4">
-          <LanguageSwitcher />
+        <div className="p-6 border-t border-sidebar-border/50">
           <div className="text-xs text-sidebar-foreground/50 text-center font-mono uppercase tracking-widest">
             {t("app.established")}
           </div>
@@ -131,6 +126,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         className="flex-1 flex flex-col min-w-0 max-w-full relative"
         tabIndex={-1}
       >
+        <ContextBar />
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" aria-hidden="true" />
         <div className="flex-1 p-6 md:p-12 lg:p-16 max-w-6xl mx-auto w-full z-10">
           {children}

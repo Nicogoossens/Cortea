@@ -87,18 +87,13 @@ export default function Atelier() {
       {isGuest && (
         <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-border/40 bg-muted/20 text-sm">
           <BookOpen className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
-          <div className="space-y-1 flex-1">
-            <p className="text-foreground/80">
-              <span className="font-medium">Gratis preview</span> — {GUEST_PILLAR1_LIMIT} scenario's uit Pijler 1 zijn beschikbaar.{" "}
-              <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                Maak een account aan
-              </Link>{" "}
-              voor toegang tot alle pijlers en regio's.
-            </p>
-            <p className="text-xs text-muted-foreground font-light">
-              Pijler 2 en hoger vereisen een account. Pijler 3 en hoger vereisen een betaald abonnement.
-            </p>
-          </div>
+          <p className="text-foreground/80">
+            <span className="font-medium">{t("atelier.guest.preview_label")}</span> — {GUEST_PILLAR1_LIMIT} {t("atelier.guest.available")}{" "}
+            <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
+              {t("atelier.guest.register_link")}
+            </Link>{" "}
+            {t("atelier.guest.register_prompt")}
+          </p>
         </div>
       )}
 
@@ -163,36 +158,28 @@ export default function Atelier() {
                     </div>
                     {isPillar3Plus ? (
                       <>
-                        <p className="text-sm font-medium text-foreground">Vereist premium abonnement</p>
-                        <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                          Pijler 3 en hoger zijn toegankelijk met een betaald SOWISO-abonnement.
-                        </p>
+                        <p className="text-sm font-medium text-foreground">{t("atelier.guest.locked_premium")}</p>
                         <Link href="/profile">
                           <Button size="sm" className="font-serif gap-1.5 rounded-sm text-xs">
-                            Abonnement upgraden
+                            {t("atelier.guest.upgrade")}
                           </Button>
                         </Link>
                       </>
                     ) : (
                       <>
                         <p className="text-sm font-medium text-foreground">
-                          {scenario.pillar === 1 ? "Preview voltooid" : "Vereist een account"}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-light leading-relaxed">
-                          {scenario.pillar === 1
-                            ? `U heeft uw ${GUEST_PILLAR1_LIMIT} gratis scenario's gebruikt.`
-                            : "Pijler 2 en hoger zijn beschikbaar na registratie."}
+                          {scenario.pillar === 1 ? t("atelier.guest.preview_done") : t("atelier.guest.locked_account")}
                         </p>
                         <div className="flex flex-col gap-1.5 w-full">
                           <Link href="/register">
                             <Button size="sm" className="font-serif gap-1.5 rounded-sm text-xs w-full">
                               <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                              Account aanmaken
+                              {t("atelier.guest.create_account")}
                             </Button>
                           </Link>
                           <Link href="/signin">
                             <Button size="sm" variant="outline" className="font-serif rounded-sm text-xs w-full">
-                              Aanmelden
+                              {t("atelier.guest.signin")}
                             </Button>
                           </Link>
                         </div>

@@ -5,7 +5,7 @@ import {
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 
 export default function CompassRegion() {
@@ -35,6 +35,7 @@ export default function CompassRegion() {
             <Skeleton className="h-4 w-40" />
           </div>
         </div>
+        <Skeleton className="h-48 w-full" />
         <Skeleton className="h-40 w-full" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Skeleton className="h-64 w-full" />
@@ -55,6 +56,9 @@ export default function CompassRegion() {
     );
   }
 
+  const quickDos = detail.dos.slice(0, 5);
+  const quickDonts = detail.donts.slice(0, 5);
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500 pb-16">
       <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -62,6 +66,7 @@ export default function CompassRegion() {
         {t("compass.back")}
       </Link>
 
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/60">
         <div className="flex items-center gap-6">
           <div className="text-6xl drop-shadow-sm" aria-label={detail.region_name}>{detail.flag_emoji}</div>
@@ -72,6 +77,50 @@ export default function CompassRegion() {
         </div>
       </div>
 
+      {/* Quick Brief */}
+      <section aria-labelledby="quick-brief-heading" className="bg-primary/5 border border-primary/20 rounded-sm p-6 md:p-8 space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-primary/15">
+          <Zap className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+          <div>
+            <h2 id="quick-brief-heading" className="text-sm font-mono uppercase tracking-widest text-primary font-semibold">
+              {t("compass.quick_brief")}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("compass.quick_brief_subtitle")}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-green-700 dark:text-green-400">
+              {t("compass.dos")}
+            </h3>
+            <ul className="space-y-2.5" aria-label={t("compass.dos")}>
+              {quickDos.map((item, i) => (
+                <li key={i} className="flex gap-3 items-start text-sm">
+                  <span className="text-green-600 mt-0.5 flex-shrink-0 font-bold" aria-hidden="true">+</span>
+                  <span className="text-foreground/80 leading-snug">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-red-700 dark:text-red-400">
+              {t("compass.donts")}
+            </h3>
+            <ul className="space-y-2.5" aria-label={t("compass.donts")}>
+              {quickDonts.map((item, i) => (
+                <li key={i} className="flex gap-3 items-start text-sm">
+                  <span className="text-red-600 mt-0.5 flex-shrink-0 font-bold" aria-hidden="true">×</span>
+                  <span className="text-foreground/80 leading-snug">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Value + Taboo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="pb-2">
@@ -96,6 +145,7 @@ export default function CompassRegion() {
         </Card>
       </div>
 
+      {/* Detailed protocols */}
       <div className="space-y-6 pt-4">
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("compass.protocols")}</h2>
 
@@ -146,6 +196,7 @@ export default function CompassRegion() {
         </div>
       </div>
 
+      {/* Full dos and don'ts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8">
         <div className="space-y-4">
           <h3 className="font-serif text-xl text-green-700 dark:text-green-500 border-b border-border pb-2">

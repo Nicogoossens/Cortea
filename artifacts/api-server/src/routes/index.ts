@@ -5,6 +5,8 @@ import cultureRouter from "./culture";
 import scenariosRouter from "./scenarios";
 import nobleScoreRouter from "./noble_score";
 import translationsRouter from "./translations";
+import counselRouter from "./counsel";
+import detectRegionRouter from "./detect-region";
 
 const router: IRouter = Router();
 
@@ -14,5 +16,7 @@ router.use(cultureRouter);
 router.use(scenariosRouter);
 router.use(nobleScoreRouter);
 router.use(translationsRouter);
+router.use(counselRouter);
+router.use(detectRegionRouter);
 
 export default router;

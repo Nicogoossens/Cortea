@@ -119,6 +119,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Refines standing",
     "atelier.empty": "No scenarios available.",
     "atelier.region": "Region",
+    "atelier.all_pillars": "All Pillars",
+
+    "compass.quick_brief": "Quick Brief",
+    "compass.quick_brief_subtitle": "The five customs you must know before arrival",
 
     "counsel.title": "The Counsel",
     "counsel.subtitle": "Thirty seconds of discreet guidance. Describe your situation and receive an immediate, precise response.",
@@ -193,6 +197,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Operating in",
     "region.choose": "Select your etiquette region",
     "region.in_preparation": "In Preparation",
+    "detect.banner_prefix": "We noticed you might be visiting from",
+    "detect.banner_suffix": "— would you like to set that as your region?",
+    "detect.confirm": "Confirm",
+    "detect.dismiss": "Dismiss",
     "counsel.region_unavailable": "This region is presently being curated. Counsel is available for the United Kingdom, China, and Canada.",
     "region.current": "Current region",
 
@@ -241,6 +249,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Verfijnt de rang",
     "atelier.empty": "Geen scenario's beschikbaar.",
     "atelier.region": "Regio",
+    "atelier.all_pillars": "Alle Pijlers",
+
+    "compass.quick_brief": "Snelle Briefing",
+    "compass.quick_brief_subtitle": "De vijf gebruiken die u moet kennen vóór aankomst",
 
     "counsel.title": "De Raadgeving",
     "counsel.subtitle": "Dertig seconden discrete begeleiding. Beschrijf uw situatie en ontvang een onmiddellijk, precies antwoord.",
@@ -315,6 +327,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Actieve regio",
     "region.choose": "Kies uw etiquetteregio",
     "region.in_preparation": "In Opmaak",
+    "detect.banner_prefix": "We zien dat u mogelijk bezoekt vanuit",
+    "detect.banner_suffix": "— wilt u dit als uw regio instellen?",
+    "detect.confirm": "Bevestigen",
+    "detect.dismiss": "Sluiten",
     "counsel.region_unavailable": "Deze regio wordt momenteel samengesteld. Raadpleging is beschikbaar voor het Verenigd Koninkrijk, China en Canada.",
     "region.current": "Huidige regio",
 
@@ -363,6 +379,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Affine le rang",
     "atelier.empty": "Aucun scénario disponible.",
     "atelier.region": "Région",
+    "atelier.all_pillars": "Tous les Piliers",
+
+    "compass.quick_brief": "Résumé Rapide",
+    "compass.quick_brief_subtitle": "Les cinq usages à connaître avant votre arrivée",
 
     "counsel.title": "Le Conseil",
     "counsel.subtitle": "Trente secondes de guidance discrète. Décrivez votre situation et recevez une réponse immédiate et précise.",
@@ -437,6 +457,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Région active",
     "region.choose": "Choisissez votre région d'étiquette",
     "region.in_preparation": "En Préparation",
+    "detect.banner_prefix": "Nous avons détecté que vous visitez depuis",
+    "detect.banner_suffix": "— souhaitez-vous définir cela comme votre région ?",
+    "detect.confirm": "Confirmer",
+    "detect.dismiss": "Ignorer",
     "counsel.region_unavailable": "Cette région est actuellement en cours de préparation. Le conseil est disponible pour le Royaume-Uni, la Chine et le Canada.",
     "region.current": "Région actuelle",
 
@@ -485,6 +509,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Verfeinert den Rang",
     "atelier.empty": "Keine Szenarien verfügbar.",
     "atelier.region": "Region",
+    "atelier.all_pillars": "Alle Säulen",
+
+    "compass.quick_brief": "Kurzüberblick",
+    "compass.quick_brief_subtitle": "Die fünf Bräuche, die Sie vor der Ankunft kennen müssen",
 
     "counsel.title": "Der Rat",
     "counsel.subtitle": "Dreißig Sekunden diskrete Anleitung. Beschreiben Sie Ihre Situation und erhalten Sie eine sofortige, präzise Antwort.",
@@ -559,6 +587,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Aktive Region",
     "region.choose": "Wählen Sie Ihre Etikette-Region",
     "region.in_preparation": "In Vorbereitung",
+    "detect.banner_prefix": "Wir haben festgestellt, dass Sie möglicherweise aus",
+    "detect.banner_suffix": "besuchen — möchten Sie dies als Ihre Region festlegen?",
+    "detect.confirm": "Bestätigen",
+    "detect.dismiss": "Schließen",
     "counsel.region_unavailable": "Diese Region wird derzeit zusammengestellt. Beratung ist für das Vereinigte Königreich, China und Kanada verfügbar.",
     "region.current": "Aktuelle Region",
 
@@ -607,6 +639,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Refina el rango",
     "atelier.empty": "No hay escenarios disponibles.",
     "atelier.region": "Región",
+    "atelier.all_pillars": "Todos los Pilares",
+
+    "compass.quick_brief": "Resumen Rápido",
+    "compass.quick_brief_subtitle": "Las cinco costumbres que debe conocer antes de llegar",
 
     "counsel.title": "El Consejo",
     "counsel.subtitle": "Treinta segundos de orientación discreta. Describa su situación y reciba una respuesta inmediata y precisa.",
@@ -681,6 +717,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Región activa",
     "region.choose": "Elija su región de etiqueta",
     "region.in_preparation": "En Elaboración",
+    "detect.banner_prefix": "Hemos detectado que podría estar visitando desde",
+    "detect.banner_suffix": "— ¿desea establecerlo como su región?",
+    "detect.confirm": "Confirmar",
+    "detect.dismiss": "Ignorar",
     "counsel.region_unavailable": "Esta región está siendo elaborada con esmero. El consejo está disponible para el Reino Unido, China y Canadá.",
     "region.current": "Región actual",
 
@@ -729,6 +769,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Refina o nível",
     "atelier.empty": "Nenhum cenário disponível.",
     "atelier.region": "Região",
+    "atelier.all_pillars": "Todos os Pilares",
+
+    "compass.quick_brief": "Resumo Rápido",
+    "compass.quick_brief_subtitle": "Os cinco costumes que deve conhecer antes de chegar",
 
     "counsel.title": "O Conselho",
     "counsel.subtitle": "Trinta segundos de orientação discreta. Descreva a sua situação e receba uma resposta imediata e precisa.",
@@ -803,6 +847,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Região ativa",
     "region.choose": "Escolha a sua região de etiqueta",
     "region.in_preparation": "Em Preparação",
+    "detect.banner_prefix": "Detetamos que poderá estar a visitar desde",
+    "detect.banner_suffix": "— deseja definir isso como a sua região?",
+    "detect.confirm": "Confirmar",
+    "detect.dismiss": "Ignorar",
     "counsel.region_unavailable": "Esta região está presentemente a ser preparada. O aconselhamento está disponível para o Reino Unido, a China e o Canadá.",
     "region.current": "Região atual",
 
@@ -851,6 +899,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "Affina il rango",
     "atelier.empty": "Nessuno scenario disponibile.",
     "atelier.region": "Regione",
+    "atelier.all_pillars": "Tutti i Pilastri",
+
+    "compass.quick_brief": "Scheda Rapida",
+    "compass.quick_brief_subtitle": "I cinque usi da conoscere prima dell'arrivo",
 
     "counsel.title": "Il Consiglio",
     "counsel.subtitle": "Trenta secondi di guida discreta. Descriva la Sua situazione e riceva una risposta immediata e precisa.",
@@ -925,6 +977,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "Regione attiva",
     "region.choose": "Scelga la sua regione d'etichetta",
     "region.in_preparation": "In Preparazione",
+    "detect.banner_prefix": "Abbiamo rilevato che potrebbe visitare da",
+    "detect.banner_suffix": "— desidera impostarlo come la Sua regione?",
+    "detect.confirm": "Confermare",
+    "detect.dismiss": "Ignorare",
     "counsel.region_unavailable": "Questa regione è attualmente in fase di attenta preparazione. Il consiglio è disponibile per il Regno Unito, la Cina e il Canada.",
     "region.current": "Regione attuale",
 
@@ -973,6 +1029,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.refines": "स्तर परिष्कृत करता है",
     "atelier.empty": "कोई परिदृश्य उपलब्ध नहीं है।",
     "atelier.region": "क्षेत्र",
+    "atelier.all_pillars": "सभी स्तंभ",
+
+    "compass.quick_brief": "त्वरित सारांश",
+    "compass.quick_brief_subtitle": "पहुँचने से पहले जानने योग्य पाँच परंपराएँ",
 
     "counsel.title": "परामर्श",
     "counsel.subtitle": "तीस सेकंड का विवेकशील मार्गदर्शन। अपनी स्थिति का वर्णन करें और तत्काल, सटीक प्रतिक्रिया प्राप्त करें।",
@@ -1047,6 +1107,10 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "region.select": "सक्रिय क्षेत्र",
     "region.choose": "अपना शिष्टाचार क्षेत्र चुनें",
     "region.in_preparation": "तैयारी में",
+    "detect.banner_prefix": "हमें लगता है कि आप शायद यहाँ से आ रहे हैं",
+    "detect.banner_suffix": "— क्या आप इसे अपना क्षेत्र सेट करना चाहेंगे?",
+    "detect.confirm": "पुष्टि करें",
+    "detect.dismiss": "खारिज करें",
     "counsel.region_unavailable": "यह क्षेत्र अभी सावधानीपूर्वक तैयार किया जा रहा है। परामर्श यूनाइटेड किंगडम, चीन और कनाडा के लिए उपलब्ध है।",
     "region.current": "वर्तमान क्षेत्र",
 

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider, useLanguage } from "@/lib/i18n";
 import { ActiveRegionProvider } from "@/lib/active-region";
+import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Atelier from "@/pages/Atelier";
@@ -58,6 +59,7 @@ function App() {
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
               <Router />
             </WouterRouter>
+            <RegionDetectionBanner />
             <Toaster />
           </TooltipProvider>
         </AppWithRegion>

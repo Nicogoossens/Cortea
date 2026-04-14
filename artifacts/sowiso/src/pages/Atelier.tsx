@@ -1,14 +1,38 @@
 import { useGetScenarios, getGetScenariosQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Clock, TrendingUp, BookOpen } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
+import { pillarDomainKey } from "@/lib/content-labels";
+import { useState } from "react";
+
+const PILLARS = [0, 1, 2, 3, 4, 5] as const;
 
 export default function Atelier() {
   const { t } = useLanguage();
-  const { data: scenarios, isLoading } = useGetScenarios(undefined, { query: { queryKey: getGetScenariosQueryKey() } });
+  const { activeRegion, getRegionName } = useActiveRegion();
+  const [selectedPillar, setSelectedPillar] = useState<number>(0);
+
+  const queryParams = {
+    region_code: activeRegion,
+    ...(selectedPillar > 0 ? { pillar: selectedPillar } : {}),
+    limit: 50,
+  };
+
+  const { data: scenarios, isLoading } = useGetScenarios(queryParams, {
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar] }
+  });
+
+  const PILLAR_DOMAIN_NAMES: Record<number, string> = {
+    1: "pillar.1.name",
+    2: "pillar.2.name",
+    3: "pillar.3.name",
+    4: "pillar.4.name",
+    5: "pillar.5.name",
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -17,6 +41,32 @@ export default function Atelier() {
         <p className="text-muted-foreground text-lg font-light leading-relaxed">
           {t("atelier.subtitle")}
         </p>
+      </div>
+
+      {/* Active region indicator */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <FlagEmoji code={activeRegion} />
+        <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
+        <span className="text-muted-foreground/60 text-xs">{t("atelier.region")}</span>
+      </div>
+
+      {/* Pillar filter tabs */}
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
+        {PILLARS.map((p) => (
+          <button
+            key={p}
+            role="tab"
+            aria-selected={selectedPillar === p}
+            onClick={() => setSelectedPillar(p)}
+            className={`px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-sm transition-colors border
+              ${selectedPillar === p
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+              }`}
+          >
+            {p === 0 ? t("atelier.all_pillars") : `${t("atelier.pillar")} ${p} · ${t(PILLAR_DOMAIN_NAMES[p])}`}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -31,9 +81,9 @@ export default function Atelier() {
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start mb-2">
                     <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-xs rounded-sm px-2">
-                      {t("atelier.pillar")} {scenario.pillar}
+                      {t("atelier.pillar")} {scenario.pillar} · {t(PILLAR_DOMAIN_NAMES[scenario.pillar] ?? "pillar.1.name")}
                     </Badge>
-                    <span className="text-xs font-medium uppercase tracking-widest text-primary">{scenario.region_code}</span>
+                    <span className="text-xs font-medium uppercase tracking-widest text-primary/60">{scenario.difficulty_level ? "·".repeat(scenario.difficulty_level) : ""}</span>
                   </div>
                   <CardTitle className="font-serif text-xl line-clamp-2">{scenario.title}</CardTitle>
                 </CardHeader>

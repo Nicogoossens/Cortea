@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Send, Loader2, MapPin } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji, isRegionActive } from "@/lib/active-region";
 
@@ -17,6 +17,8 @@ const DOMAIN_KEYS = [
   "counsel.domains.apologies",
 ] as const;
 
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 export default function Counsel() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
@@ -27,24 +29,45 @@ export default function Counsel() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!query.trim() && !selectedDomain) return;
     setIsSubmitting(true);
-    const regionName = getRegionName(activeRegion);
-    const domainLabel = selectedDomain ? t(selectedDomain) : "";
-    setTimeout(() => {
-      setResponse(
-        `In ${regionName}, matters of ${domainLabel.toLowerCase() || "etiquette"} require particular attentiveness. The situation you describe calls for restraint and deliberate grace. One must err on the side of understatement — a calm demeanour and a genuine acknowledgement of the other party's position will serve far better than insistence on one's own view. Allow a moment of pause before responding, and let your conduct reflect an awareness of local custom. A quiet, respectful pivot in the conversation will resolve this with your standing intact.`
-      );
+    setError(null);
+
+    const domainLabel = selectedDomain ? t(selectedDomain as Parameters<typeof t>[0]) : undefined;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/counsel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: query.trim() || undefined,
+          domain: domainLabel,
+          region_code: activeRegion,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? "Request failed");
+      }
+
+      const body = await res.json() as { guidance: string };
+      setResponse(body.guidance);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred.");
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const handleReset = () => {
     setQuery("");
     setSelectedDomain(null);
     setResponse(null);
+    setError(null);
   };
 
   return (
@@ -137,6 +160,12 @@ export default function Counsel() {
               />
             </div>
 
+            {error && (
+              <p className="text-sm text-destructive border border-destructive/30 rounded-sm px-4 py-2 bg-destructive/5" role="alert">
+                {error}
+              </p>
+            )}
+
             <div className="flex justify-end pt-4 border-t border-border/30">
               <Button
                 size="lg"
@@ -175,7 +204,8 @@ export default function Counsel() {
           </Card>
 
           <div className="flex justify-center">
-            <Button variant="outline" onClick={handleReset} className="font-serif">
+            <Button variant="outline" onClick={handleReset} className="font-serif gap-2">
+              <RotateCcw className="w-4 h-4" aria-hidden="true" />
               {t("counsel.request")}
             </Button>
           </div>

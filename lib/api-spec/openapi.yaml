@@ -454,6 +454,9 @@ components:
         gender_identity:
           type: string
           nullable: true
+        gender_expression:
+          type: string
+          nullable: true
         ambition_level:
           type: string
           enum: [casual, professional, diplomatic]
@@ -479,6 +482,9 @@ components:
           type: integer
           nullable: true
         gender_identity:
+          type: string
+          nullable: true
+        gender_expression:
           type: string
           nullable: true
         ambition_level:
@@ -511,7 +517,6 @@ components:
           type: integer
         rule_type:
           type: string
-          enum: [absolute_taboo, strong_preference, context_dependent]
         rule_description:
           type: string
         gender_applicability:
@@ -519,7 +524,7 @@ components:
           enum: [all, masculine, feminine, fluid]
         context:
           type: string
-          enum: [business, social, general]
+          enum: [business, social, general, formal, dining]
       required:
         - id
         - region_code

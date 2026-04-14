@@ -364,7 +364,7 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
   {
     title: "The Face-Saving Moment",
     pillar: 1, region_code: "CN", age_group: "all", gender_applicability: "all",
-    context: "business", difficulty_level: 3, estimated_minutes: 4, noble_score_impact: 8,
+    context: "business", difficulty_level: 2, estimated_minutes: 4, noble_score_impact: 7,
     content_json: {
       situation: "In a meeting with Chinese colleagues, a senior manager makes a factual error in their presentation. You know the correct information and it is material to the discussion.",
       question: "How do you handle this?",
@@ -460,7 +460,7 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
   {
     title: "Negotiating Without Offence",
     pillar: 3, region_code: "CN", age_group: "30-55", gender_applicability: "all",
-    context: "business", difficulty_level: 3, estimated_minutes: 4, noble_score_impact: 7,
+    context: "business", difficulty_level: 2, estimated_minutes: 4, noble_score_impact: 7,
     content_json: {
       situation: "A Chinese business partner proposes a price you find unacceptable. You wish to negotiate. You are in a group meeting.",
       question: "What is the most effective and appropriate approach?",

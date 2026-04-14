@@ -34,6 +34,7 @@ const CreateProfileBodySchema = z.object({
   id: z.string().min(1),
   birth_year: z.number().int().min(1900).max(2010).optional().nullable(),
   gender_identity: z.string().optional().nullable(),
+  gender_expression: z.string().optional().nullable(),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional(),
   language_code: z.string().optional(),
   active_region: z.string().optional(),
@@ -54,6 +55,7 @@ router.post("/users/profile", async (req, res) => {
         .set({
           birth_year: data.birth_year ?? existing.birth_year,
           gender_identity: data.gender_identity ?? existing.gender_identity,
+          gender_expression: data.gender_expression ?? existing.gender_expression,
           ambition_level: data.ambition_level ?? existing.ambition_level,
           language_code: data.language_code ?? existing.language_code,
           active_region: data.active_region ?? existing.active_region,
@@ -67,6 +69,7 @@ router.post("/users/profile", async (req, res) => {
       id: data.id,
       birth_year: data.birth_year ?? null,
       gender_identity: data.gender_identity ?? null,
+      gender_expression: data.gender_expression ?? null,
       ambition_level: data.ambition_level ?? "casual",
       language_code: data.language_code ?? "en",
       active_region: data.active_region ?? "GB",
@@ -85,6 +88,7 @@ router.post("/users/profile", async (req, res) => {
 const UpdateProfileBodySchema = z.object({
   birth_year: z.number().int().min(1900).max(2010).optional().nullable(),
   gender_identity: z.string().optional().nullable(),
+  gender_expression: z.string().optional().nullable(),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional(),
   language_code: z.string().optional(),
   active_region: z.string().optional(),
@@ -111,6 +115,7 @@ router.put("/users/profile", async (req, res) => {
       .set({
         ...(data.birth_year !== undefined && { birth_year: data.birth_year }),
         ...(data.gender_identity !== undefined && { gender_identity: data.gender_identity }),
+        ...(data.gender_expression !== undefined && { gender_expression: data.gender_expression }),
         ...(data.ambition_level !== undefined && { ambition_level: data.ambition_level }),
         ...(data.language_code !== undefined && { language_code: data.language_code }),
         ...(data.active_region !== undefined && { active_region: data.active_region }),

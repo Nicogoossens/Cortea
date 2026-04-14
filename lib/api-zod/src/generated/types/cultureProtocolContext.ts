@@ -13,4 +13,6 @@ export const CultureProtocolContext = {
   business: "business",
   social: "social",
   general: "general",
+  formal: "formal",
+  dining: "dining",
 } as const;

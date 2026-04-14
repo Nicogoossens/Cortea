@@ -11,6 +11,7 @@ export interface CreateProfileBody {
   id: string;
   birth_year?: number | null;
   gender_identity?: string | null;
+  gender_expression?: string | null;
   ambition_level?: CreateProfileBodyAmbitionLevel;
   language_code?: string;
   active_region?: string;

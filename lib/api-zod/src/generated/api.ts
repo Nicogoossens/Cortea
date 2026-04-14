@@ -39,6 +39,7 @@ export const CreateProfileBody = zod.object({
   id: zod.string(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
+  gender_expression: zod.string().nullish(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]).optional(),
   language_code: zod.string().optional(),
   active_region: zod.string().optional(),
@@ -68,6 +69,7 @@ export const UpdateProfileQueryParams = zod.object({
 export const UpdateProfileBody = zod.object({
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
+  gender_expression: zod.string().nullish(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]).optional(),
   language_code: zod.string().optional(),
   active_region: zod.string().optional(),
@@ -142,14 +144,10 @@ export const GetCultureProtocolsResponseItem = zod.object({
   id: zod.number(),
   region_code: zod.string(),
   pillar: zod.number(),
-  rule_type: zod.enum([
-    "absolute_taboo",
-    "strong_preference",
-    "context_dependent",
-  ]),
+  rule_type: zod.string(),
   rule_description: zod.string(),
   gender_applicability: zod.enum(["all", "masculine", "feminine", "fluid"]),
-  context: zod.enum(["business", "social", "general"]),
+  context: zod.enum(["business", "social", "general", "formal", "dining"]),
 });
 export const GetCultureProtocolsResponse = zod.array(
   GetCultureProtocolsResponseItem,

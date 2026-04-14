@@ -14,7 +14,6 @@ export * from "./cultureCompassEntry";
 export * from "./cultureProtocol";
 export * from "./cultureProtocolContext";
 export * from "./cultureProtocolGenderApplicability";
-export * from "./cultureProtocolRuleType";
 export * from "./deleteProfileParams";
 export * from "./errorResponse";
 export * from "./getCultureProtocolsContext";

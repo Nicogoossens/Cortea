@@ -7,13 +7,12 @@
  */
 import type { CultureProtocolContext } from "./cultureProtocolContext";
 import type { CultureProtocolGenderApplicability } from "./cultureProtocolGenderApplicability";
-import type { CultureProtocolRuleType } from "./cultureProtocolRuleType";
 
 export interface CultureProtocol {
   id: number;
   region_code: string;
   pillar: number;
-  rule_type: CultureProtocolRuleType;
+  rule_type: string;
   rule_description: string;
   gender_applicability: CultureProtocolGenderApplicability;
   context: CultureProtocolContext;

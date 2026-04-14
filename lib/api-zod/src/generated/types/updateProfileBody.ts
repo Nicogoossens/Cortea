@@ -11,6 +11,7 @@ import type { UpdateProfileBodySubscriptionTier } from "./updateProfileBodySubsc
 export interface UpdateProfileBody {
   birth_year?: number | null;
   gender_identity?: string | null;
+  gender_expression?: string | null;
   ambition_level?: UpdateProfileBodyAmbitionLevel;
   language_code?: string;
   active_region?: string;

@@ -58,6 +58,7 @@ export interface CreateProfileBody {
   id: string;
   birth_year?: number | null;
   gender_identity?: string | null;
+  gender_expression?: string | null;
   ambition_level?: CreateProfileBodyAmbitionLevel;
   language_code?: string;
   active_region?: string;
@@ -88,6 +89,7 @@ export const UpdateProfileBodySubscriptionTier = {
 export interface UpdateProfileBody {
   birth_year?: number | null;
   gender_identity?: string | null;
+  gender_expression?: string | null;
   ambition_level?: UpdateProfileBodyAmbitionLevel;
   language_code?: string;
   active_region?: string;
@@ -97,15 +99,6 @@ export interface UpdateProfileBody {
 export interface UpdateRegionBody {
   region_code: string;
 }
-
-export type CultureProtocolRuleType =
-  (typeof CultureProtocolRuleType)[keyof typeof CultureProtocolRuleType];
-
-export const CultureProtocolRuleType = {
-  absolute_taboo: "absolute_taboo",
-  strong_preference: "strong_preference",
-  context_dependent: "context_dependent",
-} as const;
 
 export type CultureProtocolGenderApplicability =
   (typeof CultureProtocolGenderApplicability)[keyof typeof CultureProtocolGenderApplicability];
@@ -124,13 +117,15 @@ export const CultureProtocolContext = {
   business: "business",
   social: "social",
   general: "general",
+  formal: "formal",
+  dining: "dining",
 } as const;
 
 export interface CultureProtocol {
   id: number;
   region_code: string;
   pillar: number;
-  rule_type: CultureProtocolRuleType;
+  rule_type: string;
   rule_description: string;
   gender_applicability: CultureProtocolGenderApplicability;
   context: CultureProtocolContext;

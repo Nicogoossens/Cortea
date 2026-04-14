@@ -59,7 +59,7 @@ router.get("/culture/compass", async (req, res) => {
     const rows = await db.select().from(compassRegionsTable);
 
     const entries = rows.map((row) => {
-      const content = (row.content as Record<string, Record<string, string>>);
+      const content = (row.content as unknown as Record<string, Record<string, string>>);
       const localeContent = content[locale] ?? content[DEFAULT_LOCALE] ?? {};
 
       return {
@@ -101,7 +101,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
     }
 
     const row = rows[0];
-    const content = (row.content as Record<string, Record<string, unknown>>);
+    const content = (row.content as unknown as Record<string, Record<string, unknown>>);
     const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
 
     return res.json({

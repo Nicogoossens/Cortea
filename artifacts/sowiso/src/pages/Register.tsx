@@ -152,6 +152,46 @@ export default function Register() {
         </p>
       </div>
 
+      {/* SSO coming soon */}
+      <div className="space-y-3">
+        <div className="relative flex items-center gap-3">
+          <div className="flex-1 h-px bg-border/50" />
+          <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">registreren met</span>
+          <div className="flex-1 h-px bg-border/50" />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { name: "Google", logo: "G" },
+            { name: "Apple", logo: "" },
+            { name: "LinkedIn", logo: "in" },
+          ].map(({ name, logo }) => (
+            <div key={name} className="relative">
+              <button
+                type="button"
+                disabled
+                className="w-full flex items-center justify-center gap-2 h-10 rounded-sm border border-border/40 bg-muted/30 text-muted-foreground/40 text-sm font-medium cursor-not-allowed select-none"
+                aria-label={`${name} — komt binnenkort`}
+              >
+                <span className="font-bold text-xs">{logo}</span>
+                <span className="text-xs">{name}</span>
+              </button>
+              <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-widest bg-muted text-muted-foreground/60 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap border border-border/30">
+                binnenkort
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-[10px] text-muted-foreground/40 font-mono">
+          Sociale aanmelding is binnenkort beschikbaar.
+        </p>
+      </div>
+
+      <div className="relative flex items-center gap-3">
+        <div className="flex-1 h-px bg-border/50" />
+        <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">of via e-mail</span>
+        <div className="flex-1 h-px bg-border/50" />
+      </div>
+
       <Card className="border-border bg-card shadow-sm">
         <CardContent className="p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>

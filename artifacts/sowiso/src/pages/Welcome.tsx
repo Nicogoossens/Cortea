@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 type Phase = "hero" | "quiz" | "result";
 
@@ -57,6 +58,7 @@ const QUESTIONS: Question[] = [
 
 export default function Welcome() {
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   const [phase, setPhase] = useState<Phase>("hero");
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([null, null, null]);
@@ -83,17 +85,17 @@ export default function Welcome() {
   }
 
   function getScoreLabel() {
-    if (score === 3) return "Flawless";
-    if (score === 2) return "Accomplished";
-    if (score === 1) return "Promising";
-    return "Nascent";
+    if (score === 3) return t("welcome.result_flawless");
+    if (score === 2) return t("welcome.result_accomplished");
+    if (score === 1) return t("welcome.result_promising");
+    return t("welcome.result_nascent");
   }
 
   function getScoreMessage() {
-    if (score === 3) return "You answered all three correctly. Your instincts are already well-formed. SOWISO will refine what is already exceptional.";
-    if (score === 2) return "Two of three — a commendable result. SOWISO will attend to the finer distinctions that separate the accomplished from the distinguished.";
-    if (score === 1) return "One of three. There is rich ground ahead. SOWISO will guide you through the invisible codes that govern the highest circles.";
-    return "The conventions of refinement are not born but cultivated. SOWISO exists for precisely this journey.";
+    if (score === 3) return t("welcome.result_msg_flawless");
+    if (score === 2) return t("welcome.result_msg_accomplished");
+    if (score === 1) return t("welcome.result_msg_promising");
+    return t("welcome.result_msg_nascent");
   }
 
   if (phase === "hero") {
@@ -101,16 +103,14 @@ export default function Welcome() {
       <div className="min-h-[80vh] flex flex-col items-center justify-center text-center space-y-16 animate-in fade-in duration-700 py-12">
         <div className="space-y-6 max-w-2xl">
           <p className="text-xs font-mono uppercase tracking-[0.4em] text-muted-foreground">
-            The Art of Conduct
+            {t("app.tagline")}
           </p>
           <h1 className="text-5xl md:text-7xl font-serif text-foreground leading-tight">
-            How refined<br />
-            <span className="text-primary">are you?</span>
+            {t("welcome.hero_title_1")}<br />
+            <span className="text-primary">{t("welcome.hero_title_2")}</span>
           </h1>
           <p className="text-lg text-muted-foreground font-light leading-relaxed max-w-xl mx-auto">
-            Elevate your communication and etiquette across cultures. Learn the
-            traditions of different regions and build stronger, more meaningful
-            relationships — wherever in the world you find yourself.
+            {t("welcome.hero_subtitle")}
           </p>
         </div>
 
@@ -119,20 +119,20 @@ export default function Welcome() {
           className="font-serif text-lg px-10 py-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-3 rounded-sm"
           onClick={() => setPhase("quiz")}
         >
-          Begin the Assessment
+          {t("welcome.begin")}
           <ChevronRight className="w-5 h-5" aria-hidden="true" />
         </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl w-full pt-8 border-t border-border">
           {[
-            { icon: BookOpen, label: "The Atelier", desc: "Scenario-based etiquette training" },
-            { icon: Shield,   label: "The Counsel", desc: "Discreet AI guidance in 30 seconds" },
-            { icon: Compass,  label: "The Compass", desc: "Worldwide insight into traditions & customs" },
-          ].map(({ icon: Icon, label, desc }) => (
-            <div key={label} className="text-center space-y-2">
+            { icon: BookOpen, labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc" },
+            { icon: Shield,   labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc" },
+            { icon: Compass,  labelKey: "nav.compass", descKey: "welcome.module_compass_desc" },
+          ].map(({ icon: Icon, labelKey, descKey }) => (
+            <div key={labelKey} className="text-center space-y-2">
               <Icon className="w-6 h-6 mx-auto text-primary/60" aria-hidden="true" />
-              <div className="font-serif text-sm text-foreground">{label}</div>
-              <div className="text-xs text-muted-foreground font-light">{desc}</div>
+              <div className="font-serif text-sm text-foreground">{t(labelKey as Parameters<typeof t>[0])}</div>
+              <div className="text-xs text-muted-foreground font-light">{t(descKey as Parameters<typeof t>[0])}</div>
             </div>
           ))}
         </div>
@@ -163,7 +163,7 @@ export default function Welcome() {
 
         <div className="space-y-3">
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            Scenario {question.id} of {QUESTIONS.length}
+            {t("welcome.quiz_scenario")} {question.id} {t("welcome.quiz_of")} {QUESTIONS.length}
           </p>
           <p className="text-xl md:text-2xl font-serif text-foreground leading-relaxed">
             {question.scenario}
@@ -220,7 +220,7 @@ export default function Welcome() {
                 : "border-amber-300/60 bg-amber-50/40 text-amber-800"
             }`}>
               <span className="font-semibold font-mono text-xs uppercase tracking-wider mr-2">
-                {isCorrect ? "Correct." : "Not quite."}
+                {isCorrect ? t("welcome.quiz_correct") : t("welcome.quiz_not_quite")}
               </span>
               {question.explanation}
             </div>
@@ -230,7 +230,7 @@ export default function Welcome() {
                 onClick={advance}
                 className="font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-sm"
               >
-                {currentQ < QUESTIONS.length - 1 ? "Next Scenario" : "See My Result"}
+                {currentQ < QUESTIONS.length - 1 ? t("welcome.quiz_next") : t("welcome.quiz_result")}
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Button>
             </div>
@@ -244,7 +244,7 @@ export default function Welcome() {
     <div className="max-w-2xl mx-auto space-y-12 animate-in fade-in duration-700 py-8 text-center">
       <div className="space-y-6">
         <p className="text-xs font-mono uppercase tracking-[0.4em] text-muted-foreground">
-          Your Assessment
+          {t("welcome.result_title")}
         </p>
         <div className="text-8xl font-serif text-primary">{score}<span className="text-4xl text-muted-foreground">/3</span></div>
         <h2 className="text-3xl font-serif text-foreground">{getScoreLabel()}</h2>
@@ -255,21 +255,21 @@ export default function Welcome() {
 
       <div className="border border-border rounded-sm p-8 space-y-6 text-left bg-card">
         <div className="space-y-2">
-          <h3 className="font-serif text-xl text-foreground">Join SOWISO</h3>
+          <h3 className="font-serif text-xl text-foreground">{t("welcome.join_heading")}</h3>
           <p className="text-sm text-muted-foreground font-light leading-relaxed">
-            Continue your study of refinement. Track your Noble Score, train across five pillars of etiquette, and consult the Counsel on any situation — from dining in Paris to negotiating in Tokyo.
+            {t("welcome.join_body")}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
           {[
-            { label: "The Atelier", desc: "Scenario training" },
-            { label: "The Counsel", desc: "Instant AI guidance" },
-            { label: "The Compass", desc: "Global traditions & customs" },
-          ].map(({ label, desc }) => (
-            <div key={label} className="space-y-1">
-              <div className="font-serif text-foreground">{label}</div>
-              <div className="text-xs text-muted-foreground font-mono">{desc}</div>
+            { labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc" },
+            { labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc" },
+            { labelKey: "nav.compass", descKey: "welcome.module_compass_desc" },
+          ].map(({ labelKey, descKey }) => (
+            <div key={labelKey} className="space-y-1">
+              <div className="font-serif text-foreground">{t(labelKey as Parameters<typeof t>[0])}</div>
+              <div className="text-xs text-muted-foreground font-mono">{t(descKey as Parameters<typeof t>[0])}</div>
             </div>
           ))}
         </div>
@@ -280,7 +280,7 @@ export default function Welcome() {
             className="flex-1 font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-sm"
             onClick={() => navigate("/register")}
           >
-            Create Your Account
+            {t("welcome.create_account")}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Button>
           <Button
@@ -289,7 +289,7 @@ export default function Welcome() {
             className="font-serif rounded-sm"
             onClick={() => navigate("/signin")}
           >
-            Sign In
+            {t("signin.title")}
           </Button>
         </div>
       </div>
@@ -298,7 +298,7 @@ export default function Welcome() {
         onClick={() => { setPhase("quiz"); setCurrentQ(0); setAnswers([null, null, null]); setRevealed(false); }}
         className="text-xs text-muted-foreground/60 hover:text-muted-foreground underline underline-offset-4 font-mono"
       >
-        Repeat the assessment
+        {t("welcome.repeat")}
       </button>
     </div>
   );

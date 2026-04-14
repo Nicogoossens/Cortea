@@ -7,12 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, TrendingUp, BookOpen, Lock, UserPlus } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
+import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
+const GUEST_PILLAR1_LIMIT = 3;
 
 function scoreToDifficultyMax(score: number): number {
   if (score >= 80) return 5;
@@ -25,7 +28,10 @@ function scoreToDifficultyMax(score: number): number {
 export default function Atelier() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
+  const { isAuthenticated, userId } = useAuth();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
+
+  const isGuest = !isAuthenticated || userId === "default-user";
 
   const { data: nobleScore } = useGetNobleScore();
   const difficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);
@@ -49,6 +55,18 @@ export default function Atelier() {
     5: "pillar.5.name",
   };
 
+  // For guests: first GUEST_PILLAR1_LIMIT Pillar-1 scenarios are accessible;
+  // all Pillar 2+ scenarios are always locked.
+  let guestP1Slots = GUEST_PILLAR1_LIMIT;
+  const processedScenarios = (scenarios ?? []).map((s) => {
+    if (!isGuest) return { scenario: s, locked: false };
+    if (s.pillar === 1 && guestP1Slots > 0) {
+      guestP1Slots--;
+      return { scenario: s, locked: false };
+    }
+    return { scenario: s, locked: true };
+  });
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-4 max-w-3xl">
@@ -64,6 +82,25 @@ export default function Atelier() {
         <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
         <span className="text-muted-foreground/60 text-xs">{t("atelier.region")}</span>
       </div>
+
+      {/* Guest preview banner */}
+      {isGuest && (
+        <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-border/40 bg-muted/20 text-sm">
+          <BookOpen className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
+          <div className="space-y-1 flex-1">
+            <p className="text-foreground/80">
+              <span className="font-medium">Gratis preview</span> — {GUEST_PILLAR1_LIMIT} scenario's uit Pijler 1 zijn beschikbaar.{" "}
+              <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
+                Maak een account aan
+              </Link>{" "}
+              voor toegang tot alle pijlers en regio's.
+            </p>
+            <p className="text-xs text-muted-foreground font-light">
+              Pijler 2 en hoger vereisen een account. Pijler 3 en hoger vereisen een betaald abonnement.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Pillar filter tabs */}
       <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
@@ -90,36 +127,114 @@ export default function Atelier() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {scenarios?.map((scenario) => (
-            <Link key={scenario.id} href={`/atelier/${scenario.id}`} aria-label={scenario.title}>
-              <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/40 cursor-pointer flex flex-col">
-                <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-xs rounded-sm px-2">
-                      {t("atelier.pillar")} {scenario.pillar} · {t(PILLAR_DOMAIN_NAMES[scenario.pillar] ?? "pillar.1.name")}
-                    </Badge>
-                    <span className="text-xs font-medium uppercase tracking-widest text-primary/60">{scenario.difficulty_level ? "·".repeat(scenario.difficulty_level) : ""}</span>
+          {processedScenarios.map(({ scenario, locked }) => {
+            const isPillar3Plus = scenario.pillar >= 3;
+
+            if (locked) {
+              return (
+                <div key={scenario.id} className="relative group">
+                  {/* Blurred card visible underneath */}
+                  <Card className="h-full border-border bg-card flex flex-col opacity-60 select-none pointer-events-none">
+                    <CardHeader className="pb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-xs rounded-sm px-2">
+                          {t("atelier.pillar")} {scenario.pillar} · {t(PILLAR_DOMAIN_NAMES[scenario.pillar] ?? "pillar.1.name")}
+                        </Badge>
+                      </div>
+                      <CardTitle className="font-serif text-xl line-clamp-2">{scenario.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {scenario.content_json.situation}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="pt-4 border-t border-border/50 text-xs text-muted-foreground flex justify-between items-center bg-muted/20">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>{scenario.estimated_minutes || 2} {t("atelier.duration")}</span>
+                      </div>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center rounded-sm bg-card/80 backdrop-blur-[2px] border border-border/40 p-4 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-primary" aria-hidden="true" />
+                    </div>
+                    {isPillar3Plus ? (
+                      <>
+                        <p className="text-sm font-medium text-foreground">Vereist premium abonnement</p>
+                        <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                          Pijler 3 en hoger zijn toegankelijk met een betaald SOWISO-abonnement.
+                        </p>
+                        <Link href="/profile">
+                          <Button size="sm" className="font-serif gap-1.5 rounded-sm text-xs">
+                            Abonnement upgraden
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-foreground">
+                          {scenario.pillar === 1 ? "Preview voltooid" : "Vereist een account"}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                          {scenario.pillar === 1
+                            ? `U heeft uw ${GUEST_PILLAR1_LIMIT} gratis scenario's gebruikt.`
+                            : "Pijler 2 en hoger zijn beschikbaar na registratie."}
+                        </p>
+                        <div className="flex flex-col gap-1.5 w-full">
+                          <Link href="/register">
+                            <Button size="sm" className="font-serif gap-1.5 rounded-sm text-xs w-full">
+                              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+                              Account aanmaken
+                            </Button>
+                          </Link>
+                          <Link href="/signin">
+                            <Button size="sm" variant="outline" className="font-serif rounded-sm text-xs w-full">
+                              Aanmelden
+                            </Button>
+                          </Link>
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <CardTitle className="font-serif text-xl line-clamp-2">{scenario.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <p className="text-muted-foreground text-sm line-clamp-3">
-                    {scenario.content_json.situation}
-                  </p>
-                </CardContent>
-                <CardFooter className="pt-4 border-t border-border/50 text-xs text-muted-foreground flex justify-between items-center bg-muted/20">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>{scenario.estimated_minutes || 2} {t("atelier.duration")}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-primary">
-                    <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span className="font-serif italic text-xs">{t("atelier.refines")}</span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
+                </div>
+              );
+            }
+
+            return (
+              <Link key={scenario.id} href={`/atelier/${scenario.id}`} aria-label={scenario.title}>
+                <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/40 cursor-pointer flex flex-col">
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-xs rounded-sm px-2">
+                        {t("atelier.pillar")} {scenario.pillar} · {t(PILLAR_DOMAIN_NAMES[scenario.pillar] ?? "pillar.1.name")}
+                      </Badge>
+                      <span className="text-xs font-medium uppercase tracking-widest text-primary/60">{scenario.difficulty_level ? "·".repeat(scenario.difficulty_level) : ""}</span>
+                    </div>
+                    <CardTitle className="font-serif text-xl line-clamp-2">{scenario.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1">
+                    <p className="text-muted-foreground text-sm line-clamp-3">
+                      {scenario.content_json.situation}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="pt-4 border-t border-border/50 text-xs text-muted-foreground flex justify-between items-center bg-muted/20">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{scenario.estimated_minutes || 2} {t("atelier.duration")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-primary">
+                      <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span className="font-serif italic text-xs">{t("atelier.refines")}</span>
+                    </div>
+                  </CardFooter>
+                </Card>
+              </Link>
+            );
+          })}
+
           {(!scenarios || scenarios.length === 0) && (
             <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/10 space-y-4">
               <BookOpen className="w-12 h-12 mx-auto opacity-20" aria-hidden="true" />

@@ -101,10 +101,23 @@ export function useActiveRegion(): ActiveRegionContextValue {
   return ctx;
 }
 
+/**
+ * Renders a small, legible country code badge instead of an emoji flag.
+ * Flag Unicode emojis are unreliable in many browser/OS combinations.
+ */
 export function FlagEmoji({ code }: { code: string }) {
-  const codePoints = code
-    .toUpperCase()
-    .split("")
-    .map((c) => 0x1f1e0 + c.charCodeAt(0) - 65);
-  return <span aria-hidden="true">{String.fromCodePoint(...codePoints)}</span>;
+  const display = code.toUpperCase().slice(0, 2);
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex items-center justify-center text-[9px] font-bold leading-none tracking-wider rounded-[2px] px-[3px] py-[2px] border border-current/20 font-mono shrink-0"
+      style={{
+        minWidth: "1.5rem",
+        color: "var(--muted-foreground)",
+        backgroundColor: "color-mix(in srgb, currentColor 8%, transparent)",
+      }}
+    >
+      {display}
+    </span>
+  );
 }

@@ -33,8 +33,9 @@ function ContextPill({
 function Dropdown({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`absolute top-full mt-1 z-50 bg-background border border-border rounded-sm shadow-lg overflow-hidden ${className}`}
-      style={{ maxHeight: "320px", overflowY: "auto" }}
+      className={`absolute top-full mt-1 z-50 bg-background border border-border rounded-sm shadow-lg overflow-y-auto ${className}`}
+      style={{ maxHeight: "300px" }}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {children}
     </div>
@@ -50,10 +51,10 @@ function LanguageDropdown({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="py-1 min-w-[200px]">
+    <div className="py-1 min-w-[220px]">
       {LOCALE_GROUPS.map((group) => (
         <div key={group.groupLabel}>
-          <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 border-b border-border/30">
+          <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 border-b border-border/30 sticky top-0 bg-background">
             {group.groupLabel}
           </div>
           {group.locales.map((def) => {
@@ -64,7 +65,7 @@ function LanguageDropdown({ onClose }: { onClose: () => void }) {
                 onClick={() => handleSelect(def.locale)}
                 role="option"
                 aria-selected={isSelected}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
                   isSelected
                     ? "bg-primary/10 text-primary font-medium"
                     : "text-foreground/80 hover:bg-muted/40 hover:text-foreground"
@@ -105,7 +106,7 @@ function RegionDropdown({ onClose }: { onClose: () => void }) {
             onClick={() => handleSelect(region.code)}
             role="option"
             aria-selected={isSelected}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
               isSelected
                 ? "bg-primary/10 text-primary font-medium"
                 : "text-foreground/80 hover:bg-muted/40 hover:text-foreground"
@@ -149,7 +150,7 @@ export function ContextBar() {
         <ContextPill
           icon={<Globe className="w-3 h-3" aria-hidden="true" />}
           label={
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <FlagEmoji code={currentLocale?.flag ?? "GB"} />
               <span>{currentLocale?.languageLabel ?? "English"}</span>
             </span>
@@ -159,7 +160,7 @@ export function ContextBar() {
         />
         {openPanel === "language" && (
           <Dropdown className="right-0">
-            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono sticky top-0 bg-background z-10">
               {t("locale.choose_region")}
             </div>
             <LanguageDropdown onClose={() => setOpenPanel(null)} />
@@ -167,13 +168,13 @@ export function ContextBar() {
         )}
       </div>
 
-      <div className="w-px h-4 bg-border/60" aria-hidden="true" />
+      <div className="w-px h-4 bg-border/60 mx-1" aria-hidden="true" />
 
       <div ref={regionRef} className="relative">
         <ContextPill
           icon={<MapPin className="w-3 h-3" aria-hidden="true" />}
           label={
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5">
               <FlagEmoji code={activeRegion} />
               <span>{getRegionName(activeRegion)}</span>
             </span>
@@ -183,7 +184,7 @@ export function ContextBar() {
         />
         {openPanel === "region" && (
           <Dropdown className="right-0">
-            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono sticky top-0 bg-background z-10">
               {t("region.choose")}
             </div>
             <RegionDropdown onClose={() => setOpenPanel(null)} />

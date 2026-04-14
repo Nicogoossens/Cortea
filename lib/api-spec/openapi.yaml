@@ -257,6 +257,14 @@ paths:
             type: integer
             minimum: 1
             maximum: 5
+        - name: difficulty_max
+          in: query
+          required: false
+          description: Return scenarios with difficulty_level up to this value (inclusive)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
         - name: age_group
           in: query
           required: false

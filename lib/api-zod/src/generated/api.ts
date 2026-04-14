@@ -213,6 +213,8 @@ export const getScenariosQueryPillarMax = 5;
 
 export const getScenariosQueryDifficultyLevelMax = 5;
 
+export const getScenariosQueryDifficultyMaxMax = 5;
+
 export const getScenariosQueryLimitDefault = 10;
 
 export const GetScenariosQueryParams = zod.object({
@@ -223,6 +225,14 @@ export const GetScenariosQueryParams = zod.object({
     .min(1)
     .max(getScenariosQueryDifficultyLevelMax)
     .optional(),
+  difficulty_max: zod.coerce
+    .number()
+    .min(1)
+    .max(getScenariosQueryDifficultyMaxMax)
+    .optional()
+    .describe(
+      "Return scenarios with difficulty_level up to this value (inclusive)",
+    ),
   age_group: zod.enum(["18-30", "30-55", "55+"]).optional(),
   limit: zod.coerce.number().default(getScenariosQueryLimitDefault),
 });

@@ -1,4 +1,8 @@
-import { useGetScenarios, getGetScenariosQueryKey } from "@workspace/api-client-react";
+import {
+  useGetScenarios,
+  getGetScenariosQueryKey,
+  useGetNobleScore,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
@@ -6,24 +10,35 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, TrendingUp, BookOpen } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
-import { pillarDomainKey } from "@/lib/content-labels";
 import { useState } from "react";
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
+
+function scoreToDifficultyMax(score: number): number {
+  if (score >= 80) return 5;
+  if (score >= 60) return 4;
+  if (score >= 40) return 3;
+  if (score >= 20) return 2;
+  return 1;
+}
 
 export default function Atelier() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
 
+  const { data: nobleScore } = useGetNobleScore();
+  const difficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);
+
   const queryParams = {
     region_code: activeRegion,
     ...(selectedPillar > 0 ? { pillar: selectedPillar } : {}),
+    difficulty_max: difficultyMax,
     limit: 50,
   };
 
   const { data: scenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar] }
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar, difficultyMax] }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {

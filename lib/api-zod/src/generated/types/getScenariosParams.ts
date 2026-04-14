@@ -19,6 +19,12 @@ export type GetScenariosParams = {
    * @maximum 5
    */
   difficulty_level?: number;
+  /**
+   * Return scenarios with difficulty_level up to this value (inclusive)
+   * @minimum 1
+   * @maximum 5
+   */
+  difficulty_max?: number;
   age_group?: GetScenariosAgeGroup;
   limit?: number;
 };

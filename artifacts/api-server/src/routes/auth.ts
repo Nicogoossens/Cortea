@@ -66,7 +66,13 @@ router.post("/auth/register", async (req, res) => {
         .where(eq(usersTable.id, existing[0].id));
 
       await sendActivationEmail({ to: normalizedEmail, token, locale });
-      return res.json({ message: "A new verification link has been dispatched to your address." });
+      const devUrl = process.env.NODE_ENV === "development"
+        ? `${process.env.APP_URL ?? "https://sowiso.replit.app"}/verify-email?token=${token}`
+        : undefined;
+      return res.json({
+        message: "A new verification link has been dispatched to your address.",
+        ...(devUrl ? { dev_verification_url: devUrl } : {}),
+      });
     }
 
     const userId = `user_${randomBytes(8).toString("hex")}`;
@@ -89,9 +95,14 @@ router.post("/auth/register", async (req, res) => {
 
     await sendActivationEmail({ to: normalizedEmail, token, locale });
 
+    const devUrl = process.env.NODE_ENV === "development"
+      ? `${process.env.APP_URL ?? "https://sowiso.replit.app"}/verify-email?token=${token}`
+      : undefined;
+
     return res.status(201).json({
       message: "Your account has been established. A verification link has been dispatched to your address.",
       user_id: newUser.id,
+      ...(devUrl ? { dev_verification_url: devUrl } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Registration failed");

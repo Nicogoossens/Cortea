@@ -4,7 +4,8 @@ import type { SupportedLanguage } from "./i18n";
 export type RegionCode =
   | "GB" | "US" | "AE" | "CN" | "JP"
   | "FR" | "DE" | "NL" | "AU" | "CA"
-  | "IT" | "IN" | "ES" | "PT";
+  | "IT" | "IN" | "ES" | "PT"
+  | "SG" | "BR" | "ZA" | "MX";
 
 export interface CompassRegion {
   code: RegionCode;
@@ -27,6 +28,10 @@ export const COMPASS_REGIONS: CompassRegion[] = [
   { code: "IN", flag: "IN", names: { en: "India", nl: "India", fr: "Inde", de: "Indien", es: "India", pt: "Índia", it: "India", hi: "भारत" } },
   { code: "ES", flag: "ES", names: { en: "Spain", nl: "Spanje", fr: "Espagne", de: "Spanien", es: "España", pt: "Espanha", it: "Spagna", hi: "स्पेन" } },
   { code: "PT", flag: "PT", names: { en: "Portugal", nl: "Portugal", fr: "Portugal", de: "Portugal", es: "Portugal", pt: "Portugal", it: "Portogallo", hi: "पुर्तगाल" } },
+  { code: "SG", flag: "SG", names: { en: "Singapore", nl: "Singapore", fr: "Singapour", de: "Singapur", es: "Singapur", pt: "Singapura", it: "Singapore", hi: "सिंगापुर" } },
+  { code: "BR", flag: "BR", names: { en: "Brazil", nl: "Brazilië", fr: "Brésil", de: "Brasilien", es: "Brasil", pt: "Brasil", it: "Brasile", hi: "ब्राज़ील" } },
+  { code: "ZA", flag: "ZA", names: { en: "South Africa", nl: "Zuid-Afrika", fr: "Afrique du Sud", de: "Südafrika", es: "Sudáfrica", pt: "África do Sul", it: "Sudafrica", hi: "दक्षिण अफ़्रीका" } },
+  { code: "MX", flag: "MX", names: { en: "Mexico", nl: "Mexico", fr: "Mexique", de: "Mexiko", es: "México", pt: "México", it: "Messico", hi: "मेक्सिको" } },
 ];
 
 /**
@@ -34,7 +39,7 @@ export const COMPASS_REGIONS: CompassRegion[] = [
  * The Atelier (scenarios), The Cultural Compass, and The Counsel.
  * Update this set when new region data is seeded into the database.
  */
-export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "CN", "CA"]);
+export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "CN", "CA", "AU"]);
 
 export function isRegionActive(code: RegionCode): boolean {
   return ACTIVE_REGIONS.has(code);

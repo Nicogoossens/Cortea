@@ -32,7 +32,7 @@ export default function Scenario() {
     mentor_feedback: string;
     score_delta: number;
     level_up: boolean;
-    new_level_name?: string;
+    new_level_name?: string | null;
   } | null>(null);
   const startTime = useRef(Date.now());
 

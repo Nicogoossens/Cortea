@@ -162,7 +162,7 @@ export async function sendActivationEmail({ to, token, locale = "en" }: SendActi
       logger.error({ err, to }, "Failed to send activation email via SMTP");
       throw err;
     }
-  } else {
+  } else if (process.env.NODE_ENV === "development") {
     logger.info(
       {
         mode: "console",
@@ -171,15 +171,21 @@ export async function sendActivationEmail({ to, token, locale = "en" }: SendActi
         verificationUrl,
         token,
       },
-      "SMTP not configured — activation email logged to console"
+      "SMTP not configured — activation email logged to console (development only)"
     );
     console.log("\n" + "=".repeat(70));
-    console.log("  SOWISO ACTIVATION EMAIL (no SMTP configured)");
+    console.log("  SOWISO ACTIVATION EMAIL (development — no SMTP configured)");
     console.log("=".repeat(70));
     console.log(`  To:      ${to}`);
     console.log(`  Subject: ${mailOptions.subject}`);
     console.log(`  Link:    ${verificationUrl}`);
     console.log(`  Token:   ${token}`);
     console.log("=".repeat(70) + "\n");
+  } else {
+    logger.error(
+      { to, subject: mailOptions.subject },
+      "SMTP not configured — activation email could not be delivered. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables."
+    );
+    throw new Error("Email delivery is not configured. Contact the administrator.");
   }
 }

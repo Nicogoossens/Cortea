@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, TrendingUp, BookOpen } from "lucide-react";
 
 export default function Atelier() {
-  const { data: scenarios, isLoading } = useGetScenarios({ query: { queryKey: getGetScenariosQueryKey() } });
+  const { data: scenarios, isLoading } = useGetScenarios(undefined, { query: { queryKey: getGetScenariosQueryKey() } });
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

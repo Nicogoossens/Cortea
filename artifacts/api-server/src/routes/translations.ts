@@ -2,20 +2,24 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { translationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 const router = Router();
 
+const TranslationsQuerySchema = z.object({
+  language_code: z.string().min(1).max(10),
+});
+
 router.get("/translations", async (req, res) => {
   try {
-    const { language_code } = req.query;
-
-    if (!language_code) {
+    const parsed = TranslationsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
       return res.status(400).json({ message: "A language code is required to retrieve translations." });
     }
 
     const rows = await db.select()
       .from(translationsTable)
-      .where(eq(translationsTable.language_code, language_code as string));
+      .where(eq(translationsTable.language_code, parsed.data.language_code));
 
     const result: Record<string, string> = {};
     for (const row of rows) {

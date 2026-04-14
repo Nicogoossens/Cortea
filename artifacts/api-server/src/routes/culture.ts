@@ -131,7 +131,7 @@ router.get("/culture/protocols", async (req, res) => {
   }
 });
 
-router.get("/culture/compass", async (_req, res) => {
+router.get("/culture/compass", async (req, res) => {
   try {
     const entries = Object.entries(COMPASS_DATA).map(([region_code, data]) => ({
       region_code,

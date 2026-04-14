@@ -8,6 +8,15 @@ const router = Router();
 
 const DEFAULT_USER_ID = "default-user";
 
+const UserIdQuerySchema = z.object({
+  user_id: z.string().min(1).default(DEFAULT_USER_ID),
+});
+
+const LogQuerySchema = z.object({
+  user_id: z.string().min(1).default(DEFAULT_USER_ID),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 const PILLAR_NAMES = [
   { pillar: 1, pillar_name: "Cultural Knowledge", pillar_domain: "The World Within" },
   { pillar: 2, pillar_name: "Appearance", pillar_domain: "The Presence" },
@@ -76,7 +85,8 @@ async function ensurePillarProgress(userId: string) {
 
 router.get("/noble-score", async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const parsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
 
     await ensurePillarProgress(userId);
 
@@ -137,13 +147,15 @@ const MENTOR_FEEDBACK_INCORRECT = [
 
 router.post("/noble-score/submit", async (req, res) => {
   try {
-    const parsed = SubmitAnswerBodySchema.safeParse(req.body);
-    if (!parsed.success) {
+    const queryParsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+
+    const bodyParsed = SubmitAnswerBodySchema.safeParse(req.body);
+    if (!bodyParsed.success) {
       return res.status(400).json({ message: "The submission does not meet the expected form. Please review and resubmit." });
     }
 
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
-    const { scenario_id, selected_option_index, time_taken_seconds } = parsed.data;
+    const { scenario_id, selected_option_index, time_taken_seconds } = bodyParsed.data;
 
     const [scenario] = await db.select().from(scenariosTable).where(eq(scenariosTable.id, scenario_id)).limit(1);
 
@@ -159,7 +171,6 @@ router.post("/noble-score/submit", async (req, res) => {
     }
 
     const isCorrect = selectedOption.correct;
-
     let scoreDelta = isCorrect ? scenario.noble_score_impact : Math.floor(-scenario.noble_score_impact * 0.2);
 
     if (isCorrect && time_taken_seconds && time_taken_seconds < 10) {
@@ -229,8 +240,9 @@ router.post("/noble-score/submit", async (req, res) => {
 
 router.get("/noble-score/log", async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
-    const limit = Math.min(parseInt((req.query.limit as string) || "20"), 100);
+    const parsed = LogQuerySchema.safeParse(req.query);
+    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+    const limit = parsed.success ? parsed.data.limit : 20;
 
     const log = await db.select()
       .from(nobleScoreLogTable)
@@ -247,7 +259,8 @@ router.get("/noble-score/log", async (req, res) => {
 
 router.get("/noble-score/pillars", async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const parsed = UserIdQuerySchema.safeParse(req.query);
+    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
 
     await ensurePillarProgress(userId);
 

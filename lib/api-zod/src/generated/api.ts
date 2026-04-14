@@ -59,6 +59,47 @@ export const CreateProfileResponse = zod.object({
 });
 
 /**
+ * @summary Update user profile fields
+ */
+export const UpdateProfileQueryParams = zod.object({
+  user_id: zod.coerce.string().optional(),
+});
+
+export const UpdateProfileBody = zod.object({
+  birth_year: zod.number().nullish(),
+  gender_identity: zod.string().nullish(),
+  ambition_level: zod.enum(["casual", "professional", "diplomatic"]).optional(),
+  language_code: zod.string().optional(),
+  active_region: zod.string().optional(),
+  subscription_tier: zod.enum(["guest", "traveller", "ambassador"]).optional(),
+});
+
+export const UpdateProfileResponse = zod.object({
+  id: zod.string(),
+  birth_year: zod.number().nullish(),
+  gender_identity: zod.string().nullish(),
+  gender_expression: zod.string().nullish(),
+  noble_score: zod.number(),
+  ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
+  subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  language_code: zod.string(),
+  active_region: zod.string(),
+  region_history: zod.array(zod.string()),
+  created_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete user profile
+ */
+export const DeleteProfileQueryParams = zod.object({
+  user_id: zod.coerce.string().optional(),
+});
+
+export const DeleteProfileResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
  * @summary Update the user's active region
  */
 export const UpdateActiveRegionBody = zod.object({

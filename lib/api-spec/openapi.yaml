@@ -71,6 +71,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserProfile"
+    put:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile fields
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteProfile
+      tags: [users]
+      summary: Delete user profile
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /users/profile/region:
     patch:
@@ -411,6 +463,34 @@ components:
           type: string
       required:
         - id
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        birth_year:
+          type: integer
+          nullable: true
+        gender_identity:
+          type: string
+          nullable: true
+        ambition_level:
+          type: string
+          enum: [casual, professional, diplomatic]
+        language_code:
+          type: string
+        active_region:
+          type: string
+        subscription_tier:
+          type: string
+          enum: [guest, traveller, ambassador]
 
     UpdateRegionBody:
       type: object

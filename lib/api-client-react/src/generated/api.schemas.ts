@@ -63,6 +63,37 @@ export interface CreateProfileBody {
   active_region?: string;
 }
 
+export interface MessageResponse {
+  message: string;
+}
+
+export type UpdateProfileBodyAmbitionLevel =
+  (typeof UpdateProfileBodyAmbitionLevel)[keyof typeof UpdateProfileBodyAmbitionLevel];
+
+export const UpdateProfileBodyAmbitionLevel = {
+  casual: "casual",
+  professional: "professional",
+  diplomatic: "diplomatic",
+} as const;
+
+export type UpdateProfileBodySubscriptionTier =
+  (typeof UpdateProfileBodySubscriptionTier)[keyof typeof UpdateProfileBodySubscriptionTier];
+
+export const UpdateProfileBodySubscriptionTier = {
+  guest: "guest",
+  traveller: "traveller",
+  ambassador: "ambassador",
+} as const;
+
+export interface UpdateProfileBody {
+  birth_year?: number | null;
+  gender_identity?: string | null;
+  ambition_level?: UpdateProfileBodyAmbitionLevel;
+  language_code?: string;
+  active_region?: string;
+  subscription_tier?: UpdateProfileBodySubscriptionTier;
+}
+
 export interface UpdateRegionBody {
   region_code: string;
 }
@@ -197,6 +228,14 @@ export interface ScoreLogEntry {
   trigger: string;
   timestamp: string;
 }
+
+export type UpdateProfileParams = {
+  user_id?: string;
+};
+
+export type DeleteProfileParams = {
+  user_id?: string;
+};
 
 export type GetCultureProtocolsParams = {
   /**

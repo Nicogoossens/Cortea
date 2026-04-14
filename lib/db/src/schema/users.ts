@@ -19,6 +19,8 @@ export const usersTable = pgTable("users", {
   active_region: text("active_region").notNull().default("GB"),
   region_history: json("region_history").$type<string[]>().notNull().default([]),
   created_at: timestamp("created_at").notNull().defaultNow(),
+  is_admin: boolean("is_admin").notNull().default(false),
+  suspended_at: timestamp("suspended_at"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

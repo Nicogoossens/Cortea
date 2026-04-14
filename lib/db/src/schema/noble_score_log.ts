@@ -9,6 +9,7 @@ export const nobleScoreLogTable = pgTable("noble_score_log", {
   score_delta: integer("score_delta").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   trigger: text("trigger").notNull(),
+  level_name_after: text("level_name_after"),
 });
 
 export const insertNobleScoreLogSchema = createInsertSchema(nobleScoreLogTable).omit({ id: true });

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -177,6 +177,8 @@ router.delete("/users/profile", async (req, res) => {
       return res.status(404).json({ message: "Your profile has not yet been established." });
     }
 
+    await db.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, userId));
+    await db.delete(zuil_voortgangTable).where(eq(zuil_voortgangTable.user_id, userId));
     await db.delete(usersTable).where(eq(usersTable.id, userId));
 
     return res.json({ message: "Your profile has been gracefully removed from our records." });

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -219,13 +219,6 @@ router.post("/noble-score/submit", async (req, res) => {
 
     await ensurePillarProgress(userId);
 
-    await db.insert(nobleScoreLogTable).values({
-      user_id: userId,
-      scenario_id,
-      score_delta: scoreDelta,
-      trigger,
-    });
-
     const [pillarRow] = await db.select().from(zuil_voortgangTable)
       .where(and(
         eq(zuil_voortgangTable.user_id, userId),
@@ -257,6 +250,14 @@ router.post("/noble-score/submit", async (req, res) => {
         .set({ noble_score: newTotalScore })
         .where(eq(usersTable.id, userId));
     }
+
+    await db.insert(nobleScoreLogTable).values({
+      user_id: userId,
+      scenario_id,
+      score_delta: scoreDelta,
+      trigger,
+      level_name_after: levelUp ? newLevel.name : null,
+    });
 
     const ageBand = getAgeBand(user?.birth_year);
     const feedbackPool = isCorrect
@@ -291,7 +292,34 @@ router.get("/noble-score/log", async (req, res) => {
       .orderBy(desc(nobleScoreLogTable.timestamp))
       .limit(limit);
 
-    return res.json(log);
+    const scenarioIds = [...new Set(log.map(l => l.scenario_id).filter((id): id is number => id !== null))];
+
+    let scenarioMap: Record<number, { title: string; pillar: number; pillar_domain: string }> = {};
+    if (scenarioIds.length > 0) {
+      const scenarios = await db.select({
+        id: scenariosTable.id,
+        title: scenariosTable.title,
+        pillar: scenariosTable.pillar,
+      }).from(scenariosTable).where(inArray(scenariosTable.id, scenarioIds));
+
+      for (const s of scenarios) {
+        const pillarInfo = PILLAR_NAMES.find(p => p.pillar === s.pillar);
+        scenarioMap[s.id] = {
+          title: s.title,
+          pillar: s.pillar,
+          pillar_domain: pillarInfo?.pillar_domain ?? `Pillar ${s.pillar}`,
+        };
+      }
+    }
+
+    const enriched = log.map(entry => ({
+      ...entry,
+      scenario_title: entry.scenario_id != null ? (scenarioMap[entry.scenario_id]?.title ?? null) : null,
+      scenario_pillar: entry.scenario_id != null ? (scenarioMap[entry.scenario_id]?.pillar ?? null) : null,
+      scenario_pillar_domain: entry.scenario_id != null ? (scenarioMap[entry.scenario_id]?.pillar_domain ?? null) : null,
+    }));
+
+    return res.json(enriched);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch noble score log");
     return res.status(500).json({ message: "Your progress history is momentarily unavailable." });

@@ -110,7 +110,7 @@ export default function Profile() {
                 </div>
                 {nobleScore?.next_level_threshold && (
                   <div className="text-xs text-right text-muted-foreground">
-                    {nobleScore.next_level_threshold - nobleScore.total_score} pts {t("profile.next_rank")}
+                    {t("profile.next_rank")}
                   </div>
                 )}
               </div>
@@ -185,8 +185,8 @@ export default function Profile() {
                       <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "MMM d, yyyy HH:mm")}</time>
                     </div>
                   </div>
-                  <div className={`text-sm font-medium ${log.score_delta > 0 ? "text-green-600" : log.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                    {log.score_delta > 0 ? "+" : ""}{log.score_delta} pts
+                  <div className={`text-xs font-mono uppercase tracking-widest ${log.score_delta > 0 ? "text-green-600" : log.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                    {log.score_delta > 0 ? "Refined" : log.score_delta < 0 ? "Reconsidered" : "Observed"}
                   </div>
                 </div>
               ))}

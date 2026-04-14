@@ -186,8 +186,8 @@ export default function Scenario() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-t border-border/50 gap-4">
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground uppercase tracking-widest font-mono">{t("scenario.impact")}</span>
-                <div className={`text-xl font-medium ${result.score_delta > 0 ? "text-green-600" : result.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                  {result.score_delta > 0 ? "+" : ""}{result.score_delta} pts
+                <div className={`text-sm font-mono uppercase tracking-widest ${result.score_delta > 0 ? "text-green-600" : result.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                  {result.score_delta > 0 ? "Refined" : result.score_delta < 0 ? "Reconsidered" : "Observed"}
                 </div>
               </div>
 

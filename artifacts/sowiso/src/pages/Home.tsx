@@ -68,10 +68,10 @@ export default function Home() {
           <CardContent>
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{nobleScore?.next_level_threshold ? t("profile.next_rank") : t("profile.current_title")}</span>
-                <span>{nobleScore?.next_level_threshold ? `${nobleScore.next_level_threshold - nobleScore.total_score} pts` : "Max"}</span>
+                <span>{nobleScore?.level_name}</span>
+                {!nobleScore?.next_level_threshold && <span>{t("profile.current_title")}</span>}
               </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.total_score ?? 0}>
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-label={nobleScore?.level_name ?? t("profile.noble_standing")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.next_level_threshold ? Math.round((nobleScore.total_score / nobleScore.next_level_threshold) * 100) : 100}>
                 <div
                   className="h-full transition-all duration-1000 ease-out"
                   style={{

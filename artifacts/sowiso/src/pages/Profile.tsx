@@ -14,6 +14,7 @@ import { Award, Calendar, Globe, Target, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { levelKey, pillarDomainKey, triggerLabel } from "@/lib/content-labels";
 import { useState } from "react";
 
 function logStatusKey(delta: number): string {
@@ -148,7 +149,7 @@ export default function Profile() {
               <div className="text-center py-4">
                 <div className="text-sm font-mono uppercase tracking-widest text-muted-foreground mb-2">{t("profile.current_title")}</div>
                 <div className="text-3xl font-serif" style={{ color: nobleScore?.level_color || "inherit" }}>
-                  {nobleScore?.level_name}
+                  {t(levelKey(nobleScore?.level_name))}
                 </div>
               </div>
 
@@ -189,7 +190,7 @@ export default function Profile() {
               {pillars?.map((pillar) => (
                 <div key={pillar.pillar} className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="w-40 flex-shrink-0">
-                    <div className="text-sm font-medium">{pillar.pillar_domain}</div>
+                    <div className="text-sm font-medium">{t(pillarDomainKey(pillar.pillar_domain))}</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{t("atelier.pillar")} {pillar.pillar}</div>
                   </div>
 
@@ -241,7 +242,7 @@ export default function Profile() {
                     aria-hidden="true"
                   />
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-1">
-                    <div className="text-sm font-medium text-foreground">{log.trigger}</div>
+                    <div className="text-sm font-medium text-foreground">{triggerLabel(log.trigger, t)}</div>
                     <div className="text-xs font-mono text-muted-foreground">
                       <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "d MMM yyyy HH:mm")}</time>
                     </div>

@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Check, X, ShieldAlert } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n";
+import { levelKey } from "@/lib/content-labels";
 
 function scoreDeltaKey(delta: number): string {
   if (delta > 0) return "profile.log.refined";
@@ -200,7 +201,7 @@ export default function Scenario() {
               {result.level_up && result.new_level_name && (
                 <div className="bg-secondary/20 text-secondary-foreground px-4 py-2 rounded-sm text-center border border-secondary/30">
                   <div className="text-xs uppercase tracking-widest mb-1 opacity-80">{t("scenario.promotion")}</div>
-                  <div className="font-serif font-medium">{t("scenario.elevated_to")} {result.new_level_name}</div>
+                  <div className="font-serif font-medium">{t("scenario.elevated_to")} {t(levelKey(result.new_level_name))}</div>
                 </div>
               )}
             </div>

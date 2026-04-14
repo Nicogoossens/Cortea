@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Compass, Shield, ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
+import { levelKey } from "@/lib/content-labels";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -63,15 +64,15 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
           <CardHeader className="pb-2">
             <CardDescription className="uppercase tracking-widest text-xs font-semibold">{t("home.standing")}</CardDescription>
-            <CardTitle className="font-serif text-3xl">{nobleScore?.level_name || t("level.the_aware")}</CardTitle>
+            <CardTitle className="font-serif text-3xl">{t(levelKey(nobleScore?.level_name))}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{nobleScore?.level_name}</span>
+                <span>{t(levelKey(nobleScore?.level_name))}</span>
                 {!nobleScore?.next_level_threshold && <span>{t("profile.current_title")}</span>}
               </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-label={nobleScore?.level_name ?? t("profile.noble_standing")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.next_level_threshold ? Math.round((nobleScore.total_score / nobleScore.next_level_threshold) * 100) : 100}>
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-label={t(levelKey(nobleScore?.level_name))} aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.next_level_threshold ? Math.round((nobleScore.total_score / nobleScore.next_level_threshold) * 100) : 100}>
                 <div
                   className="h-full transition-all duration-1000 ease-out"
                   style={{

@@ -199,6 +199,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "The Refined",
     "level.the_distinguished": "The Distinguished",
     "level.the_sovereign": "The Sovereign",
+    "pillar.1.name": "The World Within",
+    "pillar.2.name": "The Presence",
+    "pillar.3.name": "The Voice",
+    "pillar.4.name": "The Table",
+    "pillar.5.name": "The Cellar",
+    "trigger.correct_choice": "Correct choice",
+    "trigger.incorrect_choice": "Incorrect choice",
+    "trigger.time_bonus": "Time bonus",
   },
 
   nl: {
@@ -228,7 +236,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "atelier.pillar": "Pijler",
     "atelier.difficulty": "Moeilijkheid",
     "atelier.duration": "min",
-    "atelier.refines": "Verfijnt standing",
+    "atelier.refines": "Verfijnt de rang",
     "atelier.empty": "Geen scenario's beschikbaar.",
     "atelier.region": "Regio",
 
@@ -311,6 +319,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "De Verfijnde",
     "level.the_distinguished": "De Onderscheiden",
     "level.the_sovereign": "De Soevereine",
+    "pillar.1.name": "De Innerlijke Wereld",
+    "pillar.2.name": "De Aanwezigheid",
+    "pillar.3.name": "De Stem",
+    "pillar.4.name": "De Tafel",
+    "pillar.5.name": "De Kelder",
+    "trigger.correct_choice": "Correcte keuze",
+    "trigger.incorrect_choice": "Onjuiste keuze",
+    "trigger.time_bonus": "Tijdbonus",
   },
 
   fr: {
@@ -423,6 +439,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "Le Raffiné",
     "level.the_distinguished": "Le Distingué",
     "level.the_sovereign": "Le Souverain",
+    "pillar.1.name": "Le Monde Intérieur",
+    "pillar.2.name": "La Présence",
+    "pillar.3.name": "La Voix",
+    "pillar.4.name": "La Table",
+    "pillar.5.name": "La Cave",
+    "trigger.correct_choice": "Choix correct",
+    "trigger.incorrect_choice": "Choix incorrect",
+    "trigger.time_bonus": "Bonus de temps",
   },
 
   de: {
@@ -535,6 +559,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "Der Verfeinerte",
     "level.the_distinguished": "Der Ausgezeichnete",
     "level.the_sovereign": "Der Souveräne",
+    "pillar.1.name": "Die Innere Welt",
+    "pillar.2.name": "Die Erscheinung",
+    "pillar.3.name": "Die Stimme",
+    "pillar.4.name": "Der Tisch",
+    "pillar.5.name": "Der Keller",
+    "trigger.correct_choice": "Richtige Wahl",
+    "trigger.incorrect_choice": "Falsche Wahl",
+    "trigger.time_bonus": "Zeitbonus",
   },
 
   es: {
@@ -647,6 +679,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "El Refinado",
     "level.the_distinguished": "El Distinguido",
     "level.the_sovereign": "El Soberano",
+    "pillar.1.name": "El Mundo Interior",
+    "pillar.2.name": "La Presencia",
+    "pillar.3.name": "La Voz",
+    "pillar.4.name": "La Mesa",
+    "pillar.5.name": "La Bodega",
+    "trigger.correct_choice": "Elección correcta",
+    "trigger.incorrect_choice": "Elección incorrecta",
+    "trigger.time_bonus": "Bonificación de tiempo",
   },
 
   pt: {
@@ -759,6 +799,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "O Refinado",
     "level.the_distinguished": "O Distinto",
     "level.the_sovereign": "O Soberano",
+    "pillar.1.name": "O Mundo Interior",
+    "pillar.2.name": "A Presença",
+    "pillar.3.name": "A Voz",
+    "pillar.4.name": "A Mesa",
+    "pillar.5.name": "A Adega",
+    "trigger.correct_choice": "Escolha correta",
+    "trigger.incorrect_choice": "Escolha incorreta",
+    "trigger.time_bonus": "Bónus de tempo",
   },
 
   it: {
@@ -871,6 +919,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "Il Raffinato",
     "level.the_distinguished": "Il Distinto",
     "level.the_sovereign": "Il Sovrano",
+    "pillar.1.name": "Il Mondo Interiore",
+    "pillar.2.name": "La Presenza",
+    "pillar.3.name": "La Voce",
+    "pillar.4.name": "La Tavola",
+    "pillar.5.name": "La Cantina",
+    "trigger.correct_choice": "Scelta corretta",
+    "trigger.incorrect_choice": "Scelta errata",
+    "trigger.time_bonus": "Bonus di tempo",
   },
 
   hi: {
@@ -983,6 +1039,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "level.the_refined": "परिष्कृत",
     "level.the_distinguished": "विशिष्ट",
     "level.the_sovereign": "संप्रभु",
+    "pillar.1.name": "आंतरिक संसार",
+    "pillar.2.name": "उपस्थिति",
+    "pillar.3.name": "वाणी",
+    "pillar.4.name": "मेज",
+    "pillar.5.name": "तहखाना",
+    "trigger.correct_choice": "सही विकल्प",
+    "trigger.incorrect_choice": "गलत विकल्प",
+    "trigger.time_bonus": "समय बोनस",
   },
 };
 

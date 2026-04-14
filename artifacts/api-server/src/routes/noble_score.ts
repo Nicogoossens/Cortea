@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { db } from "@workspace/db";
 import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
@@ -6,16 +6,28 @@ import { z } from "zod";
 
 const router = Router();
 
-const DEFAULT_USER_ID = "default-user";
-
-const UserIdQuerySchema = z.object({
-  user_id: z.string().min(1).default(DEFAULT_USER_ID),
-});
-
 const LogQuerySchema = z.object({
-  user_id: z.string().min(1).default(DEFAULT_USER_ID),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/**
+ * Resolves the authenticated user ID from a Bearer token header.
+ * Returns null if no token is present or if the token is not recognised.
+ * Used by endpoints that should work for both guests and authenticated users.
+ */
+async function optionalUserFromToken(req: Request): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7).trim();
+  if (!token) return null;
+  const [user] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.session_token, token))
+    .limit(1);
+  return user?.id ?? null;
+}
+
 
 const PILLAR_NAMES = [
   { pillar: 1, pillar_name: "Cultural Knowledge", pillar_domain: "The World Within" },
@@ -85,8 +97,27 @@ async function ensurePillarProgress(userId: string) {
 
 router.get("/noble-score", async (req, res) => {
   try {
-    const parsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+    const userId = await optionalUserFromToken(req);
+
+    if (!userId) {
+      const emptyPillars = PILLAR_NAMES.map(p => ({
+        pillar: p.pillar,
+        pillar_name: p.pillar_name,
+        pillar_domain: p.pillar_domain,
+        score: 0,
+        current_title: getTitleFromScore(p.pillar, 0),
+        next_title: getNextTitle(p.pillar, 0),
+        progress_percent: 0,
+      }));
+      return res.json({
+        total_score: 0,
+        level: 1,
+        level_name: GLOBAL_LEVELS[0].name,
+        level_color: GLOBAL_LEVELS[0].color,
+        next_level_threshold: GLOBAL_LEVELS[1].min,
+        pillars: emptyPillars,
+      });
+    }
 
     await ensurePillarProgress(userId);
 
@@ -185,8 +216,7 @@ const MENTOR_FEEDBACK_INCORRECT: Record<AgeBand, string[]> = {
 
 router.post("/noble-score/submit", async (req, res) => {
   try {
-    const queryParsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+    const userId = await optionalUserFromToken(req);
 
     const bodyParsed = SubmitAnswerBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
@@ -217,49 +247,58 @@ router.post("/noble-score/submit", async (req, res) => {
 
     const trigger = isCorrect ? "correct_choice" : "incorrect_choice";
 
-    await ensurePillarProgress(userId);
+    let newTotalScore = 0;
+    let levelUp = false;
+    let newLevelName: string | null = null;
+    let ageBand: AgeBand = "adult";
 
-    const [pillarRow] = await db.select().from(zuil_voortgangTable)
-      .where(and(
-        eq(zuil_voortgangTable.user_id, userId),
-        eq(zuil_voortgangTable.pillar, scenario.pillar),
-      ))
-      .limit(1);
+    if (userId) {
+      await ensurePillarProgress(userId);
 
-    const oldPillarScore = pillarRow?.score ?? 0;
-    const newPillarScore = Math.min(100, Math.max(0, oldPillarScore + scoreDelta));
-    const newTitle = getTitleFromScore(scenario.pillar, newPillarScore);
+      const [pillarRow] = await db.select().from(zuil_voortgangTable)
+        .where(and(
+          eq(zuil_voortgangTable.user_id, userId),
+          eq(zuil_voortgangTable.pillar, scenario.pillar),
+        ))
+        .limit(1);
 
-    await db.update(zuil_voortgangTable)
-      .set({ score: newPillarScore, current_title: newTitle })
-      .where(and(
-        eq(zuil_voortgangTable.user_id, userId),
-        eq(zuil_voortgangTable.pillar, scenario.pillar),
-      ));
+      const oldPillarScore = pillarRow?.score ?? 0;
+      const newPillarScore = Math.min(100, Math.max(0, oldPillarScore + scoreDelta));
+      const newTitle = getTitleFromScore(scenario.pillar, newPillarScore);
 
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    const oldTotalScore = user?.noble_score ?? 0;
-    const newTotalScore = Math.min(100, Math.max(0, oldTotalScore + Math.round(scoreDelta * 0.5)));
+      await db.update(zuil_voortgangTable)
+        .set({ score: newPillarScore, current_title: newTitle })
+        .where(and(
+          eq(zuil_voortgangTable.user_id, userId),
+          eq(zuil_voortgangTable.pillar, scenario.pillar),
+        ));
 
-    const oldLevel = getLevelFromScore(oldTotalScore);
-    const newLevel = getLevelFromScore(newTotalScore);
-    const levelUp = newLevel.level > oldLevel.level;
+      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+      const oldTotalScore = user?.noble_score ?? 0;
+      newTotalScore = Math.min(100, Math.max(0, oldTotalScore + Math.round(scoreDelta * 0.5)));
 
-    if (user) {
-      await db.update(usersTable)
-        .set({ noble_score: newTotalScore })
-        .where(eq(usersTable.id, userId));
+      const oldLevel = getLevelFromScore(oldTotalScore);
+      const newLevel = getLevelFromScore(newTotalScore);
+      levelUp = newLevel.level > oldLevel.level;
+      newLevelName = levelUp ? newLevel.name : null;
+
+      if (user) {
+        await db.update(usersTable)
+          .set({ noble_score: newTotalScore })
+          .where(eq(usersTable.id, userId));
+      }
+
+      await db.insert(nobleScoreLogTable).values({
+        user_id: userId,
+        scenario_id,
+        score_delta: scoreDelta,
+        trigger,
+        level_name_after: newLevelName,
+      });
+
+      ageBand = getAgeBand(user?.birth_year);
     }
 
-    await db.insert(nobleScoreLogTable).values({
-      user_id: userId,
-      scenario_id,
-      score_delta: scoreDelta,
-      trigger,
-      level_name_after: levelUp ? newLevel.name : null,
-    });
-
-    const ageBand = getAgeBand(user?.birth_year);
     const feedbackPool = isCorrect
       ? MENTOR_FEEDBACK_CORRECT[ageBand]
       : MENTOR_FEEDBACK_INCORRECT[ageBand];
@@ -272,7 +311,7 @@ router.post("/noble-score/submit", async (req, res) => {
       score_delta: scoreDelta,
       new_total_score: newTotalScore,
       level_up: levelUp,
-      new_level_name: levelUp ? newLevel.name : null,
+      new_level_name: newLevelName,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to submit scenario answer");
@@ -282,8 +321,10 @@ router.post("/noble-score/submit", async (req, res) => {
 
 router.get("/noble-score/log", async (req, res) => {
   try {
+    const userId = await optionalUserFromToken(req);
+    if (!userId) return res.json([]);
+
     const parsed = LogQuerySchema.safeParse(req.query);
-    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
     const limit = parsed.success ? parsed.data.limit : 20;
 
     const log = await db.select()
@@ -328,8 +369,19 @@ router.get("/noble-score/log", async (req, res) => {
 
 router.get("/noble-score/pillars", async (req, res) => {
   try {
-    const parsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
+    const userId = await optionalUserFromToken(req);
+
+    if (!userId) {
+      return res.json(PILLAR_NAMES.map(p => ({
+        pillar: p.pillar,
+        pillar_name: p.pillar_name,
+        pillar_domain: p.pillar_domain,
+        score: 0,
+        current_title: getTitleFromScore(p.pillar, 0),
+        next_title: getNextTitle(p.pillar, 0),
+        progress_percent: 0,
+      })));
+    }
 
     await ensurePillarProgress(userId);
 

@@ -150,6 +150,7 @@ router.get("/auth/verify", async (req, res) => {
         user_id: user.id,
         full_name: user.full_name,
         session_token: refreshedToken,
+        is_admin: user.is_admin,
       });
     }
 
@@ -174,6 +175,7 @@ router.get("/auth/verify", async (req, res) => {
       user_id: user.id,
       full_name: user.full_name,
       session_token: sessionToken,
+      is_admin: user.is_admin,
     });
   } catch (err) {
     req.log.error({ err }, "Verification failed");

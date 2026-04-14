@@ -34,10 +34,11 @@ export default function EmailVerify() {
           user_id?: string;
           full_name?: string;
           session_token?: string;
+          is_admin?: boolean;
         };
         if (res.ok) {
           if (body.user_id) {
-            login(body.user_id, { name: body.full_name, sessionToken: body.session_token });
+            login(body.user_id, { name: body.full_name, sessionToken: body.session_token, isAdmin: body.is_admin ?? false });
           }
           const newUser = !body.already_verified;
           setIsNewUser(newUser);

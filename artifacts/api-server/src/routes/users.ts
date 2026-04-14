@@ -6,54 +6,21 @@ import { z } from "zod";
 
 const router = Router();
 
-const DEFAULT_USER_ID = "default-user";
-
 /**
- * Extract userId from an `Authorization: Bearer <session_token>` header.
- * Falls back to `default-user` when the header is absent (prototype / unauthenticated).
- * Returns null only when an explicit token is presented but not found in the DB.
+ * Middleware: resolves the user from an `Authorization: Bearer <session_token>` header.
+ * Always requires a valid token — no fallback to any default identity.
+ * Sets `req.resolvedUserId` on success.
  */
-async function resolveUserId(req: Request): Promise<string | null> {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
-    return DEFAULT_USER_ID;
-  }
-  const token = authHeader.slice(7).trim();
-  if (!token) return DEFAULT_USER_ID;
-
-  const [user] = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.session_token, token))
-    .limit(1);
-
-  return user?.id ?? null;
-}
-
 async function requireAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const userId = await resolveUserId(req);
-    if (!userId) {
-      res.status(401).json({ error: "The authorisation token provided is not recognised." });
-      return;
-    }
-    (req as Request & { resolvedUserId: string }).resolvedUserId = userId;
-    next();
-  } catch (err) {
-    res.status(500).json({ error: "A difficulty arose validating your session." });
-  }
-}
-
-async function requireStrictAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).json({ error: "Authentication is required to perform this action." });
+      res.status(401).json({ error: "Authentication is required." });
       return;
     }
     const token = authHeader.slice(7).trim();
     if (!token) {
-      res.status(401).json({ error: "Authentication is required to perform this action." });
+      res.status(401).json({ error: "Authentication is required." });
       return;
     }
     const [user] = await db
@@ -73,7 +40,7 @@ async function requireStrictAuthUser(req: Request, res: Response, next: NextFunc
 }
 
 function getResolvedUserId(req: Request): string {
-  return (req as Request & { resolvedUserId?: string }).resolvedUserId ?? DEFAULT_USER_ID;
+  return (req as Request & { resolvedUserId?: string }).resolvedUserId!;
 }
 
 /** Compute a broad age group from birth year for etiquette calibration. */
@@ -86,23 +53,9 @@ function computeAgeGroup(birthYear: number | null | undefined): string {
   return "elder";
 }
 
-const UserIdQuerySchema = z.object({
-  user_id: z.string().min(1).default(DEFAULT_USER_ID),
-});
-
-router.get("/users/profile", async (req, res) => {
+router.get("/users/profile", requireAuthUser, async (req, res) => {
   try {
-    let userId: string;
-    const tokenUserId = await resolveUserId(req);
-    if (tokenUserId === null) {
-      return res.status(401).json({ error: "The authorisation token provided is not recognised." });
-    }
-    if (tokenUserId !== DEFAULT_USER_ID) {
-      userId = tokenUserId;
-    } else {
-      const parsed = UserIdQuerySchema.safeParse(req.query);
-      userId = parsed.success ? parsed.data.user_id : DEFAULT_USER_ID;
-    }
+    const userId = getResolvedUserId(req);
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
@@ -123,7 +76,6 @@ router.get("/users/profile", async (req, res) => {
 });
 
 const CreateProfileBodySchema = z.object({
-  id: z.string().min(1),
   birth_year: z.number().int().min(1900).max(2010).optional().nullable(),
   gender_identity: z.string().optional().nullable(),
   gender_expression: z.string().optional().nullable(),
@@ -132,15 +84,21 @@ const CreateProfileBodySchema = z.object({
   active_region: z.string().optional(),
 });
 
-router.post("/users/profile", async (req, res) => {
+/**
+ * POST /users/profile — create or update a profile entry for the authenticated user.
+ * The user identity is derived exclusively from the Bearer token; no body-supplied ID is accepted.
+ */
+router.post("/users/profile", requireAuthUser, async (req, res) => {
   try {
+    const userId = getResolvedUserId(req);
+
     const parsed = CreateProfileBodySchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "The information provided does not meet the required form." });
     }
 
     const data = parsed.data;
-    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, data.id)).limit(1);
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (existing) {
       const [updated] = await db.update(usersTable)
@@ -152,31 +110,13 @@ router.post("/users/profile", async (req, res) => {
           language_code: data.language_code ?? existing.language_code,
           active_region: data.active_region ?? existing.active_region,
         })
-        .where(eq(usersTable.id, data.id))
+        .where(eq(usersTable.id, userId))
         .returning();
       const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
       return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
     }
 
-    const [newUser] = await db.insert(usersTable).values({
-      id: data.id,
-      birth_year: data.birth_year ?? null,
-      gender_identity: data.gender_identity ?? null,
-      gender_expression: data.gender_expression ?? null,
-      ambition_level: data.ambition_level ?? "casual",
-      language_code: data.language_code ?? "en",
-      active_region: data.active_region ?? "GB",
-      region_history: [],
-      noble_score: 0,
-      subscription_tier: "guest",
-      objectives: [],
-      interests_sports: [],
-      interests_cuisine: [],
-      interests_dress_code: [],
-    }).returning();
-
-    const { session_token: _st, verification_token: _vt, ...safeUser } = newUser;
-    return res.json({ ...safeUser, age_group: computeAgeGroup(newUser.birth_year), gender: newUser.gender_identity ?? null });
+    return res.status(404).json({ message: "No account exists for this session. Please register first." });
   } catch (err) {
     req.log.error({ err }, "Failed to create/update user profile");
     return res.status(500).json({ message: "A difficulty arose while establishing your profile." });
@@ -199,7 +139,7 @@ const UpdateProfileBodySchema = z.object({
   onboarding_completed: z.boolean().optional(),
 });
 
-router.put("/users/profile", requireStrictAuthUser, async (req, res) => {
+router.put("/users/profile", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 
@@ -245,7 +185,7 @@ const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),
 });
 
-router.patch("/users/profile/region", requireStrictAuthUser, async (req, res) => {
+router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 
@@ -277,7 +217,7 @@ router.patch("/users/profile/region", requireStrictAuthUser, async (req, res) =>
   }
 });
 
-router.delete("/users/profile", requireStrictAuthUser, async (req, res) => {
+router.delete("/users/profile", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 

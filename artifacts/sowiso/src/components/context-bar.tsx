@@ -1,196 +1,139 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, Globe, MapPin } from "lucide-react";
+import { Check, Globe, MapPin, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { useLocale, LOCALE_GROUPS, type SupportedLocale } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 
-function ContextPill({
-  icon,
-  label,
+function PillTrigger({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <DropdownMenuTrigger asChild>
+      <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 data-[state=open]:bg-muted/60 data-[state=open]:text-foreground">
+        {icon}
+        <span className="hidden sm:flex items-center gap-1.5">{children}</span>
+        <ChevronDown className="w-3 h-3 opacity-40" aria-hidden="true" />
+      </button>
+    </DropdownMenuTrigger>
+  );
+}
+
+function Item({
+  selected,
   onClick,
-  open,
+  children,
 }: {
-  icon: React.ReactNode;
-  label: React.ReactNode;
+  selected?: boolean;
   onClick: () => void;
-  open: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <button
-      onClick={onClick}
-      aria-expanded={open}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-      <ChevronDown
-        className={`w-3 h-3 opacity-50 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
-        aria-hidden="true"
-      />
-    </button>
-  );
-}
-
-function Dropdown({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={`absolute top-full mt-1 z-50 bg-background border border-border rounded-sm shadow-lg overflow-y-auto ${className}`}
-      style={{ maxHeight: "300px" }}
-      onMouseDown={(e) => e.stopPropagation()}
+    <DropdownMenuPrimitive.Item
+      onSelect={onClick}
+      className={`flex items-center gap-2.5 px-3 py-2.5 text-xs cursor-pointer outline-none select-none transition-colors rounded-sm mx-1 ${
+        selected
+          ? "bg-primary/10 text-primary font-medium"
+          : "text-foreground/80 hover:bg-muted/50 hover:text-foreground focus:bg-muted/50 focus:text-foreground"
+      }`}
     >
       {children}
-    </div>
-  );
-}
-
-function LanguageDropdown({ onClose }: { onClose: () => void }) {
-  const { locale, setLocale } = useLocale();
-
-  function handleSelect(l: SupportedLocale) {
-    setLocale(l);
-    onClose();
-  }
-
-  return (
-    <div className="py-1 min-w-[220px]">
-      {LOCALE_GROUPS.map((group) => (
-        <div key={group.groupLabel}>
-          <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 border-b border-border/30 sticky top-0 bg-background">
-            {group.groupLabel}
-          </div>
-          {group.locales.map((def) => {
-            const isSelected = def.locale === locale;
-            return (
-              <button
-                key={def.locale}
-                onClick={() => handleSelect(def.locale)}
-                role="option"
-                aria-selected={isSelected}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
-                  isSelected
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/80 hover:bg-muted/40 hover:text-foreground"
-                }`}
-              >
-                <FlagEmoji code={def.flag} />
-                <span className="flex-1 text-left">
-                  <span className="block">{def.languageLabel}</span>
-                  {group.locales.length > 1 && (
-                    <span className="block text-[10px] opacity-60">{def.regionLabel}</span>
-                  )}
-                </span>
-                {isSelected && <Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" />}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function RegionDropdown({ onClose }: { onClose: () => void }) {
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
-
-  function handleSelect(code: RegionCode) {
-    setActiveRegion(code);
-    onClose();
-  }
-
-  return (
-    <div className="py-1 min-w-[200px]">
-      {COMPASS_REGIONS.map((region) => {
-        const isSelected = region.code === activeRegion;
-        return (
-          <button
-            key={region.code}
-            onClick={() => handleSelect(region.code)}
-            role="option"
-            aria-selected={isSelected}
-            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:bg-muted/50 ${
-              isSelected
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-foreground/80 hover:bg-muted/40 hover:text-foreground"
-            }`}
-          >
-            <FlagEmoji code={region.flag} />
-            <span className="flex-1 text-left">{getRegionName(region.code)}</span>
-            {isSelected && <Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" />}
-          </button>
-        );
-      })}
-    </div>
+      {selected && <Check className="w-3 h-3 ml-auto flex-shrink-0" aria-hidden="true" />}
+    </DropdownMenuPrimitive.Item>
   );
 }
 
 export function ContextBar() {
-  const { locale, t } = useLocale();
-  const { activeRegion, getRegionName } = useActiveRegion();
-
-  const [openPanel, setOpenPanel] = useState<"language" | "region" | null>(null);
-  const langRef = useRef<HTMLDivElement>(null);
-  const regionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      const clickedLang = langRef.current?.contains(target);
-      const clickedRegion = regionRef.current?.contains(target);
-      if (!clickedLang && !clickedRegion) setOpenPanel(null);
-    }
-    if (openPanel) document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [openPanel]);
+  const { locale, setLocale, t } = useLocale();
+  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
 
   const currentLocale = LOCALE_GROUPS.flatMap((g) => g.locales).find((l) => l.locale === locale);
 
   return (
     <div className="flex items-center justify-end gap-1 px-4 py-2 border-b border-border/40 bg-background/60 backdrop-blur-sm">
 
-      <div ref={langRef} className="relative">
-        <ContextPill
-          icon={<Globe className="w-3 h-3" aria-hidden="true" />}
-          label={
-            <span className="flex items-center gap-1.5">
-              <FlagEmoji code={currentLocale?.flag ?? "GB"} />
-              <span>{currentLocale?.languageLabel ?? "English"}</span>
-            </span>
-          }
-          onClick={() => setOpenPanel(openPanel === "language" ? null : "language")}
-          open={openPanel === "language"}
-        />
-        {openPanel === "language" && (
-          <Dropdown className="right-0">
-            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono sticky top-0 bg-background z-10">
+      {/* Language picker */}
+      <DropdownMenu>
+        <PillTrigger icon={<Globe className="w-3 h-3" aria-hidden="true" />}>
+          <FlagEmoji code={currentLocale?.flag ?? "GB"} />
+          <span>{currentLocale?.languageLabel ?? "English"}</span>
+        </PillTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={6}
+          className="z-50 min-w-[220px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
+        >
+          <div className="px-3 py-2 border-b border-border/30 sticky top-0 bg-background z-10">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
               {t("locale.choose_region")}
-            </div>
-            <LanguageDropdown onClose={() => setOpenPanel(null)} />
-          </Dropdown>
-        )}
-      </div>
+            </span>
+          </div>
+
+          {LOCALE_GROUPS.map((group, gi) => (
+            <DropdownMenuGroup key={group.groupLabel}>
+              {gi > 0 && <DropdownMenuSeparator className="my-0" />}
+              <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 font-normal">
+                {group.groupLabel}
+              </DropdownMenuLabel>
+              {group.locales.map((def) => (
+                <Item
+                  key={def.locale}
+                  selected={def.locale === locale}
+                  onClick={() => setLocale(def.locale as SupportedLocale)}
+                >
+                  <FlagEmoji code={def.flag} />
+                  <span className="flex-1 min-w-0">
+                    <span className="block">{def.languageLabel}</span>
+                    {group.locales.length > 1 && (
+                      <span className="block text-[10px] opacity-60">{def.regionLabel}</span>
+                    )}
+                  </span>
+                </Item>
+              ))}
+            </DropdownMenuGroup>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="w-px h-4 bg-border/60 mx-1" aria-hidden="true" />
 
-      <div ref={regionRef} className="relative">
-        <ContextPill
-          icon={<MapPin className="w-3 h-3" aria-hidden="true" />}
-          label={
-            <span className="flex items-center gap-1.5">
-              <FlagEmoji code={activeRegion} />
-              <span>{getRegionName(activeRegion)}</span>
-            </span>
-          }
-          onClick={() => setOpenPanel(openPanel === "region" ? null : "region")}
-          open={openPanel === "region"}
-        />
-        {openPanel === "region" && (
-          <Dropdown className="right-0">
-            <div className="px-3 py-2 border-b border-border/30 text-[10px] uppercase tracking-widest text-muted-foreground font-mono sticky top-0 bg-background z-10">
+      {/* Region picker */}
+      <DropdownMenu>
+        <PillTrigger icon={<MapPin className="w-3 h-3" aria-hidden="true" />}>
+          <FlagEmoji code={activeRegion} />
+          <span>{getRegionName(activeRegion)}</span>
+        </PillTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={6}
+          className="z-50 min-w-[200px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
+        >
+          <div className="px-3 py-2 border-b border-border/30 sticky top-0 bg-background z-10">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
               {t("region.choose")}
-            </div>
-            <RegionDropdown onClose={() => setOpenPanel(null)} />
-          </Dropdown>
-        )}
-      </div>
+            </span>
+          </div>
+
+          <div className="py-1">
+            {COMPASS_REGIONS.map((region) => (
+              <Item
+                key={region.code}
+                selected={region.code === activeRegion}
+                onClick={() => setActiveRegion(region.code as RegionCode)}
+              >
+                <FlagEmoji code={region.flag} />
+                <span className="flex-1">{getRegionName(region.code)}</span>
+              </Item>
+            ))}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
     </div>
   );

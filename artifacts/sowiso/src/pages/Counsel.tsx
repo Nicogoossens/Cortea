@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Send, Loader2, MapPin } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -19,23 +19,18 @@ const DOMAIN_KEYS = [
 
 export default function Counsel() {
   const { t } = useLanguage();
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
+  const { activeRegion, getRegionName } = useActiveRegion();
 
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
-  const [sessionRegion, setSessionRegion] = useState<RegionCode>(activeRegion);
-  const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
 
   const handleSubmit = () => {
     if (!query.trim() && !selectedDomain) return;
-
     setIsSubmitting(true);
-
-    const regionName = getRegionName(sessionRegion);
+    const regionName = getRegionName(activeRegion);
     const domainLabel = selectedDomain ? t(selectedDomain) : "";
-
     setTimeout(() => {
       setResponse(
         `In ${regionName}, matters of ${domainLabel.toLowerCase() || "etiquette"} require particular attentiveness. The situation you describe calls for restraint and deliberate grace. One must err on the side of understatement — a calm demeanour and a genuine acknowledgement of the other party's position will serve far better than insistence on one's own view. Allow a moment of pause before responding, and let your conduct reflect an awareness of local custom. A quiet, respectful pivot in the conversation will resolve this with your standing intact.`
@@ -48,14 +43,6 @@ export default function Counsel() {
     setQuery("");
     setSelectedDomain(null);
     setResponse(null);
-    setSessionRegion(activeRegion);
-    setShowRegionPicker(false);
-  };
-
-  const handleRegionSelect = (code: RegionCode) => {
-    setSessionRegion(code);
-    setActiveRegion(code);
-    setShowRegionPicker(false);
   };
 
   return (
@@ -70,55 +57,18 @@ export default function Counsel() {
         </p>
       </div>
 
-      {/* Etiquette region context banner */}
-      <div className="flex items-center justify-between px-4 py-3 bg-primary/5 border border-primary/15 rounded-sm">
-        <div className="flex items-center gap-2 text-sm text-foreground/80">
-          <MapPin className="w-4 h-4 text-primary/70" aria-hidden="true" />
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground mr-1">
-            {t("counsel.region_context")}
-          </span>
-          <FlagEmoji code={sessionRegion} />
-          <span className="font-medium">{getRegionName(sessionRegion)}</span>
-        </div>
-        {!response && (
-          <button
-            onClick={() => setShowRegionPicker((v) => !v)}
-            className="text-xs text-primary/70 hover:text-primary underline-offset-2 hover:underline transition-colors font-mono"
-          >
-            {t("counsel.change_region")}
-          </button>
-        )}
+      {/* Etiquette region — read-only context note, changed via top-right bar */}
+      <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/40 border border-border/40 rounded-sm text-sm">
+        <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+          {t("counsel.region_context")}
+        </span>
+        <FlagEmoji code={activeRegion} />
+        <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
+        <span className="ml-auto text-[10px] text-muted-foreground/60 hidden sm:block">
+          {t("counsel.region_hint")}
+        </span>
       </div>
-
-      {/* Region picker (inline) */}
-      {showRegionPicker && !response && (
-        <Card className="border-border bg-card shadow-sm animate-in fade-in duration-200">
-          <CardContent className="p-4">
-            <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-              {t("region.choose")}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {COMPASS_REGIONS.map((region) => {
-                const isSelected = region.code === sessionRegion;
-                return (
-                  <button
-                    key={region.code}
-                    onClick={() => handleRegionSelect(region.code)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs border transition-all ${
-                      isSelected
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/40"
-                    }`}
-                  >
-                    <FlagEmoji code={region.flag} />
-                    {getRegionName(region.code)}
-                  </button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {!response ? (
         <Card className="border-border bg-card shadow-sm">
@@ -169,7 +119,6 @@ export default function Counsel() {
                 className="min-h-[150px] resize-none bg-background border-border/60 focus:border-primary/50 text-base p-4 rounded-sm"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                aria-required="false"
               />
             </div>
 
@@ -184,7 +133,7 @@ export default function Counsel() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
-                    <span aria-live="assertive">{t("counsel.consulting")}</span>
+                    <span>{t("counsel.consulting")}</span>
                   </>
                 ) : (
                   <>
@@ -197,11 +146,7 @@ export default function Counsel() {
           </CardContent>
         </Card>
       ) : (
-        <div
-          className="space-y-8 animate-in slide-in-from-bottom-4"
-          aria-live="polite"
-          aria-atomic="true"
-        >
+        <div className="space-y-8 animate-in slide-in-from-bottom-4" aria-live="polite" aria-atomic="true">
           <Card className="border-primary/20 bg-card shadow-md relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-primary" aria-hidden="true" />
             <CardHeader className="pb-2 pt-8 px-8">

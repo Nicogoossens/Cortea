@@ -137,6 +137,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Etiquette region",
     "counsel.region_prompt": "You are seeking counsel for etiquette in",
     "counsel.change_region": "change",
+    "counsel.region_hint": "Change via the region selector top right",
 
     "compass.title": "The Cultural Compass",
     "compass.subtitle": "Navigate the customs of the world with precision and confidence.",
@@ -248,6 +249,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Etiquetteregio",
     "counsel.region_prompt": "U vraagt advies over etiquette in",
     "counsel.change_region": "wijzigen",
+    "counsel.region_hint": "Wijzigen via de regioselector rechtsboven",
 
     "compass.title": "Het Culturele Kompas",
     "compass.subtitle": "Navigeer de gebruiken van de wereld met precisie en vertrouwen.",
@@ -359,6 +361,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Région d'étiquette",
     "counsel.region_prompt": "Vous demandez conseil sur l'étiquette en",
     "counsel.change_region": "modifier",
+    "counsel.region_hint": "Modifier via le sélecteur de région en haut à droite",
 
     "compass.title": "La Boussole Culturelle",
     "compass.subtitle": "Naviguez les coutumes du monde avec précision et confiance.",
@@ -470,6 +473,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Etikette-Region",
     "counsel.region_prompt": "Sie suchen Rat zur Etikette in",
     "counsel.change_region": "ändern",
+    "counsel.region_hint": "Ändern über den Regionsauswähler oben rechts",
 
     "compass.title": "Der Kulturkompass",
     "compass.subtitle": "Navigieren Sie die Sitten der Welt mit Präzision und Zuversicht.",
@@ -581,6 +585,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Región de etiqueta",
     "counsel.region_prompt": "Busca consejo sobre etiqueta en",
     "counsel.change_region": "cambiar",
+    "counsel.region_hint": "Cambiar con el selector de región arriba a la derecha",
 
     "compass.title": "La Brújula Cultural",
     "compass.subtitle": "Navegue las costumbres del mundo con precisión y confianza.",
@@ -692,6 +697,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Região de etiqueta",
     "counsel.region_prompt": "Pede conselho sobre etiqueta em",
     "counsel.change_region": "alterar",
+    "counsel.region_hint": "Alterar através do seletor de região no canto superior direito",
 
     "compass.title": "A Bússola Cultural",
     "compass.subtitle": "Navegue os costumes do mundo com precisão e confiança.",
@@ -803,6 +809,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "Regione d'etichetta",
     "counsel.region_prompt": "Chiede consiglio sull'etichetta in",
     "counsel.change_region": "modificare",
+    "counsel.region_hint": "Modificare tramite il selettore di regione in alto a destra",
 
     "compass.title": "La Bussola Culturale",
     "compass.subtitle": "Navighi le usanze del mondo con precisione e fiducia.",
@@ -914,6 +921,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.region_context": "शिष्टाचार क्षेत्र",
     "counsel.region_prompt": "आप इस क्षेत्र में शिष्टाचार का परामर्श ले रहे हैं",
     "counsel.change_region": "बदलें",
+    "counsel.region_hint": "ऊपर दाईं ओर क्षेत्र चयनकर्ता से बदलें",
 
     "compass.title": "सांस्कृतिक कम्पास",
     "compass.subtitle": "सटीकता और आत्मविश्वास के साथ विश्व की परंपराओं को समझें।",

@@ -21,6 +21,7 @@ export const usersTable = pgTable("users", {
   created_at: timestamp("created_at").notNull().defaultNow(),
   is_admin: boolean("is_admin").notNull().default(false),
   suspended_at: timestamp("suspended_at"),
+  session_token: text("session_token"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

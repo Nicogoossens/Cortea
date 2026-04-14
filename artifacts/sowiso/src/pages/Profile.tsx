@@ -102,7 +102,7 @@ export default function Profile() {
   const { t, locale, setLocale } = useLanguage();
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
-  const { userId, isAuthenticated, logout } = useAuth();
+  const { userId, isAuthenticated, logout, getAuthHeaders } = useAuth();
   const [, navigate] = useLocation();
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
@@ -135,9 +135,9 @@ export default function Profile() {
     setLangSave("saving");
     const langCode = newLocale.split("-")[0];
     try {
-      const res = await fetch(`${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`, {
+      const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ language_code: langCode }),
       });
       if (res.ok) {
@@ -158,9 +158,9 @@ export default function Profile() {
     if (!userId) return;
     setRegionSave("saving");
     try {
-      const res = await fetch(`${API_BASE}/api/users/profile/region?user_id=${encodeURIComponent(userId)}`, {
+      const res = await fetch(`${API_BASE}/api/users/profile/region`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ region_code: code }),
       });
       if (res.ok) {
@@ -178,7 +178,7 @@ export default function Profile() {
     if (!userId || deleteInput !== "DELETE") return;
     setDeleting(true);
     try {
-      await fetch(`${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`, { method: "DELETE" });
+      await fetch(`${API_BASE}/api/users/profile`, { method: "DELETE", headers: getAuthHeaders() });
       logout();
       navigate("/");
     } catch {

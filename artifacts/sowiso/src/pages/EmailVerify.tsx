@@ -32,10 +32,11 @@ export default function EmailVerify() {
           error?: string;
           user_id?: string;
           full_name?: string;
+          session_token?: string;
         };
         if (res.ok) {
           if (body.user_id) {
-            login(body.user_id, body.full_name);
+            login(body.user_id, { name: body.full_name, sessionToken: body.session_token });
           }
           setStatus(body.already_verified ? "already_verified" : "success");
         } else if (res.status === 410) {

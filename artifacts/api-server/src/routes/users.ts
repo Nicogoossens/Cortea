@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { usersTable, nobleScoreLogTable, zuil_voortgangTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -7,6 +7,50 @@ import { z } from "zod";
 const router = Router();
 
 const DEFAULT_USER_ID = "default-user";
+
+/**
+ * Extract userId from an `Authorization: Bearer <session_token>` header.
+ * Falls back to `default-user` when the header is absent (prototype / unauthenticated).
+ * Returns null only when an explicit token is presented but not found in the DB.
+ */
+async function resolveUserId(req: Request): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return DEFAULT_USER_ID;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!token) return DEFAULT_USER_ID;
+
+  const [user] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.session_token, token))
+    .limit(1);
+
+  return user?.id ?? null;
+}
+
+/**
+ * Middleware that resolves and attaches the authenticated userId to req.
+ * Returns 401 if a Bearer token is supplied but does not match any user.
+ */
+async function requireAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = await resolveUserId(req);
+    if (!userId) {
+      res.status(401).json({ error: "The authorisation token provided is not recognised." });
+      return;
+    }
+    (req as Request & { resolvedUserId: string }).resolvedUserId = userId;
+    next();
+  } catch (err) {
+    res.status(500).json({ error: "A difficulty arose validating your session." });
+  }
+}
+
+function getResolvedUserId(req: Request): string {
+  return (req as Request & { resolvedUserId?: string }).resolvedUserId ?? DEFAULT_USER_ID;
+}
 
 const UserIdQuerySchema = z.object({
   user_id: z.string().min(1).default(DEFAULT_USER_ID),
@@ -23,7 +67,9 @@ router.get("/users/profile", async (req, res) => {
       return res.status(404).json({ message: "Your profile has not yet been established. Allow us to create one for you." });
     }
 
-    return res.json(user);
+    // Never expose the session token in read responses.
+    const { session_token: _st, verification_token: _vt, ...safeUser } = user;
+    return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user profile");
     return res.status(500).json({ message: "We encountered a difficulty retrieving your profile. Please allow a moment and try again." });
@@ -62,7 +108,8 @@ router.post("/users/profile", async (req, res) => {
         })
         .where(eq(usersTable.id, data.id))
         .returning();
-      return res.json(updated);
+      const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+      return res.json(safeUser);
     }
 
     const [newUser] = await db.insert(usersTable).values({
@@ -78,7 +125,8 @@ router.post("/users/profile", async (req, res) => {
       subscription_tier: "guest",
     }).returning();
 
-    return res.json(newUser);
+    const { session_token: _st, verification_token: _vt, ...safeUser } = newUser;
+    return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Failed to create/update user profile");
     return res.status(500).json({ message: "A difficulty arose while establishing your profile. Please try again." });
@@ -95,10 +143,9 @@ const UpdateProfileBodySchema = z.object({
   subscription_tier: z.enum(["guest", "traveller", "ambassador"]).optional(),
 });
 
-router.put("/users/profile", async (req, res) => {
+router.put("/users/profile", requireAuthUser, async (req, res) => {
   try {
-    const queryParsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
 
     const bodyParsed = UpdateProfileBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
@@ -124,7 +171,8 @@ router.put("/users/profile", async (req, res) => {
       .where(eq(usersTable.id, userId))
       .returning();
 
-    return res.json(updated);
+    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Failed to update user profile");
     return res.status(500).json({ message: "A difficulty arose while updating your profile. Please try again." });
@@ -135,10 +183,9 @@ const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),
 });
 
-router.patch("/users/profile/region", async (req, res) => {
+router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
   try {
-    const queryParsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
 
     const bodyParsed = UpdateRegionBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
@@ -160,17 +207,17 @@ router.patch("/users/profile/region", async (req, res) => {
       .where(eq(usersTable.id, userId))
       .returning();
 
-    return res.json(updated);
+    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Failed to update region");
     return res.status(500).json({ message: "The region update encountered a difficulty. Please try again." });
   }
 });
 
-router.delete("/users/profile", async (req, res) => {
+router.delete("/users/profile", requireAuthUser, async (req, res) => {
   try {
-    const queryParsed = UserIdQuerySchema.safeParse(req.query);
-    const userId = queryParsed.success ? queryParsed.data.user_id : DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
 
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {

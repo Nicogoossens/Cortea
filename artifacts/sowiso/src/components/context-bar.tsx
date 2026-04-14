@@ -2,10 +2,7 @@ import { Check, Globe, MapPin, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { useLocale, LOCALE_GROUPS, type SupportedLocale } from "@/lib/i18n";
@@ -75,29 +72,22 @@ export function ContextBar() {
             </span>
           </div>
 
-          {LOCALE_GROUPS.map((group, gi) => (
-            <DropdownMenuGroup key={group.groupLabel}>
-              {gi > 0 && <DropdownMenuSeparator className="my-0" />}
-              <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 font-normal">
-                {group.groupLabel}
-              </DropdownMenuLabel>
-              {group.locales.map((def) => (
+          <div className="py-1">
+            {LOCALE_GROUPS.map((group) => {
+              const representative = group.locales[0];
+              const isSelected = group.locales.some((l) => l.locale === locale);
+              return (
                 <Item
-                  key={def.locale}
-                  selected={def.locale === locale}
-                  onClick={() => setLocale(def.locale as SupportedLocale)}
+                  key={group.groupLabel}
+                  selected={isSelected}
+                  onClick={() => setLocale(representative.locale as SupportedLocale)}
                 >
-                  <FlagEmoji code={def.flag} />
-                  <span className="flex-1 min-w-0">
-                    <span className="block">{def.languageLabel}</span>
-                    {group.locales.length > 1 && (
-                      <span className="block text-[10px] opacity-60">{def.regionLabel}</span>
-                    )}
-                  </span>
+                  <FlagEmoji code={representative.flag} />
+                  <span className="flex-1">{group.groupLabel}</span>
                 </Item>
-              ))}
-            </DropdownMenuGroup>
-          ))}
+              );
+            })}
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -23,6 +23,10 @@ const REGION_CONTEXT: Record<string, string> = {
   ZA: "South Africa. Culture is richly diverse across Zulu, Xhosa, Afrikaner, and other communities. Ubuntu (collective humanity) underpins social interaction.",
   AU: "Australia. Culture values egalitarianism, informality, and a fair go. Tall poppy syndrome means boasting is penalised. Outdoor culture and sport are central.",
   MX: "Mexico. Culture values family, personal relationships (personalismo), and courtesy. Business moves slowly without trust. Meals are long social events.",
+  NL: "The Netherlands. Culture values directness, egalitarianism, and pragmatism. Bluntness is not considered rude. Cycling and gezelligheid (cosiness) are cultural pillars. Punctuality is expected.",
+  IT: "Italy. Culture values family, aesthetics, and the bella figura (cutting a good figure). Meals are lengthy social events. Dress matters. Regional differences are significant.",
+  ES: "Spain. Culture values personal warmth, family, and lively social interaction. Late dining hours are the norm. Loyalty and personal trust precede business relationships.",
+  PT: "Portugal. Culture values saudade (nostalgic longing), modest restraint, and sincere hospitality. Relationship-building is slow and earnest. Punctuality is appreciated but flexible.",
 };
 
 router.post("/counsel", async (req, res) => {

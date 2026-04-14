@@ -141,11 +141,15 @@ router.get("/auth/verify", async (req, res) => {
     }
 
     if (user.email_verified) {
+      // Issue a fresh session token on re-verification of an already-verified address.
+      const refreshedToken = randomBytes(32).toString("hex");
+      await db.update(usersTable).set({ session_token: refreshedToken }).where(eq(usersTable.id, user.id));
       return res.json({
         message: "Your address has already been verified.",
         already_verified: true,
         user_id: user.id,
         full_name: user.full_name,
+        session_token: refreshedToken,
       });
     }
 
@@ -153,12 +157,15 @@ router.get("/auth/verify", async (req, res) => {
       return res.status(410).json({ error: "This verification link has expired. Please request a new one." });
     }
 
+    const sessionToken = randomBytes(32).toString("hex");
+
     await db
       .update(usersTable)
       .set({
         email_verified: true,
         verification_token: null,
         token_expires_at: null,
+        session_token: sessionToken,
       })
       .where(eq(usersTable.id, user.id));
 
@@ -166,6 +173,7 @@ router.get("/auth/verify", async (req, res) => {
       message: "Your address has been verified. Welcome to SOWISO.",
       user_id: user.id,
       full_name: user.full_name,
+      session_token: sessionToken,
     });
   } catch (err) {
     req.log.error({ err }, "Verification failed");

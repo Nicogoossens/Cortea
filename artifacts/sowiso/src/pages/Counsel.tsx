@@ -181,32 +181,32 @@ export default function Counsel() {
             {guestLimitReached ? (
               <>
                 <p className="font-medium text-amber-800">
-                  U heeft uw {FREE_QUESTION_LIMIT} gratis vragen gebruikt.
+                  {t("counsel.guest.limit_reached").replace("{limit}", String(FREE_QUESTION_LIMIT))}
                 </p>
                 <p className="text-xs font-light">
-                  Maak een account aan om onbeperkt toegang te krijgen tot alle modules van SOWISO.
+                  {t("counsel.guest.limit_body")}
                 </p>
                 <div className="flex gap-2 pt-1">
                   <Link href="/register">
                     <Button size="sm" className="font-serif gap-1.5 rounded-sm">
                       <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                      Account aanmaken
+                      {t("counsel.guest.create_account")}
                     </Button>
                   </Link>
                   <Link href="/signin">
                     <Button size="sm" variant="outline" className="font-serif rounded-sm">
-                      Aanmelden
+                      {t("counsel.guest.signin")}
                     </Button>
                   </Link>
                 </div>
               </>
             ) : (
               <p>
-                Gratis preview — {FREE_QUESTION_LIMIT - freeQuestionsUsed} van de {FREE_QUESTION_LIMIT} vragen beschikbaar.{" "}
+                <span className="font-medium">{t("counsel.guest.preview_label")}</span> — {FREE_QUESTION_LIMIT - freeQuestionsUsed} {t("counsel.guest.preview_remaining").replace("{limit}", String(FREE_QUESTION_LIMIT))}{" "}
                 <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                  Maak een account aan
+                  {t("counsel.guest.register_link")}
                 </Link>{" "}
-                voor volledige toegang.
+                {t("counsel.guest.register_prompt")}
               </p>
             )}
           </div>
@@ -266,7 +266,7 @@ export default function Counsel() {
             })}
             {isGuest && (
               <p className="w-full text-[10px] text-muted-foreground/50 font-mono px-1 mt-0.5">
-                Maak een account aan voor toegang tot alle {COMPASS_REGIONS.length} regio's.
+                {t("counsel.guest.all_regions_prompt")}
               </p>
             )}
           </div>
@@ -284,25 +284,25 @@ export default function Counsel() {
         <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-primary/20 bg-primary/5 text-sm animate-in fade-in duration-200">
           <UserPlus className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" aria-hidden="true" />
           <div className="space-y-2 flex-1">
-            <p className="font-medium text-foreground">Dit domein is beschikbaar na registratie.</p>
+            <p className="font-medium text-foreground">{t("counsel.guest.domain_register")}</p>
             <p className="text-xs text-muted-foreground font-light">
-              Maak een gratis account aan om toegang te krijgen tot alle domeinen en uw persoonlijke Noble Score bij te houden.
+              {t("counsel.guest.domain_register_body")}
             </p>
             <div className="flex gap-2 pt-1">
               <Link href="/register">
                 <Button size="sm" className="font-serif gap-1.5 rounded-sm">
                   <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                  Account aanmaken
+                  {t("counsel.guest.create_account")}
                 </Button>
               </Link>
               <Link href="/signin">
                 <Button size="sm" variant="outline" className="font-serif rounded-sm">
-                  Aanmelden
+                  {t("counsel.guest.signin")}
                 </Button>
               </Link>
             </div>
           </div>
-          <button onClick={() => setGateNotice(null)} aria-label="Sluiten" className="text-muted-foreground/40 hover:text-muted-foreground">
+          <button onClick={() => setGateNotice(null)} aria-label={t("common.close")} className="text-muted-foreground/40 hover:text-muted-foreground">
             <X className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
@@ -312,18 +312,18 @@ export default function Counsel() {
         <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-amber-200/60 bg-amber-50/30 text-sm animate-in fade-in duration-200">
           <CreditCard className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700" aria-hidden="true" />
           <div className="space-y-2 flex-1">
-            <p className="font-medium text-foreground">Dit domein vereist een premium lidmaatschap.</p>
+            <p className="font-medium text-foreground">{t("counsel.guest.domain_premium")}</p>
             <p className="text-xs text-muted-foreground font-light">
-              Upgrade uw abonnement voor toegang tot alle geavanceerde domeinen, inclusief Gastvrijheid, Geschenken en Digitaal Protocol.
+              {t("counsel.guest.domain_premium_body")}
             </p>
             <Link href="/profile">
               <Button size="sm" className="font-serif gap-1.5 rounded-sm mt-1">
                 <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
-                Abonnement upgraden
+                {t("counsel.guest.upgrade")}
               </Button>
             </Link>
           </div>
-          <button onClick={() => setGateNotice(null)} aria-label="Sluiten" className="text-muted-foreground/40 hover:text-muted-foreground">
+          <button onClick={() => setGateNotice(null)} aria-label={t("common.close")} className="text-muted-foreground/40 hover:text-muted-foreground">
             <X className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
@@ -371,7 +371,7 @@ export default function Counsel() {
               </div>
               {isGuest && (
                 <p className="text-[10px] text-muted-foreground/50 font-mono">
-                  Domeinen met een slot zijn beschikbaar na registratie.
+                  {t("counsel.guest.locked_domains_hint")}
                 </p>
               )}
             </fieldset>
@@ -439,20 +439,20 @@ export default function Counsel() {
           {/* After answer: if guest limit reached, show registration CTA instead of reset */}
           {isGuest && freeQuestionsUsed >= FREE_QUESTION_LIMIT ? (
             <div className="border border-border rounded-sm p-6 bg-card space-y-4 text-center">
-              <h3 className="font-serif text-xl text-foreground">Ga verder met SOWISO</h3>
+              <h3 className="font-serif text-xl text-foreground">{t("counsel.guest.continue_heading")}</h3>
               <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-md mx-auto">
-                U heeft de preview ervaren. Maak een gratis account aan om onbeperkt te vragen, uw Noble Score bij te houden en alle cultuurregio's te verkennen.
+                {t("counsel.guest.continue_body")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link href="/register">
                   <Button className="font-serif gap-2 rounded-sm">
                     <UserPlus className="w-4 h-4" aria-hidden="true" />
-                    Account aanmaken
+                    {t("counsel.guest.create_account")}
                   </Button>
                 </Link>
                 <Link href="/signin">
                   <Button variant="outline" className="font-serif rounded-sm">
-                    Aanmelden
+                    {t("counsel.guest.signin")}
                   </Button>
                 </Link>
               </div>

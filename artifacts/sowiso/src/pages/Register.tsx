@@ -156,7 +156,7 @@ export default function Register() {
       <div className="space-y-3">
         <div className="relative flex items-center gap-3">
           <div className="flex-1 h-px bg-border/50" />
-          <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">registreren met</span>
+          <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">{t("auth.or_register_with")}</span>
           <div className="flex-1 h-px bg-border/50" />
         </div>
         <div className="grid grid-cols-3 gap-2">
@@ -170,25 +170,25 @@ export default function Register() {
                 type="button"
                 disabled
                 className="w-full flex items-center justify-center gap-2 h-10 rounded-sm border border-border/40 bg-muted/30 text-muted-foreground/40 text-sm font-medium cursor-not-allowed select-none"
-                aria-label={`${name} — komt binnenkort`}
+                aria-label={`${name} — ${t("auth.coming_soon")}`}
               >
                 <span className="font-bold text-xs">{logo}</span>
                 <span className="text-xs">{name}</span>
               </button>
               <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-widest bg-muted text-muted-foreground/60 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap border border-border/30">
-                binnenkort
+                {t("auth.coming_soon")}
               </span>
             </div>
           ))}
         </div>
         <p className="text-center text-[10px] text-muted-foreground/40 font-mono">
-          Sociale aanmelding is binnenkort beschikbaar.
+          {t("auth.social_coming_soon_register")}
         </p>
       </div>
 
       <div className="relative flex items-center gap-3">
         <div className="flex-1 h-px bg-border/50" />
-        <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">of via e-mail</span>
+        <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">{t("auth.or_via_email")}</span>
         <div className="flex-1 h-px bg-border/50" />
       </div>
 

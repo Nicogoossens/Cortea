@@ -3,13 +3,24 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SOWISO Etiquette API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User profile management
+  - name: culture
+    description: Culture protocols and compass data
+  - name: scenarios
+    description: Training scenarios for The Atelier
+  - name: noble-score
+    description: Noble Score and progression tracking
+  - name: translations
+    description: Multi-language support
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,301 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users/profile:
+    get:
+      operationId: getProfile
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createProfile
+      tags: [users]
+      summary: Create or update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProfileBody"
+      responses:
+        "200":
+          description: Profile created or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/profile/region:
+    patch:
+      operationId: updateActiveRegion
+      tags: [users]
+      summary: Update the user's active region
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRegionBody"
+      responses:
+        "200":
+          description: Region updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /culture/protocols:
+    get:
+      operationId: getCultureProtocols
+      tags: [culture]
+      summary: Get culture protocols for a region and pillar
+      parameters:
+        - name: region_code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ISO country code (e.g. GB, CN, CA)
+        - name: pillar
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+          description: Pillar number (1-5). Omit for all pillars.
+        - name: context
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [business, social, general]
+      responses:
+        "200":
+          description: Culture protocols
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CultureProtocol"
+
+  /culture/compass:
+    get:
+      operationId: getCultureCompass
+      tags: [culture]
+      summary: Get cultural compass summary for all available regions
+      responses:
+        "200":
+          description: Cultural compass data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CultureCompassEntry"
+
+  /culture/compass/{regionCode}:
+    get:
+      operationId: getCultureCompassRegion
+      tags: [culture]
+      summary: Get detailed cultural compass for a specific region
+      parameters:
+        - name: regionCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cultural compass detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CultureCompassDetail"
+        "404":
+          description: Region not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /scenarios:
+    get:
+      operationId: getScenarios
+      tags: [scenarios]
+      summary: Get training scenarios filtered by region, pillar, and difficulty
+      parameters:
+        - name: region_code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pillar
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: difficulty_level
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: age_group
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["18-30", "30-55", "55+"]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of scenarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scenario"
+
+  /scenarios/{scenarioId}:
+    get:
+      operationId: getScenario
+      tags: [scenarios]
+      summary: Get a specific scenario by ID
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scenario detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scenario"
+        "404":
+          description: Scenario not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /noble-score:
+    get:
+      operationId: getNobleScore
+      tags: [noble-score]
+      summary: Get the current user's Noble Score and progression
+      responses:
+        "200":
+          description: Noble Score data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NobleScoreData"
+
+  /noble-score/submit:
+    post:
+      operationId: submitScenarioAnswer
+      tags: [noble-score]
+      summary: Submit a scenario answer and update Noble Score
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAnswerBody"
+      responses:
+        "200":
+          description: Answer result with score update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerResult"
+
+  /noble-score/log:
+    get:
+      operationId: getNobleScoreLog
+      tags: [noble-score]
+      summary: Get recent Noble Score events for the current user
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Score log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScoreLogEntry"
+
+  /noble-score/pillars:
+    get:
+      operationId: getPillarProgress
+      tags: [noble-score]
+      summary: Get per-pillar score and titles for the current user
+      responses:
+        "200":
+          description: Per-pillar progress
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PillarProgress"
+
+  /translations:
+    get:
+      operationId: getTranslations
+      tags: [translations]
+      summary: Get UI translations for a language
+      parameters:
+        - name: language_code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ISO 639-1 language code (e.g. en, fr, de)
+      responses:
+        "200":
+          description: Translation key-value map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +340,346 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        birth_year:
+          type: integer
+          nullable: true
+        gender_identity:
+          type: string
+          nullable: true
+        gender_expression:
+          type: string
+          nullable: true
+        noble_score:
+          type: integer
+        ambition_level:
+          type: string
+          enum: [casual, professional, diplomatic]
+        subscription_tier:
+          type: string
+          enum: [guest, traveller, ambassador]
+        language_code:
+          type: string
+        active_region:
+          type: string
+        region_history:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - noble_score
+        - ambition_level
+        - subscription_tier
+        - language_code
+        - active_region
+        - region_history
+        - created_at
+
+    CreateProfileBody:
+      type: object
+      properties:
+        id:
+          type: string
+        birth_year:
+          type: integer
+          nullable: true
+        gender_identity:
+          type: string
+          nullable: true
+        ambition_level:
+          type: string
+          enum: [casual, professional, diplomatic]
+        language_code:
+          type: string
+        active_region:
+          type: string
+      required:
+        - id
+
+    UpdateRegionBody:
+      type: object
+      properties:
+        region_code:
+          type: string
+      required:
+        - region_code
+
+    CultureProtocol:
+      type: object
+      properties:
+        id:
+          type: integer
+        region_code:
+          type: string
+        pillar:
+          type: integer
+        rule_type:
+          type: string
+          enum: [absolute_taboo, strong_preference, context_dependent]
+        rule_description:
+          type: string
+        gender_applicability:
+          type: string
+          enum: [all, masculine, feminine, fluid]
+        context:
+          type: string
+          enum: [business, social, general]
+      required:
+        - id
+        - region_code
+        - pillar
+        - rule_type
+        - rule_description
+        - gender_applicability
+        - context
+
+    CultureCompassEntry:
+      type: object
+      properties:
+        region_code:
+          type: string
+        region_name:
+          type: string
+        core_value:
+          type: string
+        biggest_taboo:
+          type: string
+        flag_emoji:
+          type: string
+      required:
+        - region_code
+        - region_name
+        - core_value
+        - biggest_taboo
+        - flag_emoji
+
+    CultureCompassDetail:
+      type: object
+      properties:
+        region_code:
+          type: string
+        region_name:
+          type: string
+        flag_emoji:
+          type: string
+        core_value:
+          type: string
+        biggest_taboo:
+          type: string
+        dining_etiquette:
+          type: string
+        language_notes:
+          type: string
+        gift_protocol:
+          type: string
+        dress_code:
+          type: string
+        dos:
+          type: array
+          items:
+            type: string
+        donts:
+          type: array
+          items:
+            type: string
+      required:
+        - region_code
+        - region_name
+        - flag_emoji
+        - core_value
+        - biggest_taboo
+        - dining_etiquette
+        - language_notes
+        - gift_protocol
+        - dress_code
+        - dos
+        - donts
+
+    Scenario:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        pillar:
+          type: integer
+        region_code:
+          type: string
+        age_group:
+          type: string
+        difficulty_level:
+          type: integer
+        estimated_minutes:
+          type: integer
+        noble_score_impact:
+          type: integer
+        content_json:
+          $ref: "#/components/schemas/ScenarioContent"
+      required:
+        - id
+        - title
+        - pillar
+        - region_code
+        - difficulty_level
+        - noble_score_impact
+        - content_json
+
+    ScenarioContent:
+      type: object
+      properties:
+        situation:
+          type: string
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioOption"
+      required:
+        - situation
+        - question
+        - options
+
+    ScenarioOption:
+      type: object
+      properties:
+        text:
+          type: string
+        correct:
+          type: boolean
+        explanation:
+          type: string
+      required:
+        - text
+        - correct
+        - explanation
+
+    NobleScoreData:
+      type: object
+      properties:
+        total_score:
+          type: integer
+        level:
+          type: integer
+          minimum: 1
+          maximum: 5
+        level_name:
+          type: string
+        level_color:
+          type: string
+        next_level_threshold:
+          type: integer
+        pillars:
+          type: array
+          items:
+            $ref: "#/components/schemas/PillarProgress"
+      required:
+        - total_score
+        - level
+        - level_name
+        - level_color
+        - next_level_threshold
+        - pillars
+
+    PillarProgress:
+      type: object
+      properties:
+        pillar:
+          type: integer
+        pillar_name:
+          type: string
+        pillar_domain:
+          type: string
+        score:
+          type: integer
+        current_title:
+          type: string
+        next_title:
+          type: string
+          nullable: true
+        progress_percent:
+          type: integer
+      required:
+        - pillar
+        - pillar_name
+        - pillar_domain
+        - score
+        - current_title
+        - progress_percent
+
+    SubmitAnswerBody:
+      type: object
+      properties:
+        scenario_id:
+          type: integer
+        selected_option_index:
+          type: integer
+        time_taken_seconds:
+          type: integer
+      required:
+        - scenario_id
+        - selected_option_index
+
+    AnswerResult:
+      type: object
+      properties:
+        correct:
+          type: boolean
+        explanation:
+          type: string
+        mentor_feedback:
+          type: string
+        score_delta:
+          type: integer
+        new_total_score:
+          type: integer
+        level_up:
+          type: boolean
+        new_level_name:
+          type: string
+          nullable: true
+      required:
+        - correct
+        - explanation
+        - mentor_feedback
+        - score_delta
+        - new_total_score
+        - level_up
+
+    ScoreLogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        scenario_id:
+          type: integer
+          nullable: true
+        score_delta:
+          type: integer
+        trigger:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - id
+        - score_delta
+        - trigger
+        - timestamp

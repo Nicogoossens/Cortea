@@ -358,9 +358,16 @@ export async function customFetch<T = unknown>(
     }
   }
 
-  const requestInfo = { method, url: resolveUrl(input) };
+  const url = resolveUrl(input);
+  
+  // Append user_id=default-user to all requests for the prototype
+  const urlObj = new URL(url.startsWith("http") ? url : `http://localhost${url.startsWith("/") ? url : `/${url}`}`);
+  urlObj.searchParams.set("user_id", "default-user");
+  const modifiedUrl = url.startsWith("http") ? urlObj.toString() : `${urlObj.pathname}${urlObj.search}`;
+  
+  const requestInfo = { method, url: modifiedUrl };
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(input instanceof Request ? new Request(modifiedUrl, input) : modifiedUrl, { ...init, method, headers });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

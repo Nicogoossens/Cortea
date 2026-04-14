@@ -11,11 +11,28 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Award, Calendar, Globe, Target, Clock } from "lucide-react";
-import { format } from "date-fns";
-import { useLanguage } from "@/lib/i18n";
+import { format, type Locale } from "date-fns";
+import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, hi } from "date-fns/locale";
+import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, triggerLabel } from "@/lib/content-labels";
 import { useState } from "react";
+
+const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
+  "en-GB": enGB,
+  "en-US": enUS,
+  "en-AU": enAU,
+  "en-CA": enCA,
+  "nl-NL": nl,
+  "fr-FR": fr,
+  "de-DE": de,
+  "es-ES": es,
+  "es-MX": es,
+  "pt-PT": pt,
+  "pt-BR": ptBR,
+  "it-IT": it,
+  "hi-IN": hi,
+};
 
 function logStatusKey(delta: number): string {
   if (delta > 0) return "profile.log.refined";
@@ -24,7 +41,8 @@ function logStatusKey(delta: number): string {
 }
 
 export default function Profile() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
   const [showRegionPicker, setShowRegionPicker] = useState(false);
 
@@ -93,7 +111,7 @@ export default function Profile() {
               <span>
                 {t("profile.member_since")}{" "}
                 {profile?.created_at
-                  ? format(new Date(profile.created_at), "MMMM yyyy")
+                  ? format(new Date(profile.created_at), "MMMM yyyy", { locale: dateFnsLocale })
                   : t("profile.member_since.recently")}
               </span>
             </div>
@@ -244,7 +262,7 @@ export default function Profile() {
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-1">
                     <div className="text-sm font-medium text-foreground">{triggerLabel(log.trigger, t)}</div>
                     <div className="text-xs font-mono text-muted-foreground">
-                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "d MMM yyyy HH:mm")}</time>
+                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "d MMM yyyy HH:mm", { locale: dateFnsLocale })}</time>
                     </div>
                   </div>
                   <div className={`text-xs font-mono uppercase tracking-widest ${log.score_delta > 0 ? "text-green-600" : log.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>

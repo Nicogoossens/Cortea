@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { useLocale, LOCALE_GROUPS, type SupportedLocale } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 
 function PillTrigger({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -43,6 +43,17 @@ function Item({
     >
       {children}
       {selected && <Check className="w-3 h-3 ml-auto flex-shrink-0" aria-hidden="true" />}
+    </DropdownMenuPrimitive.Item>
+  );
+}
+
+function InactiveRegionItem({ children }: { children: React.ReactNode }) {
+  return (
+    <DropdownMenuPrimitive.Item
+      disabled
+      className="flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-sm mx-1 opacity-40 cursor-default select-none outline-none"
+    >
+      {children}
     </DropdownMenuPrimitive.Item>
   );
 }
@@ -112,7 +123,7 @@ export function ContextBar() {
         <DropdownMenuContent
           align="end"
           sideOffset={6}
-          className="z-50 min-w-[200px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
+          className="z-50 min-w-[220px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
         >
           <div className="px-3 py-2 border-b border-border/30 sticky top-0 bg-background z-10">
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
@@ -121,16 +132,30 @@ export function ContextBar() {
           </div>
 
           <div className="py-1">
-            {COMPASS_REGIONS.map((region) => (
-              <Item
-                key={region.code}
-                selected={region.code === activeRegion}
-                onClick={() => setActiveRegion(region.code as RegionCode)}
-              >
-                <FlagEmoji code={region.flag} />
-                <span className="flex-1">{getRegionName(region.code)}</span>
-              </Item>
-            ))}
+            {COMPASS_REGIONS.map((region) => {
+              const active = isRegionActive(region.code);
+              if (!active) {
+                return (
+                  <InactiveRegionItem key={region.code}>
+                    <FlagEmoji code={region.flag} />
+                    <span className="flex-1">{getRegionName(region.code)}</span>
+                    <span className="text-[9px] font-mono uppercase tracking-widest border border-current/30 rounded-[2px] px-1 py-0.5 leading-none shrink-0">
+                      {t("region.in_preparation")}
+                    </span>
+                  </InactiveRegionItem>
+                );
+              }
+              return (
+                <Item
+                  key={region.code}
+                  selected={region.code === activeRegion}
+                  onClick={() => setActiveRegion(region.code as RegionCode)}
+                >
+                  <FlagEmoji code={region.flag} />
+                  <span className="flex-1">{getRegionName(region.code)}</span>
+                </Item>
+              );
+            })}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>

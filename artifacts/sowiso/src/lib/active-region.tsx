@@ -29,6 +29,13 @@ export const COMPASS_REGIONS: CompassRegion[] = [
   { code: "PT", flag: "PT", names: { en: "Portugal", nl: "Portugal", fr: "Portugal", de: "Portugal", es: "Portugal", pt: "Portugal", it: "Portogallo", hi: "पुर्तगाल" } },
 ];
 
+/** Regions that currently have full etiquette data and AI counsel support. */
+export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "US", "AE"]);
+
+export function isRegionActive(code: RegionCode): boolean {
+  return ACTIVE_REGIONS.has(code);
+}
+
 const REGION_STORAGE_KEY = "sowiso_active_region";
 
 const LANGUAGE_DEFAULTS: Record<SupportedLanguage, RegionCode> = {
@@ -46,7 +53,8 @@ function detectActiveRegion(language: SupportedLanguage): RegionCode {
   const stored = localStorage.getItem(REGION_STORAGE_KEY) as RegionCode | null;
   const validCodes = COMPASS_REGIONS.map((r) => r.code);
   if (stored && validCodes.includes(stored)) return stored;
-  return LANGUAGE_DEFAULTS[language] ?? "GB";
+  const defaultCode = LANGUAGE_DEFAULTS[language] ?? "GB";
+  return isRegionActive(defaultCode) ? defaultCode : "GB";
 }
 
 interface ActiveRegionContextValue {

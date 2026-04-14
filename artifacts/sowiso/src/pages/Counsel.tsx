@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Send, Loader2, MapPin } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji, isRegionActive } from "@/lib/active-region";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -20,6 +20,8 @@ const DOMAIN_KEYS = [
 export default function Counsel() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
+
+  const regionActive = isRegionActive(activeRegion);
 
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
@@ -70,7 +72,20 @@ export default function Counsel() {
         </span>
       </div>
 
-      {!response ? (
+      {!regionActive ? (
+        <Card className="border-border/50 bg-muted/20 shadow-sm">
+          <CardContent className="p-8 flex flex-col items-center text-center gap-4">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground border border-muted-foreground/20 rounded-[2px] px-2.5 py-1.5">
+              <FlagEmoji code={activeRegion} />
+              <span>{getRegionName(activeRegion)}</span>
+              <span className="border-l border-current/20 pl-2 ml-0.5">{t("region.in_preparation")}</span>
+            </div>
+            <p className="text-muted-foreground font-light leading-relaxed max-w-lg">
+              {t("counsel.region_unavailable")}
+            </p>
+          </CardContent>
+        </Card>
+      ) : !response ? (
         <Card className="border-border bg-card shadow-sm">
           <CardContent className="p-6 md:p-8 space-y-8">
             <fieldset className="space-y-4">

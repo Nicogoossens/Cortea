@@ -60,18 +60,31 @@ If a domain is specified, focus your guidance there. If the situation is ambiguo
     .filter(Boolean)
     .join("\n");
 
+  const TIMEOUT_MS = 25_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
-      max_tokens: 300,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    });
+    const message = await anthropic.messages.create(
+      {
+        model: "claude-sonnet-4-5",
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+      },
+      { signal: controller.signal },
+    );
+    clearTimeout(timer);
 
     const text =
       message.content[0].type === "text" ? message.content[0].text : "";
     res.json({ guidance: text });
   } catch (err) {
+    clearTimeout(timer);
+    if (err instanceof Error && err.name === "AbortError") {
+      res.status(504).json({ error: "The counsel timed out. Please try again shortly." });
+      return;
+    }
     console.error("Counsel AI error:", err);
     res.status(500).json({ error: "The mentor is unavailable. Please try again shortly." });
   }

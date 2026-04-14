@@ -31,8 +31,9 @@ async function resolveUserId(req: Request): Promise<string | null> {
 }
 
 /**
- * Middleware that resolves and attaches the authenticated userId to req.
- * Returns 401 if a Bearer token is supplied but does not match any user.
+ * Middleware for READ routes: resolves userId from Bearer token when present,
+ * falls back to `default-user` when no token is supplied (prototype mode).
+ * Returns 401 only when an explicit token is presented but unrecognised.
  */
 async function requireAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -42,6 +43,39 @@ async function requireAuthUser(req: Request, res: Response, next: NextFunction):
       return;
     }
     (req as Request & { resolvedUserId: string }).resolvedUserId = userId;
+    next();
+  } catch (err) {
+    res.status(500).json({ error: "A difficulty arose validating your session." });
+  }
+}
+
+/**
+ * Middleware for WRITE routes (PUT / PATCH / DELETE).
+ * A valid Bearer token is strictly required — no default-user fallback.
+ * Returns 401 when the header is absent or the token is unrecognised.
+ */
+async function requireStrictAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Authentication is required to perform this action." });
+      return;
+    }
+    const token = authHeader.slice(7).trim();
+    if (!token) {
+      res.status(401).json({ error: "Authentication is required to perform this action." });
+      return;
+    }
+    const [user] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.session_token, token))
+      .limit(1);
+    if (!user) {
+      res.status(401).json({ error: "The authorisation token provided is not recognised." });
+      return;
+    }
+    (req as Request & { resolvedUserId: string }).resolvedUserId = user.id;
     next();
   } catch (err) {
     res.status(500).json({ error: "A difficulty arose validating your session." });
@@ -156,7 +190,7 @@ const UpdateProfileBodySchema = z.object({
   subscription_tier: z.enum(["guest", "traveller", "ambassador"]).optional(),
 });
 
-router.put("/users/profile", requireAuthUser, async (req, res) => {
+router.put("/users/profile", requireStrictAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 
@@ -196,7 +230,7 @@ const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),
 });
 
-router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
+router.patch("/users/profile/region", requireStrictAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 
@@ -228,7 +262,7 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
   }
 });
 
-router.delete("/users/profile", requireAuthUser, async (req, res) => {
+router.delete("/users/profile", requireStrictAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
 

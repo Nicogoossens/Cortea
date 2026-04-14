@@ -108,7 +108,10 @@ export function ActiveRegionProvider({
         if (!data?.active_region) return;
         const validCodes = COMPASS_REGIONS.map((r) => r.code);
         if (validCodes.includes(data.active_region as RegionCode)) {
+          // Write to both state and localStorage so the preference persists
+          // across page refreshes without requiring another profile API call.
           setActiveRegionState(data.active_region as RegionCode);
+          localStorage.setItem(REGION_PREF_KEY, data.active_region);
         }
       })
       .catch(() => undefined);

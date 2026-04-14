@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { X, MapPin } from "lucide-react";
+import { X, MapPin, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRegion, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { useLanguage } from "@/lib/i18n";
 
-const SESSION_KEY = "sowiso_region_detect_dismissed";
+const SESSION_DISMISSED_KEY = "sowiso_region_detect_dismissed";
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface BBox {
@@ -61,37 +61,44 @@ async function detectViaIp(): Promise<RegionCode | null> {
   }
 }
 
+type GpsState = "idle" | "requesting" | "done";
+
 export default function RegionDetectionBanner() {
   const { t } = useLanguage();
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
-  const [detectedRegion, setDetectedRegion] = useState<RegionCode | null>(null);
+  const { activeRegion, setDetectedRegion, getRegionName } = useActiveRegion();
+  const [suggestedRegion, setSuggestedRegion] = useState<RegionCode | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [gpsState, setGpsState] = useState<GpsState>("idle");
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY)) return;
+    if (sessionStorage.getItem(SESSION_DISMISSED_KEY)) return;
 
-    (async () => {
-      const gps = await detectViaGps();
-      const region = gps ?? (await detectViaIp());
-
+    detectViaIp().then((region) => {
       if (region && region !== activeRegion) {
-        setDetectedRegion(region);
+        setSuggestedRegion(region);
       } else {
-        sessionStorage.setItem(SESSION_KEY, "1");
+        sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
       }
-    })();
+    });
   }, []);
 
-  if (!detectedRegion || dismissed) return null;
+  if (!suggestedRegion || dismissed) return null;
 
   const handleConfirm = () => {
-    setActiveRegion(detectedRegion);
-    sessionStorage.setItem(SESSION_KEY, "1");
+    setDetectedRegion(suggestedRegion);
+    sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
     setDismissed(true);
   };
 
+  const handleGps = async () => {
+    setGpsState("requesting");
+    const gpsRegion = await detectViaGps();
+    setGpsState("done");
+    if (gpsRegion) setSuggestedRegion(gpsRegion);
+  };
+
   const handleDismiss = () => {
-    sessionStorage.setItem(SESSION_KEY, "1");
+    sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
     setDismissed(true);
   };
 
@@ -99,36 +106,59 @@ export default function RegionDetectionBanner() {
     <div
       role="banner"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md bg-card border border-border shadow-lg rounded-sm px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md bg-card border border-border shadow-lg rounded-sm px-4 py-3 flex items-start gap-3 animate-in slide-in-from-bottom-4"
     >
-      <MapPin className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
-      <div className="flex-1 min-w-0">
+      <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="flex-1 min-w-0 space-y-2">
         <p className="text-sm text-foreground leading-snug">
           {t("detect.banner_prefix")}{" "}
           <span className="font-medium inline-flex items-center gap-1">
-            <FlagEmoji code={detectedRegion} />
-            {getRegionName(detectedRegion)}
+            <FlagEmoji code={suggestedRegion} />
+            {getRegionName(suggestedRegion)}
           </span>{" "}
           {t("detect.banner_suffix")}
         </p>
+        <p className="text-xs text-muted-foreground">
+          {t("detect.not_stored")}
+          {gpsState === "idle" && (
+            <button
+              onClick={handleGps}
+              className="ml-2 inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              <LocateFixed className="w-3 h-3" aria-hidden="true" />
+              {t("detect.use_gps")}
+            </button>
+          )}
+          {gpsState === "requesting" && (
+            <span className="ml-2 italic">{t("detect.gps_requesting")}</span>
+          )}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            className="h-7 text-xs font-mono uppercase tracking-wide px-3 rounded-sm"
+            onClick={handleConfirm}
+          >
+            {t("detect.confirm")}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs px-2 rounded-sm text-muted-foreground"
+            onClick={handleDismiss}
+          >
+            {t("detect.dismiss")}
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Button
-          size="sm"
-          variant="default"
-          className="h-7 text-xs font-mono uppercase tracking-wide px-3 rounded-sm"
-          onClick={handleConfirm}
-        >
-          {t("detect.confirm")}
-        </Button>
-        <button
-          onClick={handleDismiss}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={t("detect.dismiss")}
-        >
-          <X className="w-4 h-4" aria-hidden="true" />
-        </button>
-      </div>
+      <button
+        onClick={handleDismiss}
+        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-0.5"
+        aria-label={t("detect.dismiss")}
+      >
+        <X className="w-4 h-4" aria-hidden="true" />
+      </button>
     </div>
   );
 }

@@ -45,7 +45,10 @@ export function isRegionActive(code: RegionCode): boolean {
   return ACTIVE_REGIONS.has(code);
 }
 
-const REGION_STORAGE_KEY = "sowiso_active_region";
+/** Persisted user preference — survives across sessions. */
+const REGION_PREF_KEY = "sowiso_active_region";
+/** Location-inferred suggestion — cleared when the browser tab closes. */
+const REGION_SESSION_KEY = "sowiso_session_region";
 
 const LANGUAGE_DEFAULTS: Record<SupportedLanguage, RegionCode> = {
   en: "GB",
@@ -58,9 +61,12 @@ const LANGUAGE_DEFAULTS: Record<SupportedLanguage, RegionCode> = {
   hi: "IN",
 };
 
-function detectActiveRegion(language: SupportedLanguage): RegionCode {
-  const stored = localStorage.getItem(REGION_STORAGE_KEY) as RegionCode | null;
+function resolveActiveRegion(language: SupportedLanguage): RegionCode {
   const validCodes = COMPASS_REGIONS.map((r) => r.code);
+  // Session-scoped location suggestion takes precedence over stored preference.
+  const session = sessionStorage.getItem(REGION_SESSION_KEY) as RegionCode | null;
+  if (session && validCodes.includes(session)) return session;
+  const stored = localStorage.getItem(REGION_PREF_KEY) as RegionCode | null;
   if (stored && validCodes.includes(stored)) return stored;
   const defaultCode = LANGUAGE_DEFAULTS[language] ?? "GB";
   return isRegionActive(defaultCode) ? defaultCode : "GB";
@@ -68,7 +74,10 @@ function detectActiveRegion(language: SupportedLanguage): RegionCode {
 
 interface ActiveRegionContextValue {
   activeRegion: RegionCode;
+  /** Persist the user's explicit region choice to localStorage. */
   setActiveRegion: (code: RegionCode) => void;
+  /** Accept a location-detected suggestion; stored in sessionStorage only. */
+  setDetectedRegion: (code: RegionCode) => void;
   getRegionName: (code: RegionCode) => string;
   getCurrentRegion: () => CompassRegion;
 }
@@ -83,12 +92,20 @@ export function ActiveRegionProvider({
   language: SupportedLanguage;
 }) {
   const [activeRegion, setActiveRegionState] = useState<RegionCode>(() =>
-    detectActiveRegion(language)
+    resolveActiveRegion(language)
   );
 
   const setActiveRegion = useCallback((code: RegionCode) => {
     setActiveRegionState(code);
-    localStorage.setItem(REGION_STORAGE_KEY, code);
+    localStorage.setItem(REGION_PREF_KEY, code);
+    // Explicit user choice supersedes any session-scoped detection.
+    sessionStorage.removeItem(REGION_SESSION_KEY);
+  }, []);
+
+  const setDetectedRegion = useCallback((code: RegionCode) => {
+    setActiveRegionState(code);
+    sessionStorage.setItem(REGION_SESSION_KEY, code);
+    // Do NOT write to localStorage — location data is session-scoped only.
   }, []);
 
   const getRegionName = useCallback(
@@ -105,7 +122,7 @@ export function ActiveRegionProvider({
 
   return (
     <ActiveRegionContext.Provider
-      value={{ activeRegion, setActiveRegion, getRegionName, getCurrentRegion }}
+      value={{ activeRegion, setActiveRegion, setDetectedRegion, getRegionName, getCurrentRegion }}
     >
       {children}
     </ActiveRegionContext.Provider>

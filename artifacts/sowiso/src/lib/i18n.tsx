@@ -200,6 +200,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— would you like to set that as your region?",
     "detect.confirm": "Confirm",
     "detect.dismiss": "Dismiss",
+    "detect.not_stored": "Not stored after this session.",
+    "detect.use_gps": "Refine with GPS",
+    "detect.gps_requesting": "Requesting GPS…",
     "counsel.region_unavailable": "This region is presently being curated. Counsel is available for the United Kingdom, China, and Canada.",
     "region.current": "Current region",
 
@@ -329,6 +332,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— wilt u dit als uw regio instellen?",
     "detect.confirm": "Bevestigen",
     "detect.dismiss": "Sluiten",
+    "detect.not_stored": "Niet opgeslagen na deze sessie.",
+    "detect.use_gps": "Verfijnen met GPS",
+    "detect.gps_requesting": "GPS aanvragen…",
     "counsel.region_unavailable": "Deze regio wordt momenteel samengesteld. Raadpleging is beschikbaar voor het Verenigd Koninkrijk, China en Canada.",
     "region.current": "Huidige regio",
 
@@ -458,6 +464,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— souhaitez-vous définir cela comme votre région ?",
     "detect.confirm": "Confirmer",
     "detect.dismiss": "Ignorer",
+    "detect.not_stored": "Non conservé après cette session.",
+    "detect.use_gps": "Affiner avec le GPS",
+    "detect.gps_requesting": "Demande GPS en cours…",
     "counsel.region_unavailable": "Cette région est actuellement en cours de préparation. Le conseil est disponible pour le Royaume-Uni, la Chine et le Canada.",
     "region.current": "Région actuelle",
 
@@ -587,6 +596,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "besuchen — möchten Sie dies als Ihre Region festlegen?",
     "detect.confirm": "Bestätigen",
     "detect.dismiss": "Schließen",
+    "detect.not_stored": "Wird nach dieser Sitzung nicht gespeichert.",
+    "detect.use_gps": "Mit GPS verfeinern",
+    "detect.gps_requesting": "GPS wird angefragt…",
     "counsel.region_unavailable": "Diese Region wird derzeit zusammengestellt. Beratung ist für das Vereinigte Königreich, China und Kanada verfügbar.",
     "region.current": "Aktuelle Region",
 
@@ -716,6 +728,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— ¿desea establecerlo como su región?",
     "detect.confirm": "Confirmar",
     "detect.dismiss": "Ignorar",
+    "detect.not_stored": "No se almacena después de esta sesión.",
+    "detect.use_gps": "Refinar con GPS",
+    "detect.gps_requesting": "Solicitando GPS…",
     "counsel.region_unavailable": "Esta región está siendo elaborada con esmero. El consejo está disponible para el Reino Unido, China y Canadá.",
     "region.current": "Región actual",
 
@@ -845,6 +860,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— deseja definir isso como a sua região?",
     "detect.confirm": "Confirmar",
     "detect.dismiss": "Ignorar",
+    "detect.not_stored": "Não guardado após esta sessão.",
+    "detect.use_gps": "Refinar com GPS",
+    "detect.gps_requesting": "A solicitar GPS…",
     "counsel.region_unavailable": "Esta região está presentemente a ser preparada. O aconselhamento está disponível para o Reino Unido, a China e o Canadá.",
     "region.current": "Região atual",
 
@@ -974,6 +992,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— desidera impostarlo come la Sua regione?",
     "detect.confirm": "Confermare",
     "detect.dismiss": "Ignorare",
+    "detect.not_stored": "Non conservato dopo questa sessione.",
+    "detect.use_gps": "Affina con GPS",
+    "detect.gps_requesting": "Richiesta GPS in corso…",
     "counsel.region_unavailable": "Questa regione è attualmente in fase di attenta preparazione. Il consiglio è disponibile per il Regno Unito, la Cina e il Canada.",
     "region.current": "Regione attuale",
 
@@ -1103,6 +1124,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "detect.banner_suffix": "— क्या आप इसे अपना क्षेत्र सेट करना चाहेंगे?",
     "detect.confirm": "पुष्टि करें",
     "detect.dismiss": "खारिज करें",
+    "detect.not_stored": "इस सत्र के बाद संग्रहीत नहीं किया जाएगा।",
+    "detect.use_gps": "GPS से परिष्कृत करें",
+    "detect.gps_requesting": "GPS अनुरोध किया जा रहा है…",
     "counsel.region_unavailable": "यह क्षेत्र अभी सावधानीपूर्वक तैयार किया जा रहा है। परामर्श यूनाइटेड किंगडम, चीन और कनाडा के लिए उपलब्ध है।",
     "region.current": "वर्तमान क्षेत्र",
 

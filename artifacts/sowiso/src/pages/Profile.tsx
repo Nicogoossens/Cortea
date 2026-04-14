@@ -262,7 +262,7 @@ export default function Profile() {
                   <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-1">
                     <div className="text-sm font-medium text-foreground">{triggerLabel(log.trigger, t)}</div>
                     <div className="text-xs font-mono text-muted-foreground">
-                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "PP", { locale: dateFnsLocale })}</time>
+                      <time dateTime={log.timestamp}>{format(new Date(log.timestamp), "PPpp", { locale: dateFnsLocale })}</time>
                     </div>
                   </div>
                   <div className={`text-xs font-mono uppercase tracking-widest ${log.score_delta > 0 ? "text-green-600" : log.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>

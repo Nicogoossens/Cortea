@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={t("locale.select")}
+        aria-label={`${t("locale.select")}: ${current.languageLabel} (${current.regionLabel})`}
         className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded-sm transition-colors text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
       >
         <Globe className="w-3 h-3 flex-shrink-0 opacity-60" aria-hidden="true" />

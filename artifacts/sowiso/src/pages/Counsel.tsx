@@ -56,7 +56,7 @@ export default function Counsel() {
       const body = await res.json() as { guidance: string };
       setResponse(body.guidance);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred.");
+      setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsSubmitting(false);
     }

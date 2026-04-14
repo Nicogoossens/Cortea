@@ -248,6 +248,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Link Not Recognised",
     "verify.invalid_body": "This verification link is not recognised. Please check your correspondence or register again.",
     "verify.error_body": "A difficulty arose during verification. Please try again or request a new link.",
+
+    "register.name_label": "Full Name",
+    "register.name_placeholder": "Your name",
+    "register.birth_year_label": "Birth Year",
+    "register.gender_label": "Gender",
+    "register.required_note": "Fields marked * are required.",
+    "register.error_email": "Please enter a valid email address.",
+    "register.error_name": "Please enter your full name (at least 2 characters).",
+    "register.error_birth_year": "Please enter your birth year.",
+    "register.error_birth_year_invalid": "Please enter a valid birth year.",
+
+    "signin.title": "Sign In",
+    "signin.subtitle": "Return to your practice.",
+    "signin.submit": "Send Sign-In Link",
+    "signin.sent_heading": "Link Dispatched",
+    "signin.sent_body_prefix": "A sign-in link has been sent to",
+    "signin.sent_body_suffix": "Follow the link to continue your practice.",
+    "signin.no_account": "Not yet a member?",
   },
 
   nl: {
@@ -409,6 +427,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Link Niet Herkend",
     "verify.invalid_body": "Deze verificatielink wordt niet herkend. Controleer uw correspondentie of registreer opnieuw.",
     "verify.error_body": "Er is een probleem opgetreden tijdens de verificatie. Probeer het opnieuw of vraag een nieuwe link aan.",
+
+    "register.name_label": "Volledige Naam",
+    "register.name_placeholder": "Uw naam",
+    "register.birth_year_label": "Geboortejaar",
+    "register.gender_label": "Geslacht",
+    "register.required_note": "Velden gemarkeerd met * zijn verplicht.",
+    "register.error_email": "Voer een geldig e-mailadres in.",
+    "register.error_name": "Voer uw volledige naam in (minimaal 2 tekens).",
+    "register.error_birth_year": "Voer uw geboortejaar in.",
+    "register.error_birth_year_invalid": "Voer een geldig geboortejaar in.",
+
+    "signin.title": "Inloggen",
+    "signin.subtitle": "Keer terug naar uw oefeningen.",
+    "signin.submit": "Stuur Inloglink",
+    "signin.sent_heading": "Link Verzonden",
+    "signin.sent_body_prefix": "Een inloglink is verzonden naar",
+    "signin.sent_body_suffix": "Volg de link om uw oefeningen te hervatten.",
+    "signin.no_account": "Nog geen lid?",
   },
 
   fr: {
@@ -570,6 +606,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Lien Non Reconnu",
     "verify.invalid_body": "Ce lien de vérification n'est pas reconnu. Veuillez vérifier votre correspondance ou vous inscrire à nouveau.",
     "verify.error_body": "Une difficulté est survenue lors de la vérification. Veuillez réessayer ou demander un nouveau lien.",
+
+    "register.name_label": "Nom Complet",
+    "register.name_placeholder": "Votre nom",
+    "register.birth_year_label": "Année de Naissance",
+    "register.gender_label": "Genre",
+    "register.required_note": "Les champs marqués * sont obligatoires.",
+    "register.error_email": "Veuillez entrer une adresse e-mail valide.",
+    "register.error_name": "Veuillez entrer votre nom complet (au moins 2 caractères).",
+    "register.error_birth_year": "Veuillez entrer votre année de naissance.",
+    "register.error_birth_year_invalid": "Veuillez entrer une année de naissance valide.",
+
+    "signin.title": "Se Connecter",
+    "signin.subtitle": "Reprenez votre pratique.",
+    "signin.submit": "Envoyer un Lien de Connexion",
+    "signin.sent_heading": "Lien Envoyé",
+    "signin.sent_body_prefix": "Un lien de connexion a été envoyé à",
+    "signin.sent_body_suffix": "Suivez le lien pour reprendre votre pratique.",
+    "signin.no_account": "Pas encore membre ?",
   },
 
   de: {
@@ -731,6 +785,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Link Nicht Erkannt",
     "verify.invalid_body": "Dieser Bestätigungslink wird nicht erkannt. Bitte überprüfen Sie Ihre Korrespondenz oder registrieren Sie sich erneut.",
     "verify.error_body": "Bei der Verifizierung ist eine Schwierigkeit aufgetreten. Bitte versuchen Sie es erneut oder fordern Sie einen neuen Link an.",
+
+    "register.name_label": "Vollständiger Name",
+    "register.name_placeholder": "Ihr Name",
+    "register.birth_year_label": "Geburtsjahr",
+    "register.gender_label": "Geschlecht",
+    "register.required_note": "Mit * gekennzeichnete Felder sind Pflichtfelder.",
+    "register.error_email": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "register.error_name": "Bitte geben Sie Ihren vollständigen Namen ein (mindestens 2 Zeichen).",
+    "register.error_birth_year": "Bitte geben Sie Ihr Geburtsjahr ein.",
+    "register.error_birth_year_invalid": "Bitte geben Sie ein gültiges Geburtsjahr ein.",
+
+    "signin.title": "Anmelden",
+    "signin.subtitle": "Kehren Sie zu Ihrer Übung zurück.",
+    "signin.submit": "Anmeldelink Senden",
+    "signin.sent_heading": "Link Gesendet",
+    "signin.sent_body_prefix": "Ein Anmeldelink wurde gesendet an",
+    "signin.sent_body_suffix": "Folgen Sie dem Link, um Ihre Übung fortzusetzen.",
+    "signin.no_account": "Noch kein Mitglied?",
   },
 
   es: {
@@ -892,6 +964,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Enlace No Reconocido",
     "verify.invalid_body": "Este enlace de verificación no es reconocido. Verifique su correspondencia o regístrese de nuevo.",
     "verify.error_body": "Surgió una dificultad durante la verificación. Inténtelo de nuevo o solicite un nuevo enlace.",
+
+    "register.name_label": "Nombre Completo",
+    "register.name_placeholder": "Su nombre",
+    "register.birth_year_label": "Año de Nacimiento",
+    "register.gender_label": "Género",
+    "register.required_note": "Los campos marcados con * son obligatorios.",
+    "register.error_email": "Por favor, introduzca un correo electrónico válido.",
+    "register.error_name": "Por favor, introduzca su nombre completo (al menos 2 caracteres).",
+    "register.error_birth_year": "Por favor, introduzca su año de nacimiento.",
+    "register.error_birth_year_invalid": "Por favor, introduzca un año de nacimiento válido.",
+
+    "signin.title": "Iniciar Sesión",
+    "signin.subtitle": "Regrese a su práctica.",
+    "signin.submit": "Enviar Enlace de Inicio de Sesión",
+    "signin.sent_heading": "Enlace Enviado",
+    "signin.sent_body_prefix": "Se ha enviado un enlace de inicio de sesión a",
+    "signin.sent_body_suffix": "Siga el enlace para continuar su práctica.",
+    "signin.no_account": "¿Aún no es miembro?",
   },
 
   pt: {
@@ -1053,6 +1143,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Link Não Reconhecido",
     "verify.invalid_body": "Este link de verificação não é reconhecido. Verifique a sua correspondência ou registe-se novamente.",
     "verify.error_body": "Surgiu uma dificuldade durante a verificação. Tente novamente ou solicite um novo link.",
+
+    "register.name_label": "Nome Completo",
+    "register.name_placeholder": "O seu nome",
+    "register.birth_year_label": "Ano de Nascimento",
+    "register.gender_label": "Género",
+    "register.required_note": "Os campos marcados com * são obrigatórios.",
+    "register.error_email": "Por favor, introduza um endereço de e-mail válido.",
+    "register.error_name": "Por favor, introduza o seu nome completo (pelo menos 2 caracteres).",
+    "register.error_birth_year": "Por favor, introduza o seu ano de nascimento.",
+    "register.error_birth_year_invalid": "Por favor, introduza um ano de nascimento válido.",
+
+    "signin.title": "Entrar",
+    "signin.subtitle": "Regresse à sua prática.",
+    "signin.submit": "Enviar Link de Acesso",
+    "signin.sent_heading": "Link Enviado",
+    "signin.sent_body_prefix": "Um link de acesso foi enviado para",
+    "signin.sent_body_suffix": "Siga o link para continuar a sua prática.",
+    "signin.no_account": "Ainda não é membro?",
   },
 
   it: {
@@ -1214,6 +1322,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "Link Non Riconosciuto",
     "verify.invalid_body": "Questo link di verifica non è riconosciuto. Verifichi la Sua corrispondenza o si registri di nuovo.",
     "verify.error_body": "Si è verificata una difficoltà durante la verifica. Riprovi o richieda un nuovo link.",
+
+    "register.name_label": "Nome Completo",
+    "register.name_placeholder": "Il suo nome",
+    "register.birth_year_label": "Anno di Nascita",
+    "register.gender_label": "Genere",
+    "register.required_note": "I campi contrassegnati con * sono obbligatori.",
+    "register.error_email": "Inserisca un indirizzo e-mail valido.",
+    "register.error_name": "Inserisca il suo nome completo (almeno 2 caratteri).",
+    "register.error_birth_year": "Inserisca il suo anno di nascita.",
+    "register.error_birth_year_invalid": "Inserisca un anno di nascita valido.",
+
+    "signin.title": "Accedi",
+    "signin.subtitle": "Riprenda la sua pratica.",
+    "signin.submit": "Invia Link di Accesso",
+    "signin.sent_heading": "Link Inviato",
+    "signin.sent_body_prefix": "Un link di accesso è stato inviato a",
+    "signin.sent_body_suffix": "Segua il link per riprendere la sua pratica.",
+    "signin.no_account": "Non è ancora membro?",
   },
 
   hi: {
@@ -1375,6 +1501,24 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "verify.invalid_heading": "लिंक पहचाना नहीं गया",
     "verify.invalid_body": "यह सत्यापन लिंक पहचाना नहीं गया। कृपया अपना पत्राचार जांचें या फिर से पंजीकरण करें।",
     "verify.error_body": "सत्यापन के दौरान एक कठिनाई उत्पन्न हुई। कृपया पुनः प्रयास करें या नया लिंक मांगें।",
+
+    "register.name_label": "पूरा नाम",
+    "register.name_placeholder": "आपका नाम",
+    "register.birth_year_label": "जन्म वर्ष",
+    "register.gender_label": "लिंग",
+    "register.required_note": "* से चिह्नित फ़ील्ड आवश्यक हैं।",
+    "register.error_email": "कृपया एक मान्य ईमेल पता दर्ज करें।",
+    "register.error_name": "कृपया अपना पूरा नाम दर्ज करें (कम से कम 2 अक्षर)।",
+    "register.error_birth_year": "कृपया अपना जन्म वर्ष दर्ज करें।",
+    "register.error_birth_year_invalid": "कृपया एक मान्य जन्म वर्ष दर्ज करें।",
+
+    "signin.title": "साइन इन",
+    "signin.subtitle": "अपने अभ्यास पर वापस जाएँ।",
+    "signin.submit": "साइन-इन लिंक भेजें",
+    "signin.sent_heading": "लिंक भेजा गया",
+    "signin.sent_body_prefix": "एक साइन-इन लिंक भेजा गया है",
+    "signin.sent_body_suffix": "अपना अभ्यास जारी रखने के लिए लिंक का अनुसरण करें।",
+    "signin.no_account": "अभी तक सदस्य नहीं?",
   },
 };
 

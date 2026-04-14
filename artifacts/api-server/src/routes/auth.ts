@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import { sendActivationEmail } from "../lib/email";
 
 const router = Router();
 
-const DEFAULT_USER_ID = "default-user";
+const APP_URL = process.env.APP_URL ?? "https://sowiso.replit.app";
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");
@@ -20,8 +20,16 @@ function tokenExpiresAt(): Date {
   return d;
 }
 
+function devUrl(token: string): string | undefined {
+  if (process.env.NODE_ENV !== "development") return undefined;
+  return `${APP_URL}/verify-email?token=${token}`;
+}
+
 const RegisterBodySchema = z.object({
   email: z.string().email(),
+  full_name: z.string().min(2).max(120),
+  birth_year: z.number().int().min(1900).max(new Date().getFullYear() - 13),
+  gender_identity: z.string().max(50).optional(),
   locale: z.string().optional().default("en"),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional().default("casual"),
   language_code: z.string().optional().default("en"),
@@ -38,7 +46,7 @@ router.post("/auth/register", async (req, res) => {
       });
     }
 
-    const { email, locale, ambition_level, language_code, active_region } = parsed.data;
+    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     const existing = await db
@@ -60,18 +68,18 @@ router.post("/auth/register", async (req, res) => {
       await db
         .update(usersTable)
         .set({
+          full_name,
+          birth_year,
+          gender_identity: gender_identity ?? null,
           verification_token: token,
           token_expires_at: expiresAt,
         })
         .where(eq(usersTable.id, existing[0].id));
 
       await sendActivationEmail({ to: normalizedEmail, token, locale });
-      const devUrl = process.env.NODE_ENV === "development"
-        ? `${process.env.APP_URL ?? "https://sowiso.replit.app"}/verify-email?token=${token}`
-        : undefined;
       return res.json({
         message: "A new verification link has been dispatched to your address.",
-        ...(devUrl ? { dev_verification_url: devUrl } : {}),
+        ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
       });
     }
 
@@ -80,10 +88,13 @@ router.post("/auth/register", async (req, res) => {
       .insert(usersTable)
       .values({
         id: userId,
+        full_name,
         email: normalizedEmail,
         email_verified: false,
         verification_token: token,
         token_expires_at: expiresAt,
+        birth_year,
+        gender_identity: gender_identity ?? null,
         ambition_level,
         language_code,
         active_region,
@@ -95,14 +106,10 @@ router.post("/auth/register", async (req, res) => {
 
     await sendActivationEmail({ to: normalizedEmail, token, locale });
 
-    const devUrl = process.env.NODE_ENV === "development"
-      ? `${process.env.APP_URL ?? "https://sowiso.replit.app"}/verify-email?token=${token}`
-      : undefined;
-
     return res.status(201).json({
       message: "Your account has been established. A verification link has been dispatched to your address.",
       user_id: newUser.id,
-      ...(devUrl ? { dev_verification_url: devUrl } : {}),
+      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Registration failed");
@@ -134,7 +141,12 @@ router.get("/auth/verify", async (req, res) => {
     }
 
     if (user.email_verified) {
-      return res.json({ message: "Your address has already been verified.", already_verified: true });
+      return res.json({
+        message: "Your address has already been verified.",
+        already_verified: true,
+        user_id: user.id,
+        full_name: user.full_name,
+      });
     }
 
     if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
@@ -153,6 +165,7 @@ router.get("/auth/verify", async (req, res) => {
     return res.json({
       message: "Your address has been verified. Welcome to SOWISO.",
       user_id: user.id,
+      full_name: user.full_name,
     });
   } catch (err) {
     req.log.error({ err }, "Verification failed");
@@ -194,17 +207,67 @@ router.post("/auth/resend", async (req, res) => {
 
     await db
       .update(usersTable)
-      .set({
-        verification_token: token,
-        token_expires_at: expiresAt,
-      })
+      .set({ verification_token: token, token_expires_at: expiresAt })
       .where(eq(usersTable.id, user.id));
 
     await sendActivationEmail({ to: normalizedEmail, token, locale });
 
-    return res.json({ message: "A new verification link has been dispatched to your address." });
+    return res.json({
+      message: "A new verification link has been dispatched to your address.",
+      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+    });
   } catch (err) {
     req.log.error({ err }, "Resend verification failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+const SignInBodySchema = z.object({
+  email: z.string().email(),
+});
+
+router.post("/auth/signin", async (req, res) => {
+  try {
+    const parsed = SignInBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "A valid email address is required." });
+    }
+
+    const { email } = parsed.data;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, normalizedEmail))
+      .limit(1);
+
+    if (!user) {
+      return res.json({ message: "If this address is registered, a sign-in link will be dispatched." });
+    }
+
+    if (!user.email_verified) {
+      return res.status(400).json({
+        error: "This address has not yet been verified. Please check your inbox for the verification link.",
+      });
+    }
+
+    const token = generateToken();
+    const expiresAt = tokenExpiresAt();
+
+    await db
+      .update(usersTable)
+      .set({ verification_token: token, token_expires_at: expiresAt })
+      .where(eq(usersTable.id, user.id));
+
+    await sendActivationEmail({ to: normalizedEmail, token, locale: user.language_code });
+
+    return res.json({
+      message: "A sign-in link has been dispatched to your address.",
+      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Sign-in failed");
     return res.status(500).json({ error: "A difficulty arose. Please try again." });
   }
 });

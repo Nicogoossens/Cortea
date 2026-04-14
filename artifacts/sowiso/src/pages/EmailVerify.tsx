@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -10,6 +11,8 @@ type Status = "loading" | "success" | "already_verified" | "expired" | "invalid"
 
 export default function EmailVerify() {
   const { t } = useLanguage();
+  const { login } = useAuth();
+  const [, navigate] = useLocation();
   const [status, setStatus] = useState<Status>("loading");
 
   useEffect(() => {
@@ -23,8 +26,17 @@ export default function EmailVerify() {
 
     fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`)
       .then(async (res) => {
-        const body = await res.json() as { message?: string; already_verified?: boolean; error?: string };
+        const body = await res.json() as {
+          message?: string;
+          already_verified?: boolean;
+          error?: string;
+          user_id?: string;
+          full_name?: string;
+        };
         if (res.ok) {
+          if (body.user_id) {
+            login(body.user_id, body.full_name);
+          }
           setStatus(body.already_verified ? "already_verified" : "success");
         } else if (res.status === 410) {
           setStatus("expired");
@@ -37,6 +49,10 @@ export default function EmailVerify() {
       .catch(() => setStatus("error"));
   }, []);
 
+  function handleEnter() {
+    navigate("/");
+  }
+
   const views: Record<Status, { icon: React.ReactNode; heading: string; body: string; cta?: React.ReactNode }> = {
     loading: {
       icon: <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" aria-hidden="true" />,
@@ -48,12 +64,13 @@ export default function EmailVerify() {
       heading: t("verify.success_heading"),
       body: t("verify.success_body"),
       cta: (
-        <Link href="/">
-          <Button className="font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-            {t("verify.enter_sowiso")}
-            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </Button>
-        </Link>
+        <Button
+          onClick={handleEnter}
+          className="font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+        >
+          {t("verify.enter_sowiso")}
+          <ArrowRight className="w-4 h-4" aria-hidden="true" />
+        </Button>
       ),
     },
     already_verified: {
@@ -61,11 +78,9 @@ export default function EmailVerify() {
       heading: t("verify.already_heading"),
       body: t("verify.already_body"),
       cta: (
-        <Link href="/">
-          <Button variant="outline" className="font-serif gap-2">
-            {t("common.return_home")}
-          </Button>
-        </Link>
+        <Button onClick={handleEnter} variant="outline" className="font-serif gap-2">
+          {t("common.return_home")}
+        </Button>
       ),
     },
     expired: {

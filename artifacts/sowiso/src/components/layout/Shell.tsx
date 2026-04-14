@@ -1,14 +1,16 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
+  const { isAuthenticated, userName, logout } = useAuth();
 
   const navigation = [
     { key: "nav.dashboard", href: "/",        icon: Landmark },
@@ -77,6 +79,33 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+
+            <div className="pt-4 border-t border-sidebar-border/50 space-y-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors w-full"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-sm font-medium">Sign Out</span>
+                </button>
+              ) : (
+                <>
+                  <Link href="/signin">
+                    <div onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
+                      <LogIn className="h-4 w-4" aria-hidden="true" />
+                      <span className="text-sm font-medium">{t("signin.title")}</span>
+                    </div>
+                  </Link>
+                  <Link href="/register">
+                    <div onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
+                      <UserPlus className="h-4 w-4" aria-hidden="true" />
+                      <span className="text-sm font-medium">{t("register.title")}</span>
+                    </div>
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       )}
@@ -113,14 +142,39 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-6 border-t border-sidebar-border/50 space-y-3">
-          <Link href="/register" className="block">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
-              <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-              <span className="font-mono tracking-wide">{t("register.title")}</span>
-            </div>
-          </Link>
-          <div className="text-xs text-sidebar-foreground/40 text-center font-mono uppercase tracking-widest">
+        <div className="p-6 border-t border-sidebar-border/50 space-y-2">
+          {isAuthenticated ? (
+            <>
+              {userName && (
+                <p className="text-xs text-sidebar-foreground/60 font-mono px-3 truncate">
+                  {userName}
+                </p>
+              )}
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer w-full"
+              >
+                <LogOut className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                <span className="font-mono tracking-wide">Sign Out</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/signin" className="block">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors cursor-pointer">
+                  <LogIn className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                  <span className="font-mono tracking-wide">{t("signin.title")}</span>
+                </div>
+              </Link>
+              <Link href="/register" className="block">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
+                  <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                  <span className="font-mono tracking-wide">{t("register.title")}</span>
+                </div>
+              </Link>
+            </>
+          )}
+          <div className="text-xs text-sidebar-foreground/40 text-center font-mono uppercase tracking-widest pt-1">
             {t("app.established")}
           </div>
         </div>

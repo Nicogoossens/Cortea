@@ -8,17 +8,55 @@ import { UserPlus, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical } from "
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+const GENDER_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "non_binary", label: "Non-binary" },
+  { value: "other", label: "Other" },
+];
+
+const currentYear = new Date().getFullYear();
+
 export default function Register() {
   const { t, locale } = useLanguage();
-  const [email, setEmail] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    full_name: "",
+    birth_year: "",
+    gender_identity: "",
+  });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null);
 
+  function update(field: string, value: string) {
+    setForm((f) => ({ ...f, [field]: value }));
+    setError(null);
+  }
+
+  function validate() {
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      return t("register.error_email");
+    }
+    if (!form.full_name.trim() || form.full_name.trim().length < 2) {
+      return t("register.error_name");
+    }
+    if (!form.birth_year) {
+      return t("register.error_birth_year");
+    }
+    const yr = parseInt(form.birth_year, 10);
+    if (isNaN(yr) || yr < 1900 || yr > currentYear - 13) {
+      return t("register.error_birth_year_invalid");
+    }
+    return null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    const validationError = validate();
+    if (validationError) { setError(validationError); return; }
     setLoading(true);
     setError(null);
 
@@ -27,7 +65,10 @@ export default function Register() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim(),
+          email: form.email.trim(),
+          full_name: form.full_name.trim(),
+          birth_year: parseInt(form.birth_year, 10),
+          gender_identity: form.gender_identity || undefined,
           locale: locale.split("-")[0],
         }),
       });
@@ -39,10 +80,7 @@ export default function Register() {
         return;
       }
 
-      if (body.dev_verification_url) {
-        setDevVerifyUrl(body.dev_verification_url);
-      }
-
+      if (body.dev_verification_url) setDevVerifyUrl(body.dev_verification_url);
       setSubmitted(true);
     } catch {
       setError(t("common.error"));
@@ -60,7 +98,7 @@ export default function Register() {
           </div>
           <h1 className="text-3xl font-serif text-foreground">{t("register.check_email")}</h1>
           <p className="text-muted-foreground leading-relaxed font-light">
-            {t("register.sent_to")} <span className="font-medium text-foreground">{email}</span>
+            {t("register.sent_to")} <span className="font-medium text-foreground">{form.email}</span>
           </p>
           {!devVerifyUrl && (
             <p className="text-sm text-muted-foreground/70">
@@ -116,22 +154,78 @@ export default function Register() {
 
       <Card className="border-border bg-card shadow-sm">
         <CardContent className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+
+            <div className="space-y-2">
+              <label htmlFor="full_name" className="text-sm font-medium text-foreground tracking-wide block">
+                {t("register.name_label")} <span className="text-destructive" aria-hidden="true">*</span>
+              </label>
+              <Input
+                id="full_name"
+                type="text"
+                autoComplete="name"
+                placeholder={t("register.name_placeholder")}
+                value={form.full_name}
+                onChange={(e) => update("full_name", e.target.value)}
+                className="bg-background border-border/60 focus:border-primary/50 rounded-sm"
+                disabled={loading}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground tracking-wide block">
-                {t("register.email_label")}
+                {t("register.email_label")} <span className="text-destructive" aria-hidden="true">*</span>
               </label>
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
                 placeholder={t("register.email_placeholder")}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
                 className="bg-background border-border/60 focus:border-primary/50 rounded-sm"
                 disabled={loading}
                 required
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="birth_year" className="text-sm font-medium text-foreground tracking-wide block">
+                  {t("register.birth_year_label")} <span className="text-destructive" aria-hidden="true">*</span>
+                </label>
+                <Input
+                  id="birth_year"
+                  type="number"
+                  autoComplete="bday-year"
+                  placeholder="1985"
+                  min={1900}
+                  max={currentYear - 13}
+                  value={form.birth_year}
+                  onChange={(e) => update("birth_year", e.target.value)}
+                  className="bg-background border-border/60 focus:border-primary/50 rounded-sm"
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="gender_identity" className="text-sm font-medium text-foreground tracking-wide block">
+                  {t("register.gender_label")}
+                </label>
+                <select
+                  id="gender_identity"
+                  value={form.gender_identity}
+                  onChange={(e) => update("gender_identity", e.target.value)}
+                  disabled={loading}
+                  className="w-full h-10 px-3 rounded-sm border border-border/60 bg-background text-sm text-foreground focus:outline-none focus:border-primary/50 disabled:opacity-50"
+                >
+                  {GENDER_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {error && (
@@ -144,7 +238,7 @@ export default function Register() {
               type="submit"
               size="lg"
               className="w-full font-serif bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!email.trim() || loading}
+              disabled={!form.email.trim() || !form.full_name.trim() || !form.birth_year || loading}
               aria-busy={loading}
             >
               {loading ? (
@@ -159,14 +253,18 @@ export default function Register() {
                 </>
               )}
             </Button>
+
+            <p className="text-xs text-muted-foreground/60 text-center font-light">
+              {t("register.required_note")}
+            </p>
           </form>
         </CardContent>
       </Card>
 
       <p className="text-center text-sm text-muted-foreground">
         {t("register.already_member")}{" "}
-        <Link href="/" className="text-primary hover:underline underline-offset-2">
-          {t("register.return_home")}
+        <Link href="/signin" className="text-primary hover:underline underline-offset-2">
+          {t("signin.title")}
         </Link>
       </p>
     </div>

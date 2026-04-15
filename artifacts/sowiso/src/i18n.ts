@@ -57,8 +57,8 @@ i18next
     // Do not escape — React already handles XSS
     interpolation: { escapeValue: false },
 
-    // Don't wait for async load before returning (bundled langs are immediate)
-    initImmediate: true,
+    // Don't block on async backend load — bundled langs are available immediately
+    initAsync: false,
 
     // react-i18next options
     react: {

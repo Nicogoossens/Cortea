@@ -43,14 +43,33 @@ function getResolvedUserId(req: Request): string {
   return (req as Request & { resolvedUserId?: string }).resolvedUserId!;
 }
 
-/** Compute a broad age group from birth year for etiquette calibration. */
-function computeAgeGroup(birthYear: number | null | undefined): string {
-  if (!birthYear) return "unknown";
-  const age = new Date().getFullYear() - birthYear;
-  if (age < 25) return "young_professional";
-  if (age < 40) return "mid_career";
-  if (age < 60) return "senior";
-  return "elder";
+/**
+ * Compute an age group for etiquette and accessibility calibration.
+ *
+ * Primary source  : birth_year  (explicit, most accurate).
+ * Secondary source: noble_score (Noble Score age estimation — Ambassador level ≥ 600
+ *   or Grand Master ≥ 1000 suggests a highly committed, often mature practitioner;
+ *   used only when birth_year is absent so the client need not perform arithmetic).
+ *
+ * The returned group drives the accessibility font-scaling hint on the client:
+ *   "senior_elder" or "established_practitioner" → auto-large font (55+ UX).
+ */
+function computeAgeGroup(
+  birthYear: number | null | undefined,
+  nobleScore?: number | null,
+): string {
+  if (birthYear) {
+    const age = new Date().getFullYear() - birthYear;
+    if (age < 25) return "young_professional";
+    if (age < 40) return "mid_career";
+    if (age < 55) return "mature";
+    return "senior_elder"; // 55+ → triggers auto-large font
+  }
+
+  // Noble Score age estimation fallback (no birth_year supplied)
+  const score = nobleScore ?? 0;
+  if (score >= 600) return "established_practitioner"; // Ambassador/Grand Master → also triggers font hint
+  return "unknown";
 }
 
 router.get("/users/profile", requireAuthUser, async (req, res) => {
@@ -66,7 +85,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
     const { session_token: _st, verification_token: _vt, ...safeUser } = user;
     return res.json({
       ...safeUser,
-      age_group: computeAgeGroup(user.birth_year),
+      age_group: computeAgeGroup(user.birth_year, user.noble_score),
       gender: user.gender_identity ?? null,
     });
   } catch (err) {

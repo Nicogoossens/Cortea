@@ -385,5 +385,10 @@
   "membership.ambassador.feature2": "Mirror — private reflection",
   "membership.ambassador.feature3": "Inner Circle access",
   "membership.ambassador.feature4": "Sensory Awareness module",
-  "auth.sso_signin": "Sign in"
+  "auth.sso_signin": "Sign in",
+  "auth.dev_mode": "Development mode",
+  "auth.dev_no_smtp_signin": "No SMTP is configured. Use the link below to sign in.",
+  "auth.dev_complete_signin": "Complete Sign-In",
+  "auth.dev_no_smtp_register": "No SMTP is configured. Use the link below to complete verification in this environment.",
+  "auth.dev_complete_verification": "Complete Verification"
 }

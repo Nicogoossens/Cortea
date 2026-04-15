@@ -62,9 +62,15 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
  * component applies two server-side preferences:
  *  1. `language_code` — overrides the localStorage locale so the UI matches
  *     the profile the user last saved (cross-device).
- *  2. `birth_year`    — if the user is 55+ and has never manually changed the
- *     font-size, automatically promotes it to "large" for readability.
+ *  2. `age_group`     — server-side Noble Score age estimation (primary: birth_year;
+ *     fallback: Noble Score ≥600 Ambassador tier). If the group is "senior_elder"
+ *     or "established_practitioner" and the user has never manually changed their
+ *     font-size, it is automatically promoted to "large" for readability.
  */
+
+/** Age groups that warrant automatic large-font promotion. */
+const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
+
 function UserPreferencesSync() {
   const { isAuthenticated, getAuthHeaders } = useAuth();
   const { locale, setLocale } = useLanguage();
@@ -84,7 +90,7 @@ function UserPreferencesSync() {
     fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
       .then((r) => r.ok ? r.json() : null)
       .catch(() => null)
-      .then((profile: { language_code?: string; birth_year?: number } | null) => {
+      .then((profile: { language_code?: string; age_group?: string } | null) => {
         if (!profile) return;
 
         if (profile.language_code) {
@@ -97,11 +103,8 @@ function UserPreferencesSync() {
           }
         }
 
-        if (profile.birth_year) {
-          const age = new Date().getFullYear() - profile.birth_year;
-          if (age >= 55) {
-            autoApplyAgeFont("large");
-          }
+        if (profile.age_group && AGE_FONT_GROUPS.has(profile.age_group)) {
+          autoApplyAgeFont("large");
         }
       });
   }, [isAuthenticated, getAuthHeaders, locale, setLocale, autoApplyAgeFont]);

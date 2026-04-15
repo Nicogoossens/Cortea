@@ -385,5 +385,10 @@
   "membership.ambassador.feature2": "Mirror — التأمل الخاص",
   "membership.ambassador.feature3": "إمكانية وصول الدائرة الداخلية",
   "membership.ambassador.feature4": "وحدة الوعي الحسي",
-  "auth.sso_signin": "تسجيل الدخول"
+  "auth.sso_signin": "تسجيل الدخول",
+  "auth.dev_mode": "وضع التطوير",
+  "auth.dev_no_smtp_signin": "لم يتم تكوين SMTP. استخدم الرابط أدناه لتسجيل الدخول.",
+  "auth.dev_complete_signin": "إتمام تسجيل الدخول",
+  "auth.dev_no_smtp_register": "لم يتم تكوين SMTP. استخدم الرابط أدناه لإتمام التحقق.",
+  "auth.dev_complete_verification": "إتمام التحقق"
 }

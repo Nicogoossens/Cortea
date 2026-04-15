@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
 export default function ReplitCallback() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
@@ -10,19 +12,29 @@ export default function ReplitCallback() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const uid = params.get("uid");
-    const name = params.get("name") ? decodeURIComponent(params.get("name")!) : undefined;
-    const isAdmin = params.get("admin") === "1";
+    const code = params.get("code");
     const error = params.get("error");
 
-    if (error || !token || !uid) {
+    if (error || !code) {
       setLocation("/signin?error=auth_failed");
       return;
     }
 
-    login(uid, { name, sessionToken: token, isAdmin });
-    setLocation("/");
+    // Exchange the one-time code for a session token server-side.
+    // The session token is never placed in a URL parameter.
+    fetch(`${API_BASE}/api/auth/redeem?code=${encodeURIComponent(code)}`)
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: { token: string; userId: string; fullName: string | null; isAdmin: boolean }) => {
+        login(data.userId, {
+          name: data.fullName ?? undefined,
+          sessionToken: data.token,
+          isAdmin: data.isAdmin,
+        });
+        setLocation("/");
+      })
+      .catch(() => {
+        setLocation("/signin?error=auth_failed");
+      });
   }, [login, setLocation]);
 
   return (

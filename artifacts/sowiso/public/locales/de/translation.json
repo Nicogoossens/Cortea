@@ -385,5 +385,10 @@
   "profile.gender_prefer_not": "Lieber nicht angeben",
   "counsel.quality_checking": "Registerprüfung wird durchgeführt…",
   "counsel.register_suggestion": "Registerempfehlung",
-  "auth.sso_signin": "Anmelden"
+  "auth.sso_signin": "Anmelden",
+  "auth.dev_mode": "Entwicklungsmodus",
+  "auth.dev_no_smtp_signin": "Kein SMTP konfiguriert. Verwenden Sie den untenstehenden Link zur Anmeldung.",
+  "auth.dev_complete_signin": "Anmeldung abschließen",
+  "auth.dev_no_smtp_register": "Kein SMTP konfiguriert. Verwenden Sie den untenstehenden Link zur Verifizierung.",
+  "auth.dev_complete_verification": "Verifizierung abschließen"
 }

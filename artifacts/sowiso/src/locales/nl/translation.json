@@ -385,5 +385,10 @@
   "profile.gender_prefer_not": "Liever niet zeggen",
   "counsel.quality_checking": "Register wordt beoordeeld…",
   "counsel.register_suggestion": "Registervoorstel",
-  "auth.sso_signin": "Aanmelden"
+  "auth.sso_signin": "Aanmelden",
+  "auth.dev_mode": "Ontwikkelingsmodus",
+  "auth.dev_no_smtp_signin": "Geen SMTP geconfigureerd. Gebruik de onderstaande link om in te loggen.",
+  "auth.dev_complete_signin": "Aanmelding voltooien",
+  "auth.dev_no_smtp_register": "Geen SMTP geconfigureerd. Gebruik de onderstaande link om verificatie te voltooien.",
+  "auth.dev_complete_verification": "Verificatie voltooien"
 }

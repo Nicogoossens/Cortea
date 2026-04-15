@@ -64,10 +64,10 @@ export default function SignIn() {
           <div className="border border-amber-300/60 bg-amber-50/60 rounded-sm p-5 space-y-3">
             <div className="flex items-center gap-2 text-amber-700">
               <FlaskConical className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span className="text-xs font-mono uppercase tracking-widest font-semibold">Development mode</span>
+              <span className="text-xs font-mono uppercase tracking-widest font-semibold">{t("auth.dev_mode")}</span>
             </div>
             <p className="text-xs text-amber-700/80 font-light leading-relaxed">
-              No SMTP is configured. Use the link below to sign in.
+              {t("auth.dev_no_smtp_signin")}
             </p>
             <Link href={devVerifyUrl.replace(/^https?:\/\/[^/]+/, "")}>
               <Button
@@ -75,7 +75,7 @@ export default function SignIn() {
                 size="sm"
                 className="w-full font-mono text-xs border-amber-400/60 text-amber-800 hover:bg-amber-100/60"
               >
-                Complete Sign-In
+                {t("auth.dev_complete_signin")}
               </Button>
             </Link>
           </div>

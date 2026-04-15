@@ -7,10 +7,34 @@ import { randomBytes } from "crypto";
 
 const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
 const OIDC_COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
+const REDEEM_CODE_TTL = 60 * 1000; // 60 seconds
 
 const router: IRouter = Router();
 
 let oidcConfigCache: oidc.Configuration | null = null;
+
+/**
+ * Short-lived one-time redemption codes issued after a successful OIDC callback.
+ * The session token is NEVER placed in a URL query parameter. Instead the
+ * frontend exchanges this opaque code for the token via POST /api/auth/redeem,
+ * which deletes the code immediately after use.
+ */
+interface RedeemEntry {
+  token: string;
+  userId: string;
+  fullName: string | null;
+  isAdmin: boolean;
+  expiresAt: number;
+}
+const redeemCodes = new Map<string, RedeemEntry>();
+
+// Prune expired codes lazily to avoid memory leaks
+function pruneExpiredCodes() {
+  const now = Date.now();
+  for (const [code, entry] of redeemCodes) {
+    if (entry.expiresAt <= now) redeemCodes.delete(code);
+  }
+}
 
 async function getOidcConfig(): Promise<oidc.Configuration> {
   if (!oidcConfigCache) {
@@ -45,7 +69,7 @@ function getSafePath(value: unknown): string {
   return value;
 }
 
-function generateBearerToken(): string {
+function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
@@ -64,7 +88,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
     .limit(1);
 
   if (byOAuth.length > 0) {
-    const sessionToken = generateBearerToken();
+    const sessionToken = generateToken();
     await db.update(usersTable)
       .set({ session_token: sessionToken, full_name: fullName ?? byOAuth[0].full_name })
       .where(eq(usersTable.id, byOAuth[0].id));
@@ -80,7 +104,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
       .limit(1);
 
     if (byEmail.length > 0) {
-      const sessionToken = generateBearerToken();
+      const sessionToken = generateToken();
       await db.update(usersTable)
         .set({
           session_token: sessionToken,
@@ -96,7 +120,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
 
   // 3. Create new user
   const userId = `replit_${randomBytes(8).toString("hex")}`;
-  const sessionToken = generateBearerToken();
+  const sessionToken = generateToken();
   const [newUser] = await db.insert(usersTable).values({
     id: userId,
     email,
@@ -202,13 +226,54 @@ router.get("/callback", async (req: Request, res: Response) => {
 
   try {
     const user = await upsertSowisoUser(claims as unknown as Record<string, unknown>);
-    const name = encodeURIComponent(user.full_name ?? "");
-    const admin = user.is_admin ? "1" : "0";
-    res.redirect(`${origin}${returnTo}?token=${user.session_token}&uid=${user.id}&name=${name}&admin=${admin}`);
+
+    // Issue a short-lived one-time redemption code — session token stays server-side.
+    pruneExpiredCodes();
+    const redeemCode = randomBytes(16).toString("hex");
+    redeemCodes.set(redeemCode, {
+      token: user.session_token!,
+      userId: user.id,
+      fullName: user.full_name ?? null,
+      isAdmin: user.is_admin ?? false,
+      expiresAt: Date.now() + REDEEM_CODE_TTL,
+    });
+
+    res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
   } catch (err) {
     req.log.error({ err }, "OIDC user upsert failed");
     res.redirect("/?error=auth_failed");
   }
+});
+
+/**
+ * GET /api/auth/redeem?code=<code>
+ * Single-use endpoint: exchanges a one-time redemption code for the session token.
+ * The code is deleted immediately after use (or on expiry).
+ */
+router.get("/auth/redeem", (req: Request, res: Response) => {
+  pruneExpiredCodes();
+  const code = typeof req.query.code === "string" ? req.query.code : null;
+
+  if (!code) {
+    res.status(400).json({ error: "Missing redemption code." });
+    return;
+  }
+
+  const entry = redeemCodes.get(code);
+  if (!entry || entry.expiresAt <= Date.now()) {
+    redeemCodes.delete(code as string);
+    res.status(401).json({ error: "The redemption code is invalid or has expired." });
+    return;
+  }
+
+  redeemCodes.delete(code);
+
+  res.json({
+    token: entry.token,
+    userId: entry.userId,
+    fullName: entry.fullName,
+    isAdmin: entry.isAdmin,
+  });
 });
 
 export default router;

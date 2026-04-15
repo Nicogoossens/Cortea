@@ -385,5 +385,10 @@
   "profile.gender_prefer_not": "Prefiro não informar",
   "counsel.quality_checking": "Avaliando registro…",
   "counsel.register_suggestion": "Sugestão de registro",
-  "auth.sso_signin": "Entrar"
+  "auth.sso_signin": "Entrar",
+  "auth.dev_mode": "Modo de desenvolvimento",
+  "auth.dev_no_smtp_signin": "Nenhum SMTP configurado. Use o link abaixo para entrar.",
+  "auth.dev_complete_signin": "Concluir acesso",
+  "auth.dev_no_smtp_register": "Nenhum SMTP configurado. Use o link abaixo para concluir a verificação.",
+  "auth.dev_complete_verification": "Concluir verificação"
 }

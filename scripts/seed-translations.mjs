@@ -15,10 +15,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const LOCALES_DIR = resolve(ROOT, "artifacts/sowiso/src/locales");
 
-// Use pg from pnpm virtual store
+// Resolve pg through the @workspace/db package so the path is stable across
+// pg version bumps and pnpm store layout changes.
 const require = createRequire(import.meta.url);
-const pgPath = resolve(ROOT, "node_modules/.pnpm/pg@8.20.0/node_modules/pg");
-const pg = require(pgPath);
+const dbPkgDir = resolve(ROOT, "lib/db");
+const pg = require(resolve(dbPkgDir, "node_modules/pg"));
 
 const args = process.argv.slice(2);
 const targetLang = args.includes("--lang") ? args[args.indexOf("--lang") + 1] : null;

@@ -16,8 +16,11 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
-const pgPath = path.resolve(__dirname, "../node_modules/.pnpm/pg@8.20.0/node_modules/pg");
-const pg = require(pgPath);
+
+// Resolve pg through the @workspace/db package so the path is stable across
+// pg version bumps and pnpm store layout changes.
+const dbPkgDir = path.resolve(__dirname, "../lib/db");
+const pg = require(path.resolve(dbPkgDir, "node_modules/pg"));
 const { Pool } = pg;
 
 const ADMIN_EMAIL = "nico.goossens.01@gmail.com";

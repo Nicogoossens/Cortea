@@ -213,12 +213,12 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
     const results: string[] = [];
     let anyFailed = false;
 
-    const run = async (label: string, cmd: string) => {
+    const run = async (label: string, cmd: string, timeoutMs = 120_000) => {
       try {
         const { stdout, stderr } = await execAsync(cmd, {
           cwd: WORKSPACE_ROOT,
           env: { ...process.env },
-          timeout: 120_000,
+          timeout: timeoutMs,
         });
         results.push(`[${label}] OK\n${stdout.trim()}`);
         if (stderr.trim()) results.push(`[${label}] stderr: ${stderr.trim()}`);
@@ -233,7 +233,7 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
     await run("Compass", "pnpm --filter db seed:compass");
     await run("Translations", "node scripts/seed-translations.mjs");
     await run("Admin", "node scripts/ensure-admin.mjs");
-    await run("Scenario Translations", "node scripts/scenario-translate.mjs");
+    await run("Scenario Translations", "node scripts/scenario-translate.mjs", 600_000);
 
     return res.status(anyFailed ? 207 : 200).json({ ok: !anyFailed, results });
   } catch (err) {
@@ -298,7 +298,10 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
           errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
           continue;
         }
-        await db.insert(scenariosTable).values(result.data);
+        await db
+          .insert(scenariosTable)
+          .values(result.data)
+          .onConflictDoNothing({ target: [scenariosTable.region_code, scenariosTable.pillar, scenariosTable.title] });
         inserted++;
       }
     } else if (type === "compass_regions") {

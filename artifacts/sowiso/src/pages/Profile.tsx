@@ -420,15 +420,37 @@ export default function Profile() {
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 1_500_000) {
-      alert(t("profile.avatar_too_large"));
-      return;
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+
+    const MAX_SIDE = 800;
+    const QUALITY = 0.82;
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const { width: w, height: h } = img;
+            const scale = Math.min(1, MAX_SIDE / Math.max(w, h));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(w * scale);
+            canvas.height = Math.round(h * scale);
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { resolve(ev.target?.result as string); return; }
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", QUALITY));
+          };
+          img.onerror = reject;
+          img.src = ev.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await patchProfile({ avatar_url: dataUrl }, setAvatarSave);
+    } catch {
+      setAvatarSave("error");
     }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      await patchProfile({ avatar_url: reader.result as string }, setAvatarSave);
-    };
-    reader.readAsDataURL(file);
   }
 
   async function handleAmbitionChange(level: string) {
@@ -542,7 +564,7 @@ export default function Profile() {
           >
             <Camera className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          <input ref={avatarInputRef} type="file" accept="image/*,image/heic,image/heif" className="absolute opacity-0 w-0 h-0 pointer-events-none" tabIndex={-1} aria-hidden="true" onChange={handleAvatarUpload} />
           {avatarSave === "saving" && (
             <div className="absolute inset-0 rounded-full bg-background/60 flex items-center justify-center">
               <span className="text-xs font-mono animate-pulse">…</span>

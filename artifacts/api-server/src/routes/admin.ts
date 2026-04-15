@@ -99,7 +99,7 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
       .offset(offset);
 
     const total = totalRow?.total ?? 0;
-    return res.json({ users: rows, total, page, limit, pages: Math.ceil(total / limit) });
+    return res.json({ users: rows, total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) });
   } catch (err) {
     req.log.error({ err }, "Admin: failed to list users");
     return res.status(500).json({ error: "A difficulty arose listing users." });
@@ -223,9 +223,11 @@ router.delete("/admin/users/:id", requireAdmin, async (req, res) => {
     const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
     if (!existing) return res.status(404).json({ error: "User not found." });
 
-    await db.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, id));
-    await db.delete(zuil_voortgangTable).where(eq(zuil_voortgangTable.user_id, id));
-    await db.delete(usersTable).where(eq(usersTable.id, id));
+    await db.transaction(async (tx) => {
+      await tx.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, id));
+      await tx.delete(zuil_voortgangTable).where(eq(zuil_voortgangTable.user_id, id));
+      await tx.delete(usersTable).where(eq(usersTable.id, id));
+    });
 
     return res.json({ message: "The user's record has been permanently removed." });
   } catch (err) {

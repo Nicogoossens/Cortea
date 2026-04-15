@@ -88,6 +88,7 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
         created_at: usersTable.created_at,
         language_code: usersTable.language_code,
         country_of_origin: usersTable.country_of_origin,
+        active_region: usersTable.active_region,
         objectives: usersTable.objectives,
         onboarding_completed: usersTable.onboarding_completed,
       })

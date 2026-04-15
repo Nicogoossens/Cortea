@@ -28,7 +28,16 @@ interface AdminUser {
   created_at: string;
   language_code: string;
   country_of_origin: string | null;
+  active_region: string | null;
   onboarding_completed: boolean;
+}
+
+function maskEmail(email: string | null): string {
+  if (!email) return "—";
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const visible = local.slice(0, 2);
+  return `${visible}***@${domain}`;
 }
 
 interface ContentStatus {
@@ -73,6 +82,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteState, setDeleteState] = useState<ActionState>("idle");
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
 
   const isSuspended = !!user.suspended_at;
 
@@ -143,7 +153,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               </span>
             )}
           </div>
-          <div className="text-xs text-muted-foreground font-light truncate">{user.email ?? "—"}</div>
+          <div className="text-xs text-muted-foreground font-light truncate">{maskEmail(user.email)}</div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {user.email_verified
@@ -174,6 +184,10 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               <p className="text-foreground mt-0.5">{user.country_of_origin ?? "—"}</p>
             </div>
             <div>
+              <span className="font-mono uppercase tracking-wider text-muted-foreground/70">Active Region</span>
+              <p className="text-foreground mt-0.5">{user.active_region ?? "—"}</p>
+            </div>
+            <div>
               <span className="font-mono uppercase tracking-wider text-muted-foreground/70">{t("admin.col_onboarding")}</span>
               <p className="text-foreground mt-0.5">{user.onboarding_completed ? t("admin.yes") : t("admin.no")}</p>
             </div>
@@ -198,39 +212,46 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                 {t("admin.action_verify")}
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              className={`font-mono text-xs gap-1.5 ${isSuspended ? "border-green-400/60 text-green-700 hover:bg-green-50" : "border-red-400/60 text-red-700 hover:bg-red-50"}`}
-              disabled={actionState === "loading"}
-              onClick={async () => {
-                setActionState("loading");
-                try {
-                  const endpoint = isSuspended ? "unsuspend" : "suspend";
-                  const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/${endpoint}`, {
-                    method: "PATCH",
-                    headers: authHeaders,
-                  });
-                  if (res.ok) {
-                    const updated = await res.json() as AdminUser;
-                    onUpdated(updated);
-                    setActionState("done");
-                    setTimeout(() => setActionState("idle"), 1500);
-                  } else {
+            {isSuspended ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-green-400/60 text-green-700 hover:bg-green-50"
+                disabled={actionState === "loading"}
+                onClick={async () => {
+                  setActionState("loading");
+                  try {
+                    const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/unsuspend`, {
+                      method: "PATCH",
+                      headers: authHeaders,
+                    });
+                    if (res.ok) {
+                      onUpdated(await res.json() as AdminUser);
+                      setActionState("done");
+                      setTimeout(() => setActionState("idle"), 1500);
+                    } else {
+                      setActionState("error");
+                      setTimeout(() => setActionState("idle"), 2000);
+                    }
+                  } catch {
                     setActionState("error");
                     setTimeout(() => setActionState("idle"), 2000);
                   }
-                } catch {
-                  setActionState("error");
-                  setTimeout(() => setActionState("idle"), 2000);
-                }
-              }}
-            >
-              {isSuspended
-                ? <><CheckCircle2 className="w-3.5 h-3.5" />{t("admin.action_unsuspend")}</>
-                : <><Ban className="w-3.5 h-3.5" />{t("admin.action_suspend")}</>
-              }
-            </Button>
+                }}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />{t("admin.action_unsuspend")}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-red-400/60 text-red-700 hover:bg-red-50"
+                disabled={actionState === "loading"}
+                onClick={() => setShowSuspendConfirm(true)}
+              >
+                <Ban className="w-3.5 h-3.5" />{t("admin.action_suspend")}
+              </Button>
+            )}
             <div className="flex items-center gap-1.5">
               <select
                 value={tierValue}
@@ -254,6 +275,57 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
             {actionState === "done" && <span className="text-xs text-green-600 font-mono flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{t("admin.saved")}</span>}
             {actionState === "error" && <span className="text-xs text-destructive font-mono">{t("admin.error")}</span>}
           </div>
+
+          {/* Suspend confirmation panel */}
+          {showSuspendConfirm && !isSuspended && (
+            <div className="border border-amber-200/60 bg-amber-50/50 rounded-sm p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 font-mono">
+                  Suspend <strong>{user.full_name ?? maskEmail(user.email)}</strong>? They will not be able to sign in until reinstated.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs gap-1.5 border-amber-500 bg-amber-500 text-white hover:bg-amber-600"
+                  disabled={actionState === "loading"}
+                  onClick={async () => {
+                    setActionState("loading");
+                    setShowSuspendConfirm(false);
+                    try {
+                      const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/suspend`, {
+                        method: "PATCH",
+                        headers: authHeaders,
+                      });
+                      if (res.ok) {
+                        onUpdated(await res.json() as AdminUser);
+                        setActionState("done");
+                        setTimeout(() => setActionState("idle"), 1500);
+                      } else {
+                        setActionState("error");
+                        setTimeout(() => setActionState("idle"), 2000);
+                      }
+                    } catch {
+                      setActionState("error");
+                      setTimeout(() => setActionState("idle"), 2000);
+                    }
+                  }}
+                >
+                  <Ban className="w-3.5 h-3.5" /> Confirm Suspend
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs"
+                  onClick={() => setShowSuspendConfirm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Delete section */}
           {!showDeleteConfirm ? (
@@ -631,7 +703,19 @@ export default function Admin() {
   }
 
   function handleUserDeleted(id: string) {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
+    setUsers((prev) => {
+      const next = prev.filter((u) => u.id !== id);
+      const newTotal = Math.max(0, totalUsers - 1);
+      setTotalUsers(newTotal);
+      const newTotalPages = Math.max(1, Math.ceil(newTotal / 20));
+      setTotalPages(newTotalPages);
+      if (next.length === 0 && currentPage > 1) {
+        const prevPage = currentPage - 1;
+        setCurrentPage(prevPage);
+        fetchUsers(query, prevPage);
+      }
+      return next;
+    });
   }
 
   if (!isAuthenticated) {

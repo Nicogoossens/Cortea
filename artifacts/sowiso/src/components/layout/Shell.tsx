@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -10,7 +10,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { isAuthenticated, userName, logout } = useAuth();
+  const { isAuthenticated, isAdmin, userName, logout } = useAuth();
 
   const navigation = [
     { key: "nav.dashboard", href: "/",           icon: Landmark },
@@ -83,6 +83,25 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+            {isAdmin && (
+              <Link href="/admin">
+                <div
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  onKeyDown={(e) => { if (e.key === "Enter") setIsMobileMenuOpen(false); }}
+                  aria-current={location === "/admin" ? "page" : undefined}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-sm transition-colors cursor-pointer ${
+                    location === "/admin"
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                  }`}
+                >
+                  <Settings2 className="h-5 w-5" aria-hidden="true" />
+                  <span className="font-medium">{t("nav.admin")}</span>
+                </div>
+              </Link>
+            )}
 
             <div className="pt-4 border-t border-sidebar-border/50 space-y-2">
               {isAuthenticated ? (
@@ -149,6 +168,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link href="/admin" className="block">
+              <div
+                aria-current={location === "/admin" ? "page" : undefined}
+                className={`flex items-center gap-3 px-4 py-3 rounded-sm transition-all duration-200 ${
+                  location === "/admin"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground translate-x-2"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground hover:translate-x-1"
+                }`}
+              >
+                <Settings2 className="h-5 w-5 opacity-70" aria-hidden="true" />
+                <span className="font-medium tracking-wide">{t("nav.admin")}</span>
+              </div>
+            </Link>
+          )}
         </nav>
 
         <div className="p-6 border-t border-sidebar-border/50 space-y-2">

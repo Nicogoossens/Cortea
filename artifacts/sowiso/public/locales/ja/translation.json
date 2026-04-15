@@ -391,5 +391,10 @@
   "auth.dev_no_smtp_signin": "SMTPが設定されていません。以下のリンクからサインインしてください。",
   "auth.dev_complete_signin": "サインインを完了",
   "auth.dev_no_smtp_register": "SMTPが設定されていません。以下のリンクで確認を完了してください。",
-  "auth.dev_complete_verification": "確認を完了"
+  "auth.dev_complete_verification": "確認を完了",
+  "register.gender_prefer_not": "回答しない",
+  "register.gender_male": "男性",
+  "register.gender_female": "女性",
+  "register.gender_non_binary": "ノンバイナリー",
+  "register.gender_other": "その他"
 }

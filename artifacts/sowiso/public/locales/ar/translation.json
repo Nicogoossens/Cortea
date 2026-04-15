@@ -390,5 +390,10 @@
   "auth.dev_no_smtp_signin": "لم يتم تكوين SMTP. استخدم الرابط أدناه لتسجيل الدخول.",
   "auth.dev_complete_signin": "إتمام تسجيل الدخول",
   "auth.dev_no_smtp_register": "لم يتم تكوين SMTP. استخدم الرابط أدناه لإتمام التحقق.",
-  "auth.dev_complete_verification": "إتمام التحقق"
+  "auth.dev_complete_verification": "إتمام التحقق",
+  "register.gender_prefer_not": "أفضل عدم الإفصاح",
+  "register.gender_male": "ذكر",
+  "register.gender_female": "أنثى",
+  "register.gender_non_binary": "غير ثنائي",
+  "register.gender_other": "آخر"
 }

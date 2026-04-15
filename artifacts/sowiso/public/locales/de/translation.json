@@ -390,5 +390,10 @@
   "auth.dev_no_smtp_signin": "Kein SMTP konfiguriert. Verwenden Sie den untenstehenden Link zur Anmeldung.",
   "auth.dev_complete_signin": "Anmeldung abschließen",
   "auth.dev_no_smtp_register": "Kein SMTP konfiguriert. Verwenden Sie den untenstehenden Link zur Verifizierung.",
-  "auth.dev_complete_verification": "Verifizierung abschließen"
+  "auth.dev_complete_verification": "Verifizierung abschließen",
+  "register.gender_prefer_not": "Keine Angabe",
+  "register.gender_male": "Männlich",
+  "register.gender_female": "Weiblich",
+  "register.gender_non_binary": "Nicht-binär",
+  "register.gender_other": "Andere"
 }

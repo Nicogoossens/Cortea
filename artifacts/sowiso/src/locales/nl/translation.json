@@ -390,5 +390,10 @@
   "auth.dev_no_smtp_signin": "Geen SMTP geconfigureerd. Gebruik de onderstaande link om in te loggen.",
   "auth.dev_complete_signin": "Aanmelding voltooien",
   "auth.dev_no_smtp_register": "Geen SMTP geconfigureerd. Gebruik de onderstaande link om verificatie te voltooien.",
-  "auth.dev_complete_verification": "Verificatie voltooien"
+  "auth.dev_complete_verification": "Verificatie voltooien",
+  "register.gender_prefer_not": "Zeg ik liever niet",
+  "register.gender_male": "Man",
+  "register.gender_female": "Vrouw",
+  "register.gender_non_binary": "Non-binair",
+  "register.gender_other": "Anders"
 }

@@ -390,5 +390,10 @@
   "auth.dev_no_smtp_signin": "Aucun SMTP configuré. Utilisez le lien ci-dessous pour vous connecter.",
   "auth.dev_complete_signin": "Finaliser la connexion",
   "auth.dev_no_smtp_register": "Aucun SMTP configuré. Utilisez le lien ci-dessous pour finaliser la vérification.",
-  "auth.dev_complete_verification": "Finaliser la vérification"
+  "auth.dev_complete_verification": "Finaliser la vérification",
+  "register.gender_prefer_not": "Préfère ne pas répondre",
+  "register.gender_male": "Homme",
+  "register.gender_female": "Femme",
+  "register.gender_non_binary": "Non-binaire",
+  "register.gender_other": "Autre"
 }

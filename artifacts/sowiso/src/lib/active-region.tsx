@@ -100,10 +100,12 @@ export function ActiveRegionProvider({
   // preference is stored yet (localStorage key absent).
   useEffect(() => {
     if (localStorage.getItem(REGION_PREF_KEY)) return;
-    const userId = localStorage.getItem("sowiso_user_id");
-    if (!userId) return;
+    const sessionToken = localStorage.getItem("sowiso_session_token");
+    if (!sessionToken) return;
     const apiBase = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL?.replace(/\/$/, "") ?? "";
-    fetch(`${apiBase}/api/users/profile?user_id=${encodeURIComponent(userId)}`)
+    fetch(`${apiBase}/api/users/profile`, {
+      headers: { Authorization: `Bearer ${sessionToken}` },
+    })
       .then((r) => r.ok ? r.json() : null)
       .then((data: { active_region?: string } | null) => {
         if (!data?.active_region) return;

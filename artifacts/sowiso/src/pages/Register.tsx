@@ -8,13 +8,13 @@ import { UserPlus, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical } from "
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const GENDER_OPTIONS = [
-  { value: "", label: "Prefer not to say" },
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "non_binary", label: "Non-binary" },
-  { value: "other", label: "Other" },
-];
+const GENDER_OPTION_KEYS = [
+  { value: "", key: "register.gender_prefer_not" },
+  { value: "male", key: "register.gender_male" },
+  { value: "female", key: "register.gender_female" },
+  { value: "non_binary", key: "register.gender_non_binary" },
+  { value: "other", key: "register.gender_other" },
+] as const;
 
 const currentYear = new Date().getFullYear();
 
@@ -279,8 +279,8 @@ export default function Register() {
                   disabled={loading}
                   className="w-full h-10 px-3 rounded-sm border border-border/60 bg-background text-sm text-foreground focus:outline-none focus:border-primary/50 disabled:opacity-50"
                 >
-                  {GENDER_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
+                  {GENDER_OPTION_KEYS.map((o) => (
+                    <option key={o.value} value={o.value}>{t(o.key)}</option>
                   ))}
                 </select>
               </div>

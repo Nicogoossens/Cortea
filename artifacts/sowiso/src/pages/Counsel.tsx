@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { useRegisterQuality } from "@/hooks/useRegisterQuality";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -37,8 +38,9 @@ function incrementStoredCount(userId: string | null): void {
 }
 
 export default function Counsel() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
+  const { result: qualityResult, checking: qualityChecking, check: checkQuality, reset: resetQuality } = useRegisterQuality(locale);
   const { data: profile } = useGetProfile();
   const { userId, isAuthenticated } = useAuth();
 
@@ -119,6 +121,7 @@ export default function Counsel() {
     setResponse(null);
     setError(null);
     setShowRegionPicker(false);
+    resetQuality();
   };
 
   const canSubmit = selectedDomain
@@ -328,8 +331,27 @@ export default function Counsel() {
                     placeholder={t("counsel.placeholder")}
                     className="min-h-[150px] resize-none bg-background border-border/60 focus:border-primary/50 text-base p-4 rounded-sm"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      checkQuality(e.target.value);
+                    }}
                   />
+                  {qualityChecking && (
+                    <p className="text-xs text-muted-foreground/50 font-mono flex items-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      {t("counsel.quality_checking")}
+                    </p>
+                  )}
+                  {!qualityChecking && qualityResult && !qualityResult.pass && qualityResult.hint && (
+                    <div className="border border-amber-200/60 bg-amber-50/40 dark:bg-amber-900/10 dark:border-amber-800/40 rounded-sm px-4 py-3 space-y-1">
+                      <p className="text-xs font-medium text-amber-700 dark:text-amber-400 tracking-wide uppercase">
+                        {t("counsel.register_suggestion")}
+                      </p>
+                      <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+                        {qualityResult.hint}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {hasBasicAccess && (

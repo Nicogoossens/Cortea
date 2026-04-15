@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,7 @@ export const translationsTable = pgTable("translations", {
   region_link: text("region_link"),
   key: text("key").notNull(),
   value: text("value").notNull(),
+  quality_reviewed_at: timestamp("quality_reviewed_at"),
 });
 
 export const insertTranslationSchema = createInsertSchema(translationsTable).omit({ id: true });

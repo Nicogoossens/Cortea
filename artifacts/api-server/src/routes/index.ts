@@ -10,6 +10,7 @@ import detectRegionRouter from "./detect-region";
 import authRouter from "./auth";
 import adminRouter from "./admin";
 import subscriptionRouter from "./subscription";
+import registerQualityRouter from "./register-quality";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(counselRouter);
 router.use(detectRegionRouter);
 router.use(adminRouter);
 router.use(subscriptionRouter);
+router.use(registerQualityRouter);
 
 export default router;

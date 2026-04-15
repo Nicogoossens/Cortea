@@ -168,6 +168,8 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.subtitle": "Thirty seconds of discreet guidance. Describe your situation and receive an immediate, precise response.",
     "counsel.placeholder": "Describe the situation requiring counsel…",
     "counsel.request": "Request Counsel",
+    "counsel.quality_checking": "Assessing register…",
+    "counsel.register_suggestion": "Register suggestion",
     "counsel.guidance": "The Mentor's Response",
     "counsel.select_domain": "Select Domain",
     "counsel.consulting": "Consulting…",
@@ -887,6 +889,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "Non-binair",
     "profile.gender_other": "Overig",
     "profile.gender_prefer_not": "Liever niet zeggen",
+
+    "counsel.quality_checking": "Register wordt beoordeeld…",
+    "counsel.register_suggestion": "Registervoorstel",
   },
 
   fr: {
@@ -1286,6 +1291,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "Non-binaire",
     "profile.gender_other": "Autre",
     "profile.gender_prefer_not": "Préfère ne pas répondre",
+
+    "counsel.quality_checking": "Évaluation du registre…",
+    "counsel.register_suggestion": "Suggestion de registre",
   },
 
   de: {
@@ -1685,6 +1693,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "Nicht-binär",
     "profile.gender_other": "Sonstiges",
     "profile.gender_prefer_not": "Lieber nicht angeben",
+
+    "counsel.quality_checking": "Registerprüfung wird durchgeführt…",
+    "counsel.register_suggestion": "Registerempfehlung",
   },
 
   es: {
@@ -2084,6 +2095,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "No binario",
     "profile.gender_other": "Otro",
     "profile.gender_prefer_not": "Prefiero no decirlo",
+
+    "counsel.quality_checking": "Evaluando el registro…",
+    "counsel.register_suggestion": "Sugerencia de registro",
   },
 
   pt: {
@@ -2483,6 +2497,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "Não-binário",
     "profile.gender_other": "Outro",
     "profile.gender_prefer_not": "Prefiro não informar",
+
+    "counsel.quality_checking": "Avaliando registro…",
+    "counsel.register_suggestion": "Sugestão de registro",
   },
 
   it: {
@@ -2882,6 +2899,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "Non binario",
     "profile.gender_other": "Altro",
     "profile.gender_prefer_not": "Preferisco non rispondere",
+
+    "counsel.quality_checking": "Valutazione del registro…",
+    "counsel.register_suggestion": "Suggerimento del registro",
   },
 
   hi: {
@@ -3281,6 +3301,9 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.gender_non_binary": "गैर-द्विआधारी",
     "profile.gender_other": "अन्य",
     "profile.gender_prefer_not": "कहना पसंद नहीं करते",
+
+    "counsel.quality_checking": "शैली का आकलन किया जा रहा है…",
+    "counsel.register_suggestion": "शैली का सुझाव",
   },
 };
 

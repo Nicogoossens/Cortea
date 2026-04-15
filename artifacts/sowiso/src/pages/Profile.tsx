@@ -71,7 +71,14 @@ interface EnrichedLogEntry {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-const AMBITION_LEVELS = ["casual", "professional", "diplomatic"] as const;
+const AMBITION_LEVELS: { key: string; label: string; description: string }[] = [
+  { key: "curious",       label: "Curious",       description: "Exploring the foundations of refined conduct" },
+  { key: "casual",        label: "Casual",         description: "Cultivating grace in everyday social settings" },
+  { key: "aspirational",  label: "Aspirational",   description: "Actively refining one's presence and manners" },
+  { key: "professional",  label: "Professional",   description: "Mastering workplace and business etiquette" },
+  { key: "distinguished", label: "Distinguished",  description: "Commanding elite social and formal environments" },
+  { key: "diplomatic",    label: "Diplomatic",     description: "International ceremony and protocol at the highest level" },
+];
 
 const OBJECTIVE_OPTIONS: { key: string; label: string }[] = [
   { key: "business", label: "Business & Professional" },
@@ -79,6 +86,24 @@ const OBJECTIVE_OPTIONS: { key: string; label: string }[] = [
   { key: "romantic", label: "Romantic & Social" },
   { key: "world_traveller", label: "World Traveller" },
 ];
+
+const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = {
+  sports: [
+    "Tennis", "Golf", "Polo", "Equestrian", "Sailing", "Cricket",
+    "Croquet", "Fencing", "Skiing", "Rowing", "Squash", "Shooting",
+    "Hunting", "Swimming", "Cycling", "Yachting",
+  ],
+  cuisine: [
+    "French", "Italian", "Japanese", "British", "Spanish", "Mediterranean",
+    "Indian", "Chinese", "Mexican", "Turkish", "Scandinavian",
+    "Wine & Sommellerie", "Fine Dining", "Tea Ceremony", "Champagne", "Gastronomy",
+  ],
+  dress_code: [
+    "White Tie", "Black Tie", "Morning Dress", "Lounge Suit",
+    "Business Formal", "Business Casual", "Smart Casual",
+    "Cocktail Attire", "Country Casual", "Resort Formal",
+  ],
+};
 
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "SO";
@@ -418,7 +443,7 @@ export default function Profile() {
               <div className="flex items-center gap-2">
                 <Input
                   value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value.replace(/\s/g, "_").toLowerCase())}
+                  onChange={(e) => setUsernameInput(e.target.value.replace(/\s/g, "_"))}
                   onKeyDown={(e) => { if (e.key === "Enter") handleUsernameSubmit(); if (e.key === "Escape") setEditingUsername(false); }}
                   className="h-7 py-0 px-2 font-mono text-sm border-primary/40 w-40"
                   placeholder="username"
@@ -447,23 +472,31 @@ export default function Profile() {
           {/* Ambition selector + Member since */}
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-1 items-center">
             {/* Ambition level — clickable pills */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Target className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              {AMBITION_LEVELS.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => handleAmbitionChange(level)}
-                  disabled={ambitionSave === "saving"}
-                  className={`px-2.5 py-0.5 rounded-full text-xs border transition-all capitalize ${
-                    profileData?.ambition_level === level
-                      ? "bg-primary/10 text-primary border-primary/30 font-medium"
-                      : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-              <SaveIndicator state={ambitionSave} t={t} />
+            <div className="space-y-1.5 w-full">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Target className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                {AMBITION_LEVELS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => handleAmbitionChange(key)}
+                    disabled={ambitionSave === "saving"}
+                    title={AMBITION_LEVELS.find((l) => l.key === key)?.description}
+                    className={`px-2.5 py-0.5 rounded-full text-xs border transition-all ${
+                      profileData?.ambition_level === key
+                        ? "bg-primary/10 text-primary border-primary/30 font-medium"
+                        : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <SaveIndicator state={ambitionSave} t={t} />
+              </div>
+              {profileData?.ambition_level && (
+                <p className="text-xs text-muted-foreground/60 font-light pl-6 italic">
+                  {AMBITION_LEVELS.find((l) => l.key === profileData.ambition_level)?.description ?? ""}
+                </p>
+              )}
             </div>
 
             {/* Member since */}
@@ -664,41 +697,59 @@ export default function Profile() {
           </div>
 
           {/* Sports & Leisure */}
-          <TagEditor
+          <InterestSelector
             label="Sports & Leisure"
+            field="sports"
+            presets={INTEREST_PRESETS.sports}
             tags={profileData?.interests_sports ?? []}
             saveState={sportsSave}
-            inputValue={tagInputSports}
-            onInputChange={setTagInputSports}
-            onAdd={() => handleTagAdd("sports", tagInputSports, () => setTagInputSports(""))}
+            customInputValue={tagInputSports}
+            onCustomInputChange={setTagInputSports}
+            onTogglePreset={(v) => {
+              const active = (profileData?.interests_sports ?? []).includes(v);
+              if (active) handleTagRemove("sports", v);
+              else handleTagAdd("sports", v, () => {});
+            }}
+            onAddCustom={() => handleTagAdd("sports", tagInputSports, () => setTagInputSports(""))}
             onRemove={(v) => handleTagRemove("sports", v)}
-            placeholder="e.g. Tennis, Golf, Polo"
             t={t}
           />
 
           {/* Culinary Interests */}
-          <TagEditor
+          <InterestSelector
             label="Culinary Interests"
+            field="cuisine"
+            presets={INTEREST_PRESETS.cuisine}
             tags={profileData?.interests_cuisine ?? []}
             saveState={cuisineSave}
-            inputValue={tagInputCuisine}
-            onInputChange={setTagInputCuisine}
-            onAdd={() => handleTagAdd("cuisine", tagInputCuisine, () => setTagInputCuisine(""))}
+            customInputValue={tagInputCuisine}
+            onCustomInputChange={setTagInputCuisine}
+            onTogglePreset={(v) => {
+              const active = (profileData?.interests_cuisine ?? []).includes(v);
+              if (active) handleTagRemove("cuisine", v);
+              else handleTagAdd("cuisine", v, () => {});
+            }}
+            onAddCustom={() => handleTagAdd("cuisine", tagInputCuisine, () => setTagInputCuisine(""))}
             onRemove={(v) => handleTagRemove("cuisine", v)}
-            placeholder="e.g. French, Japanese, Wine"
             t={t}
           />
 
           {/* Dress Code Preferences */}
-          <TagEditor
+          <InterestSelector
             label="Dress Code Preferences"
+            field="dress_code"
+            presets={INTEREST_PRESETS.dress_code}
             tags={profileData?.interests_dress_code ?? []}
             saveState={dressCodeSave}
-            inputValue={tagInputDressCode}
-            onInputChange={setTagInputDressCode}
-            onAdd={() => handleTagAdd("dress_code", tagInputDressCode, () => setTagInputDressCode(""))}
+            customInputValue={tagInputDressCode}
+            onCustomInputChange={setTagInputDressCode}
+            onTogglePreset={(v) => {
+              const active = (profileData?.interests_dress_code ?? []).includes(v);
+              if (active) handleTagRemove("dress_code", v);
+              else handleTagAdd("dress_code", v, () => {});
+            }}
+            onAddCustom={() => handleTagAdd("dress_code", tagInputDressCode, () => setTagInputDressCode(""))}
             onRemove={(v) => handleTagRemove("dress_code", v)}
-            placeholder="e.g. Black tie, Business formal"
             t={t}
           />
 
@@ -930,63 +981,94 @@ export default function Profile() {
   );
 }
 
-/* ── Tag editor sub-component ── */
-interface TagEditorProps {
+/* ── Interest selector sub-component ── preset chips + custom input ── */
+interface InterestSelectorProps {
   label: string;
+  field: string;
+  presets: string[];
   tags: string[];
   saveState: SaveState;
-  inputValue: string;
-  onInputChange: (v: string) => void;
-  onAdd: () => void;
+  customInputValue: string;
+  onCustomInputChange: (v: string) => void;
+  onTogglePreset: (v: string) => void;
+  onAddCustom: () => void;
   onRemove: (v: string) => void;
-  placeholder: string;
   t: (k: string) => string;
 }
 
-function TagEditor({ label, tags, saveState, inputValue, onInputChange, onAdd, onRemove, placeholder, t }: TagEditorProps) {
+function InterestSelector({
+  label, presets, tags, saveState,
+  customInputValue, onCustomInputChange, onTogglePreset, onAddCustom, onRemove, t,
+}: InterestSelectorProps) {
+  const customTags = tags.filter((tag) => !presets.includes(tag));
+
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3 pt-1 border-t border-border/30 first:border-0 first:pt-0">
       <div className="flex items-center justify-between">
         <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{label}</label>
         <SaveIndicator state={saveState} t={t} />
       </div>
-      <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/80 text-xs border border-border/40 group"
-          >
-            {tag}
+
+      {/* Preset options — all visible, click to select/deselect */}
+      <div className="flex flex-wrap gap-1.5">
+        {presets.map((preset) => {
+          const isActive = tags.includes(preset);
+          return (
             <button
-              onClick={() => onRemove(tag)}
-              className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5"
-              aria-label={`Remove ${tag}`}
+              key={preset}
+              onClick={() => onTogglePreset(preset)}
+              disabled={saveState === "saving"}
+              className={`px-3 py-1 rounded-sm text-xs border transition-all ${
+                isActive
+                  ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                  : "border-border/40 text-muted-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/30"
+              }`}
             >
-              <X className="w-3 h-3" aria-hidden="true" />
+              {preset}
             </button>
-          </span>
-        ))}
-        {tags.length === 0 && (
-          <span className="text-xs text-muted-foreground/40 italic font-light py-1">None added yet</span>
-        )}
+          );
+        })}
       </div>
+
+      {/* Custom tags (not in presets) shown with remove × */}
+      {customTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {customTags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-muted/40 text-foreground/70 text-xs border border-border/40 italic"
+            >
+              {tag}
+              <button
+                onClick={() => onRemove(tag)}
+                className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5"
+                aria-label={`Remove ${tag}`}
+              >
+                <X className="w-3 h-3" aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Custom input for options not in the preset list */}
       <div className="flex gap-2">
         <Input
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
+          value={customInputValue}
+          onChange={(e) => onCustomInputChange(e.target.value)}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter" && inputValue.trim()) { e.preventDefault(); onAdd(); }
+            if (e.key === "Enter" && customInputValue.trim()) { e.preventDefault(); onAddCustom(); }
           }}
-          placeholder={placeholder}
-          className="h-8 text-sm border-border/50 focus:border-primary/50 flex-1"
+          placeholder="Add a custom interest…"
+          className="h-8 text-sm border-border/40 focus:border-primary/40 flex-1 font-light placeholder:italic placeholder:text-muted-foreground/40"
         />
         <Button
           variant="outline"
           size="sm"
-          onClick={onAdd}
-          disabled={!inputValue.trim() || saveState === "saving"}
-          className="h-8 px-3 border-border/50 hover:border-primary/40"
-          aria-label={`Add ${label}`}
+          onClick={onAddCustom}
+          disabled={!customInputValue.trim() || saveState === "saving"}
+          className="h-8 px-3 border-border/40 hover:border-primary/40 text-muted-foreground"
+          aria-label={`Add custom ${label}`}
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>

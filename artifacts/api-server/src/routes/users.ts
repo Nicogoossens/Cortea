@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { usersTable, nobleScoreLogTable, zuil_voortgangTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -157,6 +157,19 @@ router.put("/users/profile", requireAuthUser, async (req, res) => {
     }
 
     const data = bodyParsed.data;
+
+    if (data.username) {
+      const [taken] = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(eq(usersTable.username, data.username), ne(usersTable.id, userId))).limit(1);
+      if (taken) return res.status(409).json({ code: "USERNAME_TAKEN", message: "This username is already claimed by another member." });
+    }
+
+    if (data.full_name) {
+      const [taken] = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(eq(usersTable.full_name, data.full_name), ne(usersTable.id, userId))).limit(1);
+      if (taken) return res.status(409).json({ code: "FULL_NAME_TAKEN", message: "This display name is already in use by another member." });
+    }
+
     const [updated] = await db.update(usersTable)
       .set({
         ...(data.birth_year !== undefined && { birth_year: data.birth_year }),

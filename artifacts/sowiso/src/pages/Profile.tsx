@@ -87,6 +87,14 @@ const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
   { key: "world_traveller", labelKey: "objective.world_traveller" },
 ];
 
+const GENDER_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: "male",              labelKey: "profile.gender_male" },
+  { value: "female",            labelKey: "profile.gender_female" },
+  { value: "non_binary",        labelKey: "profile.gender_non_binary" },
+  { value: "other",             labelKey: "profile.gender_other" },
+  { value: "prefer_not_to_say", labelKey: "profile.gender_prefer_not" },
+];
+
 const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = {
   sports: [
     "Tennis", "Golf", "Polo", "Equestrian", "Sailing", "Cricket",
@@ -150,10 +158,17 @@ export default function Profile() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [usernameSave, setUsernameSave] = useState<SaveState>("idle");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [editingFullName, setEditingFullName] = useState(false);
   const [fullNameInput, setFullNameInput] = useState("");
   const [fullNameSave, setFullNameSave] = useState<SaveState>("idle");
+  const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [avatarSave, setAvatarSave] = useState<SaveState>("idle");
+
+  // Birth year & gender — editable once, then locked
+  const [birthYearInput, setBirthYearInput] = useState("");
+  const [birthYearSave, setBirthYearSave] = useState<SaveState>("idle");
+  const [genderSave, setGenderSave] = useState<SaveState>("idle");
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Ambition level
@@ -180,6 +195,7 @@ export default function Profile() {
         setUsernameInput(data?.username ?? "");
         setFullNameInput(data?.full_name ?? "");
         setCountryInput(data?.country_of_origin ?? "");
+        setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -192,8 +208,13 @@ export default function Profile() {
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
   const logs = rawLogs as EnrichedLogEntry[] | undefined;
 
-  async function patchProfile(body: Record<string, unknown>, setSave: (s: SaveState) => void) {
+  async function patchProfile(
+    body: Record<string, unknown>,
+    setSave: (s: SaveState) => void,
+    setConflictError?: (msg: string | null) => void,
+  ): Promise<boolean> {
     setSave("saving");
+    if (setConflictError) setConflictError(null);
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PUT",
@@ -205,11 +226,25 @@ export default function Profile() {
         setProfileData(updated);
         setSave("saved");
         setTimeout(() => setSave("idle"), 2500);
+        return true;
+      } else if (res.status === 409) {
+        const err = await res.json().catch(() => ({}));
+        if (setConflictError) {
+          setConflictError(
+            err.code === "USERNAME_TAKEN"
+              ? t("profile.username_taken")
+              : t("profile.full_name_taken"),
+          );
+        }
+        setSave("error");
+        return false;
       } else {
         setSave("error");
+        return false;
       }
     } catch {
       setSave("error");
+      return false;
     }
   }
 
@@ -258,13 +293,23 @@ export default function Profile() {
   }
 
   async function handleUsernameSubmit() {
-    await patchProfile({ username: usernameInput.trim() || null }, setUsernameSave);
-    setEditingUsername(false);
+    const ok = await patchProfile({ username: usernameInput.trim() || null }, setUsernameSave, setUsernameError);
+    if (ok) setEditingUsername(false);
   }
 
   async function handleFullNameSubmit() {
-    await patchProfile({ full_name: fullNameInput.trim() || null }, setFullNameSave);
-    setEditingFullName(false);
+    const ok = await patchProfile({ full_name: fullNameInput.trim() || null }, setFullNameSave, setFullNameError);
+    if (ok) setEditingFullName(false);
+  }
+
+  async function handleBirthYearSubmit() {
+    const year = parseInt(birthYearInput, 10);
+    if (isNaN(year) || year < 1900 || year > new Date().getFullYear() - 5) return;
+    await patchProfile({ birth_year: year }, setBirthYearSave);
+  }
+
+  async function handleGenderSelect(value: string) {
+    await patchProfile({ gender_identity: value }, setGenderSave);
   }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -402,23 +447,31 @@ export default function Profile() {
 
         {/* Name + Meta */}
         <div className="flex-1 space-y-2 min-w-0">
-          {/* Full name */}
+          {/* Full name — editable only when empty, locked once set */}
           <div className="flex flex-wrap items-center gap-3">
-            {editingFullName ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={fullNameInput}
-                  onChange={(e) => setFullNameInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleFullNameSubmit(); if (e.key === "Escape") setEditingFullName(false); }}
-                  className="text-2xl font-serif h-auto py-1 px-2 border-primary/40 focus:border-primary w-48 md:w-64"
-                  autoFocus
-                />
-                <button onClick={handleFullNameSubmit} className="text-primary hover:text-primary/70" aria-label="Save">
-                  <Check className="w-4 h-4" aria-hidden="true" />
-                </button>
-                <button onClick={() => { setEditingFullName(false); setFullNameInput(profileData?.full_name ?? ""); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
-                  <X className="w-4 h-4" aria-hidden="true" />
-                </button>
+            {profileData?.full_name ? (
+              <span className="text-3xl font-serif text-foreground flex items-center gap-2">
+                {profileData.full_name}
+                <Lock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
+              </span>
+            ) : editingFullName ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={fullNameInput}
+                    onChange={(e) => setFullNameInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleFullNameSubmit(); if (e.key === "Escape") setEditingFullName(false); }}
+                    className="text-2xl font-serif h-auto py-1 px-2 border-primary/40 focus:border-primary w-48 md:w-64"
+                    autoFocus
+                  />
+                  <button onClick={handleFullNameSubmit} className="text-primary hover:text-primary/70" aria-label="Save">
+                    <Check className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                  <button onClick={() => { setEditingFullName(false); setFullNameInput(""); setFullNameError(null); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
+                    <X className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+                {fullNameError && <p className="text-xs text-destructive font-mono">{fullNameError}</p>}
               </div>
             ) : (
               <button
@@ -426,7 +479,7 @@ export default function Profile() {
                 onClick={() => setEditingFullName(true)}
                 aria-label="Edit full name"
               >
-                {profileData?.full_name ?? <span className="text-muted-foreground font-light italic text-xl">{t("profile.set_name_placeholder")}</span>}
+                <span className="text-muted-foreground font-light italic text-xl">{t("profile.set_name_placeholder")}</span>
                 <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
@@ -437,36 +490,39 @@ export default function Profile() {
           </div>
 
           {/* Username */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="text-muted-foreground/50">@</span>
-            {editingUsername ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value.replace(/\s/g, "_"))}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleUsernameSubmit(); if (e.key === "Escape") setEditingUsername(false); }}
-                  className="h-7 py-0 px-2 font-mono text-sm border-primary/40 w-40"
-                  placeholder="username"
-                  autoFocus
-                />
-                <button onClick={handleUsernameSubmit} className="text-primary hover:text-primary/70" aria-label="Save username">
-                  <Check className="w-3.5 h-3.5" aria-hidden="true" />
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-muted-foreground/50">@</span>
+              {editingUsername ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={usernameInput}
+                    onChange={(e) => { setUsernameInput(e.target.value.replace(/\s/g, "_")); setUsernameError(null); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleUsernameSubmit(); if (e.key === "Escape") { setEditingUsername(false); setUsernameError(null); } }}
+                    className="h-7 py-0 px-2 font-mono text-sm border-primary/40 w-40"
+                    placeholder="username"
+                    autoFocus
+                  />
+                  <button onClick={handleUsernameSubmit} className="text-primary hover:text-primary/70" aria-label="Save username">
+                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                  <button onClick={() => { setEditingUsername(false); setUsernameInput(profileData?.username ?? ""); setUsernameError(null); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="group flex items-center gap-1.5 font-mono text-sm hover:text-foreground transition-colors"
+                  onClick={() => setEditingUsername(true)}
+                  aria-label="Edit username"
+                >
+                  {profileData?.username ?? <span className="italic text-muted-foreground/50 font-sans font-light">{t("profile.set_username_placeholder")}</span>}
+                  <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
                 </button>
-                <button onClick={() => { setEditingUsername(false); setUsernameInput(profileData?.username ?? ""); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
-                  <X className="w-3.5 h-3.5" aria-hidden="true" />
-                </button>
-              </div>
-            ) : (
-              <button
-                className="group flex items-center gap-1.5 font-mono text-sm hover:text-foreground transition-colors"
-                onClick={() => setEditingUsername(true)}
-                aria-label="Edit username"
-              >
-                {profileData?.username ?? <span className="italic text-muted-foreground/50 font-sans font-light">{t("profile.set_username_placeholder")}</span>}
-                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-              </button>
-            )}
-            <SaveIndicator state={usernameSave} t={t} />
+              )}
+              <SaveIndicator state={usernameSave} t={t} />
+            </div>
+            {usernameError && <p className="text-xs text-destructive font-mono pl-4">{usernameError}</p>}
           </div>
 
           {/* Ambition selector + Member since */}
@@ -525,11 +581,72 @@ export default function Profile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} />
-            <DetailRow label="Username" value={profileData?.username ? `@${profileData.username}` : "—"} />
+            <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} locked={!!profileData?.full_name} />
             <DetailRow label={t("profile.email_label")} value={profileData?.email ?? "—"} />
-            <DetailRow label={t("profile.birth_year_label")} value={profileData?.birth_year ? String(profileData.birth_year) : "—"} />
-            <DetailRow label={t("profile.gender_label")} value={profileData?.gender_identity ? capitalize(profileData.gender_identity.replace("_", " ")) : "—"} />
+
+            {/* Birth year — editable when empty, locked when set */}
+            <div className="border-b border-border/40 pb-2">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.birth_year_label")}</span>
+                {profileData?.birth_year ? (
+                  <span className="flex items-center gap-1.5 text-sm text-foreground font-light">
+                    {profileData.birth_year}
+                    <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={birthYearInput}
+                      onChange={(e) => setBirthYearInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleBirthYearSubmit(); }}
+                      placeholder={t("profile.birth_year_placeholder")}
+                      className="h-7 py-0 px-2 text-sm w-24 border-border/50 focus:border-primary/40 text-right"
+                    />
+                    <button
+                      onClick={handleBirthYearSubmit}
+                      disabled={!birthYearInput || birthYearSave === "saving"}
+                      className="text-primary hover:text-primary/70 disabled:opacity-40"
+                      aria-label="Save year of birth"
+                    >
+                      <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                    </button>
+                    <SaveIndicator state={birthYearSave} t={t} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Gender — chips when empty, locked when set */}
+            <div className="border-b border-border/40 pb-2 last:border-0 space-y-2">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.gender_label")}</span>
+                {profileData?.gender_identity ? (
+                  <span className="flex items-center gap-1.5 text-sm text-foreground font-light">
+                    {capitalize(profileData.gender_identity.replace("_", " "))}
+                    <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-0.5">
+                    <SaveIndicator state={genderSave} t={t} />
+                  </div>
+                )}
+              </div>
+              {!profileData?.gender_identity && (
+                <div className="flex flex-wrap gap-1.5">
+                  {GENDER_OPTIONS.map(({ value, labelKey }) => (
+                    <button
+                      key={value}
+                      onClick={() => handleGenderSelect(value)}
+                      disabled={genderSave === "saving"}
+                      className="px-2.5 py-1 rounded-sm text-xs border border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30 transition-all"
+                    >
+                      {t(labelKey)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="pt-1 border-t border-border/50">
               <div className="flex justify-between items-baseline">
                 <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/60">{t("profile.phone_label")}</span>
@@ -1077,11 +1194,14 @@ function InterestSelector({
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
   return (
     <div className="flex justify-between items-baseline gap-2 border-b border-border/40 pb-2 last:border-0">
       <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{label}</span>
-      <span className="text-sm text-foreground text-right font-light truncate">{value}</span>
+      <span className="flex items-center gap-1.5 text-sm text-foreground text-right font-light truncate">
+        {value}
+        {locked && <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0 flex-none" aria-hidden="true" />}
+      </span>
     </div>
   );
 }

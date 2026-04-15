@@ -110,7 +110,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Enter The Atelier",
     "home.seek_counsel": "Seek Counsel",
     "home.cultural_compass": "Cultural Compass",
-    "home.continue_studies": "Continue your studies",
+    "home.continue_studies": "Continue your journey",
 
     "welcome.hero_title_1": "How refined",
     "welcome.hero_title_2": "are you?",
@@ -207,7 +207,7 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Your titles across the five pillars of refinement.",
     "profile.recent_log": "Recent Log",
     "profile.no_history": "Your ledger is currently empty.",
-    "profile.visit_atelier": "Visit The Atelier to begin your studies.",
+    "profile.visit_atelier": "Visit The Atelier to begin your journey.",
     "profile.ambition": "Ambition",
     "profile.active_region": "Active Region",
     "profile.member_since": "Member since",
@@ -447,6 +447,15 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.set_username_placeholder": "set username",
     "profile.upload_avatar": "Change profile photo",
     "profile.upload_avatar_btn": "Upload avatar",
+    "profile.locked_field_hint": "This field is permanently set and cannot be changed.",
+    "profile.full_name_taken": "This display name is already in use by another member.",
+    "profile.username_taken": "This username is already claimed by another member.",
+    "profile.birth_year_placeholder": "e.g. 1985",
+    "profile.gender_male": "Male",
+    "profile.gender_female": "Female",
+    "profile.gender_non_binary": "Non-binary",
+    "profile.gender_other": "Other",
+    "profile.gender_prefer_not": "Prefer not to say",
     "profile.avatar_too_large": "Please choose an image smaller than 1.5 MB.",
 
     "membership.eyebrow": "Membership",
@@ -502,7 +511,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Betreed Het Atelier",
     "home.seek_counsel": "Zoek Advies",
     "home.cultural_compass": "Cultureel Kompas",
-    "home.continue_studies": "Zet uw studies voort",
 
     "welcome.hero_title_1": "Hoe verfijnd",
     "welcome.hero_title_2": "bent u?",
@@ -600,7 +608,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Uw titels over de vijf pijlers van verfijning.",
     "profile.recent_log": "Recente Log",
     "profile.no_history": "Uw register is momenteel leeg.",
-    "profile.visit_atelier": "Bezoek Het Atelier om uw studies te beginnen.",
     "profile.ambition": "Ambitie",
     "profile.active_region": "Actieve Regio",
     "profile.member_since": "Lid sinds",
@@ -868,6 +875,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "per maand",
     "membership.billing_per_year": "per jaar",
+
+    "home.continue_studies": "Zet uw reis voort",
+    "profile.visit_atelier": "Bezoek The Atelier om uw reis aan te vangen.",
+    "profile.locked_field_hint": "Dit veld is permanent ingesteld en kan niet worden gewijzigd.",
+    "profile.full_name_taken": "Deze weergavenaam wordt al gebruikt door een ander lid.",
+    "profile.username_taken": "Deze gebruikersnaam is al geclaimd door een ander lid.",
+    "profile.birth_year_placeholder": "bijv. 1985",
+    "profile.gender_male": "Man",
+    "profile.gender_female": "Vrouw",
+    "profile.gender_non_binary": "Non-binair",
+    "profile.gender_other": "Overig",
+    "profile.gender_prefer_not": "Liever niet zeggen",
   },
 
   fr: {
@@ -891,7 +910,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Entrer dans L'Atelier",
     "home.seek_counsel": "Chercher Conseil",
     "home.cultural_compass": "Boussole Culturelle",
-    "home.continue_studies": "Continuer vos études",
 
     "welcome.hero_title_1": "Jusqu'où va",
     "welcome.hero_title_2": "votre raffinement ?",
@@ -985,7 +1003,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Vos titres dans les cinq piliers du raffinement.",
     "profile.recent_log": "Historique Récent",
     "profile.no_history": "Votre registre est actuellement vide.",
-    "profile.visit_atelier": "Visitez L'Atelier pour commencer vos études.",
     "profile.ambition": "Ambition",
     "profile.active_region": "Région Active",
     "profile.member_since": "Membre depuis",
@@ -1257,6 +1274,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "par mois",
     "membership.billing_per_year": "par an",
+
+    "home.continue_studies": "Poursuivez votre parcours",
+    "profile.visit_atelier": "Visitez The Atelier pour débuter votre parcours.",
+    "profile.locked_field_hint": "Ce champ est définitivement établi et ne peut être modifié.",
+    "profile.full_name_taken": "Ce nom d'affichage est déjà utilisé par un autre membre.",
+    "profile.username_taken": "Ce nom d'utilisateur est déjà réclamé par un autre membre.",
+    "profile.birth_year_placeholder": "ex. 1985",
+    "profile.gender_male": "Homme",
+    "profile.gender_female": "Femme",
+    "profile.gender_non_binary": "Non-binaire",
+    "profile.gender_other": "Autre",
+    "profile.gender_prefer_not": "Préfère ne pas répondre",
   },
 
   de: {
@@ -1280,7 +1309,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Das Atelier betreten",
     "home.seek_counsel": "Rat suchen",
     "home.cultural_compass": "Kulturkompass",
-    "home.continue_studies": "Ihre Studien fortsetzen",
 
     "welcome.hero_title_1": "Wie kultiviert",
     "welcome.hero_title_2": "sind Sie?",
@@ -1374,7 +1402,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Ihre Titel über die fünf Säulen der Verfeinerung.",
     "profile.recent_log": "Aktuelles Protokoll",
     "profile.no_history": "Ihr Register ist derzeit leer.",
-    "profile.visit_atelier": "Besuchen Sie das Atelier, um Ihre Studien zu beginnen.",
     "profile.ambition": "Ehrgeiz",
     "profile.active_region": "Aktive Region",
     "profile.member_since": "Mitglied seit",
@@ -1646,6 +1673,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "monatlich",
     "membership.billing_per_year": "jährlich",
+
+    "home.continue_studies": "Setzen Sie Ihre Reise fort",
+    "profile.visit_atelier": "Besuchen Sie The Atelier, um Ihre Reise zu beginnen.",
+    "profile.locked_field_hint": "Dieses Feld ist dauerhaft festgelegt und kann nicht geändert werden.",
+    "profile.full_name_taken": "Dieser Anzeigename wird bereits von einem anderen Mitglied verwendet.",
+    "profile.username_taken": "Dieser Benutzername wird bereits von einem anderen Mitglied beansprucht.",
+    "profile.birth_year_placeholder": "z. B. 1985",
+    "profile.gender_male": "Männlich",
+    "profile.gender_female": "Weiblich",
+    "profile.gender_non_binary": "Nicht-binär",
+    "profile.gender_other": "Sonstiges",
+    "profile.gender_prefer_not": "Lieber nicht angeben",
   },
 
   es: {
@@ -1668,7 +1707,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Entrar al Atelier",
     "home.seek_counsel": "Buscar Consejo",
     "home.cultural_compass": "Brújula Cultural",
-    "home.continue_studies": "Continuar sus estudios",
 
     "welcome.hero_title_1": "¿Cuán refinado",
     "welcome.hero_title_2": "es usted?",
@@ -1762,7 +1800,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Sus títulos en los cinco pilares del refinamiento.",
     "profile.recent_log": "Registro Reciente",
     "profile.no_history": "Su registro está actualmente vacío.",
-    "profile.visit_atelier": "Visite El Atelier para comenzar sus estudios.",
     "profile.ambition": "Ambición",
     "profile.active_region": "Región Activa",
     "profile.member_since": "Miembro desde",
@@ -2035,6 +2072,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "mes",
     "membership.billing_per_year": "año",
+
+    "home.continue_studies": "Continúe su camino",
+    "profile.visit_atelier": "Visite The Atelier para comenzar su camino.",
+    "profile.locked_field_hint": "Este campo está establecido de forma permanente y no puede ser modificado.",
+    "profile.full_name_taken": "Este nombre de perfil ya está siendo utilizado por otro miembro.",
+    "profile.username_taken": "Este nombre de usuario ya ha sido reclamado por otro miembro.",
+    "profile.birth_year_placeholder": "p. ej. 1985",
+    "profile.gender_male": "Masculino",
+    "profile.gender_female": "Femenino",
+    "profile.gender_non_binary": "No binario",
+    "profile.gender_other": "Otro",
+    "profile.gender_prefer_not": "Prefiero no decirlo",
   },
 
   pt: {
@@ -2057,7 +2106,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Entrar no Atelier",
     "home.seek_counsel": "Pedir Conselho",
     "home.cultural_compass": "Bússola Cultural",
-    "home.continue_studies": "Continuar os seus estudos",
 
     "welcome.hero_title_1": "Quão refinado",
     "welcome.hero_title_2": "é você?",
@@ -2151,7 +2199,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "Os seus títulos nos cinco pilares do refinamento.",
     "profile.recent_log": "Registo Recente",
     "profile.no_history": "O seu registo está actualmente vazio.",
-    "profile.visit_atelier": "Visite O Atelier para começar os seus estudos.",
     "profile.ambition": "Ambição",
     "profile.active_region": "Região Activa",
     "profile.member_since": "Membro desde",
@@ -2424,6 +2471,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "mês",
     "membership.billing_per_year": "ano",
+
+    "home.continue_studies": "Continue sua jornada",
+    "profile.visit_atelier": "Visite The Atelier para iniciar sua jornada.",
+    "profile.locked_field_hint": "Este campo está permanentemente definido e não pode ser alterado.",
+    "profile.full_name_taken": "Este nome de exibição já está em uso por outro membro.",
+    "profile.username_taken": "Este nome de usuário já foi reivindicado por outro membro.",
+    "profile.birth_year_placeholder": "p. ex. 1985",
+    "profile.gender_male": "Masculino",
+    "profile.gender_female": "Feminino",
+    "profile.gender_non_binary": "Não-binário",
+    "profile.gender_other": "Outro",
+    "profile.gender_prefer_not": "Prefiro não informar",
   },
 
   it: {
@@ -2446,7 +2505,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "Entrare nell'Atelier",
     "home.seek_counsel": "Cercare Consiglio",
     "home.cultural_compass": "Bussola Culturale",
-    "home.continue_studies": "Continuare i Suoi studi",
 
     "welcome.hero_title_1": "Quanto è raffinato",
     "welcome.hero_title_2": "Lei?",
@@ -2544,7 +2602,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "I Suoi titoli nei cinque pilastri del raffinamento.",
     "profile.recent_log": "Registro Recente",
     "profile.no_history": "Il Suo registro è attualmente vuoto.",
-    "profile.visit_atelier": "Visiti L'Atelier per iniziare i Suoi studi.",
     "profile.ambition": "Ambizione",
     "profile.active_region": "Regione Attiva",
     "profile.member_since": "Membro dal",
@@ -2813,6 +2870,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "mese",
     "membership.billing_per_year": "anno",
+
+    "home.continue_studies": "Continui il Suo percorso",
+    "profile.visit_atelier": "Visiti The Atelier per iniziare il Suo percorso.",
+    "profile.locked_field_hint": "Questo campo è permanentemente impostato e non può essere modificato.",
+    "profile.full_name_taken": "Questo nome visualizzato è già in uso da un altro membro.",
+    "profile.username_taken": "Questo nome utente è già stato rivendicato da un altro membro.",
+    "profile.birth_year_placeholder": "es. 1985",
+    "profile.gender_male": "Uomo",
+    "profile.gender_female": "Donna",
+    "profile.gender_non_binary": "Non binario",
+    "profile.gender_other": "Altro",
+    "profile.gender_prefer_not": "Preferisco non rispondere",
   },
 
   hi: {
@@ -2835,7 +2904,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "home.enter_atelier": "एटेलियर में प्रवेश करें",
     "home.seek_counsel": "परामर्श लें",
     "home.cultural_compass": "सांस्कृतिक कम्पास",
-    "home.continue_studies": "अपनी पढ़ाई जारी रखें",
 
     "welcome.hero_title_1": "आप कितने",
     "welcome.hero_title_2": "परिष्कृत हैं?",
@@ -2929,7 +2997,6 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "profile.domain_subtitle": "परिष्करण के पांच स्तंभों में आपके खिताब।",
     "profile.recent_log": "हालिया लॉग",
     "profile.no_history": "आपका रजिस्टर अभी खाली है।",
-    "profile.visit_atelier": "अपनी पढ़ाई शुरू करने के लिए एटेलियर पर जाएं।",
     "profile.ambition": "महत्वाकांक्षा",
     "profile.active_region": "सक्रिय क्षेत्र",
     "profile.member_since": "सदस्य बने",
@@ -3202,6 +3269,18 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
 
     "membership.billing_per_month": "मास",
     "membership.billing_per_year": "वर्ष",
+
+    "home.continue_studies": "आपकी यात्रा को जारी रखें",
+    "profile.visit_atelier": "आपकी यात्रा आरंभ करने के लिए The Atelier का अवलोकन करें।",
+    "profile.locked_field_hint": "यह क्षेत्र स्थायी रूप से निर्धारित है और इसे परिवर्तित नहीं किया जा सकता।",
+    "profile.full_name_taken": "यह प्रदर्शन नाम पहले से किसी अन्य सदस्य द्वारा उपयोग में है।",
+    "profile.username_taken": "यह उपयोगकर्ता नाम पहले से किसी अन्य सदस्य द्वारा दावा किया गया है।",
+    "profile.birth_year_placeholder": "उदाहरण के लिए 1985",
+    "profile.gender_male": "पुरुष",
+    "profile.gender_female": "महिला",
+    "profile.gender_non_binary": "गैर-द्विआधारी",
+    "profile.gender_other": "अन्य",
+    "profile.gender_prefer_not": "कहना पसंद नहीं करते",
   },
 };
 

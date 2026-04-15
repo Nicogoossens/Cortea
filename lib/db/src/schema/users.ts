@@ -5,6 +5,8 @@ import { z } from "zod/v4";
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
   full_name: text("full_name"),
+  username: text("username"),
+  avatar_url: text("avatar_url"),
   email: text("email"),
   email_verified: boolean("email_verified").notNull().default(false),
   verification_token: text("verification_token"),

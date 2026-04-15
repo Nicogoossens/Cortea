@@ -305,12 +305,9 @@ export default function Membership() {
         </div>
       )}
 
-      <div className="border-t border-border/30 pt-8 text-center space-y-2">
+      <div className="border-t border-border/30 pt-8 text-center">
         <p className="text-xs text-muted-foreground/60 font-mono uppercase tracking-widest">
           All memberships renew automatically and may be cancelled at any time
-        </p>
-        <p className="text-xs text-muted-foreground/40 font-light">
-          Payments are handled with discretion through Stripe's secure infrastructure
         </p>
       </div>
 

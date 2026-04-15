@@ -12,15 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
-  ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock,
+  ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, hi } from "date-fns/locale";
 import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
-import { levelKey, pillarDomainKey, triggerLabel } from "@/lib/content-labels";
+import { levelKey, pillarDomainKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation } from "wouter";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -36,6 +36,8 @@ const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
 interface UserProfileData {
   id: string;
   full_name?: string | null;
+  username?: string | null;
+  avatar_url?: string | null;
   email?: string | null;
   birth_year?: number | null;
   gender_identity?: string | null;
@@ -46,6 +48,12 @@ interface UserProfileData {
   noble_score: number;
   created_at: string;
   is_admin?: boolean;
+  country_of_origin?: string | null;
+  objectives?: string[] | null;
+  interests_sports?: string[] | null;
+  interests_cuisine?: string[] | null;
+  interests_dress_code?: string[] | null;
+  onboarding_completed?: boolean | null;
 }
 
 interface EnrichedLogEntry {
@@ -70,12 +78,6 @@ function getInitials(name: string | null | undefined): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!domain || !local) return "•••@•••";
-  return local[0] + "•".repeat(Math.max(3, local.length - 1)) + "@" + domain;
-}
-
 function logStatusKey(delta: number): string {
   if (delta > 0) return "profile.log.refined";
   if (delta < 0) return "profile.log.reconsidered";
@@ -98,6 +100,13 @@ function SaveIndicator({ state, t }: { state: SaveState; t: (k: string) => strin
   );
 }
 
+const OBJECTIVE_LABELS: Record<string, string> = {
+  business: "Business & Professional",
+  elite: "Elite Society",
+  romantic: "Romantic & Social",
+  world_traveller: "World Traveller",
+};
+
 export default function Profile() {
   const { t, locale, setLocale } = useLanguage();
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
@@ -114,13 +123,28 @@ export default function Profile() {
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameSave, setUsernameSave] = useState<SaveState>("idle");
+
+  const [editingFullName, setEditingFullName] = useState(false);
+  const [fullNameInput, setFullNameInput] = useState("");
+  const [fullNameSave, setFullNameSave] = useState<SaveState>("idle");
+
+  const [avatarSave, setAvatarSave] = useState<SaveState>("idle");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
     fetch(`${API_BASE}/api/users/profile`, {
       headers: getAuthHeaders(),
     })
       .then((r) => r.ok ? r.json() : null)
-      .then((data) => setProfileData(data))
+      .then((data) => {
+        setProfileData(data);
+        setUsernameInput(data?.username ?? "");
+        setFullNameInput(data?.full_name ?? "");
+      })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
   }, [userId, getAuthHeaders]);
@@ -131,6 +155,27 @@ export default function Profile() {
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
   const logs = rawLogs as EnrichedLogEntry[] | undefined;
+
+  async function patchProfile(body: Record<string, unknown>, setSave: (s: SaveState) => void) {
+    setSave("saving");
+    try {
+      const res = await fetch(`${API_BASE}/api/users/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setProfileData(updated);
+        setSave("saved");
+        setTimeout(() => setSave("idle"), 2500);
+      } else {
+        setSave("error");
+      }
+    } catch {
+      setSave("error");
+    }
+  }
 
   async function handleLanguageChange(newLocale: SupportedLocale) {
     if (!userId) return;
@@ -174,6 +219,31 @@ export default function Profile() {
     } catch {
       setRegionSave("error");
     }
+  }
+
+  async function handleUsernameSubmit() {
+    await patchProfile({ username: usernameInput.trim() || null }, setUsernameSave);
+    setEditingUsername(false);
+  }
+
+  async function handleFullNameSubmit() {
+    await patchProfile({ full_name: fullNameInput.trim() || null }, setFullNameSave);
+    setEditingFullName(false);
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1_500_000) {
+      alert("Please choose an image smaller than 1.5 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      await patchProfile({ avatar_url: base64 }, setAvatarSave);
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleDeleteAccount() {
@@ -222,27 +292,120 @@ export default function Profile() {
   }
 
   const initials = getInitials(profileData?.full_name ?? null);
+  const avatarUrl = profileData?.avatar_url;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
 
-      {/* ── Header ───────────────────────────────────────────── */}
+      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center p-8 bg-card border border-border shadow-sm rounded-sm">
-        <div
-          className="w-20 h-20 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center shadow-sm flex-shrink-0 text-2xl font-serif text-primary"
-          aria-label={profileData?.full_name ?? t("profile.title")}
-        >
-          {initials}
+        {/* Avatar */}
+        <div className="relative group flex-shrink-0">
+          <div
+            className="w-20 h-20 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center shadow-sm overflow-hidden cursor-pointer"
+            aria-label="Change profile photo"
+            onClick={() => avatarInputRef.current?.click()}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={profileData?.full_name ?? "Avatar"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-2xl font-serif text-primary">{initials}</span>
+            )}
+          </div>
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Upload avatar"
+          >
+            <Camera className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+          {avatarSave === "saving" && (
+            <div className="absolute inset-0 rounded-full bg-background/60 flex items-center justify-center">
+              <span className="text-xs font-mono animate-pulse">…</span>
+            </div>
+          )}
         </div>
+
+        {/* Name + Meta */}
         <div className="flex-1 space-y-2 min-w-0">
+          {/* Full name */}
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-serif text-foreground truncate">
-              {profileData?.full_name ?? t("profile.title")}
-            </h1>
+            {editingFullName ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={fullNameInput}
+                  onChange={(e) => setFullNameInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleFullNameSubmit(); if (e.key === "Escape") setEditingFullName(false); }}
+                  className="text-2xl font-serif h-auto py-1 px-2 border-primary/40 focus:border-primary w-48 md:w-64"
+                  autoFocus
+                />
+                <button onClick={handleFullNameSubmit} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save full name">
+                  <Check className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <button onClick={() => { setEditingFullName(false); setFullNameInput(profileData?.full_name ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                  <X className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <button
+                className="group flex items-center gap-2 text-3xl font-serif text-foreground hover:text-foreground/80 transition-colors"
+                onClick={() => setEditingFullName(true)}
+                aria-label="Edit full name"
+              >
+                {profileData?.full_name ?? <span className="text-muted-foreground font-light italic text-xl">Add your name</span>}
+                <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+              </button>
+            )}
             <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-mono uppercase tracking-widest border border-primary/20 shrink-0">
               {profileData?.subscription_tier ?? "guest"}
             </span>
+            <SaveIndicator state={fullNameSave} t={t} />
           </div>
+
+          {/* Username */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="text-muted-foreground/50">@</span>
+            {editingUsername ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value.replace(/\s/g, "_").toLowerCase())}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleUsernameSubmit(); if (e.key === "Escape") setEditingUsername(false); }}
+                  className="h-7 py-0 px-2 font-mono text-sm border-primary/40 w-40"
+                  placeholder="username"
+                  autoFocus
+                />
+                <button onClick={handleUsernameSubmit} className="text-primary hover:text-primary/70" aria-label="Save username">
+                  <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+                <button onClick={() => { setEditingUsername(false); setUsernameInput(profileData?.username ?? ""); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <button
+                className="group flex items-center gap-1.5 font-mono text-sm hover:text-foreground transition-colors"
+                onClick={() => setEditingUsername(true)}
+                aria-label="Edit username"
+              >
+                {profileData?.username ?? <span className="italic text-muted-foreground/50 font-sans font-light">set username</span>}
+                <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+              </button>
+            )}
+            <SaveIndicator state={usernameSave} t={t} />
+          </div>
+
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-1">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4" aria-hidden="true" />
@@ -261,7 +424,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Personal Details + Preferences ──────────────────── */}
+      {/* ── Personal Details + Preferences ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Personal Details */}
@@ -274,9 +437,10 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} />
+            <DetailRow label="Username" value={profileData?.username ? `@${profileData.username}` : "—"} />
             <DetailRow
               label={t("profile.email_label")}
-              value={profileData?.email ? maskEmail(profileData.email) : "—"}
+              value={profileData?.email ?? "—"}
             />
             <DetailRow
               label={t("profile.birth_year_label")}
@@ -387,7 +551,70 @@ export default function Profile() {
         </Card>
       </div>
 
-      {/* ── Noble Standing + Domain Mastery ─────────────────── */}
+      {/* ── Onboarding Preferences ── */}
+      {(profileData?.objectives?.length || profileData?.country_of_origin || profileData?.interests_sports?.length || profileData?.interests_cuisine?.length || profileData?.interests_dress_code?.length) ? (
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-serif text-lg flex items-center gap-2">
+              <Target className="w-4 h-4 text-primary/60" aria-hidden="true" />
+              Interests & Objectives
+            </CardTitle>
+            <CardDescription>Your preferences as entered during onboarding</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {profileData?.country_of_origin && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Country of Origin</p>
+                <p className="text-sm text-foreground">{profileData.country_of_origin}</p>
+              </div>
+            )}
+            {profileData?.objectives && profileData.objectives.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Objectives</p>
+                <div className="flex flex-wrap gap-2">
+                  {profileData.objectives.map((obj) => (
+                    <span key={obj} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-light border border-primary/20">
+                      {OBJECTIVE_LABELS[obj] ?? obj}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {profileData?.interests_sports && profileData.interests_sports.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Sports & Leisure</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {profileData.interests_sports.map((s) => (
+                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {profileData?.interests_cuisine && profileData.interests_cuisine.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Culinary Interests</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {profileData.interests_cuisine.map((s) => (
+                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {profileData?.interests_dress_code && profileData.interests_dress_code.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Dress Code Preferences</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {profileData.interests_dress_code.map((s) => (
+                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* ── Noble Standing + Domain Mastery ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="bg-card border-border shadow-sm overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
@@ -464,7 +691,7 @@ export default function Profile() {
         </Card>
       </div>
 
-      {/* ── Recent Log ──────────────────────────────────────── */}
+      {/* ── Recent Log ── */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="font-serif text-xl flex items-center gap-2">
@@ -539,7 +766,7 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* ── Danger Zone ─────────────────────────────────────── */}
+      {/* ── Danger Zone ── */}
       <Card className="border-destructive/20 bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">

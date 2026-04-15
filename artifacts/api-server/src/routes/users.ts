@@ -137,6 +137,9 @@ const UpdateProfileBodySchema = z.object({
   interests_cuisine: z.array(z.string()).optional(),
   interests_dress_code: z.array(z.string()).optional(),
   onboarding_completed: z.boolean().optional(),
+  username: z.string().max(50).optional().nullable(),
+  full_name: z.string().max(150).optional().nullable(),
+  avatar_url: z.string().max(2000000).optional().nullable(),
 });
 
 router.put("/users/profile", requireAuthUser, async (req, res) => {
@@ -164,6 +167,9 @@ router.put("/users/profile", requireAuthUser, async (req, res) => {
         ...(data.active_region !== undefined && { active_region: data.active_region }),
         ...(data.subscription_tier !== undefined && { subscription_tier: data.subscription_tier }),
         ...(data.country_of_origin !== undefined && { country_of_origin: data.country_of_origin }),
+        ...(data.username !== undefined && { username: data.username }),
+        ...(data.full_name !== undefined && { full_name: data.full_name }),
+        ...(data.avatar_url !== undefined && { avatar_url: data.avatar_url }),
         ...(data.objectives !== undefined && { objectives: data.objectives }),
         ...(data.interests_sports !== undefined && { interests_sports: data.interests_sports }),
         ...(data.interests_cuisine !== undefined && { interests_cuisine: data.interests_cuisine }),

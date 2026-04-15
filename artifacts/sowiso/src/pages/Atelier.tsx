@@ -28,10 +28,10 @@ function scoreToDifficultyMax(score: number): number {
 export default function Atelier() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const { isAuthenticated, userId } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
 
-  const isGuest = !isAuthenticated || userId === "default-user";
+  const isGuest = !isAuthenticated;
 
   const { data: nobleScore } = useGetNobleScore();
   const difficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);

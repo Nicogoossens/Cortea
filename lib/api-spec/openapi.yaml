@@ -414,6 +414,14 @@ components:
       properties:
         id:
           type: string
+        full_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        email_verified:
+          type: boolean
         birth_year:
           type: integer
           nullable: true
@@ -423,6 +431,14 @@ components:
         gender_expression:
           type: string
           nullable: true
+        gender:
+          type: string
+          nullable: true
+          description: Computed alias for gender_identity
+        age_group:
+          type: string
+          nullable: true
+          description: Computed from birth_year (e.g. "18-25", "26-35")
         noble_score:
           type: integer
         ambition_level:
@@ -431,6 +447,8 @@ components:
         subscription_tier:
           type: string
           enum: [guest, traveller, ambassador]
+        subscription_status:
+          type: string
         language_code:
           type: string
         active_region:
@@ -439,17 +457,59 @@ components:
           type: array
           items:
             type: string
+        is_admin:
+          type: boolean
+        suspended_at:
+          type: string
+          format: date-time
+          nullable: true
+        onboarding_completed:
+          type: boolean
+        country_of_origin:
+          type: string
+          nullable: true
+        objectives:
+          type: array
+          items:
+            type: string
+        interests_sports:
+          type: array
+          items:
+            type: string
+        interests_cuisine:
+          type: array
+          items:
+            type: string
+        interests_dress_code:
+          type: array
+          items:
+            type: string
+        payment_customer_id:
+          type: string
+          nullable: true
+        trial_ends_at:
+          type: string
+          format: date-time
+          nullable: true
         created_at:
           type: string
           format: date-time
       required:
         - id
+        - email_verified
         - noble_score
         - ambition_level
         - subscription_tier
+        - subscription_status
         - language_code
         - active_region
         - region_history
+        - is_admin
+        - onboarding_completed
+        - objectives
+        - interests_sports
+        - interests_cuisine
+        - interests_dress_code
         - created_at
 
     CreateProfileBody:

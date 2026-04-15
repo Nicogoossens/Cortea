@@ -20,15 +20,34 @@ export const HealthCheckResponse = zod.object({
  */
 export const GetProfileResponse = zod.object({
   id: zod.string(),
+  full_name: zod.string().nullish(),
+  email: zod.string().nullish(),
+  email_verified: zod.boolean(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
   gender_expression: zod.string().nullish(),
+  gender: zod.string().nullish().describe("Computed alias for gender_identity"),
+  age_group: zod
+    .string()
+    .nullish()
+    .describe('Computed from birth_year (e.g. \"18-25\", \"26-35\")'),
   noble_score: zod.number(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
   subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  subscription_status: zod.string(),
   language_code: zod.string(),
   active_region: zod.string(),
   region_history: zod.array(zod.string()),
+  is_admin: zod.boolean(),
+  suspended_at: zod.coerce.date().nullish(),
+  onboarding_completed: zod.boolean(),
+  country_of_origin: zod.string().nullish(),
+  objectives: zod.array(zod.string()),
+  interests_sports: zod.array(zod.string()),
+  interests_cuisine: zod.array(zod.string()),
+  interests_dress_code: zod.array(zod.string()),
+  payment_customer_id: zod.string().nullish(),
+  trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
 });
 
@@ -46,15 +65,34 @@ export const CreateProfileBody = zod.object({
 
 export const CreateProfileResponse = zod.object({
   id: zod.string(),
+  full_name: zod.string().nullish(),
+  email: zod.string().nullish(),
+  email_verified: zod.boolean(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
   gender_expression: zod.string().nullish(),
+  gender: zod.string().nullish().describe("Computed alias for gender_identity"),
+  age_group: zod
+    .string()
+    .nullish()
+    .describe('Computed from birth_year (e.g. \"18-25\", \"26-35\")'),
   noble_score: zod.number(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
   subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  subscription_status: zod.string(),
   language_code: zod.string(),
   active_region: zod.string(),
   region_history: zod.array(zod.string()),
+  is_admin: zod.boolean(),
+  suspended_at: zod.coerce.date().nullish(),
+  onboarding_completed: zod.boolean(),
+  country_of_origin: zod.string().nullish(),
+  objectives: zod.array(zod.string()),
+  interests_sports: zod.array(zod.string()),
+  interests_cuisine: zod.array(zod.string()),
+  interests_dress_code: zod.array(zod.string()),
+  payment_customer_id: zod.string().nullish(),
+  trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
 });
 
@@ -73,15 +111,34 @@ export const UpdateProfileBody = zod.object({
 
 export const UpdateProfileResponse = zod.object({
   id: zod.string(),
+  full_name: zod.string().nullish(),
+  email: zod.string().nullish(),
+  email_verified: zod.boolean(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
   gender_expression: zod.string().nullish(),
+  gender: zod.string().nullish().describe("Computed alias for gender_identity"),
+  age_group: zod
+    .string()
+    .nullish()
+    .describe('Computed from birth_year (e.g. \"18-25\", \"26-35\")'),
   noble_score: zod.number(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
   subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  subscription_status: zod.string(),
   language_code: zod.string(),
   active_region: zod.string(),
   region_history: zod.array(zod.string()),
+  is_admin: zod.boolean(),
+  suspended_at: zod.coerce.date().nullish(),
+  onboarding_completed: zod.boolean(),
+  country_of_origin: zod.string().nullish(),
+  objectives: zod.array(zod.string()),
+  interests_sports: zod.array(zod.string()),
+  interests_cuisine: zod.array(zod.string()),
+  interests_dress_code: zod.array(zod.string()),
+  payment_customer_id: zod.string().nullish(),
+  trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
 });
 
@@ -101,15 +158,34 @@ export const UpdateActiveRegionBody = zod.object({
 
 export const UpdateActiveRegionResponse = zod.object({
   id: zod.string(),
+  full_name: zod.string().nullish(),
+  email: zod.string().nullish(),
+  email_verified: zod.boolean(),
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
   gender_expression: zod.string().nullish(),
+  gender: zod.string().nullish().describe("Computed alias for gender_identity"),
+  age_group: zod
+    .string()
+    .nullish()
+    .describe('Computed from birth_year (e.g. \"18-25\", \"26-35\")'),
   noble_score: zod.number(),
   ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
   subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  subscription_status: zod.string(),
   language_code: zod.string(),
   active_region: zod.string(),
   region_history: zod.array(zod.string()),
+  is_admin: zod.boolean(),
+  suspended_at: zod.coerce.date().nullish(),
+  onboarding_completed: zod.boolean(),
+  country_of_origin: zod.string().nullish(),
+  objectives: zod.array(zod.string()),
+  interests_sports: zod.array(zod.string()),
+  interests_cuisine: zod.array(zod.string()),
+  interests_dress_code: zod.array(zod.string()),
+  payment_customer_id: zod.string().nullish(),
+  trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
 });
 

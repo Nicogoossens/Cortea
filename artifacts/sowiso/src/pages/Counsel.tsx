@@ -46,7 +46,7 @@ const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 export default function Counsel() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const { isAuthenticated, userId } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
@@ -78,7 +78,7 @@ export default function Counsel() {
   // Registered non-paying users can use Pillar 1+2 but not Pillar 3.
   // (Subscription tier check: for now, treat all registered users as basic tier
   //  until a payment system is wired in — Pillar 3 always shows upgrade prompt for non-admin)
-  const isGuest = !isAuthenticated || userId === "default-user";
+  const isGuest = !isAuthenticated;
   // Consider all authenticated non-admin users as basic tier for now
   // (adjust when payment integration is added)
   const hasPremium = !isGuest && false; // placeholder — extend when payment is wired

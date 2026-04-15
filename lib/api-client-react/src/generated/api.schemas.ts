@@ -33,15 +33,33 @@ export const UserProfileSubscriptionTier = {
 
 export interface UserProfile {
   id: string;
+  full_name?: string | null;
+  email?: string | null;
+  email_verified: boolean;
   birth_year?: number | null;
   gender_identity?: string | null;
   gender_expression?: string | null;
+  /** Computed alias for gender_identity */
+  gender?: string | null;
+  /** Computed from birth_year (e.g. "18-25", "26-35") */
+  age_group?: string | null;
   noble_score: number;
   ambition_level: UserProfileAmbitionLevel;
   subscription_tier: UserProfileSubscriptionTier;
+  subscription_status: string;
   language_code: string;
   active_region: string;
   region_history: string[];
+  is_admin: boolean;
+  suspended_at?: string | null;
+  onboarding_completed: boolean;
+  country_of_origin?: string | null;
+  objectives: string[];
+  interests_sports: string[];
+  interests_cuisine: string[];
+  interests_dress_code: string[];
+  payment_customer_id?: string | null;
+  trial_ends_at?: string | null;
   created_at: string;
 }
 

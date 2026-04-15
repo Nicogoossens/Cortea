@@ -8,15 +8,17 @@ export interface QualityResult {
 
 const DEBOUNCE_MS = 900;
 const MIN_LENGTH  = 30;
+const SESSION_TOKEN_KEY = "sowiso_session_token";
 
 export function useRegisterQuality(locale: string) {
-  const [result, setResult]   = useState<QualityResult | null>(null);
+  const [result, setResult]     = useState<QualityResult | null>(null);
   const [checking, setChecking] = useState(false);
-  const timerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef  = useRef<AbortController | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const check = useCallback((text: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
+
     if (text.trim().length < MIN_LENGTH) {
       setResult(null);
       return;
@@ -26,11 +28,20 @@ export function useRegisterQuality(locale: string) {
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
 
+      const token = localStorage.getItem(SESSION_TOKEN_KEY);
+      if (!token) {
+        setResult(null);
+        return;
+      }
+
       setChecking(true);
       try {
         const res = await fetch("/api/register-quality/check", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
           body: JSON.stringify({ text: text.trim(), locale }),
           signal: abortRef.current.signal,
         });
@@ -39,7 +50,7 @@ export function useRegisterQuality(locale: string) {
           setResult(data);
         }
       } catch {
-        // Ignore aborts
+        // Ignore aborts and network errors silently
       } finally {
         setChecking(false);
       }

@@ -22,7 +22,6 @@ import type {
   CultureCompassDetail,
   CultureCompassEntry,
   CultureProtocol,
-  DeleteProfileParams,
   ErrorResponse,
   GetCultureCompassParams,
   GetCultureCompassRegionParams,
@@ -39,7 +38,6 @@ import type {
   ScoreLogEntry,
   SubmitAnswerBody,
   UpdateProfileBody,
-  UpdateProfileParams,
   UpdateRegionBody,
   UserProfile,
 } from "./api.schemas";
@@ -293,28 +291,15 @@ export const useCreateProfile = <
 /**
  * @summary Update user profile fields
  */
-export const getUpdateProfileUrl = (params?: UpdateProfileParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/users/profile?${stringifiedParams}`
-    : `/api/users/profile`;
+export const getUpdateProfileUrl = () => {
+  return `/api/users/profile`;
 };
 
 export const updateProfile = async (
   updateProfileBody: UpdateProfileBody,
-  params?: UpdateProfileParams,
   options?: RequestInit,
 ): Promise<UserProfile> => {
-  return customFetch<UserProfile>(getUpdateProfileUrl(params), {
+  return customFetch<UserProfile>(getUpdateProfileUrl(), {
     ...options,
     method: "PUT",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -329,14 +314,14 @@ export const getUpdateProfileMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateProfile>>,
     TError,
-    { data: BodyType<UpdateProfileBody>; params?: UpdateProfileParams },
+    { data: BodyType<UpdateProfileBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateProfile>>,
   TError,
-  { data: BodyType<UpdateProfileBody>; params?: UpdateProfileParams },
+  { data: BodyType<UpdateProfileBody> },
   TContext
 > => {
   const mutationKey = ["updateProfile"];
@@ -350,11 +335,11 @@ export const getUpdateProfileMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateProfile>>,
-    { data: BodyType<UpdateProfileBody>; params?: UpdateProfileParams }
+    { data: BodyType<UpdateProfileBody> }
   > = (props) => {
-    const { data, params } = props ?? {};
+    const { data } = props ?? {};
 
-    return updateProfile(data, params, requestOptions);
+    return updateProfile(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -376,14 +361,14 @@ export const useUpdateProfile = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateProfile>>,
     TError,
-    { data: BodyType<UpdateProfileBody>; params?: UpdateProfileParams },
+    { data: BodyType<UpdateProfileBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateProfile>>,
   TError,
-  { data: BodyType<UpdateProfileBody>; params?: UpdateProfileParams },
+  { data: BodyType<UpdateProfileBody> },
   TContext
 > => {
   return useMutation(getUpdateProfileMutationOptions(options));
@@ -392,27 +377,14 @@ export const useUpdateProfile = <
 /**
  * @summary Delete user profile
  */
-export const getDeleteProfileUrl = (params?: DeleteProfileParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? "null" : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/api/users/profile?${stringifiedParams}`
-    : `/api/users/profile`;
+export const getDeleteProfileUrl = () => {
+  return `/api/users/profile`;
 };
 
 export const deleteProfile = async (
-  params?: DeleteProfileParams,
   options?: RequestInit,
 ): Promise<MessageResponse> => {
-  return customFetch<MessageResponse>(getDeleteProfileUrl(params), {
+  return customFetch<MessageResponse>(getDeleteProfileUrl(), {
     ...options,
     method: "DELETE",
   });
@@ -425,14 +397,14 @@ export const getDeleteProfileMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteProfile>>,
     TError,
-    { params?: DeleteProfileParams },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteProfile>>,
   TError,
-  { params?: DeleteProfileParams },
+  void,
   TContext
 > => {
   const mutationKey = ["deleteProfile"];
@@ -446,11 +418,9 @@ export const getDeleteProfileMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteProfile>>,
-    { params?: DeleteProfileParams }
-  > = (props) => {
-    const { params } = props ?? {};
-
-    return deleteProfile(params, requestOptions);
+    void
+  > = () => {
+    return deleteProfile(requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -472,14 +442,14 @@ export const useDeleteProfile = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteProfile>>,
     TError,
-    { params?: DeleteProfileParams },
+    void,
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteProfile>>,
   TError,
-  { params?: DeleteProfileParams },
+  void,
   TContext
 > => {
   return useMutation(getDeleteProfileMutationOptions(options));

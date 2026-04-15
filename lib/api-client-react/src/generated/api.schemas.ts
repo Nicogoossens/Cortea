@@ -223,14 +223,6 @@ export interface ScoreLogEntry {
   timestamp: string;
 }
 
-export type UpdateProfileParams = {
-  user_id?: string;
-};
-
-export type DeleteProfileParams = {
-  user_id?: string;
-};
-
 export type GetCultureProtocolsParams = {
   /**
    * ISO country code (e.g. GB, CN, CA)

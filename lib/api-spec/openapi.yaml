@@ -75,12 +75,6 @@ paths:
       operationId: updateProfile
       tags: [users]
       summary: Update user profile fields
-      parameters:
-        - name: user_id
-          in: query
-          required: false
-          schema:
-            type: string
       requestBody:
         required: true
         content:
@@ -104,12 +98,6 @@ paths:
       operationId: deleteProfile
       tags: [users]
       summary: Delete user profile
-      parameters:
-        - name: user_id
-          in: query
-          required: false
-          schema:
-            type: string
       responses:
         "200":
           description: Profile deleted

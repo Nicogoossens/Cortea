@@ -61,10 +61,6 @@ export const CreateProfileResponse = zod.object({
 /**
  * @summary Update user profile fields
  */
-export const UpdateProfileQueryParams = zod.object({
-  user_id: zod.coerce.string().optional(),
-});
-
 export const UpdateProfileBody = zod.object({
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
@@ -92,10 +88,6 @@ export const UpdateProfileResponse = zod.object({
 /**
  * @summary Delete user profile
  */
-export const DeleteProfileQueryParams = zod.object({
-  user_id: zod.coerce.string().optional(),
-});
-
 export const DeleteProfileResponse = zod.object({
   message: zod.string(),
 });

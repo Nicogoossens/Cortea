@@ -1243,10 +1243,13 @@ async function seedCompass() {
   }
 
   console.log(`Compass seed complete. ${COMPASS_SEED.length} regions inserted/updated.`);
-  process.exit(0);
 }
 
-seedCompass().catch((err) => {
-  console.error("Compass seed failed:", err);
-  process.exit(1);
-});
+export { seedCompass as runCompassSeed };
+
+if (process.argv[1] && process.argv[1].includes("seed-compass.ts")) {
+  seedCompass().catch((err) => {
+    console.error("Compass seed failed:", err);
+    process.exit(1);
+  });
+}

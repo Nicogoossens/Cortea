@@ -1135,10 +1135,13 @@ async function seed() {
   }
 
   console.log("Atelier seed complete.");
-  process.exit(0);
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+export { seed as runAtelierSeed };
+
+if (process.argv[1] && process.argv[1].includes("seed.ts")) {
+  seed().catch((err) => {
+    console.error("Seed failed:", err);
+    process.exit(1);
+  });
+}

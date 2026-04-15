@@ -5,12 +5,18 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
 import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap } from "@workspace/db";
+import { runAtelierSeed } from "@workspace/db/seed";
+import { runCompassSeed } from "@workspace/db/seed-compass";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
 import { z } from "zod";
 
 const execAsync = promisify(exec);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_ROOT = path.resolve(__dirname, "../../../../");
+const __currentDir = path.dirname(fileURLToPath(import.meta.url));
+// In the compiled bundle (dist/index.mjs) __currentDir ends with /dist — 3 levels to workspace root.
+// In development (src/routes/admin.ts via tsx) it ends with /routes — 4 levels to workspace root.
+const WORKSPACE_ROOT = __currentDir.endsWith("/dist")
+  ? path.resolve(__currentDir, "../../../")
+  : path.resolve(__currentDir, "../../../../");
 
 const router = Router();
 
@@ -302,8 +308,24 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
       }
     };
 
-    await run("Atelier", "pnpm --filter db seed");
-    await run("Compass", "pnpm --filter db seed:compass");
+    try {
+      await runAtelierSeed();
+      results.push("[Atelier] OK");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      results.push(`[Atelier] ERROR: ${msg}`);
+      anyFailed = true;
+    }
+
+    try {
+      await runCompassSeed();
+      results.push("[Compass] OK");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      results.push(`[Compass] ERROR: ${msg}`);
+      anyFailed = true;
+    }
+
     await run("Translations", "node scripts/seed-translations.mjs");
     await run("Admin", "node scripts/ensure-admin.mjs");
     await run("Scenario Translations", "node scripts/scenario-translate.mjs", 600_000);

@@ -99,19 +99,25 @@ export default function Compass() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3 pt-0">
-                  <div className="space-y-1.5">
-                    {cluster.dos.slice(0, 2).map((item, i) => (
-                      <div key={i} className="flex gap-2 text-xs text-foreground/70">
-                        <span className="text-green-600 font-bold flex-shrink-0">+</span>
-                        <span className="leading-snug">{item}</span>
-                      </div>
-                    ))}
-                    {cluster.donts.slice(0, 1).map((item, i) => (
-                      <div key={i} className="flex gap-2 text-xs text-foreground/70">
-                        <span className="text-red-600 font-bold flex-shrink-0">×</span>
-                        <span className="leading-snug">{item}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-green-700/70 dark:text-green-500/70 mb-0.5">{t("compass.dos")}</p>
+                      {cluster.dos.slice(0, 5).map((item, i) => (
+                        <div key={i} className="flex gap-1.5 items-start text-[11px] text-foreground/65">
+                          <span className="text-green-600 font-bold flex-shrink-0 leading-none mt-0.5">+</span>
+                          <span className="leading-tight line-clamp-2">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-red-700/70 dark:text-red-500/70 mb-0.5">{t("compass.donts")}</p>
+                      {cluster.donts.slice(0, 5).map((item, i) => (
+                        <div key={i} className="flex gap-1.5 items-start text-[11px] text-foreground/65">
+                          <span className="text-red-600 font-bold flex-shrink-0 leading-none mt-0.5">×</span>
+                          <span className="leading-tight line-clamp-2">{item}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div className="pt-2 border-t border-border/30 flex items-center justify-between">
                     <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60">

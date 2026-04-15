@@ -55,3 +55,27 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **i18n**: 25+ new keys added to English (`profile.personal_details`, `profile.delete_account_*`, `profile.log.*`, etc.) — all other locales auto-fallback to English via `t()` chain
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Subscription Tiers (Task #4)
+
+Three tiers are implemented: **The Guest** (free), **The Traveller** (€9.99/mo, €79/yr), **The Ambassador** (€29/mo, €249/yr).
+
+- **Feature flags**: `artifacts/api-server/src/lib/tier-features.ts`
+- **Backend routes**: `artifacts/api-server/src/routes/subscription.ts` — `/api/subscription/tiers`, `/api/subscription/plans`, `/api/subscription/checkout`, `/api/subscription/portal`, `/api/subscription/features`
+- **Webhook handler**: `artifacts/api-server/src/webhookHandlers.ts` — auto-updates `subscription_tier` in DB on Stripe events
+- **Frontend gate**: `artifacts/sowiso/src/components/TierGate.tsx` — inline blurred content with upgrade prompt (never pop-ups)
+- **Membership page**: `artifacts/sowiso/src/pages/Membership.tsx` — 3-tier comparison with monthly/yearly toggle
+- **DB schema**: `stripe_customer_id` column added to `users` table
+
+### Payment Integration — PRE-LAUNCH TODO
+
+> **IMPORTANT**: Stripe is not available in all countries worldwide. Before launching, we must add additional payment providers to ensure full global coverage. Options to evaluate:
+> - **Mollie** — strong EU coverage, ideal for Belgian/Dutch market
+> - **PayPal** — broad international reach
+> - **Local/regional methods** — iDEAL (NL), Bancontact (BE), etc.
+>
+> The Stripe integration code is ready but **Stripe credentials are not yet connected**. To activate payments:
+> 1. Connect Stripe via the Replit integrations panel (connector ID: `ccfg_stripe_default_org_ernmlb`)
+> 2. Run `pnpm --filter @workspace/scripts exec tsx src/seed-products.ts` to create products in Stripe
+> 3. Set `STRIPE_WEBHOOK_SECRET` in environment secrets for the webhook endpoint
+> 4. Evaluate and add at least one additional payment provider before launch

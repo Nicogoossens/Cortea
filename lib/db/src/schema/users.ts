@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
   noble_score: integer("noble_score").notNull().default(0),
   ambition_level: text("ambition_level").notNull().default("casual"),
   subscription_tier: text("subscription_tier").notNull().default("guest"),
+  stripe_customer_id: text("stripe_customer_id"),
   language_code: text("language_code").notNull().default("en"),
   active_region: text("active_region").notNull().default("GB"),
   region_history: json("region_history").$type<string[]>().notNull().default([]),

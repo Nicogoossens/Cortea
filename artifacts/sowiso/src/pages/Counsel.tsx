@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, CreditCard } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
-import { useAuth } from "@/lib/auth";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
+import { useGetProfile } from "@workspace/api-client-react";
+import { TierGate } from "@/components/TierGate";
 
 // Domain keys in counselling order
 const DOMAIN_KEYS = [
@@ -22,43 +23,22 @@ const DOMAIN_KEYS = [
 
 type DomainKey = typeof DOMAIN_KEYS[number];
 
-// Domains accessible on the free/guest tier (Pillar 1 sample)
-const PILLAR_1_DOMAINS: DomainKey[] = [
-  "counsel.domains.dining",
-  "counsel.domains.introductions",
-];
-
-// Domains restricted to paying members (Pillar 3+)
-const PILLAR_3_DOMAINS: DomainKey[] = [
-  "counsel.domains.gifting",
-  "counsel.domains.digital_protocol",
-  "counsel.domains.hosting",
-  "counsel.domains.apologies",
-];
-
-// Regions available to guests for the preview experience
-const GUEST_REGIONS: RegionCode[] = ["GB", "US", "FR", "DE", "NL", "AU", "CA"];
-
-const FREE_QUESTION_LIMIT = 3;
-
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function Counsel() {
   const { t } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const { isAuthenticated } = useAuth();
+  const { data: profile } = useGetProfile();
+
+  const regionActive = isRegionActive(activeRegion);
+  const tier = profile?.subscription_tier ?? "guest";
+  const canUseCounsel = tier === "traveller" || tier === "ambassador";
 
   const [query, setQuery] = useState("");
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Guest free-question counter (session-only, not persisted)
-  const [freeQuestionsUsed, setFreeQuestionsUsed] = useState(0);
-
-  // Inline gate notice shown when a locked domain is clicked
-  const [gateNotice, setGateNotice] = useState<"register" | "upgrade" | null>(null);
 
   /** Session-only region override — does NOT mutate the stored profile region. */
   const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(null);
@@ -68,52 +48,10 @@ export default function Counsel() {
   const effectiveRegion: RegionCode = sessionRegion ?? activeRegion;
   const isOverriding = sessionRegion !== null;
 
-  // For guests, restrict available regions to the preview set
-  const availableRegions = isAuthenticated
-    ? COMPASS_REGIONS
-    : COMPASS_REGIONS.filter((r) => GUEST_REGIONS.includes(r.code as RegionCode));
-
-  // Access tier derived from auth state
-  // Guests get 3 free questions on Pillar 1 domains only.
-  // Registered non-paying users can use Pillar 1+2 but not Pillar 3.
-  // (Subscription tier check: for now, treat all registered users as basic tier
-  //  until a payment system is wired in — Pillar 3 always shows upgrade prompt for non-admin)
-  const isGuest = !isAuthenticated;
-  // Consider all authenticated non-admin users as basic tier for now
-  // (adjust when payment integration is added)
-  const hasPremium = !isGuest && false; // placeholder — extend when payment is wired
-
-  const guestLimitReached = isGuest && freeQuestionsUsed >= FREE_QUESTION_LIMIT;
-
-  function getDomainAccess(domain: DomainKey): "open" | "locked-register" | "locked-upgrade" {
-    if (isGuest) {
-      return PILLAR_1_DOMAINS.includes(domain) ? "open" : "locked-register";
-    }
-    if (!hasPremium && PILLAR_3_DOMAINS.includes(domain)) {
-      return "locked-upgrade";
-    }
-    return "open";
-  }
-
-  function handleDomainClick(key: DomainKey) {
-    const access = getDomainAccess(key);
-    if (access === "locked-register") {
-      setGateNotice("register");
-      setSelectedDomain(null);
-      return;
-    }
-    if (access === "locked-upgrade") {
-      setGateNotice("upgrade");
-      setSelectedDomain(null);
-      return;
-    }
-    setGateNotice(null);
-    setSelectedDomain(selectedDomain === key ? null : key);
-  }
+  const availableRegions = COMPASS_REGIONS;
 
   const handleSubmit = async () => {
     if (!query.trim() && !selectedDomain) return;
-    if (guestLimitReached) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -138,9 +76,6 @@ export default function Counsel() {
 
       const body = await res.json() as { guidance: string };
       setResponse(body.guidance);
-      if (isGuest) {
-        setFreeQuestionsUsed((prev) => prev + 1);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
@@ -153,7 +88,6 @@ export default function Counsel() {
     setSelectedDomain(null);
     setResponse(null);
     setError(null);
-    setGateNotice(null);
     setShowRegionPicker(false);
   };
 
@@ -169,303 +103,191 @@ export default function Counsel() {
         </p>
       </div>
 
-      {/* Guest free-question progress banner */}
-      {isGuest && (
-        <div className={`flex items-start gap-3 px-5 py-4 rounded-sm border text-sm ${
-          guestLimitReached
-            ? "border-amber-300/60 bg-amber-50/40 text-amber-800"
-            : "border-border/30 bg-muted/20 text-muted-foreground"
-        }`}>
-          <Shield className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
-          <div className="space-y-2 flex-1">
-            {guestLimitReached ? (
-              <>
-                <p className="font-medium text-amber-800">
-                  {t("counsel.guest.limit_reached").replace("{limit}", String(FREE_QUESTION_LIMIT))}
-                </p>
-                <p className="text-xs font-light">
-                  {t("counsel.guest.limit_body")}
-                </p>
-                <div className="flex gap-2 pt-1">
-                  <Link href="/register">
-                    <Button size="sm" className="font-serif gap-1.5 rounded-sm">
-                      <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                      {t("counsel.guest.create_account")}
-                    </Button>
-                  </Link>
-                  <Link href="/signin">
-                    <Button size="sm" variant="outline" className="font-serif rounded-sm">
-                      {t("counsel.guest.signin")}
-                    </Button>
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <p>
-                <span className="font-medium">{t("counsel.guest.preview_label")}</span> — {FREE_QUESTION_LIMIT - freeQuestionsUsed} {t("counsel.guest.preview_remaining").replace("{limit}", String(FREE_QUESTION_LIMIT))}{" "}
-                <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
-                  {t("counsel.guest.register_link")}
-                </Link>{" "}
-                {t("counsel.guest.register_prompt")}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Region context strip with session override ── */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/40 border border-border/40 rounded-sm text-sm flex-wrap gap-y-1.5">
-          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
-          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            {isOverriding ? t("counsel.session_override_label") : t("counsel.region_context")}
-          </span>
-          <FlagEmoji code={effectiveRegion} />
-          <span className="font-medium text-foreground/80">{getRegionName(effectiveRegion)}</span>
-          {isOverriding && (
-            <button
-              onClick={() => { setSessionRegion(null); setShowRegionPicker(false); }}
-              className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/70 border border-primary/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
-              aria-label={t("counsel.session_override_reset")}
-            >
-              <X className="w-3 h-3" aria-hidden="true" />
-              {t("counsel.session_override_reset")}
-            </button>
-          )}
-          {!isOverriding && (
-            <button
-              onClick={() => setShowRegionPicker((v) => !v)}
-              aria-expanded={showRegionPicker}
-              className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 hover:text-primary border border-muted-foreground/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
-            >
-              {t("counsel.session_override_change")}
-              <ChevronDown className={`w-3 h-3 transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
-            </button>
-          )}
-        </div>
-
-        {/* Session region picker */}
-        {showRegionPicker && (
-          <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
-            {availableRegions.map((region) => {
-              const isSelected = region.code === effectiveRegion;
-              return (
-                <button
-                  key={region.code}
-                  onClick={() => { setSessionRegion(region.code); setShowRegionPicker(false); }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                    isSelected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
-                  }`}
-                >
-                  <FlagEmoji code={region.flag} />
-                  {getRegionName(region.code)}
-                </button>
-              );
-            })}
-            {isGuest && (
-              <p className="w-full text-[10px] text-muted-foreground/50 font-mono px-1 mt-0.5">
-                {t("counsel.guest.all_regions_prompt")}
-              </p>
-            )}
-          </div>
-        )}
-
-        {isOverriding && (
-          <p className="text-[10px] text-muted-foreground/50 font-mono px-1">
-            {t("counsel.session_override_hint")}
-          </p>
-        )}
-      </div>
-
-      {/* Inline gate notice */}
-      {gateNotice === "register" && (
-        <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-primary/20 bg-primary/5 text-sm animate-in fade-in duration-200">
-          <UserPlus className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" aria-hidden="true" />
-          <div className="space-y-2 flex-1">
-            <p className="font-medium text-foreground">{t("counsel.guest.domain_register")}</p>
-            <p className="text-xs text-muted-foreground font-light">
-              {t("counsel.guest.domain_register_body")}
+      {!canUseCounsel ? (
+        <TierGate
+          feature="AI-Counsel"
+          requiredTier="traveller"
+        />
+      ) : !regionActive ? (
+        <Card className="border-border/50 bg-muted/20 shadow-sm">
+          <CardContent className="p-8 flex flex-col items-center text-center gap-4">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground border border-muted-foreground/20 rounded-[2px] px-2.5 py-1.5">
+              <FlagEmoji code={activeRegion} />
+              <span>{getRegionName(activeRegion)}</span>
+              <span className="border-l border-current/20 pl-2 ml-0.5">{t("region.in_preparation")}</span>
+            </div>
+            <p className="text-muted-foreground font-light leading-relaxed max-w-lg">
+              {t("counsel.region_unavailable")}
             </p>
-            <div className="flex gap-2 pt-1">
-              <Link href="/register">
-                <Button size="sm" className="font-serif gap-1.5 rounded-sm">
-                  <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
-                  {t("counsel.guest.create_account")}
-                </Button>
-              </Link>
-              <Link href="/signin">
-                <Button size="sm" variant="outline" className="font-serif rounded-sm">
-                  {t("counsel.guest.signin")}
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <button onClick={() => setGateNotice(null)} aria-label={t("common.close")} className="text-muted-foreground/40 hover:text-muted-foreground">
-            <X className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
-      {gateNotice === "upgrade" && (
-        <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-amber-200/60 bg-amber-50/30 text-sm animate-in fade-in duration-200">
-          <CreditCard className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-700" aria-hidden="true" />
-          <div className="space-y-2 flex-1">
-            <p className="font-medium text-foreground">{t("counsel.guest.domain_premium")}</p>
-            <p className="text-xs text-muted-foreground font-light">
-              {t("counsel.guest.domain_premium_body")}
-            </p>
-            <Link href="/profile">
-              <Button size="sm" className="font-serif gap-1.5 rounded-sm mt-1">
-                <CreditCard className="w-3.5 h-3.5" aria-hidden="true" />
-                {t("counsel.guest.upgrade")}
-              </Button>
-            </Link>
-          </div>
-          <button onClick={() => setGateNotice(null)} aria-label={t("common.close")} className="text-muted-foreground/40 hover:text-muted-foreground">
-            <X className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
-      {!response ? (
-        <Card className="border-border bg-card shadow-sm">
-          <CardContent className="p-6 md:p-8 space-y-8">
-            <fieldset className="space-y-4">
-              <legend className="text-sm font-medium text-foreground tracking-wide">
-                {t("counsel.select_domain")}
-              </legend>
-              <div className="flex flex-wrap gap-2" role="group" aria-label={t("counsel.select_domain")}>
-                {DOMAIN_KEYS.map((key) => {
-                  const label = t(key);
-                  const isSelected = selectedDomain === key;
-                  const access = getDomainAccess(key);
-                  const locked = access !== "open";
-
-                  return (
-                    <Badge
-                      key={key}
-                      variant={isSelected ? "default" : "outline"}
-                      className={`cursor-pointer px-4 py-1.5 rounded-sm transition-all text-sm font-normal gap-1.5 ${
-                        locked
-                          ? "opacity-60 cursor-pointer hover:opacity-80 text-muted-foreground"
-                          : isSelected
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "hover:bg-muted/50 text-muted-foreground"
-                      }`}
-                      onClick={() => handleDomainClick(key)}
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      aria-disabled={locked}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === " " || e.key === "Enter") handleDomainClick(key);
-                      }}
-                    >
-                      {locked && <Lock className="w-3 h-3" aria-hidden="true" />}
-                      {label}
-                    </Badge>
-                  );
-                })}
-              </div>
-              {isGuest && (
-                <p className="text-[10px] text-muted-foreground/50 font-mono">
-                  {t("counsel.guest.locked_domains_hint")}
-                </p>
-              )}
-            </fieldset>
-
-            <div className="space-y-4">
-              <label
-                htmlFor="counsel-query"
-                className="text-sm font-medium text-foreground tracking-wide block"
-              >
-                {t("counsel.placeholder")}
-              </label>
-              <Textarea
-                id="counsel-query"
-                placeholder={t("counsel.placeholder")}
-                className="min-h-[150px] resize-none bg-background border-border/60 focus:border-primary/50 text-base p-4 rounded-sm"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                disabled={guestLimitReached}
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-destructive border border-destructive/30 rounded-sm px-4 py-2 bg-destructive/5" role="alert">
-                {error}
-              </p>
-            )}
-
-            <div className="flex justify-end pt-4 border-t border-border/30">
-              <Button
-                size="lg"
-                className="font-serif px-8 bg-primary hover:bg-primary/90 text-primary-foreground w-full md:w-auto"
-                onClick={handleSubmit}
-                disabled={(!query.trim() && !selectedDomain) || isSubmitting || guestLimitReached}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
-                    <span>{t("counsel.consulting")}</span>
-                  </>
-                ) : (
-                  <>
-                    {t("counsel.request")}
-                    <Send className="w-4 h-4 ml-2" aria-hidden="true" />
-                  </>
-                )}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8 animate-in slide-in-from-bottom-4" aria-live="polite" aria-atomic="true">
-          <Card className="border-primary/20 bg-card shadow-md relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary" aria-hidden="true" />
-            <CardHeader className="pb-2 pt-8 px-8">
-              <CardDescription className="uppercase tracking-widest text-xs font-semibold text-primary">
-                {t("counsel.guidance")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-8 pb-8 pt-4">
-              <p className="text-xl leading-relaxed font-serif text-foreground">{response}</p>
-            </CardContent>
-          </Card>
+        <>
+          {/* ── Region context strip with session override ── */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-muted/40 border border-border/40 rounded-sm text-sm flex-wrap gap-y-1.5">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                {isOverriding ? t("counsel.session_override_label") : t("counsel.region_context")}
+              </span>
+              <FlagEmoji code={effectiveRegion} />
+              <span className="font-medium text-foreground/80">{getRegionName(effectiveRegion)}</span>
+              {isOverriding && (
+                <button
+                  onClick={() => { setSessionRegion(null); setShowRegionPicker(false); }}
+                  className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/70 border border-primary/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
+                  aria-label={t("counsel.session_override_reset")}
+                >
+                  <X className="w-3 h-3" aria-hidden="true" />
+                  {t("counsel.session_override_reset")}
+                </button>
+              )}
+              {!isOverriding && (
+                <button
+                  onClick={() => setShowRegionPicker((v) => !v)}
+                  aria-expanded={showRegionPicker}
+                  className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 hover:text-primary border border-muted-foreground/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
+                >
+                  {t("counsel.session_override_change")}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
+                </button>
+              )}
+            </div>
 
-          {/* After answer: if guest limit reached, show registration CTA instead of reset */}
-          {isGuest && freeQuestionsUsed >= FREE_QUESTION_LIMIT ? (
-            <div className="border border-border rounded-sm p-6 bg-card space-y-4 text-center">
-              <h3 className="font-serif text-xl text-foreground">{t("counsel.guest.continue_heading")}</h3>
-              <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-md mx-auto">
-                {t("counsel.guest.continue_body")}
+            {/* Session region picker */}
+            {showRegionPicker && (
+              <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
+                {availableRegions.map((region) => {
+                  const isSelected = region.code === effectiveRegion;
+                  return (
+                    <button
+                      key={region.code}
+                      onClick={() => { setSessionRegion(region.code); setShowRegionPicker(false); }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                      }`}
+                    >
+                      <FlagEmoji code={region.flag} />
+                      {getRegionName(region.code)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {isOverriding && (
+              <p className="text-[10px] text-muted-foreground/50 font-mono px-1">
+                {t("counsel.session_override_hint")}
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                <Link href="/register">
-                  <Button className="font-serif gap-2 rounded-sm">
-                    <UserPlus className="w-4 h-4" aria-hidden="true" />
-                    {t("counsel.guest.create_account")}
+            )}
+          </div>
+
+          {!response ? (
+            <Card className="border-border bg-card shadow-sm">
+              <CardContent className="p-6 md:p-8 space-y-8">
+                <fieldset className="space-y-4">
+                  <legend className="text-sm font-medium text-foreground tracking-wide">
+                    {t("counsel.select_domain")}
+                  </legend>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t("counsel.select_domain")}>
+                    {DOMAIN_KEYS.map((key) => {
+                      const label = t(key);
+                      const isSelected = selectedDomain === key;
+
+                      return (
+                        <Badge
+                          key={key}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer px-4 py-1.5 rounded-sm transition-all text-sm font-normal gap-1.5 ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "hover:bg-muted/50 text-muted-foreground"
+                          }`}
+                          onClick={() => setSelectedDomain(selectedDomain === key ? null : key)}
+                          role="checkbox"
+                          aria-checked={isSelected}
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === " " || e.key === "Enter") setSelectedDomain(selectedDomain === key ? null : key);
+                          }}
+                        >
+                          {label}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+
+                <div className="space-y-4">
+                  <label
+                    htmlFor="counsel-query"
+                    className="text-sm font-medium text-foreground tracking-wide block"
+                  >
+                    {t("counsel.placeholder")}
+                  </label>
+                  <Textarea
+                    id="counsel-query"
+                    placeholder={t("counsel.placeholder")}
+                    className="min-h-[150px] resize-none bg-background border-border/60 focus:border-primary/50 text-base p-4 rounded-sm"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-sm text-destructive border border-destructive/30 rounded-sm px-4 py-2 bg-destructive/5" role="alert">
+                    {error}
+                  </p>
+                )}
+
+                <div className="flex justify-end pt-4 border-t border-border/30">
+                  <Button
+                    size="lg"
+                    className="font-serif px-8 bg-primary hover:bg-primary/90 text-primary-foreground w-full md:w-auto"
+                    onClick={handleSubmit}
+                    disabled={(!query.trim() && !selectedDomain) || isSubmitting}
+                    aria-busy={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
+                        <span>{t("counsel.consulting")}</span>
+                      </>
+                    ) : (
+                      <>
+                        {t("counsel.request")}
+                        <Send className="w-4 h-4 ml-2" aria-hidden="true" />
+                      </>
+                    )}
                   </Button>
-                </Link>
-                <Link href="/signin">
-                  <Button variant="outline" className="font-serif rounded-sm">
-                    {t("counsel.guest.signin")}
-                  </Button>
-                </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-8 animate-in slide-in-from-bottom-4" aria-live="polite" aria-atomic="true">
+              <Card className="border-primary/20 bg-card shadow-md relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary" aria-hidden="true" />
+                <CardHeader className="pb-2 pt-8 px-8">
+                  <CardDescription className="uppercase tracking-widest text-xs font-semibold text-primary">
+                    {t("counsel.guidance")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-8 pb-8 pt-4">
+                  <p className="text-xl leading-relaxed font-serif text-foreground">{response}</p>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-center">
+                <Button variant="outline" onClick={handleReset} className="font-serif gap-2">
+                  <RotateCcw className="w-4 h-4" aria-hidden="true" />
+                  {t("counsel.request")}
+                </Button>
               </div>
             </div>
-          ) : (
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={handleReset} className="font-serif gap-2">
-                <RotateCcw className="w-4 h-4" aria-hidden="true" />
-                {t("counsel.request")}
-              </Button>
-            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

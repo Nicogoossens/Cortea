@@ -23,6 +23,7 @@ import SignIn from "@/pages/SignIn";
 import EmailVerify from "@/pages/EmailVerify";
 import Onboarding from "@/pages/Onboarding";
 import Admin from "@/pages/Admin";
+import Membership from "@/pages/Membership";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,7 @@ function Router() {
         <Route path="/verify-email" component={EmailVerify} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/admin" component={Admin} />
+        <Route path="/membership" component={Membership} />
         <Route component={NotFound} />
       </Switch>
     </Shell>

@@ -9,6 +9,7 @@ import counselRouter from "./counsel";
 import detectRegionRouter from "./detect-region";
 import authRouter from "./auth";
 import adminRouter from "./admin";
+import subscriptionRouter from "./subscription";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(translationsRouter);
 router.use(counselRouter);
 router.use(detectRegionRouter);
 router.use(adminRouter);
+router.use(subscriptionRouter);
 
 export default router;

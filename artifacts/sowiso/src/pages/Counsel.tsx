@@ -180,7 +180,7 @@ export default function Counsel() {
                   )}
                   {hasBasicAccess && isBasicFree && !isSelected && accessible && (
                     <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60 border border-primary/20 rounded-[2px] px-1.5 py-0.5">
-                      {questionsRemaining} left
+                      {t("counsel.domains.remaining").replace("{count}", String(questionsRemaining))}
                     </span>
                   )}
                 </span>
@@ -195,18 +195,16 @@ export default function Counsel() {
         <div className="border border-border/40 rounded-sm bg-muted/10 px-6 py-8 space-y-3">
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
             <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>The Counsel</span>
+            <span>{t("nav.counsel")}</span>
           </div>
           <p className="text-muted-foreground font-light leading-relaxed">
-            This domain belongs to the repertoire of{" "}
-            <span className="text-foreground font-medium">The Traveller</span>.
-            {" "}Shall we expand your access?
+            {t("counsel.gate.guest_desc")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-2">
             <Link href="/signin">
               <div className="inline-flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
                 <UserPlus className="h-4 w-4" aria-hidden="true" />
-                Begin your journey
+                {t("counsel.gate.guest_cta")}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </div>
             </Link>
@@ -219,17 +217,14 @@ export default function Counsel() {
         <div className="border border-border/40 rounded-sm bg-muted/10 px-6 py-8 space-y-3">
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
             <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>The Counsel</span>
+            <span>{t("nav.counsel")}</span>
           </div>
           <p className="text-muted-foreground font-light leading-relaxed">
-            You have used your {BASIC_QUESTION_LIMIT} complimentary consultations.
-            This domain belongs to the repertoire of{" "}
-            <span className="text-foreground font-medium">The Traveller</span>.
-            {" "}Shall we expand your access?
+            {t("counsel.gate.limit_desc").replace("{count}", String(BASIC_QUESTION_LIMIT))}
           </p>
           <Link href="/membership">
             <div className="inline-flex items-center gap-2 mt-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
-              Expand your world
+              {t("counsel.gate.limit_cta")}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
             </div>
           </Link>
@@ -356,7 +351,9 @@ export default function Counsel() {
 
                 {hasBasicAccess && (
                   <p className="text-xs text-muted-foreground/60 font-mono">
-                    {questionsRemaining} of {BASIC_QUESTION_LIMIT} complimentary consultations remaining
+                    {t("counsel.consultations_remaining")
+                      .replace("{remaining}", String(questionsRemaining))
+                      .replace("{limit}", String(BASIC_QUESTION_LIMIT))}
                   </p>
                 )}
 

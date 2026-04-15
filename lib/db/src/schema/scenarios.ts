@@ -17,6 +17,7 @@ export interface ScenarioContent {
 export const scenariosTable = pgTable("scenarios", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
+  title_i18n: json("title_i18n").$type<Record<string, string>>(),
   pillar: integer("pillar").notNull(),
   region_code: text("region_code").notNull(),
   age_group: text("age_group").notNull().default("18-30"),
@@ -26,6 +27,7 @@ export const scenariosTable = pgTable("scenarios", {
   estimated_minutes: integer("estimated_minutes").notNull().default(5),
   noble_score_impact: integer("noble_score_impact").notNull().default(5),
   content_json: json("content_json").$type<ScenarioContent>().notNull(),
+  content_i18n: json("content_i18n").$type<Record<string, ScenarioContent>>(),
 });
 
 export const insertScenarioSchema = createInsertSchema(scenariosTable).omit({ id: true });

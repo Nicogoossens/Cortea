@@ -91,7 +91,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors w-full"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
-                  <span className="text-sm font-medium">Sign Out</span>
+                  <span className="text-sm font-medium">{t("common.sign_out")}</span>
                 </button>
               ) : (
                 <>
@@ -164,7 +164,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer w-full"
               >
                 <LogOut className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                <span className="font-mono tracking-wide">Sign Out</span>
+                <span className="font-mono tracking-wide">{t("common.sign_out")}</span>
               </button>
             </>
           ) : (

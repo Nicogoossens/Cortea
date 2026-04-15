@@ -298,6 +298,13 @@ export type GetScenariosParams = {
   difficulty_max?: number;
   age_group?: GetScenariosAgeGroup;
   limit?: number;
+  /** BCP-47 language code — server resolves title and content to this locale */
+  lang?: string;
+};
+
+export type GetScenarioParams = {
+  /** BCP-47 language code — server resolves title and content to this locale */
+  lang?: string;
 };
 
 export type GetScenariosAgeGroup =

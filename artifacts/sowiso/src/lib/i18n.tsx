@@ -268,6 +268,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "You've experienced the preview. Create a free account to ask unlimited questions, track your Noble Score and explore all culture regions.",
 
     "common.close": "Close",
+    "common.sign_out": "Sign Out",
+
+    "counsel.gate.guest_desc": "This domain belongs to the repertoire of The Traveller. Shall we expand your access?",
+    "counsel.gate.guest_cta": "Begin your journey",
+    "counsel.gate.limit_desc": "You have employed your {count} complimentary consultations. Shall we expand your access?",
+    "counsel.gate.limit_cta": "Expand your world",
+    "counsel.domains.remaining": "{count} remaining",
+    "counsel.consultations_remaining": "{remaining} of {limit} complimentary consultations remaining",
+
+    "atelier.locked_label": "Advanced Scenarios — The Traveller",
 
     "profile.log.review": "Review",
     "profile.log.level_up_label": "Level achieved",
@@ -649,6 +659,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "U heeft de preview ervaren. Maak een gratis account aan om onbeperkt te vragen, uw Noble Score bij te houden en alle cultuurregio's te verkennen.",
 
     "common.close": "Sluiten",
+    "common.sign_out": "Uitloggen",
+
+    "counsel.gate.guest_desc": "Dit domein behoort tot het repertoire van De Reiziger. Wenst u uw toegang te verruimen?",
+    "counsel.gate.guest_cta": "Begin uw parcours",
+    "counsel.gate.limit_desc": "U heeft uw {count} gratis consultaties aangewend. Wenst u uw toegang te verruimen?",
+    "counsel.gate.limit_cta": "Verruim uw wereld",
+    "counsel.domains.remaining": "{count} resterend",
+    "counsel.consultations_remaining": "{remaining} van {limit} gratis consultaties resterend",
+
+    "atelier.locked_label": "Gevorderde Scenario's — De Reiziger",
 
     "scenario.return_atelier": "Terug naar Atelier",
     "scenario.pillar": "Pijler",
@@ -1047,6 +1067,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "Vous avez vécu l'aperçu. Créez un compte gratuit pour poser des questions illimitées, suivre votre Noble Score et explorer toutes les régions culturelles.",
 
     "common.close": "Fermer",
+    "common.sign_out": "Déconnexion",
+
+    "counsel.gate.guest_desc": "Ce domaine appartient au répertoire du Voyageur. Désirez-vous élargir votre accès ?",
+    "counsel.gate.guest_cta": "Débutez votre parcours",
+    "counsel.gate.limit_desc": "Vous avez employé vos {count} consultations gratuites. Désirez-vous élargir votre accès ?",
+    "counsel.gate.limit_cta": "Élargissez vos horizons",
+    "counsel.domains.remaining": "{count} restantes",
+    "counsel.consultations_remaining": "{remaining} sur {limit} consultations gratuites restantes",
+
+    "atelier.locked_label": "Scénarios Avancés — Le Voyageur",
 
     "scenario.return_atelier": "Retour à l'Atelier",
     "scenario.pillar": "Pilier",
@@ -1449,6 +1479,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "Sie haben die Vorschau erlebt. Erstellen Sie ein kostenloses Konto, um unbegrenzt Fragen zu stellen, Ihren Noble Score zu verfolgen und alle Kulturregionen zu erkunden.",
 
     "common.close": "Schließen",
+    "common.sign_out": "Abmelden",
+
+    "counsel.gate.guest_desc": "Dieser Bereich gehört zum Repertoire des Reisenden. Sollen wir Ihren Zugang erweitern?",
+    "counsel.gate.guest_cta": "Beginnen Sie Ihr Vorhaben",
+    "counsel.gate.limit_desc": "Sie haben Ihre {count} kostenlosen Beratungen in Anspruch genommen. Sollen wir Ihren Zugang erweitern?",
+    "counsel.gate.limit_cta": "Erweitern Sie Ihren Horizont",
+    "counsel.domains.remaining": "{count} verbleibend",
+    "counsel.consultations_remaining": "{remaining} von {limit} kostenlosen Beratungen verbleibend",
+
+    "atelier.locked_label": "Fortgeschrittene Szenarien — Der Reisende",
 
     "scenario.return_atelier": "Zurück zum Atelier",
     "scenario.pillar": "Säule",
@@ -1850,6 +1890,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "Ha experimentado la vista previa. Cree una cuenta gratuita para hacer preguntas ilimitadas, rastrear su Noble Score y explorar todas las regiones culturales.",
 
     "common.close": "Cerrar",
+    "common.sign_out": "Cerrar Sesión",
+
+    "counsel.gate.guest_desc": "Este dominio pertenece al repertorio del Viajero. ¿Desea ampliar su acceso?",
+    "counsel.gate.guest_cta": "Inicie su recorrido",
+    "counsel.gate.limit_desc": "Ha empleado sus {count} consultas gratuitas. ¿Desea ampliar su acceso?",
+    "counsel.gate.limit_cta": "Amplíe su horizonte",
+    "counsel.domains.remaining": "{count} restantes",
+    "counsel.consultations_remaining": "{remaining} de {limit} consultas gratuitas restantes",
+
+    "atelier.locked_label": "Escenarios Avanzados — El Viajero",
 
     "scenario.return_atelier": "Volver al Atelier",
     "scenario.pillar": "Pilar",
@@ -2252,6 +2302,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "Experimentou a pré-visualização. Crie uma conta gratuita para fazer perguntas ilimitadas, acompanhar o seu Noble Score e explorar todas as regiões culturais.",
 
     "common.close": "Fechar",
+    "common.sign_out": "Terminar Sessão",
+
+    "counsel.gate.guest_desc": "Este domínio pertence ao repertório do Viajante. Deseja expandir o seu acesso?",
+    "counsel.gate.guest_cta": "Inicie o seu percurso",
+    "counsel.gate.limit_desc": "Utilizou as suas {count} consultas gratuitas. Deseja expandir o seu acesso?",
+    "counsel.gate.limit_cta": "Alargue os seus horizontes",
+    "counsel.domains.remaining": "{count} restantes",
+    "counsel.consultations_remaining": "{remaining} de {limit} consultas gratuitas restantes",
+
+    "atelier.locked_label": "Cenários Avançados — O Viajante",
 
     "scenario.return_atelier": "Voltar ao Atelier",
     "scenario.pillar": "Pilar",
@@ -2658,6 +2718,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "Ha vissuto l'anteprima. Crei un account gratuito per fare domande illimitate, tracciare il Suo Noble Score e esplorare tutte le regioni culturali.",
 
     "common.close": "Chiudi",
+    "common.sign_out": "Disconnettersi",
+
+    "counsel.gate.guest_desc": "Questo dominio appartiene al repertorio del Viaggiatore. Desidera ampliare il Suo accesso?",
+    "counsel.gate.guest_cta": "Inizi il Suo percorso",
+    "counsel.gate.limit_desc": "Ha impiegato le Sue {count} consultazioni gratuite. Desidera ampliare il Suo accesso?",
+    "counsel.gate.limit_cta": "Ampli i Suoi orizzonti",
+    "counsel.domains.remaining": "{count} rimanenti",
+    "counsel.consultations_remaining": "{remaining} di {limit} consultazioni gratuite rimanenti",
+
+    "atelier.locked_label": "Scenari Avanzati — Il Viaggiatore",
 
     "scenario.return_atelier": "Torna all'Atelier",
     "scenario.pillar": "Pilastro",
@@ -3056,6 +3126,16 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "counsel.guest.continue_body": "आपने पूर्वावलोकन का अनुभव किया। असीमित प्रश्न पूछने, अपना Noble Score ट्रैक करने और सभी सांस्कृतिक क्षेत्रों का पता लगाने के लिए एक निःशुल्क खाता बनाएं।",
 
     "common.close": "बंद करें",
+    "common.sign_out": "साइन आउट करें",
+
+    "counsel.gate.guest_desc": "यह क्षेत्र यात्री के संग्रह में है। क्या आप अपनी पहुँच विस्तृत करना चाहते हैं?",
+    "counsel.gate.guest_cta": "अपनी यात्रा आरम्भ करें",
+    "counsel.gate.limit_desc": "आपने अपनी {count} निःशुल्क परामर्श का उपयोग किया है। क्या आप अपनी पहुँच विस्तृत करना चाहते हैं?",
+    "counsel.gate.limit_cta": "अपना क्षितिज विस्तृत करें",
+    "counsel.domains.remaining": "{count} शेष",
+    "counsel.consultations_remaining": "{remaining} में से {limit} निःशुल्क परामर्श शेष",
+
+    "atelier.locked_label": "उन्नत परिदृश्य — यात्री",
 
     "scenario.return_atelier": "एटेलियर पर वापस",
     "scenario.pillar": "स्तंभ",

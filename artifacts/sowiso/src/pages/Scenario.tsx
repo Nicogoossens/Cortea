@@ -18,11 +18,12 @@ function scoreDeltaKey(delta: number): string {
 export default function Scenario() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const scenarioId = parseInt(id || "0", 10);
+  const lang = locale.split("-")[0];
 
-  const { data: scenario, isLoading } = useGetScenario(scenarioId, {
-    query: { enabled: !!scenarioId, queryKey: getGetScenarioQueryKey(scenarioId) }
+  const { data: scenario, isLoading } = useGetScenario(scenarioId, { lang }, {
+    query: { enabled: !!scenarioId, queryKey: getGetScenarioQueryKey(scenarioId, { lang }) }
   });
 
   const submitAnswer = useSubmitScenarioAnswer();

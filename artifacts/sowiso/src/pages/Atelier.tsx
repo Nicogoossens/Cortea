@@ -27,7 +27,7 @@ function scoreToDifficultyMax(score: number): number {
 }
 
 export default function Atelier() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
 
@@ -41,15 +41,18 @@ export default function Atelier() {
     ? Math.min(scoreDifficultyMax, GUEST_DIFFICULTY_MAX)
     : scoreDifficultyMax;
 
+  const lang = locale.split("-")[0];
+
   const queryParams = {
     region_code: activeRegion,
     ...(selectedPillar > 0 ? { pillar: selectedPillar } : {}),
     difficulty_max: 5,
     limit: 50,
+    lang,
   };
 
   const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar] }
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar, lang] }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {
@@ -176,7 +179,7 @@ export default function Atelier() {
                 <div className="flex-1 h-px bg-border/50" />
                 <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
                   <Lock className="h-3 w-3" aria-hidden="true" />
-                  <span>Advanced scenarios — The Traveller</span>
+                  <span>{t("atelier.locked_label")}</span>
                 </div>
                 <div className="flex-1 h-px bg-border/50" />
               </div>

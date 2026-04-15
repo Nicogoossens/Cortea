@@ -157,6 +157,9 @@ importers:
 
   .:
     dependencies:
+      jsonrepair:
+        specifier: ^3.13.3
+        version: 3.13.3
       stripe:
         specifier: ^22.0.1
         version: 22.0.1(@types/node@25.3.5)
@@ -182,9 +185,6 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
-      '@workspace/integrations-anthropic-ai':
-        specifier: workspace:*
-        version: link:../../lib/integrations-anthropic-ai
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -197,6 +197,9 @@ importers:
       express:
         specifier: ^5
         version: 5.2.1
+      jsonrepair:
+        specifier: ^3.13.3
+        version: 3.13.3
       nodemailer:
         specifier: ^8.0.5
         version: 8.0.5
@@ -2458,6 +2461,10 @@ packages:
   jsonpointer@5.0.1:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
+
+  jsonrepair@3.13.3:
+    resolution: {integrity: sha512-BTznj0owIt2CBAH/LTo7+1I5pMvl1e1033LRl/HUowlZmJOIhzC0zbX5bxMngLkfT4WnzPP26QnW5wMr2g9tsQ==}
+    hasBin: true
 
   leven@4.1.0:
     resolution: {integrity: sha512-KZ9W9nWDT7rF7Dazg8xyLHGLrmpgq2nVNFUckhqdW3szVP6YhCpp/RAnpmVExA9JvrMynjwSLVrEj3AepHR6ew==}
@@ -5107,6 +5114,8 @@ snapshots:
       graceful-fs: 4.2.11
 
   jsonpointer@5.0.1: {}
+
+  jsonrepair@3.13.3: {}
 
   leven@4.1.0: {}
 

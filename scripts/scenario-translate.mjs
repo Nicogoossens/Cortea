@@ -22,6 +22,7 @@
 import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
+import { jsonrepair } from "jsonrepair";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -48,41 +49,48 @@ const TARGET_LANGS = FLAG_LANG ? [FLAG_LANG] : ALL_LANGS;
 // ── System prompts per language ────────────────────────────────────────────────
 // Each prompt instructs the model to translate etiquette scenario content into
 // the target language with a register appropriate for an elite etiquette academy.
+const JSON_SAFETY_NOTE = `
+CRITICAL JSON RULES: All string values must be valid JSON strings.
+- Any double-quote character (") that appears INSIDE a string value MUST be escaped as \\"
+- Do NOT use typographic/curly quotes (" " „ ") inside string values — use escaped ASCII quotes \\" instead
+- Do NOT use unescaped apostrophes that look like quotes; prefer single quotes (') for contractions
+- Return ONLY the raw JSON object. No markdown fences, no preamble, no trailing text.`;
+
 const SYSTEM_PROMPTS = {
   nl: `You are a professional translator for SOWISO, an elite etiquette academy.
 Translate English etiquette scenario content into formal Dutch (Nederlands).
 Register: dignified and measured — u/uw forms, Latinate vocabulary, no anglicisms.
-Return ONLY valid JSON matching the schema provided. No markdown fences.`,
+${JSON_SAFETY_NOTE}`,
 
   fr: `Vous êtes traducteur professionnel pour SOWISO, académie d'étiquette de prestige.
 Traduisez des scénarios d'étiquette anglais en français formel et élégant.
 Registre : 18e siècle parisien — vous/votre, vocabulaire Académie française, sans anglicismes.
-Répondez UNIQUEMENT avec du JSON valide correspondant au schéma fourni. Aucune balise markdown.`,
+${JSON_SAFETY_NOTE}`,
 
   de: `Sie sind professioneller Übersetzer für SOWISO, eine Eliteakademie für Etikette.
 Übersetzen Sie englische Etikette-Szenarien ins formelle Hochdeutsch.
 Register: Preußische Verwaltungspräzision — Sie/Ihnen, Konjunktiv II für höfliche Bitten, Duden-Standard.
-Antworten Sie NUR mit gültigem JSON gemäß dem bereitgestellten Schema. Keine Markdown-Codeblöcke.`,
+${JSON_SAFETY_NOTE}`,
 
   es: `Usted es traductor profesional para SOWISO, academia de etiqueta de élite.
 Traduzca escenarios de etiqueta del inglés al español formal castellano.
 Registro: Real Academia Española — usted, subjuntivo, vocabulario culto ('solicitar' no 'pedir'), sin anglicismos.
-Responda ÚNICAMENTE con JSON válido conforme al esquema proporcionado. Sin bloques markdown.`,
+${JSON_SAFETY_NOTE}`,
 
   pt: `É tradutor profissional da SOWISO, academia de etiqueta de prestígio.
 Traduza cenários de etiqueta do inglês para português europeu formal.
 Registo: o senhor / a senhora, infinitivo pessoal, vocabulário clássico português, sem neologismos brasileiros.
-Responda APENAS com JSON válido conforme o esquema fornecido. Sem blocos markdown.`,
+${JSON_SAFETY_NOTE}`,
 
   it: `Lei è traduttore professionale per SOWISO, accademia di etichetta d'élite.
 Traduca scenari di galateo dall'inglese all'italiano formale letterario.
 Registro: Lei/Suo, congiuntivo, vocabolario toscano letterario, senza anglicismi. Tono: Leopardi e Manzoni.
-Risponda SOLO con JSON valido conforme allo schema fornito. Nessun blocco markdown.`,
+${JSON_SAFETY_NOTE}`,
 
   hi: `आप SOWISO के लिए एक पेशेवर अनुवादक हैं, जो एक कुलीन शिष्टाचार अकादमी है।
 अंग्रेज़ी शिष्टाचार परिदृश्यों का औपचारिक हिंदी में अनुवाद करें।
 रजिस्टर: आप-सम्बोधन, संस्कृत-निष्ठ तत्सम शब्दावली, अंग्रेज़ी शब्दों से परहेज़।
-केवल दिए गए स्कीमा के अनुरूप वैध JSON लौटाएं। कोई markdown ब्लॉक नहीं।`,
+${JSON_SAFETY_NOTE}`,
 };
 
 const USER_PROMPT = (lang, scenario) => `Translate the following English etiquette scenario into ${lang.toUpperCase()}.
@@ -131,7 +139,7 @@ async function callAnthropic(systemPrompt, userPrompt) {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5",
-      max_tokens: 2048,
+      max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     }),
@@ -148,7 +156,14 @@ async function callAnthropic(systemPrompt, userPrompt) {
 
 // ── Parse translation response ────────────────────────────────────────────────
 function parseTranslation(raw, scenario) {
-  let text = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+  // Extract the first JSON object from the response (handles markdown fences robustly)
+  let text = raw;
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (jsonMatch) text = jsonMatch[0];
+  else text = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  // Repair common JSON issues (e.g. unescaped inner quotes from typographic conventions)
+  try { text = jsonrepair(text); } catch { /* ignore repair errors; let JSON.parse report */ }
   try {
     const parsed = JSON.parse(text);
     if (typeof parsed.title !== "string") return null;
@@ -170,7 +185,8 @@ function parseTranslation(raw, scenario) {
         }),
       },
     };
-  } catch {
+  } catch (e) {
+    process.stderr.write(`JSON parse error: ${e.message}\nText (first 800): ${text.substring(0, 800)}\n`);
     return null;
   }
 }

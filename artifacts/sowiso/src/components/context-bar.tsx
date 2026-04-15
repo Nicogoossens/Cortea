@@ -22,8 +22,7 @@ function PillTrigger({
     <DropdownMenuTrigger asChild>
       <button
         aria-label={ariaLabel}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 data-[state=open]:bg-muted/60 data-[state=open]:text-foreground touch-target-skip"
-        style={{ minHeight: "36px" }}
+        className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 data-[state=open]:bg-muted/60 data-[state=open]:text-foreground"
       >
         {icon}
         <span className="hidden sm:flex items-center gap-1.5">{children}</span>

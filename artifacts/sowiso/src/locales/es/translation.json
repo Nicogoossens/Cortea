@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "El Catador",
   "pillar.title.the_selector": "El Selector",
   "pillar.title.the_sommelier": "El Sommelier",
-  "pillar.title.the_cellar_master": "El Maestro de Bodega"
+  "pillar.title.the_cellar_master": "El Maestro de Bodega",
+  "profile.compass.title": "Brújula de Refinamiento",
+  "profile.compass.subtitle": "Su perfil de refinamiento social se desarrolla con la práctica.",
+  "profile.compass.attentiveness": "Atención",
+  "profile.compass.composure": "Compostura",
+  "profile.compass.discernment": "Discernimiento",
+  "profile.compass.diplomacy": "Diplomacia",
+  "profile.compass.presence": "Presencia"
 }

@@ -8,6 +8,34 @@ const router = Router();
 
 const DEFAULT_LOCALE = "en-GB";
 
+interface MehrabianWeight {
+  nonverbal: number;
+  tone: number;
+  words: number;
+  note: string;
+}
+
+const MEHRABIAN_WEIGHTS: Record<string, MehrabianWeight> = {
+  JP: { nonverbal: 70, tone: 22, words: 8, note: "Posture, silence, and bowing convey most meaning. Words are secondary." },
+  CN: { nonverbal: 60, tone: 30, words: 10, note: "Tone and composed demeanour signal respect. Face is preserved through bearing, not words alone." },
+  AE: { nonverbal: 55, tone: 35, words: 10, note: "Physical presence and sincerity of bearing carry great weight. Spiritual composure is observed." },
+  IN: { nonverbal: 55, tone: 30, words: 15, note: "Warmth in voice and respectful posture smooth social interactions significantly." },
+  SG: { nonverbal: 50, tone: 30, words: 20, note: "Measured, composed behaviour signals education. Economy of expression is valued." },
+  FR: { nonverbal: 45, tone: 35, words: 20, note: "Articulate speech and deliberate expression matter. Controlled elegance in gesture and tone." },
+  IT: { nonverbal: 50, tone: 35, words: 15, note: "Expressive gesture is natural; manner of dress speaks before words do." },
+  BR: { nonverbal: 50, tone: 35, words: 15, note: "Warmth and physical closeness are expected. Animated expression signals genuine engagement." },
+  ES: { nonverbal: 48, tone: 37, words: 15, note: "Animated expression and vocal warmth are natural. Tone signals enthusiasm." },
+  MX: { nonverbal: 48, tone: 37, words: 15, note: "Warmth in tone and personal greeting carry significant social weight." },
+  ZA: { nonverbal: 48, tone: 35, words: 17, note: "Ubuntu is felt through warmth and genuine presence. Engage with your whole bearing." },
+  PT: { nonverbal: 45, tone: 35, words: 20, note: "Measured and sincere tone is most trusted. Restraint signals depth of character." },
+  AU: { nonverbal: 40, tone: 38, words: 22, note: "Easy, open posture and a relaxed direct tone win trust. Authenticity is paramount." },
+  US: { nonverbal: 38, tone: 37, words: 25, note: "Confident body language and animated but controlled voice signal leadership." },
+  GB: { nonverbal: 40, tone: 40, words: 20, note: "Composure is all. Restrained gesture and measured tone signal good breeding." },
+  DE: { nonverbal: 35, tone: 35, words: 30, note: "Precision of speech is valued above warmth. Sincerity in expression outweighs affability." },
+  CA: { nonverbal: 35, tone: 38, words: 27, note: "Clear verbal communication is primary. Direct, polite, precise speech is valued." },
+  NL: { nonverbal: 32, tone: 35, words: 33, note: "Direct verbal communication is primary. Words are chosen precisely; meaning lives in the words." },
+};
+
 const ProtocolsQuerySchema = z.object({
   region_code: z.string().min(1),
   pillar: z.coerce.number().int().min(1).max(5).optional(),
@@ -104,6 +132,8 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
     const content = (row.content as unknown as Record<string, Record<string, unknown>>);
     const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
 
+    const mehrabian = MEHRABIAN_WEIGHTS[regionCode] ?? null;
+
     return res.json({
       region_code: row.region_code,
       flag_emoji: row.flag_emoji,
@@ -116,6 +146,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
       dress_code: localeContent.dress_code ?? "",
       dos: localeContent.dos ?? [],
       donts: localeContent.donts ?? [],
+      mehrabian_weight: mehrabian,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass region");

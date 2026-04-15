@@ -396,5 +396,12 @@
   "register.gender_male": "Man",
   "register.gender_female": "Vrouw",
   "register.gender_non_binary": "Non-binair",
-  "register.gender_other": "Anders"
+  "register.gender_other": "Anders",
+  "profile.compass.title": "Verfijningskompas",
+  "profile.compass.subtitle": "Uw profiel van sociale verfijning ontwikkelt zich naarmate u oefent.",
+  "profile.compass.attentiveness": "Aandacht",
+  "profile.compass.composure": "Kalmte",
+  "profile.compass.discernment": "Onderscheidingsvermogen",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Aanwezigheid"
 }

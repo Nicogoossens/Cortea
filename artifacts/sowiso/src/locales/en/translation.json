@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "The Taster",
   "pillar.title.the_selector": "The Selector",
   "pillar.title.the_sommelier": "The Sommelier",
-  "pillar.title.the_cellar_master": "The Cellar Master"
+  "pillar.title.the_cellar_master": "The Cellar Master",
+  "profile.compass.title": "Refinement Compass",
+  "profile.compass.subtitle": "Your social refinement profile develops as you practise across scenarios.",
+  "profile.compass.attentiveness": "Attentiveness",
+  "profile.compass.composure": "Composure",
+  "profile.compass.discernment": "Discernment",
+  "profile.compass.diplomacy": "Diplomacy",
+  "profile.compass.presence": "Presence"
 }

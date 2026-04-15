@@ -54,6 +54,15 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Account deletion**: `DELETE /api/users/profile` cascades: removes `noble_score_log` + `zuil_voortgang` rows before deleting user record
 - **i18n**: 25+ new keys added to English (`profile.personal_details`, `profile.delete_account_*`, `profile.log.*`, etc.) — all other locales auto-fallback to English via `t()` chain
 
+- **Task #27 — Behavioral Psychology Layer (SILENT)**: Invisible behavior profiling embedded across all modules. Key implementation:
+  - **DB**: `behavior_profile` JSON column on users (Bolton cluster tracking: listening_score, assertiveness_style, conflict_mode, nonverbal_awareness, eq_dimensions); `behavioral_tags`, `bolton_cluster`, `correction_style` columns on scenarios
+  - **noble_score.ts**: `updateBehaviorProfile()` updates user behavior profile on every scenario answer based on `bolton_cluster` (1=listening, 2=assertiveness, 3=conflict). Saves `correction_style` as mentor feedback when user answers incorrectly.
+  - **counsel.ts**: Enriched system prompt with Bolton 3-step structure (Acknowledge → Illuminate → Guide) + Mehrabian nonverbal weighting map for 18 regions (tone/nonverbal/words breakdown per culture)
+  - **culture.ts**: `MEHRABIAN_WEIGHTS` map added; compass region detail API now includes `mehrabian_weight: { nonverbal, tone, words, note }` in response
+  - **seed.ts**: 3 Bolton cluster scenarios added (Cluster 1: "The Interrupted Confidence" GB, Cluster 2: "The Persistent Host" CN, Cluster 3: "The Misread Remark" US)
+  - **Profile.tsx**: Refinement Compass card with SVG pentagon radar chart (5 etiquette-language dimensions: Attentiveness, Composure, Discernment, Diplomacy, Presence). Fetches `GET /api/users/behavior-profile` in parallel with profile fetch. Card only appears for authenticated users with a behavior profile.
+  - All user-facing labels are in etiquette language — no psychological labels shown to the user
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
 
 ## Subscription Tiers (Task #4)

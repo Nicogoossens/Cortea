@@ -396,5 +396,12 @@
   "register.gender_male": "Masculino",
   "register.gender_female": "Femenino",
   "register.gender_non_binary": "No binario",
-  "register.gender_other": "Otro"
+  "register.gender_other": "Otro",
+  "profile.compass.title": "Brújula de Refinamiento",
+  "profile.compass.subtitle": "Su perfil de refinamiento social se desarrolla con la práctica.",
+  "profile.compass.attentiveness": "Atención",
+  "profile.compass.composure": "Compostura",
+  "profile.compass.discernment": "Discernimiento",
+  "profile.compass.diplomacy": "Diplomacia",
+  "profile.compass.presence": "Presencia"
 }

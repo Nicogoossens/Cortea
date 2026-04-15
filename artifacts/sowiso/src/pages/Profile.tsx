@@ -35,6 +35,19 @@ const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
   "ja-JP": ja,
 };
 
+interface BehaviorProfile {
+  listening_score: number;
+  assertiveness_style: "assertive" | "passive" | "aggressive" | "passive_aggressive";
+  conflict_mode: "collaborate" | "avoid" | "compete" | "accommodate";
+  nonverbal_awareness: number;
+  eq_dimensions: {
+    self_awareness: number;
+    self_regulation: number;
+    empathy: number;
+    social_skill: number;
+  };
+}
+
 interface UserProfileData {
   id: string;
   full_name?: string | null;
@@ -140,6 +153,91 @@ function SaveIndicator({ state, t }: { state: SaveState; t: (k: string) => strin
   return <span className="text-xs text-destructive font-mono">{t("profile.save_error")}</span>;
 }
 
+const ASSERTIVENESS_SCORE: Record<string, number> = {
+  assertive: 82,
+  passive: 42,
+  aggressive: 22,
+  passive_aggressive: 18,
+};
+
+const CONFLICT_SCORE: Record<string, number> = {
+  collaborate: 88,
+  accommodate: 58,
+  avoid: 32,
+  compete: 18,
+};
+
+function behaviorToRadar(p: BehaviorProfile): [number, number, number, number, number] {
+  const attentiveness = p.listening_score;
+  const composure = ASSERTIVENESS_SCORE[p.assertiveness_style] ?? 50;
+  const eq = Math.round((p.eq_dimensions.self_awareness + p.eq_dimensions.self_regulation + p.eq_dimensions.empathy + p.eq_dimensions.social_skill) / 4);
+  const diplomacy = CONFLICT_SCORE[p.conflict_mode] ?? 50;
+  const presence = p.nonverbal_awareness;
+  return [attentiveness, composure, eq, diplomacy, presence];
+}
+
+interface PentagonChartProps {
+  values: [number, number, number, number, number];
+  labels: [string, string, string, string, string];
+  color?: string;
+}
+
+function PentagonChart({ values, labels, color = "var(--primary)" }: PentagonChartProps) {
+  const cx = 130;
+  const cy = 130;
+  const maxR = 100;
+  const angles = [-90, -18, 54, 126, 198].map((a) => (a * Math.PI) / 180);
+
+  function point(r: number, i: number): string {
+    return `${cx + r * Math.cos(angles[i])},${cy + r * Math.sin(angles[i])}`;
+  }
+
+  const gridLevels = [0.25, 0.5, 0.75, 1];
+
+  const dataPoints = values
+    .map((v, i) => {
+      const r = (Math.min(v, 100) / 100) * maxR;
+      return point(r, i);
+    })
+    .join(" ");
+
+  return (
+    <svg width="260" height="260" viewBox="0 0 260 260" className="mx-auto" role="img" aria-label="Refinement compass">
+      {gridLevels.map((frac) => {
+        const pts = angles.map((_, i) => point(maxR * frac, i)).join(" ");
+        return <polygon key={frac} points={pts} fill="none" stroke="currentColor" strokeWidth="0.5" className="text-border" />;
+      })}
+      {angles.map((_, i) => (
+        <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(angles[i])} y2={cy + maxR * Math.sin(angles[i])} stroke="currentColor" strokeWidth="0.5" className="text-border" />
+      ))}
+      <polygon
+        points={dataPoints}
+        fill={color}
+        fillOpacity={0.15}
+        stroke={color}
+        strokeWidth="2"
+      />
+      {values.map((v, i) => {
+        const r = (Math.min(v, 100) / 100) * maxR;
+        const x = cx + r * Math.cos(angles[i]);
+        const y = cy + r * Math.sin(angles[i]);
+        return <circle key={i} cx={x} cy={y} r={4} fill={color} />;
+      })}
+      {labels.map((label, i) => {
+        const labelR = maxR + 20;
+        const x = cx + labelR * Math.cos(angles[i]);
+        const y = cy + labelR * Math.sin(angles[i]);
+        const anchor = x < cx - 5 ? "end" : x > cx + 5 ? "start" : "middle";
+        return (
+          <text key={i} x={x} y={y} textAnchor={anchor} dominantBaseline="middle" className="fill-muted-foreground" fontSize="10" fontFamily="var(--font-mono, monospace)" letterSpacing="0.08em">
+            {label.toUpperCase()}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
 export default function Profile() {
   const { t, locale, setLocale } = useLanguage();
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
@@ -149,6 +247,7 @@ export default function Profile() {
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [behaviorProfile, setBehaviorProfile] = useState<BehaviorProfile | null>(null);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [langSave, setLangSave] = useState<SaveState>("idle");
   const [regionSave, setRegionSave] = useState<SaveState>("idle");
@@ -190,14 +289,18 @@ export default function Profile() {
 
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
-    fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
+    const headers = getAuthHeaders();
+    Promise.all([
+      fetch(`${API_BASE}/api/users/profile`, { headers }).then((r) => r.ok ? r.json() : null),
+      fetch(`${API_BASE}/api/users/behavior-profile`, { headers }).then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([data, bp]) => {
         setProfileData(data);
         setUsernameInput(data?.username ?? "");
         setFullNameInput(data?.full_name ?? "");
         setCountryInput(data?.country_of_origin ?? "");
         setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
+        if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -951,6 +1054,44 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Refinement Compass ── */}
+      {behaviorProfile && (() => {
+        const radarValues = behaviorToRadar(behaviorProfile);
+        const RADAR_LABELS: [string, string, string, string, string] = [
+          t("profile.compass.attentiveness"),
+          t("profile.compass.composure"),
+          t("profile.compass.discernment"),
+          t("profile.compass.diplomacy"),
+          t("profile.compass.presence"),
+        ];
+        return (
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
+              <CardDescription>{t("profile.compass.subtitle")}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-shrink-0">
+                <PentagonChart values={radarValues} labels={RADAR_LABELS} />
+              </div>
+              <div className="flex flex-col gap-3 flex-1 min-w-0">
+                {(["attentiveness", "composure", "discernment", "diplomacy", "presence"] as const).map((key, i) => (
+                  <div key={key} className="space-y-1">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t(`profile.compass.${key}`)}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{radarValues[i]}</span>
+                    </div>
+                    <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary/70 transition-all duration-700" style={{ width: `${radarValues[i]}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* ── Recent Log ── */}
       <Card className="bg-card border-border shadow-sm">

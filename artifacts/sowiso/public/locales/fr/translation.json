@@ -396,5 +396,12 @@
   "register.gender_male": "Homme",
   "register.gender_female": "Femme",
   "register.gender_non_binary": "Non-binaire",
-  "register.gender_other": "Autre"
+  "register.gender_other": "Autre",
+  "profile.compass.title": "Boussole de Raffinement",
+  "profile.compass.subtitle": "Votre profil de raffinement social se développe au fil de la pratique.",
+  "profile.compass.attentiveness": "Attention",
+  "profile.compass.composure": "Maîtrise de soi",
+  "profile.compass.discernment": "Discernement",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Présence"
 }

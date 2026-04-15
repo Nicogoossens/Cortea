@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "المتذوق",
   "pillar.title.the_selector": "المختار",
   "pillar.title.the_sommelier": "السومليه",
-  "pillar.title.the_cellar_master": "سيد القبو"
+  "pillar.title.the_cellar_master": "سيد القبو",
+  "profile.compass.title": "بوصلة التهذيب",
+  "profile.compass.subtitle": "يتطور ملفك الشخصي للرقي الاجتماعي مع الممارسة.",
+  "profile.compass.attentiveness": "الانتباه",
+  "profile.compass.composure": "الهدوء",
+  "profile.compass.discernment": "الفطنة",
+  "profile.compass.diplomacy": "الدبلوماسية",
+  "profile.compass.presence": "الحضور"
 }

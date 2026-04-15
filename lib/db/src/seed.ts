@@ -1101,6 +1101,69 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
       ]
     }
   },
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Bolton Cluster 1 — The Art of Listening
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Interrupted Confidence",
+    pillar: 3, region_code: "GB", age_group: "all", gender_applicability: "all",
+    context: "social", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 8,
+    bolton_cluster: 1,
+    behavioral_tags: ["listening", "attentiveness", "empathy"],
+    correction_style: "A cultivated listener waits with composed patience. The impulse to fill silence or redirect a conversation reveals a preoccupation with one's own thoughts rather than an attentiveness to the speaker. The distinguished response is to hold space gracefully and allow the other to finish.",
+    content_json: {
+      situation: "A colleague is sharing a difficult personal experience during a quiet moment at a professional dinner. They pause mid-sentence, appearing to gather themselves. You sense they are not finished.",
+      question: "What is the most refined course of action in this moment?",
+      options: [
+        { text: "Wait in composed silence, maintaining calm, attentive eye contact.", correct: true, explanation: "Precisely. A pause is not an invitation to speak — it is a request for patient presence. A truly cultivated listener holds stillness and allows the speaker to continue at their own pace." },
+        { text: "Offer a reassuring sentence — 'Take your time, it sounds difficult.'", correct: false, explanation: "Well-intentioned, but speaking into a pause interrupts the speaker's internal process. Unless distress is acute, composed silence is a far greater act of consideration." },
+        { text: "Gently change the subject to relieve the discomfort.", correct: false, explanation: "Redirecting the conversation denies the speaker the space they are seeking. It signals that your comfort takes precedence over their need to be heard — a social error of some consequence." },
+        { text: "Lean forward and ask a question to show engagement.", correct: false, explanation: "A question, however well-meant, interrupts. Active listening is demonstrated through stillness and attention, not speech. Trust the silence." },
+      ]
+    }
+  },
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Bolton Cluster 2 — Assertiveness and Composure Under Social Pressure
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Persistent Host",
+    pillar: 4, region_code: "CN", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 8,
+    bolton_cluster: 2,
+    behavioral_tags: ["assertiveness", "boundary_setting", "face_preservation"],
+    correction_style: "Confident composure is expressed not through direct refusal, but through gracious firmness. A repeated, kind declination — delivered with warmth and appreciation — is both socially sound and personally dignified. The cultivated guest neither capitulates under pressure nor sharpens into confrontation.",
+    content_json: {
+      situation: "At a formal dinner in Beijing, your host repeatedly offers you a dish you cannot eat due to a dietary restriction. They insist warmly, saying it is a great speciality and would bring you luck. You have already declined twice, politely.",
+      question: "How do you decline a third time with grace?",
+      options: [
+        { text: "Accept a small portion and move it around your plate discreetly.", correct: false, explanation: "While this preserves immediate harmony, it risks discovery and greater embarrassment for both parties. It also denies you the opportunity to model gracious firmness — a virtue of equal value in Chinese hospitality." },
+        { text: "Decline with composed warmth — 'Your generosity truly moves me; I must respectfully decline for health reasons, but I am deeply honoured by your care.'", correct: true, explanation: "Excellent. This formulation acknowledges the host's generosity, preserves their face, and declines with quiet authority. Framing the refusal as a health matter removes any implication of personal preference or rejection of the culture." },
+        { text: "Firmly say no and explain that you have a strict dietary requirement.", correct: false, explanation: "Bluntness — even truthful bluntness — in this context risks damaging the host's face. Firmness must be delivered within the container of warmth and gratitude." },
+        { text: "Ask another guest to help you by taking the dish, without explaining.", correct: false, explanation: "Deflecting in this manner creates confusion and does not address the host directly. It sidesteps the social obligation to respond with dignified honesty." },
+      ]
+    }
+  },
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Bolton Cluster 3 — Conflict Resolution and Social Repair
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Misread Remark",
+    pillar: 3, region_code: "US", age_group: "all", gender_applicability: "all",
+    context: "professional", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 8,
+    bolton_cluster: 3,
+    behavioral_tags: ["conflict_resolution", "repair", "emotional_composure"],
+    correction_style: "Social friction, when met with prompt and genuine acknowledgement, rarely becomes lasting damage. The cultivated response is to own the misstep without theatre — a brief, composed expression of regret followed by a sincere question about the other person's perspective. This transforms a rupture into a mark of character.",
+    content_json: {
+      situation: "During a business meeting in New York, a comment you made — intended lightly — appeared to offend a colleague. They have withdrawn from conversation and seem cool toward you. The meeting has ended and you are standing near each other.",
+      question: "What is the most distinguished way to address this?",
+      options: [
+        { text: "Approach them privately and say, 'I noticed my remark earlier may not have landed as I intended — I hope it didn't offend you. I'd welcome your thoughts if I was off-key.'", correct: true, explanation: "Precisely calibrated. This acknowledges the rupture without dramatising it, invites dialogue, and signals self-awareness — without grovelling or making the moment larger than it needs to be." },
+        { text: "Say nothing — the moment has passed and drawing attention to it will make it worse.", correct: false, explanation: "Unaddressed friction hardens into distance. A quiet, private approach is nearly always the correct remedy. Allowing coolness to persist is a missed opportunity for social repair." },
+        { text: "Send a brief message later — 'Hope all is well, didn't mean anything by the comment earlier!'", correct: false, explanation: "Text or message dilutes the sincerity of an apology and allows ambiguity of tone. A composed, private, in-person acknowledgement carries far more weight and dignity." },
+        { text: "Speak to a mutual colleague and ask them to pass along your apologies.", correct: false, explanation: "Delegating an apology removes the personal accountability that gives it meaning. It also risks misrepresentation and places a social burden on a third party." },
+      ]
+    }
+  },
 ];
 
 const FLAG_FORCE = process.argv.includes("--force");

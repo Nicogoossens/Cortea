@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "De Smaakmaker",
   "pillar.title.the_selector": "De Selecteur",
   "pillar.title.the_sommelier": "De Sommelier",
-  "pillar.title.the_cellar_master": "De Keldermeester"
+  "pillar.title.the_cellar_master": "De Keldermeester",
+  "profile.compass.title": "Verfijningskompas",
+  "profile.compass.subtitle": "Uw profiel van sociale verfijning ontwikkelt zich naarmate u oefent.",
+  "profile.compass.attentiveness": "Aandacht",
+  "profile.compass.composure": "Kalmte",
+  "profile.compass.discernment": "Onderscheidingsvermogen",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Aanwezigheid"
 }

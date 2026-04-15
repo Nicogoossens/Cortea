@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "テイスター",
   "pillar.title.the_selector": "セレクター",
   "pillar.title.the_sommelier": "ソムリエ",
-  "pillar.title.the_cellar_master": "セラーマスター"
+  "pillar.title.the_cellar_master": "セラーマスター",
+  "profile.compass.title": "洗練コンパス",
+  "profile.compass.subtitle": "シナリオを通じて練習することで、社会的洗練のプロフィールが発展します。",
+  "profile.compass.attentiveness": "注意力",
+  "profile.compass.composure": "沈着さ",
+  "profile.compass.discernment": "識別力",
+  "profile.compass.diplomacy": "外交力",
+  "profile.compass.presence": "存在感"
 }

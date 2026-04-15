@@ -29,6 +29,27 @@ const REGION_CONTEXT: Record<string, string> = {
   PT: "Portugal. Culture values saudade (nostalgic longing), modest restraint, and sincere hospitality. Relationship-building is slow and earnest. Punctuality is appreciated but flexible.",
 };
 
+const MEHRABIAN_GUIDANCE: Record<string, string> = {
+  JP: "Nonverbal signals dominate (posture, silence, bowing angle). Stillness and composure communicate far more than words. Silence is not awkward — it is respectful.",
+  CN: "Tone and composed demeanour matter enormously. A calm voice and respectful posture signal cultural fluency. Avoid anything that could be read as confrontational in bearing.",
+  AE: "Physical presence and eye contact signal sincerity. Speak with measured gravity. Spiritual composure is read in one's bearing and unhurried manner.",
+  IN: "Warmth and respect in voice can smooth many missteps. A slight bow or hands pressed together communicates esteem without words.",
+  SG: "Composed, measured behaviour is prized. Avoid overt gesturing or loud speech. Economy of movement signals confidence and education.",
+  FR: "Articulate speech and deliberate pauses matter. Controlled expressiveness is valued; do not gesticulate excessively.",
+  IT: "Expressive gesture is part of the conversation, but excess becomes performance. Manner of dress is read before you speak a word.",
+  BR: "Warmth and physical closeness are expected. Firm embrace, eye contact, and animated expression signal genuine engagement.",
+  CA: "Clear verbal communication is primary. Direct, polite, precise speech is valued. Minimal gesturing and steady eye contact convey credibility.",
+  AU: "An easy, open posture and direct but relaxed tone win trust. Authenticity of manner is paramount; excessive formality reads as pretension.",
+  GB: "Composure is all. Restrained gesture and measured tone signal breeding. Excessive warmth or demonstration is viewed with mild alarm.",
+  DE: "Precision of speech is valued above warmth of tone. Stand straight, speak clearly, avoid filler words. Sincerity outweighs affability.",
+  NL: "Direct verbal communication is primary. Words are chosen precisely. Excessive nonverbal theatrics are unnecessary.",
+  ES: "Animated expression and vocal warmth are natural. Physical closeness is comfortable. Tone signals enthusiasm and engagement.",
+  PT: "A measured and sincere tone is most trusted. Restraint signals depth of character.",
+  MX: "Warmth in tone and a personal touch in greeting are expected. Voice quality and facial expression convey respect and genuine interest.",
+  US: "Confident and open body language is expected. Firm handshakes, eye contact, and an animated but controlled voice signal leadership.",
+  ZA: "Ubuntu is felt through warmth, openness, and an unhurried manner. Be present, engage genuinely, and listen with your whole bearing.",
+};
+
 router.post("/counsel", async (req, res) => {
   const { query, domain, region_code } = req.body as {
     query?: string;
@@ -43,17 +64,20 @@ router.post("/counsel", async (req, res) => {
 
   const region = (region_code || "GB").toUpperCase();
   const regionContext = REGION_CONTEXT[region] ?? REGION_CONTEXT["GB"];
+  const mehrabian = MEHRABIAN_GUIDANCE[region] ?? "";
 
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}
+Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
+First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 
-Your guidance must be:
-- Precise and actionable, not vague
+Additional requirements:
 - Written in a formal but warm literary register (think a trusted advisor, not a textbook)
-- Calibrated to the specific region's customs
+- Calibrated to the specific region's customs, including tone and nonverbal posture where relevant
 - Between 80 and 160 words — no more
-- Free of bullet points; written as flowing prose
+- Never name psychological constructs directly — all behavioural guidance must be expressed in etiquette language
 
 If a domain is specified, focus your guidance there. If the situation is ambiguous, address the most likely interpretation gracefully.`;
 

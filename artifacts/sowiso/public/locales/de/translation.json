@@ -396,5 +396,12 @@
   "register.gender_male": "Männlich",
   "register.gender_female": "Weiblich",
   "register.gender_non_binary": "Nicht-binär",
-  "register.gender_other": "Andere"
+  "register.gender_other": "Andere",
+  "profile.compass.title": "Verfeinerungs-Kompass",
+  "profile.compass.subtitle": "Ihr Profil der sozialen Verfeinerung entwickelt sich durch Übung.",
+  "profile.compass.attentiveness": "Aufmerksamkeit",
+  "profile.compass.composure": "Besonnenheit",
+  "profile.compass.discernment": "Urteilsvermögen",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Präsenz"
 }

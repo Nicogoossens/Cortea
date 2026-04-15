@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable } from "@workspace/db";
+import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -214,6 +214,46 @@ const MENTOR_FEEDBACK_INCORRECT: Record<AgeBand, string[]> = {
   ],
 };
 
+function clamp(n: number, min = 0, max = 100): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+function updateBehaviorProfile(
+  current: BehaviorProfile,
+  boltonCluster: number | null | undefined,
+  isCorrect: boolean,
+  selectedOptionIndex: number,
+): BehaviorProfile {
+  const profile: BehaviorProfile = JSON.parse(JSON.stringify(current));
+  const delta = isCorrect ? 4 : -3;
+
+  if (boltonCluster === 1) {
+    profile.listening_score = clamp(profile.listening_score + delta);
+    profile.eq_dimensions.self_awareness = clamp(profile.eq_dimensions.self_awareness + Math.round(delta * 0.5));
+    profile.eq_dimensions.social_skill = clamp(profile.eq_dimensions.social_skill + Math.round(delta * 0.5));
+  } else if (boltonCluster === 2) {
+    profile.eq_dimensions.self_regulation = clamp(profile.eq_dimensions.self_regulation + delta);
+    if (isCorrect) {
+      profile.assertiveness_style = "assertive";
+    } else {
+      const styles: BehaviorProfile["assertiveness_style"][] = ["passive", "aggressive", "passive_aggressive"];
+      profile.assertiveness_style = styles[selectedOptionIndex % 3] ?? "passive";
+    }
+  } else if (boltonCluster === 3) {
+    profile.eq_dimensions.empathy = clamp(profile.eq_dimensions.empathy + delta);
+    if (isCorrect) {
+      profile.conflict_mode = "collaborate";
+    } else {
+      profile.conflict_mode = selectedOptionIndex % 2 === 0 ? "avoid" : "compete";
+    }
+  } else {
+    profile.eq_dimensions.social_skill = clamp(profile.eq_dimensions.social_skill + Math.round(delta * 0.5));
+    profile.nonverbal_awareness = clamp(profile.nonverbal_awareness + Math.round(delta * 0.3));
+  }
+
+  return profile;
+}
+
 router.post("/noble-score/submit", async (req, res) => {
   try {
     const userId = await optionalUserFromToken(req);
@@ -283,8 +323,15 @@ router.post("/noble-score/submit", async (req, res) => {
       newLevelName = levelUp ? newLevel.name : null;
 
       if (user) {
+        const currentProfile: BehaviorProfile = (user as { behavior_profile?: BehaviorProfile | null }).behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE;
+        const updatedProfile = updateBehaviorProfile(
+          currentProfile,
+          (scenario as { bolton_cluster?: number | null }).bolton_cluster,
+          isCorrect,
+          selected_option_index,
+        );
         await db.update(usersTable)
-          .set({ noble_score: newTotalScore })
+          .set({ noble_score: newTotalScore, behavior_profile: updatedProfile })
           .where(eq(usersTable.id, userId));
       }
 
@@ -299,10 +346,16 @@ router.post("/noble-score/submit", async (req, res) => {
       ageBand = getAgeBand(user?.birth_year);
     }
 
-    const feedbackPool = isCorrect
-      ? MENTOR_FEEDBACK_CORRECT[ageBand]
-      : MENTOR_FEEDBACK_INCORRECT[ageBand];
-    const mentorFeedback = feedbackPool[Math.floor(Math.random() * feedbackPool.length)];
+    const correctionStyle = (scenario as { correction_style?: string | null }).correction_style;
+    let mentorFeedback: string;
+    if (!isCorrect && correctionStyle) {
+      mentorFeedback = correctionStyle;
+    } else {
+      const feedbackPool = isCorrect
+        ? MENTOR_FEEDBACK_CORRECT[ageBand]
+        : MENTOR_FEEDBACK_INCORRECT[ageBand];
+      mentorFeedback = feedbackPool[Math.floor(Math.random() * feedbackPool.length)];
+    }
 
     return res.json({
       correct: isCorrect,

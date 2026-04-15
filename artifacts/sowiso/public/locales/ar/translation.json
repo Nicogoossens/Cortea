@@ -396,5 +396,12 @@
   "register.gender_male": "ذكر",
   "register.gender_female": "أنثى",
   "register.gender_non_binary": "غير ثنائي",
-  "register.gender_other": "آخر"
+  "register.gender_other": "آخر",
+  "profile.compass.title": "بوصلة التهذيب",
+  "profile.compass.subtitle": "يتطور ملفك الشخصي للرقي الاجتماعي مع الممارسة.",
+  "profile.compass.attentiveness": "الانتباه",
+  "profile.compass.composure": "الهدوء",
+  "profile.compass.discernment": "الفطنة",
+  "profile.compass.diplomacy": "الدبلوماسية",
+  "profile.compass.presence": "الحضور"
 }

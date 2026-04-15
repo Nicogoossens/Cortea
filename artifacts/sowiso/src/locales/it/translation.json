@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "L'Assaggiatore",
   "pillar.title.the_selector": "Il Selezionatore",
   "pillar.title.the_sommelier": "Il Sommelier",
-  "pillar.title.the_cellar_master": "Il Mastro di Cantina"
+  "pillar.title.the_cellar_master": "Il Mastro di Cantina",
+  "profile.compass.title": "Bussola del Raffinamento",
+  "profile.compass.subtitle": "Il tuo profilo di raffinamento sociale si sviluppa con la pratica.",
+  "profile.compass.attentiveness": "Attenzione",
+  "profile.compass.composure": "Compostezza",
+  "profile.compass.discernment": "Discernimento",
+  "profile.compass.diplomacy": "Diplomazia",
+  "profile.compass.presence": "Presenza"
 }

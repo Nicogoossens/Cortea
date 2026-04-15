@@ -120,7 +120,6 @@
   "profile.next": "次",
   "profile.log.refined": "洗練された",
   "profile.log.reconsidered": "再検討した",
-  
   "profile.member_since.recently": "最近",
   "profile.personal_details": "個人情報",
   "profile.full_name_label": "お名前（フルネーム）",
@@ -397,5 +396,12 @@
   "register.gender_male": "男性",
   "register.gender_female": "女性",
   "register.gender_non_binary": "ノンバイナリー",
-  "register.gender_other": "その他"
+  "register.gender_other": "その他",
+  "profile.compass.title": "洗練コンパス",
+  "profile.compass.subtitle": "シナリオを通じて練習することで、社会的洗練のプロフィールが発展します。",
+  "profile.compass.attentiveness": "注意力",
+  "profile.compass.composure": "沈着さ",
+  "profile.compass.discernment": "識別力",
+  "profile.compass.diplomacy": "外交力",
+  "profile.compass.presence": "存在感"
 }

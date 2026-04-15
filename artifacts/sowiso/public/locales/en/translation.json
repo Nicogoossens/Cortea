@@ -396,5 +396,12 @@
   "register.gender_male": "Male",
   "register.gender_female": "Female",
   "register.gender_non_binary": "Non-binary",
-  "register.gender_other": "Other"
+  "register.gender_other": "Other",
+  "profile.compass.title": "Refinement Compass",
+  "profile.compass.subtitle": "Your social refinement profile develops as you practise across scenarios.",
+  "profile.compass.attentiveness": "Attentiveness",
+  "profile.compass.composure": "Composure",
+  "profile.compass.discernment": "Discernment",
+  "profile.compass.diplomacy": "Diplomacy",
+  "profile.compass.presence": "Presence"
 }

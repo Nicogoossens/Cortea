@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "Le Goûteur",
   "pillar.title.the_selector": "Le Sélecteur",
   "pillar.title.the_sommelier": "Le Sommelier",
-  "pillar.title.the_cellar_master": "Le Maître de Cave"
+  "pillar.title.the_cellar_master": "Le Maître de Cave",
+  "profile.compass.title": "Boussole de Raffinement",
+  "profile.compass.subtitle": "Votre profil de raffinement social se développe au fil de la pratique.",
+  "profile.compass.attentiveness": "Attention",
+  "profile.compass.composure": "Maîtrise de soi",
+  "profile.compass.discernment": "Discernement",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Présence"
 }

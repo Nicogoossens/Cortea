@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable } from "@workspace/db";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 
@@ -252,6 +252,22 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to update region");
     return res.status(500).json({ message: "The region update encountered a difficulty." });
+  }
+});
+
+router.get("/users/behavior-profile", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const [user] = await db
+      .select({ behavior_profile: usersTable.behavior_profile })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+    if (!user) return res.status(404).json({ message: "Profile not found." });
+    return res.json(user.behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch behavior profile");
+    return res.status(500).json({ message: "The behavioral profile is momentarily unavailable." });
   }
 });
 

@@ -446,5 +446,12 @@
   "pillar.title.the_taster": "Der Verkoster",
   "pillar.title.the_selector": "Der Auswähler",
   "pillar.title.the_sommelier": "Der Sommelier",
-  "pillar.title.the_cellar_master": "Der Kellermeister"
+  "pillar.title.the_cellar_master": "Der Kellermeister",
+  "profile.compass.title": "Verfeinerungs-Kompass",
+  "profile.compass.subtitle": "Ihr Profil der sozialen Verfeinerung entwickelt sich durch Übung.",
+  "profile.compass.attentiveness": "Aufmerksamkeit",
+  "profile.compass.composure": "Besonnenheit",
+  "profile.compass.discernment": "Urteilsvermögen",
+  "profile.compass.diplomacy": "Diplomatie",
+  "profile.compass.presence": "Präsenz"
 }

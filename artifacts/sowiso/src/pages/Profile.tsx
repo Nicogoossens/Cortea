@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
-  ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
+  ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, hi } from "date-fns/locale";
@@ -20,7 +20,7 @@ import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -71,6 +71,15 @@ interface EnrichedLogEntry {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+const AMBITION_LEVELS = ["casual", "professional", "diplomatic"] as const;
+
+const OBJECTIVE_OPTIONS: { key: string; label: string }[] = [
+  { key: "business", label: "Business & Professional" },
+  { key: "elite", label: "Elite Society" },
+  { key: "romantic", label: "Romantic & Social" },
+  { key: "world_traveller", label: "World Traveller" },
+];
+
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "SO";
   const parts = name.trim().split(/\s+/);
@@ -86,26 +95,15 @@ function logStatusKey(delta: number): string {
 
 function SaveIndicator({ state, t }: { state: SaveState; t: (k: string) => string }) {
   if (state === "idle") return null;
-  if (state === "saving") return (
-    <span className="text-xs text-muted-foreground font-mono animate-pulse">…</span>
-  );
+  if (state === "saving") return <span className="text-xs text-muted-foreground font-mono animate-pulse">…</span>;
   if (state === "saved") return (
     <span className="flex items-center gap-1 text-xs text-green-600 font-mono animate-in fade-in">
       <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
       {t("profile.saved")}
     </span>
   );
-  return (
-    <span className="text-xs text-destructive font-mono">{t("profile.save_error")}</span>
-  );
+  return <span className="text-xs text-destructive font-mono">{t("profile.save_error")}</span>;
 }
-
-const OBJECTIVE_LABELS: Record<string, string> = {
-  business: "Business & Professional",
-  elite: "Elite Society",
-  romantic: "Romantic & Social",
-  world_traveller: "World Traveller",
-};
 
 export default function Profile() {
   const { t, locale, setLocale } = useLanguage();
@@ -123,27 +121,40 @@ export default function Profile() {
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  // Identity fields
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [usernameSave, setUsernameSave] = useState<SaveState>("idle");
-
   const [editingFullName, setEditingFullName] = useState(false);
   const [fullNameInput, setFullNameInput] = useState("");
   const [fullNameSave, setFullNameSave] = useState<SaveState>("idle");
-
   const [avatarSave, setAvatarSave] = useState<SaveState>("idle");
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // Ambition level
+  const [ambitionSave, setAmbitionSave] = useState<SaveState>("idle");
+
+  // Interests & Objectives
+  const [editingCountry, setEditingCountry] = useState(false);
+  const [countryInput, setCountryInput] = useState("");
+  const [countrySave, setCountrySave] = useState<SaveState>("idle");
+  const [objectivesSave, setObjectivesSave] = useState<SaveState>("idle");
+  const [tagInputSports, setTagInputSports] = useState("");
+  const [tagInputCuisine, setTagInputCuisine] = useState("");
+  const [tagInputDressCode, setTagInputDressCode] = useState("");
+  const [sportsSave, setSportsSave] = useState<SaveState>("idle");
+  const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
+  const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
+
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
-    fetch(`${API_BASE}/api/users/profile`, {
-      headers: getAuthHeaders(),
-    })
+    fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         setProfileData(data);
         setUsernameInput(data?.username ?? "");
         setFullNameInput(data?.full_name ?? "");
+        setCountryInput(data?.country_of_origin ?? "");
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -240,10 +251,46 @@ export default function Profile() {
     }
     const reader = new FileReader();
     reader.onload = async () => {
-      const base64 = reader.result as string;
-      await patchProfile({ avatar_url: base64 }, setAvatarSave);
+      await patchProfile({ avatar_url: reader.result as string }, setAvatarSave);
     };
     reader.readAsDataURL(file);
+  }
+
+  async function handleAmbitionChange(level: string) {
+    if (profileData?.ambition_level === level || ambitionSave === "saving") return;
+    await patchProfile({ ambition_level: level }, setAmbitionSave);
+  }
+
+  async function handleObjectiveToggle(obj: string) {
+    const current = profileData?.objectives ?? [];
+    const next = current.includes(obj) ? current.filter((o) => o !== obj) : [...current, obj];
+    await patchProfile({ objectives: next }, setObjectivesSave);
+  }
+
+  async function handleCountrySubmit() {
+    await patchProfile({ country_of_origin: countryInput.trim() || null }, setCountrySave);
+    setEditingCountry(false);
+  }
+
+  async function handleTagAdd(
+    field: "sports" | "cuisine" | "dress_code",
+    value: string,
+    clearInput: () => void,
+  ) {
+    const key = `interests_${field}` as keyof UserProfileData;
+    const setSave = field === "sports" ? setSportsSave : field === "cuisine" ? setCuisineSave : setDressCodeSave;
+    const current = (profileData?.[key] as string[] | null | undefined) ?? [];
+    const trimmed = value.trim();
+    if (!trimmed || current.includes(trimmed)) { clearInput(); return; }
+    clearInput();
+    await patchProfile({ [key]: [...current, trimmed] }, setSave);
+  }
+
+  async function handleTagRemove(field: "sports" | "cuisine" | "dress_code", value: string) {
+    const key = `interests_${field}` as keyof UserProfileData;
+    const setSave = field === "sports" ? setSportsSave : field === "cuisine" ? setCuisineSave : setDressCodeSave;
+    const current = (profileData?.[key] as string[] | null | undefined) ?? [];
+    await patchProfile({ [key]: current.filter((v) => v !== value) }, setSave);
   }
 
   async function handleDeleteAccount() {
@@ -282,6 +329,7 @@ export default function Profile() {
           <Skeleton className="h-48 rounded-sm" />
           <Skeleton className="h-48 rounded-sm" />
         </div>
+        <Skeleton className="h-72 rounded-sm" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Skeleton className="h-64 rounded-sm" />
           <Skeleton className="h-64 rounded-sm lg:col-span-2" />
@@ -303,15 +351,11 @@ export default function Profile() {
         <div className="relative group flex-shrink-0">
           <div
             className="w-20 h-20 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center shadow-sm overflow-hidden cursor-pointer"
-            aria-label="Change profile photo"
             onClick={() => avatarInputRef.current?.click()}
+            aria-label="Change profile photo"
           >
             {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={profileData?.full_name ?? "Avatar"}
-                className="w-full h-full object-cover"
-              />
+              <img src={avatarUrl} alt={profileData?.full_name ?? "Avatar"} className="w-full h-full object-cover" />
             ) : (
               <span className="text-2xl font-serif text-primary">{initials}</span>
             )}
@@ -323,13 +367,7 @@ export default function Profile() {
           >
             <Camera className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarUpload}
-          />
+          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           {avatarSave === "saving" && (
             <div className="absolute inset-0 rounded-full bg-background/60 flex items-center justify-center">
               <span className="text-xs font-mono animate-pulse">…</span>
@@ -350,10 +388,10 @@ export default function Profile() {
                   className="text-2xl font-serif h-auto py-1 px-2 border-primary/40 focus:border-primary w-48 md:w-64"
                   autoFocus
                 />
-                <button onClick={handleFullNameSubmit} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save full name">
+                <button onClick={handleFullNameSubmit} className="text-primary hover:text-primary/70" aria-label="Save">
                   <Check className="w-4 h-4" aria-hidden="true" />
                 </button>
-                <button onClick={() => { setEditingFullName(false); setFullNameInput(profileData?.full_name ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                <button onClick={() => { setEditingFullName(false); setFullNameInput(profileData?.full_name ?? ""); }} className="text-muted-foreground hover:text-foreground" aria-label="Cancel">
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
@@ -406,11 +444,29 @@ export default function Profile() {
             <SaveIndicator state={usernameSave} t={t} />
           </div>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-1">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4" aria-hidden="true" />
-              <span className="capitalize">{profileData?.ambition_level} {t("profile.ambition")}</span>
+          {/* Ambition selector + Member since */}
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground pt-1 items-center">
+            {/* Ambition level — clickable pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Target className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+              {AMBITION_LEVELS.map((level) => (
+                <button
+                  key={level}
+                  onClick={() => handleAmbitionChange(level)}
+                  disabled={ambitionSave === "saving"}
+                  className={`px-2.5 py-0.5 rounded-full text-xs border transition-all capitalize ${
+                    profileData?.ambition_level === level
+                      ? "bg-primary/10 text-primary border-primary/30 font-medium"
+                      : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+              <SaveIndicator state={ambitionSave} t={t} />
             </div>
+
+            {/* Member since */}
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" aria-hidden="true" />
               <span>
@@ -438,26 +494,13 @@ export default function Profile() {
           <CardContent className="space-y-4">
             <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} />
             <DetailRow label="Username" value={profileData?.username ? `@${profileData.username}` : "—"} />
-            <DetailRow
-              label={t("profile.email_label")}
-              value={profileData?.email ?? "—"}
-            />
-            <DetailRow
-              label={t("profile.birth_year_label")}
-              value={profileData?.birth_year ? String(profileData.birth_year) : "—"}
-            />
-            <DetailRow
-              label={t("profile.gender_label")}
-              value={profileData?.gender_identity ? capitalize(profileData.gender_identity.replace("_", " ")) : "—"}
-            />
+            <DetailRow label={t("profile.email_label")} value={profileData?.email ?? "—"} />
+            <DetailRow label={t("profile.birth_year_label")} value={profileData?.birth_year ? String(profileData.birth_year) : "—"} />
+            <DetailRow label={t("profile.gender_label")} value={profileData?.gender_identity ? capitalize(profileData.gender_identity.replace("_", " ")) : "—"} />
             <div className="pt-1 border-t border-border/50">
               <div className="flex justify-between items-baseline">
-                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/60">
-                  {t("profile.phone_label")}
-                </span>
-                <span className="text-xs text-muted-foreground/40 italic font-light">
-                  {t("profile.phone_coming_soon")}
-                </span>
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/60">{t("profile.phone_label")}</span>
+                <span className="text-xs text-muted-foreground/40 italic font-light">{t("profile.phone_coming_soon")}</span>
               </div>
             </div>
           </CardContent>
@@ -475,9 +518,7 @@ export default function Profile() {
             {/* Language */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                  {t("profile.pref_language")}
-                </label>
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_language")}</label>
                 <SaveIndicator state={langSave} t={t} />
               </div>
               <div className="flex flex-wrap gap-2">
@@ -506,9 +547,7 @@ export default function Profile() {
             {/* Region */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                  {t("profile.pref_region_label")}
-                </label>
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_region_label")}</label>
                 <SaveIndicator state={regionSave} t={t} />
               </div>
               <button
@@ -519,12 +558,8 @@ export default function Profile() {
                 <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
                 <FlagEmoji code={activeRegion} />
                 <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
-                <ChevronRight
-                  className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-90" : ""}`}
-                  aria-hidden="true"
-                />
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-90" : ""}`} aria-hidden="true" />
               </button>
-
               {showRegionPicker && (
                 <div className="flex flex-wrap gap-1.5 pt-1 animate-in fade-in duration-200">
                   {COMPASS_REGIONS.map((region) => {
@@ -551,68 +586,124 @@ export default function Profile() {
         </Card>
       </div>
 
-      {/* ── Onboarding Preferences ── */}
-      {(profileData?.objectives?.length || profileData?.country_of_origin || profileData?.interests_sports?.length || profileData?.interests_cuisine?.length || profileData?.interests_dress_code?.length) ? (
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="font-serif text-lg flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary/60" aria-hidden="true" />
-              Interests & Objectives
-            </CardTitle>
-            <CardDescription>Your preferences as entered during onboarding</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {profileData?.country_of_origin && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Country of Origin</p>
-                <p className="text-sm text-foreground">{profileData.country_of_origin}</p>
+      {/* ── Interests & Objectives ── always visible, always editable ── */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <Target className="w-4 h-4 text-primary/60" aria-hidden="true" />
+            Interests & Objectives
+          </CardTitle>
+          <CardDescription>
+            These preferences guide your personalised exercises and recommendations across the platform.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+
+          {/* Country of origin */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Country of Origin</label>
+              <SaveIndicator state={countrySave} t={t} />
+            </div>
+            {editingCountry ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={countryInput}
+                  onChange={(e) => setCountryInput(e.target.value)}
+                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") handleCountrySubmit();
+                    if (e.key === "Escape") { setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }
+                  }}
+                  placeholder="e.g. Belgium"
+                  className="flex-1 h-8 text-sm border-primary/40 focus:border-primary"
+                  autoFocus
+                />
+                <button onClick={handleCountrySubmit} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
+                  <Check className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <button onClick={() => { setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                  <X className="w-4 h-4" aria-hidden="true" />
+                </button>
               </div>
+            ) : (
+              <button
+                onClick={() => setEditingCountry(true)}
+                className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
+              >
+                {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">Not specified</span>}
+                <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+              </button>
             )}
-            {profileData?.objectives && profileData.objectives.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Objectives</p>
-                <div className="flex flex-wrap gap-2">
-                  {profileData.objectives.map((obj) => (
-                    <span key={obj} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-light border border-primary/20">
-                      {OBJECTIVE_LABELS[obj] ?? obj}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profileData?.interests_sports && profileData.interests_sports.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Sports & Leisure</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.interests_sports.map((s) => (
-                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profileData?.interests_cuisine && profileData.interests_cuisine.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Culinary Interests</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.interests_cuisine.map((s) => (
-                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {profileData?.interests_dress_code && profileData.interests_dress_code.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Dress Code Preferences</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.interests_dress_code.map((s) => (
-                    <span key={s} className="px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/70 text-xs border border-border/40">{s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
+          </div>
+
+          {/* Objectives */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Objectives</label>
+              <SaveIndicator state={objectivesSave} t={t} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {OBJECTIVE_OPTIONS.map(({ key, label }) => {
+                const isActive = (profileData?.objectives ?? []).includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleObjectiveToggle(key)}
+                    disabled={objectivesSave === "saving"}
+                    className={`text-left px-4 py-3 rounded-sm border text-sm transition-all ${
+                      isActive
+                        ? "bg-primary/10 border-primary/40 text-primary font-medium"
+                        : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sports & Leisure */}
+          <TagEditor
+            label="Sports & Leisure"
+            tags={profileData?.interests_sports ?? []}
+            saveState={sportsSave}
+            inputValue={tagInputSports}
+            onInputChange={setTagInputSports}
+            onAdd={() => handleTagAdd("sports", tagInputSports, () => setTagInputSports(""))}
+            onRemove={(v) => handleTagRemove("sports", v)}
+            placeholder="e.g. Tennis, Golf, Polo"
+            t={t}
+          />
+
+          {/* Culinary Interests */}
+          <TagEditor
+            label="Culinary Interests"
+            tags={profileData?.interests_cuisine ?? []}
+            saveState={cuisineSave}
+            inputValue={tagInputCuisine}
+            onInputChange={setTagInputCuisine}
+            onAdd={() => handleTagAdd("cuisine", tagInputCuisine, () => setTagInputCuisine(""))}
+            onRemove={(v) => handleTagRemove("cuisine", v)}
+            placeholder="e.g. French, Japanese, Wine"
+            t={t}
+          />
+
+          {/* Dress Code Preferences */}
+          <TagEditor
+            label="Dress Code Preferences"
+            tags={profileData?.interests_dress_code ?? []}
+            saveState={dressCodeSave}
+            inputValue={tagInputDressCode}
+            onInputChange={setTagInputDressCode}
+            onAdd={() => handleTagAdd("dress_code", tagInputDressCode, () => setTagInputDressCode(""))}
+            onRemove={(v) => handleTagRemove("dress_code", v)}
+            placeholder="e.g. Black tie, Business formal"
+            t={t}
+          />
+
+        </CardContent>
+      </Card>
 
       {/* ── Noble Standing + Domain Mastery ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -643,7 +734,7 @@ export default function Profile() {
                   className="h-full transition-all duration-1000"
                   style={{
                     width: `${nobleScore?.next_level_threshold ? (nobleScore.total_score / nobleScore.next_level_threshold) * 100 : 100}%`,
-                    backgroundColor: nobleScore?.level_color || "var(--primary)"
+                    backgroundColor: nobleScore?.level_color || "var(--primary)",
                   }}
                 />
               </div>
@@ -779,9 +870,7 @@ export default function Profile() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground">{t("profile.delete_account_title")}</p>
-                <p className="text-xs text-muted-foreground font-light mt-1 max-w-sm">
-                  {t("profile.delete_account_warning")}
-                </p>
+                <p className="text-xs text-muted-foreground font-light mt-1 max-w-sm">{t("profile.delete_account_warning")}</p>
               </div>
               <Button
                 variant="outline"
@@ -841,12 +930,75 @@ export default function Profile() {
   );
 }
 
+/* ── Tag editor sub-component ── */
+interface TagEditorProps {
+  label: string;
+  tags: string[];
+  saveState: SaveState;
+  inputValue: string;
+  onInputChange: (v: string) => void;
+  onAdd: () => void;
+  onRemove: (v: string) => void;
+  placeholder: string;
+  t: (k: string) => string;
+}
+
+function TagEditor({ label, tags, saveState, inputValue, onInputChange, onAdd, onRemove, placeholder, t }: TagEditorProps) {
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{label}</label>
+        <SaveIndicator state={saveState} t={t} />
+      </div>
+      <div className="flex flex-wrap gap-1.5 min-h-[28px]">
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-muted/50 text-foreground/80 text-xs border border-border/40 group"
+          >
+            {tag}
+            <button
+              onClick={() => onRemove(tag)}
+              className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5"
+              aria-label={`Remove ${tag}`}
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+            </button>
+          </span>
+        ))}
+        {tags.length === 0 && (
+          <span className="text-xs text-muted-foreground/40 italic font-light py-1">None added yet</span>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter" && inputValue.trim()) { e.preventDefault(); onAdd(); }
+          }}
+          placeholder={placeholder}
+          className="h-8 text-sm border-border/50 focus:border-primary/50 flex-1"
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onAdd}
+          disabled={!inputValue.trim() || saveState === "saving"}
+          className="h-8 px-3 border-border/50 hover:border-primary/40"
+          aria-label={`Add ${label}`}
+        >
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-baseline gap-2 border-b border-border/40 pb-2 last:border-0">
-      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">
-        {label}
-      </span>
+      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{label}</span>
       <span className="text-sm text-foreground text-right font-light truncate">{value}</span>
     </div>
   );

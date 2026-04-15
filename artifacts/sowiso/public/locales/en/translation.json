@@ -384,5 +384,6 @@
   "membership.ambassador.feature1": "Every Traveller privilege",
   "membership.ambassador.feature2": "Mirror — private reflection",
   "membership.ambassador.feature3": "Inner Circle access",
-  "membership.ambassador.feature4": "Sensory Awareness module"
+  "membership.ambassador.feature4": "Sensory Awareness module",
+  "auth.sso_signin": "Sign in"
 }

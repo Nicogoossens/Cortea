@@ -384,5 +384,6 @@
   "profile.gender_other": "Otro",
   "profile.gender_prefer_not": "Prefiero no decirlo",
   "counsel.quality_checking": "Evaluando el registro…",
-  "counsel.register_suggestion": "Sugerencia de registro"
+  "counsel.register_suggestion": "Sugerencia de registro",
+  "auth.sso_signin": "Iniciar sesión"
 }

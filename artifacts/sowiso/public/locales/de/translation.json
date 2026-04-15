@@ -384,5 +384,6 @@
   "profile.gender_other": "Sonstiges",
   "profile.gender_prefer_not": "Lieber nicht angeben",
   "counsel.quality_checking": "Registerprüfung wird durchgeführt…",
-  "counsel.register_suggestion": "Registerempfehlung"
+  "counsel.register_suggestion": "Registerempfehlung",
+  "auth.sso_signin": "Anmelden"
 }

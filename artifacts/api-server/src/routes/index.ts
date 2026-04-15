@@ -8,6 +8,7 @@ import translationsRouter from "./translations";
 import counselRouter from "./counsel";
 import detectRegionRouter from "./detect-region";
 import authRouter from "./auth";
+import oidcRouter from "./oidc";
 import adminRouter from "./admin";
 import subscriptionRouter from "./subscription";
 import registerQualityRouter from "./register-quality";
@@ -16,6 +17,7 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(oidcRouter);
 router.use(usersRouter);
 router.use(cultureRouter);
 router.use(scenariosRouter);

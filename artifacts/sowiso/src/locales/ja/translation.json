@@ -384,5 +384,6 @@
   "membership.ambassador.feature1": "Travellerのすべての特典",
   "membership.ambassador.feature2": "Mirror — 個人的な内省",
   "membership.ambassador.feature3": "Inner Circleアクセス",
-  "membership.ambassador.feature4": "Sensory Awarenessモジュール"
+  "membership.ambassador.feature4": "Sensory Awarenessモジュール",
+  "auth.sso_signin": "サインイン"
 }

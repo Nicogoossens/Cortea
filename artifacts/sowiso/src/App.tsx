@@ -26,6 +26,7 @@ import EmailVerify from "@/pages/EmailVerify";
 import Onboarding from "@/pages/Onboarding";
 import Admin from "@/pages/Admin";
 import Membership from "@/pages/Membership";
+import ReplitCallback from "@/pages/ReplitCallback";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,6 +131,7 @@ function Router() {
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/admin" component={Admin} />
         <Route path="/membership" component={Membership} />
+        <Route path="/replit-callback" component={ReplitCallback} />
         <Route component={NotFound} />
       </Switch>
     </Shell>

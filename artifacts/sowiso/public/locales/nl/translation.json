@@ -384,5 +384,6 @@
   "profile.gender_other": "Overig",
   "profile.gender_prefer_not": "Liever niet zeggen",
   "counsel.quality_checking": "Register wordt beoordeeld…",
-  "counsel.register_suggestion": "Registervoorstel"
+  "counsel.register_suggestion": "Registervoorstel",
+  "auth.sso_signin": "Aanmelden"
 }

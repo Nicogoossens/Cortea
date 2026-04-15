@@ -917,6 +917,312 @@ const COMPASS_SEED = [
         ]
       }
     }
+  },
+  // ── AUSTRALIA ────────────────────────────────────────────────────────────────
+  {
+    region_code: "AU",
+    flag_emoji: "🇦🇺",
+    content: {
+      "en-GB": {
+        region_name: "Australia",
+        core_value: "Mateship, Egalitarianism & Directness",
+        biggest_taboo: "Boasting, pretension, or elevating yourself above others",
+        dining_etiquette: "Australian dining is relaxed and egalitarian. Bills are usually split equally. At a BBQ, the host manages the grill — do not interfere. Tipping is appreciated but not obligatory; 10% for good service is generous. BYO (bring your own alcohol) is common at casual gatherings — always bring enough to share.",
+        language_notes: "Australians use first names immediately, regardless of seniority. Titles are rarely used in social settings. Direct communication is valued — say what you mean, without elaborate diplomacy. Self-deprecating humour and light teasing are expressions of warmth, not disrespect.",
+        gift_protocol: "Bringing a bottle of wine, a six-pack, or a dessert to a dinner is warmly appreciated. Gifts are not expected in business settings. Overly lavish gifts create awkwardness. The thought and generosity matter more than the price.",
+        dress_code: "Smart casual is the default in most business and social settings. Formal suits are worn in law, finance, and specified formal occasions. When Black Tie is specified, comply fully — the relaxed general standard makes formal occasions distinctive. Outdoor and climate-appropriate clothing is entirely appropriate and respected.",
+        dos: [
+          "Use first names immediately — formality creates unnecessary distance",
+          "Buy your round at the pub — 'shouting' is a social obligation",
+          "Bring something to share to any BYO or casual gathering",
+          "Acknowledge the Traditional Owners at formal events",
+          "Give direct, honest feedback when asked for it"
+        ],
+        donts: [
+          "Boast about your achievements or elevate yourself above the group",
+          "Take over the host's BBQ without being invited",
+          "Opt out of the pub round system while continuing to drink with the group",
+          "Use elaborate titles or formal address in social settings",
+          "Dismiss Australian wine, food, or culture as inferior to European equivalents"
+        ]
+      },
+      "en-US": {
+        region_name: "Australia",
+        core_value: "Mateship, Egalitarianism & Directness",
+        biggest_taboo: "Bragging, showing off, or thinking you are better than anyone else",
+        dining_etiquette: "Dining in Australia is relaxed and unpretentious. Bills are typically split evenly. At a BBQ, the host runs the grill — don't step in to help unless specifically asked. Tipping isn't mandatory — service workers are paid fairly — but 10% for good service is appreciated. BYO (bring your own alcohol) is common at casual get-togethers; bring enough for the group.",
+        language_notes: "Australians jump straight to first names with almost everyone. Titles and formal address feel stiff and out of place in most settings. They say what they mean — directness is respected, not rude. Expect good-natured teasing as a sign of acceptance.",
+        gift_protocol: "A bottle of wine, beer, or something for dessert is a great gift when invited somewhere. Business settings don't really call for gifts. Don't overthink it — a genuine, practical gesture beats anything too lavish.",
+        dress_code: "Smart casual is appropriate for most work and social occasions. Suits are worn in finance, law, and formal events. If an invitation says Black Tie, take it seriously — the casual everyday standard makes formal events really stand out. Practical outdoor clothing is completely acceptable and respected.",
+        dos: [
+          "Jump to first names right away — using titles feels formal and stiff",
+          "Buy your round at the pub — it is expected and part of the culture",
+          "Bring drinks or food to share at casual gatherings",
+          "Acknowledge Indigenous heritage at formal events",
+          "Be direct and honest when someone asks your opinion"
+        ],
+        donts: [
+          "Brag about your accomplishments — tall poppy syndrome is real",
+          "Take over the BBQ grill without being asked",
+          "Skip your turn buying drinks while staying with the group",
+          "Use formal titles in casual conversations",
+          "Dismiss Australian food, wine, or culture compared to Europe or the US"
+        ]
+      },
+      "en-AU": {
+        region_name: "Australia",
+        core_value: "Mateship, Egalitarianism & Directness",
+        biggest_taboo: "Skiting, putting on airs, or thinking you are better than everyone else",
+        dining_etiquette: "Dining is relaxed and no-fuss. Bills get split evenly — nobody's counting down to the cent. At a barbie, the host runs the grill, full stop. Don't interfere. Tipping isn't compulsory but rounding up or leaving 10% for good service is a nice gesture. BYO is part of the culture — pitch in, don't rock up empty-handed.",
+        language_notes: "First names straight away — always. Nobody's waiting for a formal introduction. Speak plainly; beating around the bush is more irritating than rude. Good-natured ribbing is how Australians show they like you. Laugh along and give as good as you get.",
+        gift_protocol: "A slab, a bottle of red, or something sweet for afters is always welcome. Don't stress about business gifts — not really expected here. Keep it genuine and practical; nobody wants something that feels like a performance.",
+        dress_code: "Smart casual covers most things. Suits are for the law firm or a formal do. If they've written Black Tie on the invite, they mean it — the usual casualness makes those nights stand out. Practical gear for outdoors is perfectly fine.",
+        dos: [
+          "Use first names immediately — everyone does",
+          "Shout your round at the pub — it is what you do",
+          "Bring something to share to any BYO or barbie",
+          "Acknowledge Country at formal events — it matters",
+          "Say what you mean — directness is respected here"
+        ],
+        donts: [
+          "Skite about what you have achieved — nobody likes a tall poppy",
+          "Take over the barbie — it is the host's domain",
+          "Bludge rounds while staying out with the group",
+          "Use titles and formal address in social settings",
+          "Bag Australian wine or culture as not as good as overseas"
+        ]
+      },
+      "en-CA": {
+        region_name: "Australia",
+        core_value: "Mateship, Egalitarianism & Directness",
+        biggest_taboo: "Boasting, pretension, or acting superior to others",
+        dining_etiquette: "Australian dining is relaxed and egalitarian, much like Canada in its informality. Bills are split equally. At a BBQ, the host manages the grill — don't offer to take over. Tipping is not mandatory but a 10% gesture for good service is appreciated. BYO is common at casual gatherings — bring enough to share generously.",
+        language_notes: "Like Canada, Australians move to first names quickly. Direct communication is valued — expect plain, honest feedback without excessive diplomatic cushioning. Light teasing is a form of acceptance, similar to Canadian banter.",
+        gift_protocol: "A bottle of wine or beer to a dinner is a thoughtful gesture. Business settings do not typically require gifts. Keep it simple and genuine — generosity of spirit matters more than expense.",
+        dress_code: "Smart casual suits most professional and social environments. Formal occasions specified as Black Tie should be taken seriously. Outdoor and climate-appropriate clothing is respected and practical. The default is more relaxed than Canada's urban professional dress, but formality is honoured when called for.",
+        dos: [
+          "Use first names right away — formality creates distance",
+          "Buy your round at the pub — 'shouting' is expected",
+          "Bring something to contribute to BYO gatherings",
+          "Acknowledge Indigenous heritage at formal occasions",
+          "Be honest and direct when asked for your view"
+        ],
+        donts: [
+          "Boast about accomplishments or status",
+          "Take over the host's BBQ uninvited",
+          "Avoid your turn in the pub round system",
+          "Use formal titles in casual conversation",
+          "Dismiss Australian culture in favour of British or American equivalents"
+        ]
+      },
+      "nl-NL": {
+        region_name: "Australië",
+        core_value: "Matenschap, gelijkwaardigheid en directheid",
+        biggest_taboo: "Opscheppen, aanstellerij of jezelf boven anderen plaatsen",
+        dining_etiquette: "Australisch tafelen is ontspannen en informeel. Rekeningen worden doorgaans gelijk verdeeld. Bij een BBQ beheert de gastheer de grill — grijp niet in tenzij gevraagd. Fooi is niet verplicht maar 10% voor goede service wordt gewaardeerd. BYO (breng je eigen drank) is gebruikelijk bij informele bijeenkomsten — breng altijd genoeg om te delen.",
+        language_notes: "Australiërs gebruiken onmiddellijk de voornaam, ongeacht rang of status. Titels voelen formeel en onnatuurlijk aan in de meeste situaties. Directe communicatie wordt gewaardeerd. Luchtig plagen is een teken van acceptatie en vriendschap.",
+        gift_protocol: "Een fles wijn, bier of iets voor toe is een welkome bijdrage. Cadeaus worden niet verwacht in zakelijke situaties. Houd het oprecht en praktisch — overdadige geschenken creëren ongemak.",
+        dress_code: "Smart casual is de standaard in de meeste zakelijke en sociale situaties. Pakken zijn gebruikelijk in de advocatuur, financiën en bij formele gelegenheden. Black Tie betekent wat het zegt. Praktische buitenkleding is volledig geaccepteerd.",
+        dos: [
+          "Gebruik onmiddellijk de voornaam — formeel aanspreken creëert onnodige afstand",
+          "Koop je ronde in de pub — 'shouten' is een sociale verwachting",
+          "Breng iets om te delen bij informele bijeenkomsten",
+          "Erken de Traditionele Eigenaren bij formele evenementen",
+          "Wees direct en eerlijk als om je mening wordt gevraagd"
+        ],
+        donts: [
+          "Opscheppen over prestaties of status — tall poppy syndrome is reëel",
+          "De BBQ overnemen zonder uitnodiging",
+          "Je beurt overslaan in het rondjesysteem in de pub",
+          "Formele titels gebruiken in sociale gesprekken",
+          "Australische wijn of cultuur negatief vergelijken met Europese equivalenten"
+        ]
+      },
+      "fr-FR": {
+        region_name: "Australie",
+        core_value: "Camaraderie, égalitarisme et franc-parler",
+        biggest_taboo: "La vantardise, la prétention ou se croire supérieur aux autres",
+        dining_etiquette: "Les repas australiens sont décontractés et sans cérémonie. Les additions se partagent généralement à parts égales. Au barbecue, c'est l'hôte qui gère le grill — n'intervenez pas sans y être invité. Le pourboire n'est pas obligatoire, mais 10 % pour un bon service est apprécié. Le BYO (apporter ses propres boissons) est courant lors des réunions informelles.",
+        language_notes: "Les Australiens passent immédiatement au prénom, quelle que soit la hiérarchie. La communication directe est valorisée. Les taquineries légères sont une marque d'affection et d'acceptation.",
+        gift_protocol: "Une bouteille de vin ou de bière est toujours bienvenue. Les cadeaux professionnels ne sont pas attendus. Restez simple et sincère — l'ostentation crée plus d'embarras que de plaisir.",
+        dress_code: "Le smart casual est la norme dans la plupart des contextes professionnels et sociaux. Le Black Tie, quand il est spécifié, doit être respecté scrupuleusement. Les vêtements pratiques adaptés au climat sont tout à fait appropriés.",
+        dos: [
+          "Utilisez le prénom immédiatement — la formalité crée une distance inutile",
+          "Payez votre tournée au pub — c'est une obligation sociale",
+          "Apportez quelque chose à partager lors des rassemblements informels",
+          "Reconnaissez les peuples autochtones lors des événements formels",
+          "Soyez direct et honnête lorsqu'on vous demande votre avis"
+        ],
+        donts: [
+          "Vous vanter de vos succès ou de votre statut",
+          "Prendre le contrôle du barbecue sans y être invité",
+          "Éviter votre tour de tournée tout en restant dans le groupe",
+          "Utiliser des titres formels dans les conversations sociales",
+          "Dénigrer la cuisine, le vin ou la culture australienne par rapport à l'Europe"
+        ]
+      },
+      "de-DE": {
+        region_name: "Australien",
+        core_value: "Kameradschaft, Gleichheit und Direktheit",
+        biggest_taboo: "Prahlerei, Angeberei oder das Hervorheben des eigenen Status",
+        dining_etiquette: "Das Essen in Australien ist entspannt und ungezwungen. Rechnungen werden üblicherweise gleichmäßig aufgeteilt. Beim BBQ liegt die Kontrolle des Grills beim Gastgeber — nicht einmischen, sofern nicht ausdrücklich gebeten. Trinkgeld ist nicht verpflichtend, aber 10 % für guten Service wird geschätzt. BYO (Getränke selbst mitbringen) ist bei informellen Zusammenkünften verbreitet.",
+        language_notes: "Australier verwenden sofort den Vornamen, unabhängig von Hierarchie oder Status. Direktheit wird geschätzt. Leichtes Necken unter Freunden ist ein Zeichen der Zuneigung, nicht der Unhöflichkeit.",
+        gift_protocol: "Eine Flasche Wein oder Bier ist immer willkommen. Geschäftliche Geschenke werden nicht erwartet. Halten Sie es einfach und aufrichtig — übertriebene Gesten wirken befremdlich.",
+        dress_code: "Smart Casual gilt für die meisten beruflichen und gesellschaftlichen Anlässe. Anzüge sind in Recht, Finanzen und bei formal gekennzeichneten Anlässen üblich. Black Tie sollte vollständig respektiert werden. Praktische Outdoor-Kleidung ist akzeptiert.",
+        dos: [
+          "Sofort den Vornamen verwenden — Förmlichkeit schafft unnötige Distanz",
+          "Die eigene Runde im Pub bezahlen — das ist soziale Pflicht",
+          "Etwas zum Teilen zu informellen Zusammenkünften mitbringen",
+          "Die Traditionellen Eigentümer bei formellen Veranstaltungen anerkennen",
+          "Ehrlich und direkt antworten, wenn man nach einer Meinung gefragt wird"
+        ],
+        donts: [
+          "Mit Leistungen oder Status prahlen",
+          "Den Grill ohne Einladung übernehmen",
+          "Die eigene Runde auslassen, während man in der Gruppe bleibt",
+          "Formelle Titel im gesellschaftlichen Umgang verwenden",
+          "Australischen Wein oder Kultur im Vergleich zu Europa herabsetzen"
+        ]
+      },
+      "es-ES": {
+        region_name: "Australia",
+        core_value: "Compañerismo, igualitarismo y franqueza",
+        biggest_taboo: "La fanfarronería, la pretensión o creerse superior a los demás",
+        dining_etiquette: "Las comidas en Australia son relajadas e igualitarias. Las cuentas suelen dividirse a partes iguales. En una barbacoa, el anfitrión gestiona la parrilla — no interfieras a menos que te lo pidan. La propina no es obligatoria, pero dejar un 10% por buen servicio es bien recibido. El BYO (trae tu propia bebida) es habitual en reuniones informales.",
+        language_notes: "Los australianos pasan al nombre de pila de inmediato. La comunicación directa es valorada; los rodeos se perciben como evasivos. Las bromas ligeras son una expresión de aceptación y afecto.",
+        gift_protocol: "Una botella de vino o cerveza es siempre bien recibida. Los regalos no son habituales en contextos profesionales. Mantenlo sencillo y sincero.",
+        dress_code: "El smart casual es la norma en la mayoría de entornos laborales y sociales. El Black Tie, cuando se especifica, debe cumplirse plenamente. La ropa práctica para exteriores es completamente apropiada.",
+        dos: [
+          "Usa el nombre de pila inmediatamente — la formalidad crea distancia innecesaria",
+          "Invita a tu ronda en el pub — es una expectativa social",
+          "Lleva algo para compartir en reuniones informales",
+          "Reconoce a los Propietarios Tradicionales en eventos formales",
+          "Sé directo y honesto cuando te pidan tu opinión"
+        ],
+        donts: [
+          "Presumir de logros o estatus",
+          "Hacerse cargo de la barbacoa sin ser invitado",
+          "Evitar tu turno en las rondas mientras sigues con el grupo",
+          "Usar títulos formales en conversaciones sociales",
+          "Menospreciar el vino, la comida o la cultura australiana frente a la europea"
+        ]
+      },
+      "pt-PT": {
+        region_name: "Austrália",
+        core_value: "Camaradagem, igualitarismo e franqueza",
+        biggest_taboo: "Gabar-se, pretensão ou colocar-se acima dos outros",
+        dining_etiquette: "As refeições na Austrália são descontraídas e sem cerimónia. As contas dividem-se geralmente de forma igual. No churrasco, o anfitrião controla a grelha — não interfira sem ser convidado. As gorjetas não são obrigatórias, mas 10% por bom serviço é apreciado. O BYO (trazer as próprias bebidas) é comum em reuniões informais.",
+        language_notes: "Os australianos passam imediatamente ao nome próprio. A comunicação directa é valorizada. As brincadeiras ligeiras são uma expressão de aceitação, não de falta de respeito.",
+        gift_protocol: "Uma garrafa de vinho ou cerveja é sempre bem-vinda. Os presentes não são esperados em contextos profissionais. Mantenha-o simples e genuíno.",
+        dress_code: "O smart casual é o padrão na maioria dos ambientes profissionais e sociais. O Black Tie, quando especificado, deve ser respeitado na totalidade. A roupa prática para o exterior é completamente adequada.",
+        dos: [
+          "Use o nome próprio imediatamente — a formalidade cria distância desnecessária",
+          "Pague a sua ronda no pub — é uma expectativa social",
+          "Traga algo para partilhar em reuniões informais",
+          "Reconheça os Proprietários Tradicionais em eventos formais",
+          "Seja directo e honesto quando lhe pedem a sua opinião"
+        ],
+        donts: [
+          "Gabar-se de conquistas ou estatuto",
+          "Tomar conta do churrasco sem ser convidado",
+          "Evitar a sua vez nas rondas enquanto continua com o grupo",
+          "Usar títulos formais em conversas sociais",
+          "Menosprezar o vinho, a comida ou a cultura australiana em relação à europeia"
+        ]
+      },
+      "it-IT": {
+        region_name: "Australia",
+        core_value: "Cameratismo, egualitarismo e schiettezza",
+        biggest_taboo: "Il vantarsi, la pretenziosità o il sentirsi superiori agli altri",
+        dining_etiquette: "I pasti in Australia sono rilassati e senza cerimonie. I conti si dividono generalmente in parti uguali. Al barbecue, è il padrone di casa a gestire la griglia — non interferire senza essere invitato. La mancia non è obbligatoria, ma il 10% per un buon servizio è apprezzato. Il BYO (porta le tue bevande) è comune alle riunioni informali.",
+        language_notes: "Gli australiani passano subito al nome di battesimo. La comunicazione diretta è apprezzata. Le battute amichevoli sono un'espressione di accettazione e affetto.",
+        gift_protocol: "Una bottiglia di vino o birra è sempre benvenuta. I regali non sono attesi in ambito professionale. Tienilo semplice e sincero.",
+        dress_code: "Lo smart casual è la norma nella maggior parte dei contesti lavorativi e sociali. Il Black Tie, quando specificato, va rispettato pienamente. L'abbigliamento pratico per l'esterno è del tutto appropriato.",
+        dos: [
+          "Usa il nome di battesimo immediatamente — la formalità crea distanza inutile",
+          "Paga il tuo giro al pub — è un'aspettativa sociale",
+          "Porta qualcosa da condividere alle riunioni informali",
+          "Riconosci i Proprietari Tradizionali agli eventi formali",
+          "Sii diretto e onesto quando ti viene chiesta la tua opinione"
+        ],
+        donts: [
+          "Vantarti dei tuoi successi o del tuo status",
+          "Prendere il controllo del barbecue senza essere invitato",
+          "Evitare il tuo turno nel giro da offrire rimanendo nel gruppo",
+          "Usare titoli formali nelle conversazioni sociali",
+          "Sminuire il vino, il cibo o la cultura australiana rispetto a quella europea"
+        ]
+      },
+      "ja-JP": {
+        region_name: "オーストラリア",
+        core_value: "友情・平等主義・率直さ",
+        biggest_taboo: "自慢、気取り、または自分を他者より優れていると示すこと",
+        dining_etiquette: "オーストラリアの食事はリラックスした雰囲気で行われます。割り勘が一般的で、細かく計算するよりも均等に分けることが好まれます。バーベキューでは、ホストがグリルを管理します――招かれない限り手を出してはいけません。チップは義務ではありませんが、良いサービスには10%程度が喜ばれます。BYO（飲み物持参）はカジュアルな集まりでよく見られます。",
+        language_notes: "オーストラリア人はすぐに名前で呼び合います。役職や敬称はほとんど使われません。率直な意思疎通が重視され、遠まわしな表現は回避的に映ることがあります。軽い冗談や冷やかしは親しみの表現です。",
+        gift_protocol: "ワインやビールを持参することは歓迎されます。ビジネスの場ではプレゼントは通常期待されません。シンプルで誠実なものが最も喜ばれます。",
+        dress_code: "ほとんどのビジネス・社交場面ではスマートカジュアルが標準です。Black Tieと指定された場合は、きちんと従う必要があります。屋外に適した実用的な服装も十分に受け入れられます。",
+        dos: [
+          "すぐに名前で呼ぶ――形式的な呼び方は距離感を生む",
+          "パブでは自分の番に飲み物をおごる――これは社会的義務",
+          "カジュアルな集まりには何か持参して分かち合う",
+          "正式な場では先住民族の土地への敬意を示す",
+          "意見を求められたら、率直かつ正直に答える"
+        ],
+        donts: [
+          "自分の業績や地位を自慢しない",
+          "招かれていないのにバーベキューを取り仕切らない",
+          "グループにいながら飲み物をおごる順番を避けない",
+          "社交的な場で正式な敬称を使わない",
+          "オーストラリアのワインや文化をヨーロッパと比べて否定しない"
+        ]
+      },
+      "ar": {
+        region_name: "أستراليا",
+        core_value: "الرفقة والمساواة والصراحة",
+        biggest_taboo: "التباهي والتكبر أو الشعور بالتفوق على الآخرين",
+        dining_etiquette: "تناول الطعام في أستراليا هادئ وغير رسمي. عادةً ما تُقسَّم الفاتورة بالتساوي. في الشواء، يتولى المضيف إدارة الشواية — لا تتدخل إلا إذا طُلب منك ذلك. البقشيش غير إلزامي، لكن 10% مقابل خدمة جيدة موضع تقدير. اصطحاب مشروباتك الخاصة (BYO) شائع في التجمعات غير الرسمية.",
+        language_notes: "يستخدم الأستراليون الاسم الأول فوراً بصرف النظر عن المرتبة. التواصل المباشر محل تقدير؛ المراوغة تُعدّ تهرباً. المداعبة الخفيفة تعبير عن القبول والمودة.",
+        gift_protocol: "يُرحَّب دائماً بزجاجة نبيذ أو بيرة. لا تُتوقع الهدايا في السياقات المهنية. أبقِ الأمر بسيطاً وصادقاً.",
+        dress_code: "الملابس الأنيقة غير الرسمية هي المعيار في معظم البيئات المهنية والاجتماعية. Black Tie يعني ما يقوله حرفياً. الملابس العملية للخارج مقبولة تماماً.",
+        dos: [
+          "استخدم الاسم الأول فوراً — الرسمية تخلق مسافة غير ضرورية",
+          "ادفع جولتك في الحانة — هذا توقع اجتماعي",
+          "أحضر شيئاً لتشاركه في التجمعات غير الرسمية",
+          "اعترف بملاك الأراضي التقليديين في المناسبات الرسمية",
+          "كن صريحاً وصادقاً حين يُطلب رأيك"
+        ],
+        donts: [
+          "التباهي بالإنجازات أو المكانة",
+          "الاستيلاء على الشواية دون دعوة",
+          "تجنب دورك في جولة الشراء بينما تبقى مع المجموعة",
+          "استخدام الألقاب الرسمية في المحادثات الاجتماعية",
+          "الاستهانة بالنبيذ أو الثقافة الأسترالية مقارنةً بالأوروبية"
+        ]
+      },
+      "hi-IN": {
+        region_name: "ऑस्ट्रेलिया",
+        core_value: "दोस्ती, समानता और स्पष्टवादिता",
+        biggest_taboo: "शेखी बघारना, दिखावा करना या खुद को दूसरों से श्रेष्ठ समझना",
+        dining_etiquette: "ऑस्ट्रेलिया में भोजन आरामदायक और बिना किसी औपचारिकता के होता है। बिल आमतौर पर समान रूप से बांटा जाता है। बारबेक्यू में मेजबान ग्रिल संभालता है — बिना बुलाए दखल न दें। टिप अनिवार्य नहीं है, लेकिन अच्छी सेवा के लिए 10% सराहनीय है। BYO (अपनी पेय वस्तुएं लाना) अनौपचारिक सभाओं में सामान्य है।",
+        language_notes: "ऑस्ट्रेलियाई तुरंत पहले नाम से बुलाते हैं, चाहे पद कुछ भी हो। सीधी बात को सराहा जाता है। हल्की-फुल्की चुहलबाजी स्वीकृति और स्नेह का प्रतीक है।",
+        gift_protocol: "शराब या बियर की बोतल हमेशा स्वागत योग्य है। व्यावसायिक संदर्भ में उपहार की अपेक्षा नहीं की जाती। सरल और ईमानदार उपहार सबसे उपयुक्त रहता है।",
+        dress_code: "अधिकांश व्यावसायिक और सामाजिक स्थितियों में स्मार्ट कैजुअल पर्याप्त है। Black Tie निर्दिष्ट होने पर उसका पूरी तरह पालन करें। बाहरी गतिविधियों के लिए व्यावहारिक कपड़े पूरी तरह से उचित हैं।",
+        dos: [
+          "तुरंत पहले नाम से बुलाएं — औपचारिकता अनावश्यक दूरी बनाती है",
+          "पब में अपनी बारी पर पेय खरीदें — यह सामाजिक अपेक्षा है",
+          "अनौपचारिक सभाओं में बांटने के लिए कुछ लाएं",
+          "औपचारिक कार्यक्रमों में पारंपरिक भूमि-स्वामियों को स्वीकार करें",
+          "राय मांगने पर सीधे और ईमानदारी से जवाब दें"
+        ],
+        donts: [
+          "अपनी उपलब्धियों या दर्जे का बखान न करें",
+          "बिना निमंत्रण के बारबेक्यू पर कब्जा न करें",
+          "समूह में रहते हुए अपनी बारी पर पेय खरीदने से न बचें",
+          "सामाजिक बातचीत में औपचारिक उपाधियों का उपयोग न करें",
+          "ऑस्ट्रेलियाई वाइन या संस्कृति को यूरोपीय के मुकाबले कमतर न आंकें"
+        ]
+      }
+    }
   }
 ];
 

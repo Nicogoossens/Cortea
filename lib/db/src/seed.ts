@@ -98,6 +98,38 @@ const protocols: (typeof cultureProtocolsTable.$inferInsert)[] = [
   { region_code: "CA", pillar: 5, context: "dining", rule_type: "Wine at Dinner", rule_description: "Bringing a bottle of wine to a dinner party is a perfectly appropriate host gift and often expected in social dining contexts." },
   { region_code: "CA", pillar: 5, context: "social", rule_type: "Drinking Responsibly", rule_description: "Canada has a culture of responsible drinking. Peer pressure around alcohol is rare; your choices will be respected without comment." },
   { region_code: "CA", pillar: 5, context: "social", rule_type: "Coffee Culture", rule_description: "Tim Hortons is a cultural institution. Sharing a 'double-double' (coffee with two creams and two sugars) is a Canadian social ritual." },
+
+  // ── AUSTRALIA ────────────────────────────────────────────────────────────────
+  // Pillar 1: Cultural Knowledge
+  { region_code: "AU", pillar: 1, context: "social", rule_type: "Mateship", rule_description: "Mateship is a foundational Australian value — loyalty, equality, and solidarity between friends. Being a reliable mate is among the highest social virtues." },
+  { region_code: "AU", pillar: 1, context: "social", rule_type: "Tall Poppy Syndrome", rule_description: "Australians are suspicious of those who elevate themselves above others. Excessive self-promotion, boasting of achievements, or putting on airs invites social ridicule." },
+  { region_code: "AU", pillar: 1, context: "formal", rule_type: "Indigenous Land Acknowledgement", rule_description: "At formal events, acknowledging the Traditional Owners of the land is standard and expected. A brief, respectful acknowledgement demonstrates cultural awareness." },
+  { region_code: "AU", pillar: 1, context: "social", rule_type: "Egalitarian Values", rule_description: "Australian culture is resolutely egalitarian. Rank and titles carry less weight than in Europe; treating everyone — regardless of status — with equal respect is the expectation." },
+  { region_code: "AU", pillar: 1, context: "social", rule_type: "Directness Without Offence", rule_description: "Australians value directness and plain speaking. Beating around the bush is seen as evasive or dishonest. Say what you mean, but with good humour." },
+  // Pillar 2: Appearance
+  { region_code: "AU", pillar: 2, context: "business", rule_type: "Smart Casual as Default", rule_description: "Most Australian business environments favour smart casual. Formal suits are worn in finance and law, but many sectors consider them unnecessarily stiff." },
+  { region_code: "AU", pillar: 2, context: "social", rule_type: "Climate-Appropriate Dressing", rule_description: "Australia's climate demands practical choices. Quality outdoor wear, sun-safe clothing, and appropriate footwear for conditions signal good sense, not poor taste." },
+  { region_code: "AU", pillar: 2, context: "social", rule_type: "Understated Grooming", rule_description: "High grooming standards are expected but loudly displayed luxury is viewed with suspicion. Clean, practical, and well-maintained counts for more than designer labels." },
+  { region_code: "AU", pillar: 2, context: "social", rule_type: "BBQ and Outdoor Dress", rule_description: "Casual outdoor gatherings call for clean, comfortable clothing. Over-dressing for a backyard BBQ is as awkward as under-dressing for a formal dinner — read the occasion." },
+  { region_code: "AU", pillar: 2, context: "formal", rule_type: "Formal When Called For", rule_description: "When an invitation specifies formal attire, Australians take it seriously. The relaxed general standard makes formal occasions stand out; dress accordingly." },
+  // Pillar 3: Eloquence
+  { region_code: "AU", pillar: 3, context: "social", rule_type: "First Names Immediately", rule_description: "Australians move to first names almost instantly. Using titles or surnames in casual conversation quickly feels stiff and creates unnecessary distance." },
+  { region_code: "AU", pillar: 3, context: "social", rule_type: "Self-Deprecating Humour", rule_description: "Mocking yourself lightly is a social virtue in Australia. It signals confidence and invites connection. Those who take themselves too seriously attract gentle ridicule." },
+  { region_code: "AU", pillar: 3, context: "social", rule_type: "Banter as Affection", rule_description: "Light-hearted teasing — 'taking the mickey' — is a primary expression of affection among Australians. Being teased is generally a sign of acceptance, not hostility." },
+  { region_code: "AU", pillar: 3, context: "business", rule_type: "Direct Feedback Culture", rule_description: "Australian workplaces value direct, honest feedback. Diplomatic circumlocutions are seen as time-wasting. Deliver criticism constructively but plainly." },
+  { region_code: "AU", pillar: 3, context: "social", rule_type: "No Pretension", rule_description: "Affectation — of accent, of expertise, of status — is swiftly and mercilessly noticed. Speak naturally and honestly; authenticity is highly valued." },
+  // Pillar 4: Table Manners
+  { region_code: "AU", pillar: 4, context: "dining", rule_type: "BBQ Protocol", rule_description: "At an Australian BBQ, the host manages the grill. Do not offer to take over unless explicitly invited. Bring something to contribute — drinks, salad, or dessert." },
+  { region_code: "AU", pillar: 4, context: "dining", rule_type: "BYO Culture", rule_description: "Many Australian casual gatherings operate on BYO (bring your own) for alcohol. Arriving empty-handed to a BYO occasion is poor form. Bring more than you expect to consume." },
+  { region_code: "AU", pillar: 4, context: "dining", rule_type: "Egalitarian Bill Splitting", rule_description: "Bills in casual dining are frequently split equally among the table. Meticulous individual accounting is considered petty; contribute your fair share without fuss." },
+  { region_code: "AU", pillar: 4, context: "dining", rule_type: "Tipping Norms", rule_description: "Tipping is appreciated but not mandatory — service staff are paid properly. Rounding up or leaving 10% for good service is sufficient and welcome." },
+  { region_code: "AU", pillar: 4, context: "dining", rule_type: "Continental Cutlery Style", rule_description: "At formal dinners, Australian table manners follow the continental style: fork left, knife right. Switching hands is unnecessary and marks one as unversed." },
+  // Pillar 5: Drinks
+  { region_code: "AU", pillar: 5, context: "social", rule_type: "Shouting Rounds", rule_description: "'Shouting' — buying a round of drinks for the group — is a deeply ingrained ritual. Accepting drinks without reciprocating is noticed and poorly received." },
+  { region_code: "AU", pillar: 5, context: "social", rule_type: "Serious Coffee Culture", rule_description: "Australia has a sophisticated coffee culture. The flat white originated here; the long black is the preferred alternative to Americano. Instant coffee is served only in emergencies." },
+  { region_code: "AU", pillar: 5, context: "social", rule_type: "Wine Without Pretension", rule_description: "Australia produces world-class wines, but discussing them with excessive expertise is seen as showy. Enthusiasm and genuine curiosity are preferred over connoisseur performance." },
+  { region_code: "AU", pillar: 5, context: "social", rule_type: "BYOB at Casual Gatherings", rule_description: "When attending a casual gathering, bringing a six-pack, a bottle of wine, or a bottle of spirits as a contribution is standard practice and socially expected." },
+  { region_code: "AU", pillar: 5, context: "dining", rule_type: "The Designated Driver", rule_description: "In social groups, the role of designated driver is taken seriously and respected. Never pressure someone who is driving to drink; offer them a quality non-alcoholic alternative." },
 ];
 
 // 3 scenarios per pillar per region = 3 × 5 × 3 = 45 total
@@ -821,6 +853,251 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
         { text: "Show genuine curiosity — ask about the specific brewery, what makes it distinctive, and express genuine interest in trying something local.", correct: true, explanation: "Precisely. Showing genuine curiosity and appreciation for local craft brewing demonstrates cultural engagement and makes for warm conversation. You need not be an expert — genuine interest is the key." },
         { text: "'I prefer European beers — Canada doesn't have the tradition.'", correct: false, explanation: "This response is dismissive of a genuine and growing craft tradition. Canada has produced internationally recognised breweries, and this comparison would be received poorly." },
         { text: "Agree enthusiastically regardless of your actual view — positivity is always appropriate.", correct: false, explanation: "Insincere enthusiasm is easily detected and creates an artificial conversation. Genuine curiosity, even if you are unfamiliar with the topic, is far more engaging and authentic." },
+      ]
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUSTRALIA — Pillar 1: Cultural Knowledge
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Promotion Announcement",
+    pillar: 1, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "business", difficulty_level: 1, estimated_minutes: 3, noble_score_impact: 5,
+    content_json: {
+      situation: "Your Australian colleague has just been promoted to a senior management position. At the team lunch, they mention it briefly and then immediately change the subject.",
+      question: "How do you respond to your colleague's promotion?",
+      options: [
+        { text: "Make a toast and give a long speech about their remarkable achievements and career trajectory.", correct: false, explanation: "Australians are deeply uncomfortable with public elevation. A long speech of praise triggers the 'tall poppy' instinct — your colleague changed the subject deliberately." },
+        { text: "Offer a warm but brief congratulations, then let the conversation move on as they indicated.", correct: true, explanation: "Precisely right. Matching your colleague's own level of understatement is the socially intelligent response. They downplayed it intentionally; honour that." },
+        { text: "Express surprise — you hadn't noticed they were particularly outstanding.", correct: false, explanation: "While Australians value modesty, expressing surprise at someone's success is unkind rather than egalitarian." },
+        { text: "Say nothing — mentioning it at all might embarrass them further.", correct: false, explanation: "A brief, genuine congratulations is entirely appropriate. Saying nothing would seem cold. The key is brevity, not silence." },
+      ]
+    }
+  },
+  {
+    title: "The Land Acknowledgement",
+    pillar: 1, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "formal", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 6,
+    content_json: {
+      situation: "You have been asked to open a formal business conference in Sydney. You are aware of the practice of acknowledging the Traditional Owners of the land.",
+      question: "How should you open the conference?",
+      options: [
+        { text: "Skip the acknowledgement — it is a political gesture and not necessary in a business context.", correct: false, explanation: "In contemporary Australia, a land acknowledgement at formal events is considered standard courtesy, not a political statement. Omitting it is increasingly noticed and considered an oversight." },
+        { text: "Open with a sincere acknowledgement of the Gadigal people of the Eora Nation as the Traditional Custodians of the land.", correct: true, explanation: "Correct. A respectful, sincere acknowledgement of the relevant Traditional Custodians demonstrates cultural awareness and respect. It should be delivered genuinely, not as a formality." },
+        { text: "Ask an Australian colleague if it is really necessary before deciding.", correct: false, explanation: "While consulting locally is wise, at a formal conference in a major city this is now expected. Asking whether it is 'necessary' signals unfamiliarity with contemporary Australian norms." },
+        { text: "Give an extended speech on Australian history to demonstrate your awareness.", correct: false, explanation: "An extended lecture is not appropriate. The acknowledgement should be brief, sincere, and respectful — its power lies in its genuine simplicity." },
+      ]
+    }
+  },
+  {
+    title: "The Moving Request",
+    pillar: 1, region_code: "AU", age_group: "18-30", gender_applicability: "all",
+    context: "social", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "An Australian friend asks if you can help them move house on Saturday. You have no other plans that day.",
+      question: "What is the appropriate response?",
+      options: [
+        { text: "Decline politely — physical labour is not something you normally offer to do for acquaintances.", correct: false, explanation: "In Australian culture, helping a mate move is an expression of mateship — one of the culture's highest values. Declining without a genuine reason is seen as letting someone down." },
+        { text: "Agree readily and show up on time, ready to help without complaint.", correct: true, explanation: "Exactly right. Showing up willingly and working hard without complaint is the Australian ideal of being a good mate. The reciprocity of mateship is taken seriously." },
+        { text: "Agree but suggest they hire a removal company instead.", correct: false, explanation: "While this is practical, it sidesteps the request for personal help. Your friend asked for your presence, not your logistical advice." },
+        { text: "Say you will try to make it — keeping options open is polite.", correct: false, explanation: "Vagueness is not considered polite in Australia — it is evasive. A mate gives a straight answer." },
+      ]
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUSTRALIA — Pillar 2: Appearance
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Business Meeting Dress",
+    pillar: 2, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "business", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You have a first meeting with an Australian technology company in Melbourne. The email confirms it is a 'business casual' environment.",
+      question: "What do you wear to the meeting?",
+      options: [
+        { text: "A full formal suit with tie — it is always better to be overdressed for a first impression.", correct: false, explanation: "In Australian business culture, a full formal suit to a business casual tech meeting would immediately mark you as out of place and out of touch with local norms." },
+        { text: "Smart casual — well-fitted chinos or trousers, a collared shirt, clean shoes.", correct: true, explanation: "Correct. Smart casual is the sweet spot for Australian business casual. Well-presented and professional without unnecessary formality." },
+        { text: "Jeans and a T-shirt — they said casual, so casual it is.", correct: false, explanation: "'Business casual' still means business. Jeans and a T-shirt would be underdressed and signal poor professional judgement." },
+        { text: "Ask the organiser for a precise dress code before deciding.", correct: false, explanation: "While clarifying is reasonable in some cultures, asking for more precision on 'business casual' in Australia would likely seem overly anxious. Use good judgement." },
+      ]
+    }
+  },
+  {
+    title: "The Backyard BBQ Arrival",
+    pillar: 2, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "social", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You have been invited to a Sunday afternoon BBQ at a colleague's home. The invitation says 'come as you are'.",
+      question: "What do you wear?",
+      options: [
+        { text: "Smart casual — you want to make a good impression.", correct: false, explanation: "While not wrong, 'smart casual' at a backyard BBQ in Australia may read as slightly overdressed and a little stiff. Clean, comfortable, practical clothing is the mark." },
+        { text: "Clean, comfortable casual clothing — neat but relaxed, appropriate for outdoors.", correct: true, explanation: "Exactly right. 'Come as you are' means relaxed but presentable — clean clothes that are comfortable outdoors. This reads perfectly in the Australian social context." },
+        { text: "Formal wear — this is a social occasion at a colleague's home.", correct: false, explanation: "A BBQ in formal wear would be immediately and memorably peculiar. Read the room — or the invitation." },
+        { text: "Activewear — it is Sunday and it will be outdoors.", correct: false, explanation: "Activewear at a social BBQ is underdressed for a colleague's home. Clean casual is the standard; activewear suggests you didn't consider the occasion." },
+      ]
+    }
+  },
+  {
+    title: "The Gala Dinner",
+    pillar: 2, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "formal", difficulty_level: 2, estimated_minutes: 2, noble_score_impact: 5,
+    content_json: {
+      situation: "You receive an invitation to an industry gala dinner in Sydney. The dress code states 'Black Tie'.",
+      question: "What do you wear?",
+      options: [
+        { text: "A dark business suit — Australia is casual, so Black Tie is probably just a suggestion.", correct: false, explanation: "Australians generally relax formality, but when they specify Black Tie they mean it. A business suit at a Black Tie event is a noticeable error." },
+        { text: "A dinner jacket (tuxedo) with black bow tie, formal trousers, and black dress shoes.", correct: true, explanation: "Correct. Black Tie in Australia means what it says. The relaxed general standard makes formal occasions stand out — honour the dress code fully." },
+        { text: "A smart cocktail suit — it is close to Black Tie and more versatile.", correct: false, explanation: "A cocktail suit is not Black Tie. When the dress code is specified, respect it precisely." },
+        { text: "Ask the organiser if Black Tie is strictly required.", correct: false, explanation: "The invitation specifies Black Tie. Asking whether it is 'strictly required' reads as looking for an excuse not to comply. Simply dress accordingly." },
+      ]
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUSTRALIA — Pillar 3: Eloquence
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The New Colleague",
+    pillar: 3, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "business", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You join an Australian company and meet your new manager, Dr. Sarah Mitchell, for the first time. She introduces herself simply as 'Sarah'.",
+      question: "How do you address her going forward?",
+      options: [
+        { text: "Continue to call her Dr. Mitchell — she holds a doctorate and should be addressed correctly.", correct: false, explanation: "She introduced herself as Sarah. In Australian workplace culture, using a title when someone has offered their first name creates unnecessary formality and may cause mild awkwardness." },
+        { text: "Call her Sarah, as she has introduced herself.", correct: true, explanation: "Exactly right. In Australia, first names are adopted almost immediately once offered. Using a title when someone has given their first name goes against the egalitarian workplace norm." },
+        { text: "Ask her how she prefers to be addressed — this shows respect.", correct: false, explanation: "She has already answered this by introducing herself as Sarah. Asking again is redundant and slightly awkward." },
+        { text: "Use 'Dr. Mitchell' in formal settings and 'Sarah' in casual ones.", correct: false, explanation: "This distinction would feel strange in most Australian workplaces. She said Sarah; use Sarah consistently." },
+      ]
+    }
+  },
+  {
+    title: "The Teasing Colleague",
+    pillar: 3, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "social", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 5,
+    content_json: {
+      situation: "At a team lunch, an Australian colleague makes a light-hearted joke at your expense — ribbing you about spilling coffee earlier that morning. The group laughs warmly.",
+      question: "How do you respond?",
+      options: [
+        { text: "Take offence — being mocked in front of colleagues is unprofessional.", correct: false, explanation: "In Australian culture, light-hearted teasing from a colleague is typically a sign of acceptance and affection, not disrespect. Taking genuine offence would create real awkwardness." },
+        { text: "Laugh along and make a self-deprecating remark in return.", correct: true, explanation: "Perfect. Joining in with good humour — especially by gently mocking yourself — signals that you understand Australian social dynamics and are comfortable in the group." },
+        { text: "Smile politely but say nothing — don't encourage it.", correct: false, explanation: "Polite silence reads as either awkwardness or mild displeasure. Joining the banter, even briefly, is the warmer and more socially fluent response." },
+        { text: "Tease the colleague back sharply to assert yourself.", correct: false, explanation: "A sharp retort may escalate unexpectedly. Keeping it light and self-deprecating is safer and more in the spirit of the exchange." },
+      ]
+    }
+  },
+  {
+    title: "The Performance Review",
+    pillar: 3, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 5,
+    content_json: {
+      situation: "Your Australian manager asks for your honest assessment of a project that did not go as well as hoped. You had reservations about the approach from the beginning.",
+      question: "How do you respond?",
+      options: [
+        { text: "Be diplomatic — focus on the positives and gently hint at any issues.", correct: false, explanation: "Excessive diplomacy frustrates Australian business culture. If your manager asks for honest feedback, give it — with clarity and without harshness." },
+        { text: "Give a direct, honest assessment, noting what worked and what did not, with specific examples.", correct: true, explanation: "Correct. Australians value direct, honest feedback in professional settings. Being specific, constructive, and plain-spoken is seen as professional and trustworthy." },
+        { text: "Avoid mentioning your earlier reservations — it would seem like saying 'I told you so'.", correct: false, explanation: "If the reservations are relevant to understanding what went wrong, sharing them diplomatically is useful and honest. Pretending you had no concerns is not constructive." },
+        { text: "Agree with whatever your manager says to maintain harmony.", correct: false, explanation: "If your manager specifically asks for your view, simply agreeing is unhelpful. Australian workplace culture respects those who contribute their genuine perspective." },
+      ]
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUSTRALIA — Pillar 4: Table Manners
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The BBQ Host",
+    pillar: 4, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 5,
+    content_json: {
+      situation: "You are a guest at an Australian backyard BBQ. The host is cooking at the grill. You consider yourself a skilled cook and notice the steaks could be turned sooner.",
+      question: "What do you do?",
+      options: [
+        { text: "Take over at the grill — your host will appreciate your expertise.", correct: false, explanation: "The host manages the BBQ. Taking over uninvited — however well-intentioned — is a significant breach of BBQ protocol in Australia." },
+        { text: "Quietly mention to the host that the steaks might need turning.", correct: false, explanation: "Unless the host asks for help, offering unsolicited cooking advice is presumptuous. The host has it under control." },
+        { text: "Say nothing — the BBQ belongs to the host, and you are there to enjoy yourself as a guest.", correct: true, explanation: "Exactly right. In Australia, the host controls the BBQ absolutely. Your role as a guest is to enjoy the company, not manage the grill." },
+        { text: "Loudly ask other guests if they agree the steaks look done.", correct: false, explanation: "Drawing the group's attention to a perceived failing is worse than saying nothing. It embarrasses your host in their own home." },
+      ]
+    }
+  },
+  {
+    title: "The Restaurant Bill",
+    pillar: 4, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You are dining with four Australian colleagues after a team meeting. The bill arrives. No one ordered significantly more than anyone else.",
+      question: "What is the expected approach to the bill?",
+      options: [
+        { text: "Calculate each person's exact share, including their drinks and any extras.", correct: false, explanation: "Meticulous individual accounting is seen as petty in Australia. Among friends or colleagues with similar orders, splitting equally is the norm and far smoother." },
+        { text: "Split the bill equally among the four of you.", correct: true, explanation: "Correct. Equal splitting is the default among Australians in casual dining. It is quick, fair enough, and avoids the awkwardness of detailed accounting." },
+        { text: "Wait for someone else to suggest how to handle it.", correct: false, explanation: "Being passive leaves others to manage the situation. Contributing actively to the bill conversation is normal and expected." },
+        { text: "Insist on paying the whole bill — generosity is always appreciated.", correct: false, explanation: "While generous, insisting on covering the full bill for a group of colleagues who didn't expect it creates awkwardness and obligation." },
+      ]
+    }
+  },
+  {
+    title: "The BYO Dinner",
+    pillar: 4, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You are invited to a friend's home for a casual dinner. The host mentions it is BYO — bring your own drinks.",
+      question: "What do you bring?",
+      options: [
+        { text: "Nothing — BYO means the host handles the food and you provide only for yourself.", correct: false, explanation: "BYO means you bring drinks to share, not just enough for yourself. Arriving with only your own portion is considered mean-spirited." },
+        { text: "A bottle of wine or a six-pack of beer — enough to share generously through the evening.", correct: true, explanation: "Correct. BYO in Australia means contributing to the group's drinks for the evening. Bringing enough to share generously is the expectation and the spirit of it." },
+        { text: "A single drink for yourself — you are on a health programme.", correct: false, explanation: "If you have particular dietary reasons to limit your intake, a brief explanation is fine, but still bring something to contribute to the group." },
+        { text: "Expensive spirits — to impress the other guests.", correct: false, explanation: "Expensive spirits may create an awkward dynamic. A good bottle of wine or quality beer is perfectly appropriate — and showing off is not the Australian spirit." },
+      ]
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AUSTRALIA — Pillar 5: Drinks
+  // ─────────────────────────────────────────────────────────────────────────────
+  {
+    title: "The Pub Round",
+    pillar: 5, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "social", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 5,
+    content_json: {
+      situation: "You are at a pub with five Australian colleagues after work. One colleague buys the first round. The drinks are consumed and conversation continues.",
+      question: "What do you do next?",
+      options: [
+        { text: "Wait — someone will inevitably offer to buy the next round when they are ready.", correct: false, explanation: "Waiting passively for others to shout means you are not participating in the round system. This is noticed and remembered." },
+        { text: "Offer to buy the next round — it is your turn to shout.", correct: true, explanation: "Exactly right. The round system — 'shouting' in Australian terms — is fundamental to pub culture. Taking your turn without prompting is expected and demonstrates you understand the social contract." },
+        { text: "Buy only your own drink — you prefer not to be involved in rounds.", correct: false, explanation: "Opting out of rounds while continuing to drink with the group is strongly frowned upon. If you are staying, you participate." },
+        { text: "Offer to transfer money to the first person who paid.", correct: false, explanation: "Transferring money rather than buying the round misses the social point entirely. The gesture of going to the bar and buying for the group is what matters." },
+      ]
+    }
+  },
+  {
+    title: "The Coffee Order",
+    pillar: 5, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "social", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 4,
+    content_json: {
+      situation: "You are having a morning meeting with Australian colleagues at a café. The server asks for your order. You usually drink drip filter coffee at home.",
+      question: "What do you order?",
+      options: [
+        { text: "A drip filter coffee.", correct: false, explanation: "Drip filter coffee is not typically offered in Australian cafés, which operate on espresso-based drinks. Asking for it signals unfamiliarity with the local coffee culture." },
+        { text: "A long black — espresso topped with hot water, the closest to your preference.", correct: true, explanation: "A long black is the Australian equivalent of a simple black coffee — espresso-based, strong, and widely available. It is an entirely appropriate and knowledgeable order." },
+        { text: "An Americano.", correct: false, explanation: "While understood, ordering an 'Americano' in Australia may get a slightly puzzled look. The local term is 'long black' and using it signals cultural awareness." },
+        { text: "Whatever is most popular — you don't want to seem fussy.", correct: false, explanation: "Australians have strong coffee preferences and order specifically. Asking for 'whatever is popular' would seem indecisive and may result in a surprise." },
+      ]
+    }
+  },
+  {
+    title: "The Wine Conversation",
+    pillar: 5, region_code: "AU", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 5,
+    content_json: {
+      situation: "At a dinner with Australian hosts, the conversation turns to Australian wine. Your host pours a Barossa Valley Shiraz and asks what you think of it.",
+      question: "How do you respond?",
+      options: [
+        { text: "Give a detailed technical tasting note — discussing tannins, terroir, and the vintage.", correct: false, explanation: "An elaborate technical performance is likely to read as pretentious in Australian company. Genuine enthusiasm and curiosity are preferred over connoisseur display." },
+        { text: "Express genuine enjoyment and ask what makes Barossa Shiraz distinctive.", correct: true, explanation: "Exactly right. Showing genuine pleasure and curiosity about the wine's character invites good conversation. Australians are proud of their wine regions — genuine interest is warmly received." },
+        { text: "Mention that you prefer French wines — Australian wine has improved but still can't compare.", correct: false, explanation: "This is dismissive of a genuine world-class wine region. Australia produces wines that compete internationally; this comment would be poorly received." },
+        { text: "Say you are not really a wine person to avoid saying the wrong thing.", correct: false, explanation: "While honest, opting out of the conversation entirely when your host has specifically invited your view is a missed social opportunity. A simple honest response — 'it is rich and full — I really like it' — is perfectly fine." },
       ]
     }
   },

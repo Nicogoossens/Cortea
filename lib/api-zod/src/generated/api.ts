@@ -276,6 +276,7 @@ export const GetCultureCompassRegionResponse = zod.object({
       nonverbal: zod.number(),
       tone: zod.number(),
       words: zod.number(),
+      note: zod.string().optional(),
     })
     .optional(),
 });

@@ -10,4 +10,5 @@ export type CultureCompassDetailMehrabianWeight = {
   nonverbal: number;
   tone: number;
   words: number;
+  note?: string;
 };

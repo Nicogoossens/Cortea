@@ -665,6 +665,8 @@ components:
               type: number
             words:
               type: number
+            note:
+              type: string
           required:
             - nonverbal
             - tone

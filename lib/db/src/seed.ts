@@ -826,11 +826,23 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
   },
 ];
 
-async function seed() {
-  console.log("Seeding SOWISO database...");
+const FLAG_FORCE = process.argv.includes("--force");
 
-  await db.execute(sql`TRUNCATE TABLE culture_protocols, scenarios RESTART IDENTITY CASCADE`);
-  console.log("  Tables cleared");
+async function seed() {
+  console.log("Seeding SOWISO database (Atelier content)…");
+
+  // Skip if already populated (unless --force is passed)
+  if (!FLAG_FORCE) {
+    const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(scenariosTable);
+    if (count > 0) {
+      console.log(`  Scenarios table already has ${count} rows — skipping (use --force to reseed).`);
+      process.exit(0);
+    }
+  } else {
+    // --force: clear and reseed (only safe in dev/staging with explicit intent)
+    await db.execute(sql`TRUNCATE TABLE culture_protocols, scenarios RESTART IDENTITY CASCADE`);
+    console.log("  --force: tables cleared for reseed");
+  }
 
   await db.insert(cultureProtocolsTable).values(protocols);
   console.log(`  ${protocols.length} culture protocols inserted (UK/CN/CA x 5 pillars x 5 rules each)`);
@@ -838,7 +850,7 @@ async function seed() {
   await db.insert(scenariosTable).values(scenarios);
   console.log(`  ${scenarios.length} scenarios inserted (3 per pillar per region = 3 x 5 x 3 = 45)`);
 
-  console.log("Seed complete.");
+  console.log("Atelier seed complete.");
   process.exit(0);
 }
 

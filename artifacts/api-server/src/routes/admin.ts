@@ -1,8 +1,16 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
+import { exec } from "child_process";
+import { promisify } from "util";
+import path from "path";
+import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq, ilike, or, desc } from "drizzle-orm";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, type CompassLocaleMap } from "@workspace/db";
+import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
 import { z } from "zod";
+
+const execAsync = promisify(exec);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const WORKSPACE_ROOT = path.resolve(__dirname, "../../../../");
 
 const router = Router();
 
@@ -152,6 +160,176 @@ router.patch("/admin/users/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Admin: failed to patch user");
     return res.status(500).json({ error: "A difficulty arose updating the user." });
+  }
+});
+
+// ── Content Management ────────────────────────────────────────────────────────
+
+/** GET /admin/content/status — row counts + translation coverage per table */
+router.get("/admin/content/status", requireAdmin, async (req, res) => {
+  try {
+    const [scenarios] = await db.select({ total: count() }).from(scenariosTable);
+    const [protocols] = await db.select({ total: count() }).from(cultureProtocolsTable);
+    const [regions] = await db.select({ total: count() }).from(compassRegionsTable);
+
+    const translationsByLang = await db
+      .select({ lang: translationsTable.language_code, total: count() })
+      .from(translationsTable)
+      .groupBy(translationsTable.language_code);
+
+    // Scenario translation coverage: count how many have title_i18n for each lang
+    const allScenarios = await db
+      .select({ title_i18n: sql<Record<string, string> | null>`title_i18n` })
+      .from(scenariosTable);
+
+    const scenarioLangs = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"];
+    const scenarioTranslationCoverage: Record<string, number> = {};
+    for (const lang of scenarioLangs) {
+      scenarioTranslationCoverage[lang] = allScenarios.filter(
+        (s) => s.title_i18n && s.title_i18n[lang]
+      ).length;
+    }
+
+    return res.json({
+      scenarios: scenarios.total,
+      culture_protocols: protocols.total,
+      compass_regions: regions.total,
+      translations: translationsByLang.reduce((acc, r) => {
+        acc[r.lang] = r.total;
+        return acc;
+      }, {} as Record<string, number>),
+      scenario_translation_coverage: scenarioTranslationCoverage,
+      total_scenarios: allScenarios.length,
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to get content status");
+    return res.status(500).json({ error: "A difficulty arose retrieving content status." });
+  }
+});
+
+/** POST /admin/content/seed — trigger idempotent seed scripts */
+router.post("/admin/content/seed", requireAdmin, async (req, res) => {
+  try {
+    const results: string[] = [];
+
+    const run = async (label: string, cmd: string) => {
+      try {
+        const { stdout, stderr } = await execAsync(cmd, {
+          cwd: WORKSPACE_ROOT,
+          env: { ...process.env },
+          timeout: 120_000,
+        });
+        results.push(`[${label}] OK\n${stdout.trim()}`);
+        if (stderr.trim()) results.push(`[${label}] stderr: ${stderr.trim()}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        results.push(`[${label}] ERROR: ${msg}`);
+      }
+    };
+
+    await run("Atelier", "pnpm --filter db seed");
+    await run("Compass", "pnpm --filter db seed:compass");
+    await run("Translations", "node scripts/seed-translations.mjs");
+    await run("Admin", "node scripts/ensure-admin.mjs");
+
+    return res.json({ ok: true, results });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: seed failed");
+    return res.status(500).json({ error: "A difficulty arose triggering the seed." });
+  }
+});
+
+// ── JSON Bulk Import ──────────────────────────────────────────────────────────
+
+const ScenarioImportSchema = z.object({
+  title: z.string().min(1),
+  pillar: z.number().int().min(1).max(5),
+  region_code: z.string().length(2),
+  age_group: z.string().default("all"),
+  gender_applicability: z.string().default("all"),
+  context: z.string().default("social"),
+  difficulty_level: z.number().int().min(1).max(5).default(1),
+  estimated_minutes: z.number().int().min(1).max(60).default(5),
+  noble_score_impact: z.number().int().min(1).max(20).default(5),
+  content_json: z.object({
+    situation: z.string().min(1),
+    question: z.string().min(1),
+    options: z.array(z.object({
+      text: z.string().min(1),
+      correct: z.boolean(),
+      explanation: z.string().min(1),
+    })).min(2).max(6),
+  }),
+});
+
+const CompassRegionImportSchema = z.object({
+  region_code: z.string().length(2),
+  flag_emoji: z.string().optional(),
+  content: z.record(z.string(), z.unknown()),
+});
+
+const BulkImportBodySchema = z.object({
+  type: z.enum(["scenarios", "compass_regions"]),
+  items: z.array(z.unknown()).min(1).max(500),
+});
+
+/** POST /admin/content/import — bulk upsert scenarios or compass regions from JSON */
+router.post("/admin/content/import", requireAdmin, async (req, res) => {
+  try {
+    const parsed = BulkImportBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: "Invalid import payload.",
+        details: parsed.error.flatten().fieldErrors,
+      });
+    }
+
+    const { type, items } = parsed.data;
+    let inserted = 0;
+    const errors: string[] = [];
+
+    if (type === "scenarios") {
+      for (let i = 0; i < items.length; i++) {
+        const result = ScenarioImportSchema.safeParse(items[i]);
+        if (!result.success) {
+          errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
+          continue;
+        }
+        await db.insert(scenariosTable).values(result.data);
+        inserted++;
+      }
+    } else if (type === "compass_regions") {
+      for (let i = 0; i < items.length; i++) {
+        const result = CompassRegionImportSchema.safeParse(items[i]);
+        if (!result.success) {
+          errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
+          continue;
+        }
+        const { region_code, flag_emoji, content } = result.data;
+        const typedContent = content as CompassLocaleMap;
+        await db
+          .insert(compassRegionsTable)
+          .values({ region_code, flag_emoji: flag_emoji ?? "", content: typedContent })
+          .onConflictDoUpdate({
+            target: compassRegionsTable.region_code,
+            set: {
+              content: typedContent,
+              ...(flag_emoji ? { flag_emoji } : {}),
+            },
+          });
+        inserted++;
+      }
+    }
+
+    return res.json({
+      ok: true,
+      inserted,
+      errors_count: errors.length,
+      errors: errors.slice(0, 20),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: import failed");
+    return res.status(500).json({ error: "A difficulty arose during bulk import." });
   }
 });
 

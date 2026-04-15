@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,12 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
-  BadgeCheck, Ban, Loader2,
+  BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AdminUser {
   id: string;
@@ -29,7 +31,19 @@ interface AdminUser {
   onboarding_completed: boolean;
 }
 
+interface ContentStatus {
+  scenarios: number;
+  culture_protocols: number;
+  compass_regions: number;
+  translations: Record<string, number>;
+  scenario_translation_coverage: Record<string, number>;
+  total_scenarios: number;
+}
+
 type ActionState = "idle" | "loading" | "done" | "error";
+type AdminTab = "users" | "content";
+
+// ── Small components ──────────────────────────────────────────────────────────
 
 function TierBadge({ tier }: { tier: string }) {
   const colors: Record<string, string> = {
@@ -43,6 +57,8 @@ function TierBadge({ tier }: { tier: string }) {
     </span>
   );
 }
+
+// ── User row ──────────────────────────────────────────────────────────────────
 
 function UserRow({ user, authHeaders, onUpdated }: {
   user: AdminUser;
@@ -200,9 +216,277 @@ function UserRow({ user, authHeaders, onUpdated }: {
   );
 }
 
+// ── Content Management Tab ────────────────────────────────────────────────────
+
+const SCENARIO_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"] as const;
+const LANG_LABELS: Record<string, string> = {
+  nl: "Nederlands", fr: "Français", de: "Deutsch", es: "Español",
+  pt: "Português", it: "Italiano", ar: "العربية", ja: "日本語",
+};
+
+function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const [status, setStatus] = useState<ContentStatus | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [seedState, setSeedState] = useState<ActionState>("idle");
+  const [seedOutput, setSeedOutput] = useState<string[]>([]);
+  const [importState, setImportState] = useState<ActionState>("idle");
+  const [importResult, setImportResult] = useState<{ inserted: number; errors_count: number; errors: string[] } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchStatus = useCallback(async () => {
+    setLoadingStatus(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/content/status`, { headers: authHeaders });
+      if (res.ok) setStatus(await res.json() as ContentStatus);
+    } catch { /* silent */ } finally {
+      setLoadingStatus(false);
+    }
+  }, [authHeaders]);
+
+  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+
+  async function handleSeed() {
+    setSeedState("loading");
+    setSeedOutput([]);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/content/seed`, {
+        method: "POST",
+        headers: authHeaders,
+      });
+      const data = await res.json() as { ok: boolean; results: string[] };
+      setSeedOutput(data.results ?? []);
+      setSeedState(res.ok ? "done" : "error");
+      if (res.ok) fetchStatus();
+    } catch (err) {
+      setSeedOutput([String(err)]);
+      setSeedState("error");
+    }
+    setTimeout(() => setSeedState("idle"), 5000);
+  }
+
+  async function handleImport(type: "scenarios" | "compass_regions") {
+    const file = fileRef.current?.files?.[0];
+    if (!file) return;
+
+    setImportState("loading");
+    setImportResult(null);
+    try {
+      const text = await file.text();
+      const items = JSON.parse(text) as unknown[];
+      const res = await fetch(`${API_BASE}/api/admin/content/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ type, items }),
+      });
+      const data = await res.json() as { inserted: number; errors_count: number; errors: string[] };
+      setImportResult(data);
+      setImportState(res.ok ? "done" : "error");
+      if (res.ok) fetchStatus();
+    } catch (err) {
+      setImportResult({ inserted: 0, errors_count: 1, errors: [String(err)] });
+      setImportState("error");
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Status overview */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-serif text-foreground">Content Status</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs gap-1.5"
+            onClick={fetchStatus}
+            disabled={loadingStatus}
+          >
+            {loadingStatus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Refresh
+          </Button>
+        </div>
+
+        {loadingStatus && !status ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-sm" />)}
+          </div>
+        ) : status ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[
+                { label: "Scenarios", value: status.scenarios },
+                { label: "Culture Protocols", value: status.culture_protocols },
+                { label: "Compass Regions", value: status.compass_regions },
+              ].map(({ label, value }) => (
+                <Card key={label} className="bg-card border-border">
+                  <CardContent className="pt-4 pb-3">
+                    <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">{label}</p>
+                    <p className="text-2xl font-serif text-foreground mt-1">{value}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Scenario translation coverage */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70">
+                  Scenario Translation Coverage ({status.total_scenarios} total)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {SCENARIO_LANGS.map(lang => {
+                    const covered = status.scenario_translation_coverage[lang] ?? 0;
+                    const pct = status.total_scenarios > 0
+                      ? Math.round((covered / status.total_scenarios) * 100)
+                      : 0;
+                    return (
+                      <div key={lang} className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="font-mono text-foreground/80">{LANG_LABELS[lang]}</span>
+                          <span className={`font-mono ${pct === 100 ? "text-green-600" : pct > 0 ? "text-amber-600" : "text-muted-foreground/40"}`}>
+                            {covered}/{status.total_scenarios}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${pct === 100 ? "bg-green-500" : pct > 0 ? "bg-amber-400" : "bg-muted-foreground/20"}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* UI Translations */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70">
+                  UI Translations (keys per language)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(status.translations).sort().map(([lang, n]) => (
+                    <span key={lang} className="px-2 py-1 rounded-sm bg-muted text-xs font-mono">
+                      {lang}: {n}
+                    </span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        ) : null}
+      </div>
+
+      {/* Seed action */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Seed Base Content
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground font-light">
+            Runs all seed scripts (Atelier, Compass, Translations, Admin account).
+            Existing data is preserved — seeds are skipped if the tables are already populated.
+          </p>
+          <Button
+            className="font-serif gap-2"
+            disabled={seedState === "loading"}
+            onClick={handleSeed}
+          >
+            {seedState === "loading" ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Seeding…</>
+            ) : seedState === "done" ? (
+              <><CheckCircle2 className="w-4 h-4" /> Seed Complete</>
+            ) : seedState === "error" ? (
+              <><XCircle className="w-4 h-4" /> Seed Failed</>
+            ) : (
+              <>Seed Base Content</>
+            )}
+          </Button>
+
+          {seedOutput.length > 0 && (
+            <pre className="text-xs font-mono bg-muted/40 border border-border/50 rounded-sm p-3 overflow-auto max-h-48 whitespace-pre-wrap">
+              {seedOutput.join("\n\n")}
+            </pre>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* JSON Bulk Import */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            Bulk Import (JSON)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground font-light">
+            Upload a JSON array of scenario or compass region objects. Scenarios are inserted as new rows;
+            compass regions are upserted by region_code.
+          </p>
+
+          <div className="flex flex-wrap gap-3 items-start">
+            <div className="flex flex-col gap-2 flex-1 min-w-48">
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json"
+                className="text-xs text-muted-foreground font-mono file:mr-3 file:px-3 file:py-1.5 file:rounded-sm file:border file:border-border/60 file:bg-muted file:text-xs file:font-mono file:text-foreground hover:file:bg-muted/70 cursor-pointer"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs"
+                disabled={importState === "loading"}
+                onClick={() => handleImport("scenarios")}
+              >
+                {importState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Import Scenarios"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs"
+                disabled={importState === "loading"}
+                onClick={() => handleImport("compass_regions")}
+              >
+                {importState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Import Compass Regions"}
+              </Button>
+            </div>
+          </div>
+
+          {importResult && (
+            <div className={`text-xs font-mono p-3 rounded-sm border ${importState === "done" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+              <p>{importResult.inserted} item(s) imported. {importResult.errors_count} error(s).</p>
+              {importResult.errors.length > 0 && (
+                <ul className="mt-2 space-y-1 list-disc list-inside">
+                  {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Main Admin page ───────────────────────────────────────────────────────────
+
 export default function Admin() {
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, getAuthHeaders } = useAuth();
+  const [activeTab, setActiveTab] = useState<AdminTab>("users");
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -272,51 +556,82 @@ export default function Admin() {
         <p className="text-muted-foreground font-light text-sm">{t("admin.subtitle")}</p>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          <Input
-            placeholder={t("admin.search_placeholder")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-9 rounded-sm"
-          />
-        </div>
-        <Button type="submit" className="font-serif rounded-sm" disabled={loading}>
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("admin.search_btn")}
-        </Button>
-      </form>
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border/50">
+        {([
+          { key: "users" as const, label: "Users", icon: Users },
+          { key: "content" as const, label: "Content", icon: Database },
+        ]).map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-mono transition-colors border-b-2 -mb-px
+              ${activeTab === key
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {loading && (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-sm" />)}
-        </div>
-      )}
+      {/* Users tab */}
+      {activeTab === "users" && (
+        <div className="space-y-6">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Input
+                placeholder={t("admin.search_placeholder")}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9 rounded-sm"
+              />
+            </div>
+            <Button type="submit" className="font-serif rounded-sm" disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("admin.search_btn")}
+            </Button>
+          </form>
 
-      {!loading && searched && (
-        <div className="space-y-3">
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-            {t("admin.users_found", { n: users.length })}
-          </p>
-          {users.length === 0 ? (
-            <Card className="bg-card border-border">
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground font-light">{t("admin.no_users")}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {users.map((u) => (
-                <UserRow
-                  key={u.id}
-                  user={u}
-                  authHeaders={authHeaders}
-                  onUpdated={handleUserUpdated}
-                />
-              ))}
+          {loading && (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 rounded-sm" />)}
+            </div>
+          )}
+
+          {!loading && searched && (
+            <div className="space-y-3">
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+                {t("admin.users_found", { n: users.length })}
+              </p>
+              {users.length === 0 ? (
+                <Card className="bg-card border-border">
+                  <CardContent className="py-12 text-center">
+                    <p className="text-muted-foreground font-light">{t("admin.no_users")}</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {users.map((u) => (
+                    <UserRow
+                      key={u.id}
+                      user={u}
+                      authHeaders={authHeaders}
+                      onUpdated={handleUserUpdated}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
+      )}
+
+      {/* Content tab */}
+      {activeTab === "content" && (
+        <ContentTab authHeaders={authHeaders} />
       )}
     </div>
   );

@@ -86,11 +86,21 @@ const UI_KEYS: Record<string, { en: string; nl: string; fr: string }> = {
   "level.the_sovereign":         { en: "The Sovereign",                       nl: "De Soevereine",                        fr: "Le Souverain" },
 };
 
+const FLAG_FORCE = process.argv.includes("--force");
+
 async function seedTranslations() {
   console.log("Seeding translations…");
 
-  await db.execute(sql`TRUNCATE TABLE translations RESTART IDENTITY CASCADE`);
-  console.log("  Translations table cleared");
+  if (!FLAG_FORCE) {
+    const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(translationsTable);
+    if (count > 0) {
+      console.log(`  Translations already have ${count} rows — skipping (use --force to reseed).`);
+      process.exit(0);
+    }
+  } else {
+    await db.execute(sql`TRUNCATE TABLE translations RESTART IDENTITY CASCADE`);
+    console.log("  --force: translations table cleared for reseed");
+  }
 
   const rows: TranslationRow[] = [];
   const languages: Array<{ code: string; formality: string; rtl: boolean }> = [

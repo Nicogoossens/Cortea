@@ -7,6 +7,7 @@ interface AccessibilityContextValue {
   setHighContrast: (v: boolean) => void;
   fontSize: FontSize;
   setFontSize: (v: FontSize) => void;
+  autoApplyAgeFont: (v: FontSize) => void;
 }
 
 const AccessibilityContext = createContext<AccessibilityContextValue>({
@@ -14,10 +15,12 @@ const AccessibilityContext = createContext<AccessibilityContextValue>({
   setHighContrast: () => {},
   fontSize: "normal",
   setFontSize: () => {},
+  autoApplyAgeFont: () => {},
 });
 
-const LS_HIGH_CONTRAST = "sowiso_high_contrast";
-const LS_FONT_SIZE     = "sowiso_font_size";
+const LS_HIGH_CONTRAST    = "sowiso_high_contrast";
+const LS_FONT_SIZE        = "sowiso_font_size";
+const LS_FONT_SIZE_USER_SET = "sowiso_font_size_user_set";
 
 function readBool(key: string, fallback: boolean): boolean {
   try {
@@ -54,6 +57,17 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   function setFontSize(v: FontSize) {
     setFontSizeState(v);
+    try {
+      localStorage.setItem(LS_FONT_SIZE, v);
+      localStorage.setItem(LS_FONT_SIZE_USER_SET, "true");
+    } catch {}
+  }
+
+  function autoApplyAgeFont(v: FontSize) {
+    try {
+      if (localStorage.getItem(LS_FONT_SIZE_USER_SET) === "true") return;
+    } catch {}
+    setFontSizeState(v);
     try { localStorage.setItem(LS_FONT_SIZE, v); } catch {}
   }
 
@@ -71,7 +85,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   }, [fontSize]);
 
   return (
-    <AccessibilityContext.Provider value={{ highContrast, setHighContrast, fontSize, setFontSize }}>
+    <AccessibilityContext.Provider value={{ highContrast, setHighContrast, fontSize, setFontSize, autoApplyAgeFont }}>
       {children}
     </AccessibilityContext.Provider>
   );

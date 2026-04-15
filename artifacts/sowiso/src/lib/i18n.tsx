@@ -119,7 +119,7 @@ interface LocaleContextValue {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const STORAGE_KEY = "sowiso_locale";
-const ALL_LOCALES: SupportedLocale[] = LOCALE_GROUPS.flatMap((g) => g.locales.map((l) => l.locale));
+export const ALL_LOCALES: SupportedLocale[] = LOCALE_GROUPS.flatMap((g) => g.locales.map((l) => l.locale));
 
 function detectLocale(): SupportedLocale {
   const stored = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null;

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import { sendActivationEmail } from "../lib/email";
@@ -280,6 +280,35 @@ router.post("/auth/signin", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Sign-in failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+// ── First-admin bootstrap ──────────────────────────────────────────────────────
+// Promotes the authenticated user to admin if no admins currently exist.
+// Automatically becomes a no-op once any admin account is present.
+router.post("/auth/claim-first-admin", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+    const token = authHeader.slice(7);
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.session_token, token))
+      .limit(1);
+    if (!user) return res.status(401).json({ error: "Invalid session." });
+    if (user.is_admin) return res.json({ message: "You are already an administrator." });
+
+    const [{ total }] = await db.select({ total: count() }).from(usersTable).where(eq(usersTable.is_admin, true));
+    if (total > 0) return res.status(403).json({ error: "An administrator already exists. This endpoint is disabled." });
+
+    await db.update(usersTable).set({ is_admin: true }).where(eq(usersTable.id, user.id));
+    return res.json({ message: "You have been granted administrator access.", is_admin: true });
+  } catch (err) {
+    req.log.error({ err }, "claim-first-admin failed");
     return res.status(500).json({ error: "A difficulty arose. Please try again." });
   }
 });

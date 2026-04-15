@@ -27,17 +27,36 @@ const OBJECTIVES = [
 ] as const;
 
 const SPORTS_OPTIONS = [
-  "polo", "golf", "sailing", "rowing", "horse riding",
-  "squash", "tennis", "fencing", "hunting",
+  { id: "polo",         label_key: "onboarding.sport_polo" },
+  { id: "golf",         label_key: "onboarding.sport_golf" },
+  { id: "sailing",      label_key: "onboarding.sport_sailing" },
+  { id: "rowing",       label_key: "onboarding.sport_rowing" },
+  { id: "horse riding", label_key: "onboarding.sport_horse_riding" },
+  { id: "squash",       label_key: "onboarding.sport_squash" },
+  { id: "tennis",       label_key: "onboarding.sport_tennis" },
+  { id: "fencing",      label_key: "onboarding.sport_fencing" },
+  { id: "hunting",      label_key: "onboarding.sport_hunting" },
 ];
 
 const CUISINE_OPTIONS = [
-  "French", "Japanese", "Italian", "Indian", "Scandinavian",
-  "Spanish", "British", "Chinese", "Lebanese", "Peruvian",
+  { id: "French",        label_key: "onboarding.cuisine_french" },
+  { id: "Japanese",      label_key: "onboarding.cuisine_japanese" },
+  { id: "Italian",       label_key: "onboarding.cuisine_italian" },
+  { id: "Indian",        label_key: "onboarding.cuisine_indian" },
+  { id: "Scandinavian",  label_key: "onboarding.cuisine_scandinavian" },
+  { id: "Spanish",       label_key: "onboarding.cuisine_spanish" },
+  { id: "British",       label_key: "onboarding.cuisine_british" },
+  { id: "Chinese",       label_key: "onboarding.cuisine_chinese" },
+  { id: "Lebanese",      label_key: "onboarding.cuisine_lebanese" },
+  { id: "Peruvian",      label_key: "onboarding.cuisine_peruvian" },
 ];
 
 const DRESS_OPTIONS = [
-  "business", "black tie", "cocktail", "casual chic", "country",
+  { id: "business",     label_key: "onboarding.dress_business" },
+  { id: "black tie",    label_key: "onboarding.dress_black_tie" },
+  { id: "cocktail",     label_key: "onboarding.dress_cocktail" },
+  { id: "casual chic",  label_key: "onboarding.dress_casual_chic" },
+  { id: "country",      label_key: "onboarding.dress_country" },
 ];
 
 type Step = 1 | 2 | 3;
@@ -222,18 +241,18 @@ export default function Onboarding() {
                 {t("onboarding.interests_sports")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {SPORTS_OPTIONS.map((s) => {
-                  const sel = sports.includes(s);
+                {SPORTS_OPTIONS.map((opt) => {
+                  const sel = sports.includes(opt.id);
                   return (
                     <button
-                      key={s}
+                      key={opt.id}
                       type="button"
-                      onClick={() => toggleArr(sports, s, setSports)}
-                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all capitalize ${
+                      onClick={() => toggleArr(sports, opt.id, setSports)}
+                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
                         sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                       }`}
                     >
-                      {s}
+                      {t(opt.label_key)}
                     </button>
                   );
                 })}
@@ -246,18 +265,18 @@ export default function Onboarding() {
                 {t("onboarding.interests_cuisine")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {CUISINE_OPTIONS.map((c) => {
-                  const sel = cuisine.includes(c);
+                {CUISINE_OPTIONS.map((opt) => {
+                  const sel = cuisine.includes(opt.id);
                   return (
                     <button
-                      key={c}
+                      key={opt.id}
                       type="button"
-                      onClick={() => toggleArr(cuisine, c, setCuisine)}
+                      onClick={() => toggleArr(cuisine, opt.id, setCuisine)}
                       className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
                         sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                       }`}
                     >
-                      {c}
+                      {t(opt.label_key)}
                     </button>
                   );
                 })}
@@ -270,18 +289,18 @@ export default function Onboarding() {
                 {t("onboarding.interests_dress")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {DRESS_OPTIONS.map((d) => {
-                  const sel = dressCode.includes(d);
+                {DRESS_OPTIONS.map((opt) => {
+                  const sel = dressCode.includes(opt.id);
                   return (
                     <button
-                      key={d}
+                      key={opt.id}
                       type="button"
-                      onClick={() => toggleArr(dressCode, d, setDressCode)}
-                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all capitalize ${
+                      onClick={() => toggleArr(dressCode, opt.id, setDressCode)}
+                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
                         sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
                       }`}
                     >
-                      {d}
+                      {t(opt.label_key)}
                     </button>
                   );
                 })}

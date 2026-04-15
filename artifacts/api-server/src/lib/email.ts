@@ -20,7 +20,8 @@ function createTransport() {
   return null;
 }
 
-const APP_URL = process.env.APP_URL ?? "https://sowiso.replit.app";
+const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/$/, "");
+const APP_URL = process.env.APP_URL ?? `https://sowiso.replit.app${BASE_PATH}`;
 const FROM_ADDRESS = process.env.SMTP_FROM ?? "noreply@sowiso.app";
 const FROM_NAME = "SOWISO";
 

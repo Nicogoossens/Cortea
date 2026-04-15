@@ -8,7 +8,8 @@ import { sendActivationEmail } from "../lib/email";
 
 const router = Router();
 
-const APP_URL = process.env.APP_URL ?? "https://sowiso.replit.app";
+const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/$/, "");
+const APP_URL = process.env.APP_URL ?? `https://sowiso.replit.app${BASE_PATH}`;
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");

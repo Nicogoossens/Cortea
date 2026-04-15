@@ -156,6 +156,12 @@ export interface CultureCompassEntry {
   flag_emoji: string;
 }
 
+export type CultureCompassDetailMehrabianWeight = {
+  nonverbal: number;
+  tone: number;
+  words: number;
+};
+
 export interface CultureCompassDetail {
   region_code: string;
   region_name: string;
@@ -168,6 +174,7 @@ export interface CultureCompassDetail {
   dress_code: string;
   dos: string[];
   donts: string[];
+  mehrabian_weight?: CultureCompassDetailMehrabianWeight;
 }
 
 export interface ScenarioOption {
@@ -298,13 +305,6 @@ export type GetScenariosParams = {
   difficulty_max?: number;
   age_group?: GetScenariosAgeGroup;
   limit?: number;
-  /** BCP-47 language code — server resolves title and content to this locale */
-  lang?: string;
-};
-
-export type GetScenarioParams = {
-  /** BCP-47 language code — server resolves title and content to this locale */
-  lang?: string;
 };
 
 export type GetScenariosAgeGroup =

@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile } from "@workspace/db";
+import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -222,7 +222,7 @@ function updateBehaviorProfile(
   current: BehaviorProfile,
   boltonCluster: number | null | undefined,
   isCorrect: boolean,
-  selectedOptionIndex: number,
+  behaviorSignal: string | null | undefined,
 ): BehaviorProfile {
   const profile: BehaviorProfile = JSON.parse(JSON.stringify(current));
   const delta = isCorrect ? 4 : -3;
@@ -233,19 +233,18 @@ function updateBehaviorProfile(
     profile.eq_dimensions.social_skill = clamp(profile.eq_dimensions.social_skill + Math.round(delta * 0.5));
   } else if (boltonCluster === 2) {
     profile.eq_dimensions.self_regulation = clamp(profile.eq_dimensions.self_regulation + delta);
-    if (isCorrect) {
-      profile.assertiveness_style = "assertive";
-    } else {
-      const styles: BehaviorProfile["assertiveness_style"][] = ["passive", "aggressive", "passive_aggressive"];
-      profile.assertiveness_style = styles[selectedOptionIndex % 3] ?? "passive";
-    }
+    const assertivenessSignals: BehaviorProfile["assertiveness_style"][] = ["assertive", "passive", "aggressive", "passive_aggressive"];
+    const resolvedStyle = behaviorSignal && assertivenessSignals.includes(behaviorSignal as BehaviorProfile["assertiveness_style"])
+      ? (behaviorSignal as BehaviorProfile["assertiveness_style"])
+      : isCorrect ? "assertive" : "passive";
+    profile.assertiveness_style = resolvedStyle;
   } else if (boltonCluster === 3) {
     profile.eq_dimensions.empathy = clamp(profile.eq_dimensions.empathy + delta);
-    if (isCorrect) {
-      profile.conflict_mode = "collaborate";
-    } else {
-      profile.conflict_mode = selectedOptionIndex % 2 === 0 ? "avoid" : "compete";
-    }
+    const conflictSignals: BehaviorProfile["conflict_mode"][] = ["collaborate", "avoid", "compete", "accommodate"];
+    const resolvedMode = behaviorSignal && conflictSignals.includes(behaviorSignal as BehaviorProfile["conflict_mode"])
+      ? (behaviorSignal as BehaviorProfile["conflict_mode"])
+      : isCorrect ? "collaborate" : "avoid";
+    profile.conflict_mode = resolvedMode;
   } else {
     profile.eq_dimensions.social_skill = clamp(profile.eq_dimensions.social_skill + Math.round(delta * 0.5));
     profile.nonverbal_awareness = clamp(profile.nonverbal_awareness + Math.round(delta * 0.3));
@@ -324,11 +323,13 @@ router.post("/noble-score/submit", async (req, res) => {
 
       if (user) {
         const currentProfile: BehaviorProfile = (user as { behavior_profile?: BehaviorProfile | null }).behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE;
+        const scenarioContent = scenario.content_json as ScenarioContent | null;
+        const behaviorSignal = scenarioContent?.options?.[selected_option_index]?.behavior_signal ?? null;
         const updatedProfile = updateBehaviorProfile(
           currentProfile,
           (scenario as { bolton_cluster?: number | null }).bolton_cluster,
           isCorrect,
-          selected_option_index,
+          behaviorSignal,
         );
         await db.update(usersTable)
           .set({ noble_score: newTotalScore, behavior_profile: updatedProfile })

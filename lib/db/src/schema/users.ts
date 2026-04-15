@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, json, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, json, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,7 +12,7 @@ export interface EQDimensions {
 export interface BehaviorProfile {
   listening_score: number;
   assertiveness_style: "assertive" | "passive" | "aggressive" | "passive_aggressive";
-  conflict_mode: "avoid" | "compete" | "collaborate";
+  conflict_mode: "avoid" | "compete" | "collaborate" | "accommodate";
   eq_dimensions: EQDimensions;
   nonverbal_awareness: number;
 }
@@ -68,7 +68,7 @@ export const usersTable = pgTable("users", {
   subscription_status: text("subscription_status").notNull().default("active"),
   trial_ends_at: timestamp("trial_ends_at"),
   // Behavioral psychology layer (Bolton + Goleman + Mehrabian)
-  behavior_profile: json("behavior_profile").$type<BehaviorProfile>(),
+  behavior_profile: jsonb("behavior_profile").$type<BehaviorProfile>(),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

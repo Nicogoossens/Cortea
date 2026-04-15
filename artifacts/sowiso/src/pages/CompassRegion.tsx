@@ -196,6 +196,38 @@ export default function CompassRegion() {
         </div>
       </div>
 
+      {/* Communication Presence — Mehrabian cultural calibration */}
+      {detail.mehrabian_weight && (
+        <section aria-labelledby="communication-presence-heading" className="space-y-5 pt-2">
+          <h2 id="communication-presence-heading" className="font-serif text-2xl border-b border-border pb-2">
+            {t("compass.communication_presence")}
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {t("compass.communication_presence_note")}
+          </p>
+          <div className="space-y-4">
+            {[
+              { label: t("compass.presence_nonverbal"), value: detail.mehrabian_weight.nonverbal },
+              { label: t("compass.presence_tone"), value: detail.mehrabian_weight.tone },
+              { label: t("compass.presence_words"), value: detail.mehrabian_weight.words },
+            ].map(({ label, value }) => (
+              <div key={label} className="space-y-1.5">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm font-medium text-foreground/80">{label}</span>
+                  <span className="text-sm font-mono text-primary tabular-nums">{value}%</span>
+                </div>
+                <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden" role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+                  <div
+                    className="h-full bg-primary/70 rounded-full transition-all duration-500"
+                    style={{ width: `${value}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Full dos and don'ts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8">
         <div className="space-y-4">

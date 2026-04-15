@@ -5,6 +5,7 @@
  * SOWISO Etiquette API
  * OpenAPI spec version: 0.1.0
  */
+import type { CultureCompassDetailMehrabianWeight } from "./cultureCompassDetailMehrabianWeight";
 
 export interface CultureCompassDetail {
   region_code: string;
@@ -18,4 +19,5 @@ export interface CultureCompassDetail {
   dress_code: string;
   dos: string[];
   donts: string[];
+  mehrabian_weight?: CultureCompassDetailMehrabianWeight;
 }

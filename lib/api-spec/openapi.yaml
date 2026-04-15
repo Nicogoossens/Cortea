@@ -650,6 +650,19 @@ components:
           type: array
           items:
             type: string
+        mehrabian_weight:
+          type: object
+          properties:
+            nonverbal:
+              type: number
+            tone:
+              type: number
+            words:
+              type: number
+          required:
+            - nonverbal
+            - tone
+            - words
       required:
         - region_code
         - region_name

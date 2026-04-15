@@ -10,6 +10,7 @@ export * from "./answerResult";
 export * from "./createProfileBody";
 export * from "./createProfileBodyAmbitionLevel";
 export * from "./cultureCompassDetail";
+export * from "./cultureCompassDetailMehrabianWeight";
 export * from "./cultureCompassEntry";
 export * from "./cultureProtocol";
 export * from "./cultureProtocolContext";

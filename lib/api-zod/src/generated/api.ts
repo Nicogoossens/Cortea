@@ -271,6 +271,13 @@ export const GetCultureCompassRegionResponse = zod.object({
   dress_code: zod.string(),
   dos: zod.array(zod.string()),
   donts: zod.array(zod.string()),
+  mehrabian_weight: zod
+    .object({
+      nonverbal: zod.number(),
+      tone: zod.number(),
+      words: zod.number(),
+    })
+    .optional(),
 });
 
 /**

@@ -349,6 +349,9 @@ const ScenarioImportSchema = z.object({
   difficulty_level: z.number().int().min(1).max(5).default(1),
   estimated_minutes: z.number().int().min(1).max(60).default(5),
   noble_score_impact: z.number().int().min(1).max(20).default(5),
+  bolton_cluster: z.number().int().min(1).max(3).nullable().optional(),
+  behavioral_tags: z.array(z.string()).optional().default([]),
+  correction_style: z.string().nullable().optional(),
   content_json: z.object({
     situation: z.string().min(1),
     question: z.string().min(1),
@@ -356,6 +359,7 @@ const ScenarioImportSchema = z.object({
       text: z.string().min(1),
       correct: z.boolean(),
       explanation: z.string().min(1),
+      behavior_signal: z.string().optional(),
     })).min(2).max(6),
   }),
 });

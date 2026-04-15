@@ -3,11 +3,10 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { TIER_FEATURES, getTierFeatures, type SubscriptionTier } from "../lib/tier-features";
-import { getUncachableStripeClient, getStripeSync } from "../stripeClient";
+import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { getUncachableStripeClient } from "../stripeClient";
 
 const router = Router();
-
-const DEFAULT_USER_ID = "default-user";
 
 router.get("/subscription/tiers", async (_req, res) => {
   const tiers = Object.values(TIER_FEATURES).map((tf) => ({
@@ -25,6 +24,11 @@ router.get("/subscription/tiers", async (_req, res) => {
   return res.json(tiers);
 });
 
+/**
+ * Returns available paid plans from Stripe.
+ * Returns an empty array (not an error) when Stripe is not yet configured —
+ * the Membership page gracefully renders static tier cards with no live prices.
+ */
 router.get("/subscription/plans", async (_req, res) => {
   try {
     const stripe = await getUncachableStripeClient();
@@ -53,15 +57,14 @@ router.get("/subscription/plans", async (_req, res) => {
     }
 
     return res.json(plans);
-  } catch (err) {
-    console.error("Failed to fetch plans:", err);
-    return res.status(500).json({ message: "Plans are momentarily unavailable." });
+  } catch {
+    return res.json([]);
   }
 });
 
-router.post("/subscription/checkout", async (req, res) => {
+router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
     const { priceId } = req.body as { priceId?: string };
 
     if (!priceId) {
@@ -75,7 +78,7 @@ router.post("/subscription/checkout", async (req, res) => {
 
     const stripe = await getUncachableStripeClient();
 
-    let customerId: string | undefined = (user as any).stripe_customer_id;
+    let customerId: string | undefined = user.stripe_customer_id ?? undefined;
     if (!customerId) {
       const customer = await stripe.customers.create({ metadata: { userId } });
       customerId = customer.id;
@@ -96,9 +99,7 @@ router.post("/subscription/checkout", async (req, res) => {
       success_url: `${baseUrl}/?upgrade=success`,
       cancel_url: `${baseUrl}/membership`,
       metadata: { userId },
-      subscription_data: {
-        metadata: { userId },
-      },
+      subscription_data: { metadata: { userId } },
     });
 
     return res.json({ url: session.url });
@@ -108,12 +109,12 @@ router.post("/subscription/checkout", async (req, res) => {
   }
 });
 
-router.post("/subscription/portal", async (req, res) => {
+router.post("/subscription/portal", requireAuthUser, async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    const customerId = (user as any)?.stripe_customer_id;
+    const customerId = user?.stripe_customer_id;
 
     if (!customerId) {
       return res.status(404).json({ message: "No billing record found for this account." });
@@ -136,9 +137,9 @@ router.post("/subscription/portal", async (req, res) => {
   }
 });
 
-router.get("/subscription/features", async (req, res) => {
+router.get("/subscription/features", requireAuthUser, async (req, res) => {
   try {
-    const userId = (req.query.user_id as string) || DEFAULT_USER_ID;
+    const userId = getResolvedUserId(req);
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
@@ -146,7 +147,7 @@ router.get("/subscription/features", async (req, res) => {
     }
 
     return res.json(getTierFeatures(user.subscription_tier as SubscriptionTier));
-  } catch (err) {
+  } catch {
     return res.status(500).json({ message: "Unable to retrieve subscription features." });
   }
 });

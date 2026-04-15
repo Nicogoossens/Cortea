@@ -93,7 +93,7 @@ export default function Membership() {
   useEffect(() => {
     fetch(`${API_BASE}/api/subscription/plans`)
       .then((r) => r.json())
-      .then((data: Plan[]) => setPlans(data))
+      .then((data: unknown) => setPlans(Array.isArray(data) ? (data as Plan[]) : []))
       .catch(() => setPlans([]))
       .finally(() => setPlansLoading(false));
   }, []);

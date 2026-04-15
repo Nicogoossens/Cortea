@@ -77,11 +77,11 @@ app.post(
         }
       }
 
-      res.status(200).json({ received: true });
+      return res.status(200).json({ received: true });
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : "Unknown error";
       logger.error({ err: error }, "Webhook error");
-      res.status(400).json({ error: "Webhook processing error" });
+      return res.status(400).json({ error: "Webhook processing error" });
     }
   }
 );

@@ -1,12 +1,12 @@
 import nodemailer from "nodemailer";
 import { logger } from "./logger";
 
-function hasSmtpConfig(): boolean {
+export function isSmtpConfigured(): boolean {
   return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
 function createTransport() {
-  if (hasSmtpConfig()) {
+  if (isSmtpConfigured()) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT ?? "587", 10),
@@ -132,7 +132,16 @@ export interface SendActivationEmailOptions {
   locale?: string;
 }
 
-export async function sendActivationEmail({ to, token, locale = "en" }: SendActivationEmailOptions): Promise<void> {
+export interface SendActivationEmailResult {
+  sent: boolean;
+  url: string;
+}
+
+export async function sendActivationEmail({
+  to,
+  token,
+  locale = "en",
+}: SendActivationEmailOptions): Promise<SendActivationEmailResult> {
   const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
   const html = buildActivationEmailHtml(verificationUrl, locale);
 
@@ -158,34 +167,24 @@ export async function sendActivationEmail({ to, token, locale = "en" }: SendActi
     try {
       await transport.sendMail(mailOptions);
       logger.info({ to, token: token.slice(0, 8) + "…" }, "Activation email sent via SMTP");
+      return { sent: true, url: verificationUrl };
     } catch (err) {
       logger.error({ err, to }, "Failed to send activation email via SMTP");
       throw err;
     }
-  } else if (process.env.NODE_ENV === "development") {
-    logger.info(
-      {
-        mode: "console",
-        to,
-        subject: mailOptions.subject,
-        verificationUrl,
-        token,
-      },
-      "SMTP not configured — activation email logged to console (development only)"
+  } else {
+    logger.warn(
+      { to, subject: mailOptions.subject, url: verificationUrl },
+      "SMTP not configured — activation email could not be delivered. Returning verification URL in response."
     );
     console.log("\n" + "=".repeat(70));
-    console.log("  SOWISO ACTIVATION EMAIL (development — no SMTP configured)");
+    console.log("  SOWISO ACTIVATION EMAIL (SMTP not configured)");
     console.log("=".repeat(70));
     console.log(`  To:      ${to}`);
     console.log(`  Subject: ${mailOptions.subject}`);
     console.log(`  Link:    ${verificationUrl}`);
     console.log(`  Token:   ${token}`);
     console.log("=".repeat(70) + "\n");
-  } else {
-    logger.error(
-      { to, subject: mailOptions.subject },
-      "SMTP not configured — activation email could not be delivered. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables."
-    );
-    throw new Error("Email delivery is not configured. Contact the administrator.");
+    return { sent: false, url: verificationUrl };
   }
 }

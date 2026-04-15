@@ -18,7 +18,7 @@ import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
 import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
-import { levelKey, pillarDomainKey } from "@/lib/content-labels";
+import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
 import { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
@@ -929,7 +929,7 @@ export default function Profile() {
                     <div className="text-xs text-muted-foreground uppercase tracking-widest mt-1">{t("atelier.pillar")} {pillar.pillar}</div>
                   </div>
                   <div className="flex-1 space-y-1">
-                    <span className="font-serif italic text-foreground/80 text-sm">{pillar.current_title}</span>
+                    <span className="font-serif italic text-foreground/80 text-sm">{t(pillarTitleKey(pillar.current_title))}</span>
                     <div
                       className="h-1 w-full bg-muted rounded-full overflow-hidden"
                       role="progressbar"
@@ -941,7 +941,7 @@ export default function Profile() {
                     </div>
                     {pillar.next_title && (
                       <div className="text-[10px] text-right text-muted-foreground uppercase tracking-wider">
-                        {t("profile.next")}: {pillar.next_title}
+                        {t("profile.next")}: {t(pillarTitleKey(pillar.next_title))}
                       </div>
                     )}
                   </div>

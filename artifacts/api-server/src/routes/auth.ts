@@ -20,11 +20,6 @@ function tokenExpiresAt(): Date {
   return d;
 }
 
-function devUrl(token: string): string | undefined {
-  if (process.env.NODE_ENV !== "development") return undefined;
-  return `${APP_URL}/verify-email?token=${token}`;
-}
-
 const RegisterBodySchema = z.object({
   email: z.string().email(),
   full_name: z.string().min(2).max(120),
@@ -76,10 +71,10 @@ router.post("/auth/register", async (req, res) => {
         })
         .where(eq(usersTable.id, existing[0].id));
 
-      await sendActivationEmail({ to: normalizedEmail, token, locale });
+      const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
       return res.json({
         message: "A new verification link has been dispatched to your address.",
-        ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+        ...(!sent ? { dev_verification_url: url } : {}),
       });
     }
 
@@ -104,12 +99,12 @@ router.post("/auth/register", async (req, res) => {
       })
       .returning();
 
-    await sendActivationEmail({ to: normalizedEmail, token, locale });
+    const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
 
     return res.status(201).json({
       message: "Your account has been established. A verification link has been dispatched to your address.",
       user_id: newUser.id,
-      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+      ...(!sent ? { dev_verification_url: url } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Registration failed");
@@ -141,7 +136,6 @@ router.get("/auth/verify", async (req, res) => {
     }
 
     if (user.email_verified) {
-      // Issue a fresh session token on re-verification of an already-verified address.
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable).set({ session_token: refreshedToken }).where(eq(usersTable.id, user.id));
       return res.json({
@@ -220,11 +214,11 @@ router.post("/auth/resend", async (req, res) => {
       .set({ verification_token: token, token_expires_at: expiresAt })
       .where(eq(usersTable.id, user.id));
 
-    await sendActivationEmail({ to: normalizedEmail, token, locale });
+    const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
 
     return res.json({
       message: "A new verification link has been dispatched to your address.",
-      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+      ...(!sent ? { dev_verification_url: url } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Resend verification failed");
@@ -270,11 +264,11 @@ router.post("/auth/signin", async (req, res) => {
       .set({ verification_token: token, token_expires_at: expiresAt })
       .where(eq(usersTable.id, user.id));
 
-    await sendActivationEmail({ to: normalizedEmail, token, locale: user.language_code });
+    const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale: user.language_code });
 
     return res.json({
       message: "A sign-in link has been dispatched to your address.",
-      ...(devUrl(token) ? { dev_verification_url: devUrl(token) } : {}),
+      ...(!sent ? { dev_verification_url: url } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Sign-in failed");

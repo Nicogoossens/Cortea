@@ -287,6 +287,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Return to Atelier",
     "scenario.pillar": "Pillar",
     "scenario.confirm": "Confirm Decision",
+
+    "accessibility.title": "Accessibility",
+    "accessibility.high_contrast": "High Contrast",
+    "accessibility.font_size": "Text Size",
+    "accessibility.font_normal": "Normal",
+    "accessibility.font_large": "Large",
+    "accessibility.font_xl": "Extra Large",
+
     "scenario.submitting": "Submitting…",
     "scenario.mentor_counsel": "The Mentor's Counsel",
     "scenario.impact": "Impact",
@@ -673,6 +681,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Terug naar Atelier",
     "scenario.pillar": "Pijler",
     "scenario.confirm": "Bevestig Beslissing",
+
+    "accessibility.title": "Toegankelijkheid",
+    "accessibility.high_contrast": "Hoog Contrast",
+    "accessibility.font_size": "Tekstgrootte",
+    "accessibility.font_normal": "Normaal",
+    "accessibility.font_large": "Groot",
+    "accessibility.font_xl": "Extra Groot",
+
     "scenario.submitting": "Indienen…",
     "scenario.mentor_counsel": "De Raad van de Mentor",
     "scenario.impact": "Impact",
@@ -1081,6 +1097,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Retour à l'Atelier",
     "scenario.pillar": "Pilier",
     "scenario.confirm": "Confirmer la Décision",
+
+    "accessibility.title": "Accessibilité",
+    "accessibility.high_contrast": "Contraste élevé",
+    "accessibility.font_size": "Taille du texte",
+    "accessibility.font_normal": "Normale",
+    "accessibility.font_large": "Grande",
+    "accessibility.font_xl": "Très grande",
+
     "scenario.submitting": "Envoi en cours…",
     "scenario.mentor_counsel": "Le Conseil du Mentor",
     "scenario.impact": "Impact",
@@ -1493,6 +1517,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Zurück zum Atelier",
     "scenario.pillar": "Säule",
     "scenario.confirm": "Entscheidung bestätigen",
+
+    "accessibility.title": "Barrierefreiheit",
+    "accessibility.high_contrast": "Hoher Kontrast",
+    "accessibility.font_size": "Textgröße",
+    "accessibility.font_normal": "Normal",
+    "accessibility.font_large": "Groß",
+    "accessibility.font_xl": "Sehr groß",
+
     "scenario.submitting": "Wird übermittelt…",
     "scenario.mentor_counsel": "Der Rat des Mentors",
     "scenario.impact": "Einfluss",
@@ -1904,6 +1936,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Volver al Atelier",
     "scenario.pillar": "Pilar",
     "scenario.confirm": "Confirmar Decisión",
+
+    "accessibility.title": "Accesibilidad",
+    "accessibility.high_contrast": "Alto contraste",
+    "accessibility.font_size": "Tamaño de texto",
+    "accessibility.font_normal": "Normal",
+    "accessibility.font_large": "Grande",
+    "accessibility.font_xl": "Extra grande",
+
     "scenario.submitting": "Enviando…",
     "scenario.mentor_counsel": "El Consejo del Mentor",
     "scenario.impact": "Impacto",
@@ -2316,6 +2356,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Voltar ao Atelier",
     "scenario.pillar": "Pilar",
     "scenario.confirm": "Confirmar Decisão",
+
+    "accessibility.title": "Acessibilidade",
+    "accessibility.high_contrast": "Alto contraste",
+    "accessibility.font_size": "Tamanho do texto",
+    "accessibility.font_normal": "Normal",
+    "accessibility.font_large": "Grande",
+    "accessibility.font_xl": "Extra grande",
+
     "scenario.submitting": "A enviar…",
     "scenario.mentor_counsel": "O Conselho do Mentor",
     "scenario.impact": "Impacto",
@@ -2732,6 +2780,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "Torna all'Atelier",
     "scenario.pillar": "Pilastro",
     "scenario.confirm": "Conferma Decisione",
+
+    "accessibility.title": "Accessibilità",
+    "accessibility.high_contrast": "Alto contrasto",
+    "accessibility.font_size": "Dimensione del testo",
+    "accessibility.font_normal": "Normale",
+    "accessibility.font_large": "Grande",
+    "accessibility.font_xl": "Extra grande",
+
     "scenario.submitting": "Invio in corso…",
     "scenario.mentor_counsel": "Il Consiglio del Mentore",
     "scenario.impact": "Impatto",
@@ -3140,6 +3196,14 @@ const STATIC_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
     "scenario.return_atelier": "एटेलियर पर वापस",
     "scenario.pillar": "स्तंभ",
     "scenario.confirm": "निर्णय की पुष्टि करें",
+
+    "accessibility.title": "अभिगम्यता",
+    "accessibility.high_contrast": "उच्च विषमता",
+    "accessibility.font_size": "पाठ आकार",
+    "accessibility.font_normal": "सामान्य",
+    "accessibility.font_large": "बड़ा",
+    "accessibility.font_xl": "अति बड़ा",
+
     "scenario.submitting": "सबमिट हो रहा है…",
     "scenario.mentor_counsel": "मेंटर की सलाह",
     "scenario.impact": "प्रभाव",

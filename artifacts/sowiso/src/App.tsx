@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider, useLanguage } from "@/lib/i18n";
 import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { AccessibilityProvider } from "@/lib/accessibility";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
@@ -85,17 +86,19 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AuthTokenSync />
-        <LanguageProvider>
-          <AppWithRegion>
-            <TooltipProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-              </WouterRouter>
-              <RegionDetectionBanner />
-              <Toaster />
-            </TooltipProvider>
-          </AppWithRegion>
-        </LanguageProvider>
+        <AccessibilityProvider>
+          <LanguageProvider>
+            <AppWithRegion>
+              <TooltipProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <Router />
+                </WouterRouter>
+                <RegionDetectionBanner />
+                <Toaster />
+              </TooltipProvider>
+            </AppWithRegion>
+          </LanguageProvider>
+        </AccessibilityProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

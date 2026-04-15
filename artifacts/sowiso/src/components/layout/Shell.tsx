@@ -161,7 +161,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               )}
               <button
                 onClick={logout}
-                className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer w-full"
+                className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer w-full"
               >
                 <LogOut className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                 <span className="font-mono tracking-wide">{t("common.sign_out")}</span>
@@ -170,13 +170,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ) : (
             <>
               <Link href="/signin" className="block">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors cursor-pointer">
                   <LogIn className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                   <span className="font-mono tracking-wide">{t("signin.title")}</span>
                 </div>
               </Link>
               <Link href="/register" className="block">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
+                <div className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
                   <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
                   <span className="font-mono tracking-wide">{t("register.title")}</span>
                 </div>

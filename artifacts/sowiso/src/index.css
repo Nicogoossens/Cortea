@@ -184,6 +184,79 @@
   --chart-5: 40 15% 50%;
 }
 
+/* ── Font-size scaling for accessibility (55+) ───────────────────────────── */
+.font-scale-large {
+  font-size: 112.5%; /* 18px base */
+}
+.font-scale-xl {
+  font-size: 125%; /* 20px base */
+}
+
+/* ── High-contrast mode (WCAG 2.1 AA ≥ 4.5:1) ───────────────────────────── */
+.high-contrast {
+  /* Text and backgrounds */
+  --foreground: 150 40% 5%;
+  --background: 0 0% 100%;
+  --border: 150 30% 30%;
+  --input: 150 30% 75%;
+  --ring: 150 60% 15%;
+
+  /* Cards — pure white for max contrast against text */
+  --card: 0 0% 100%;
+  --card-foreground: 150 40% 5%;
+  --card-border: 150 30% 30%;
+
+  /* Muted — only slightly lighter than main foreground */
+  --muted: 0 0% 92%;
+  --muted-foreground: 150 30% 15%;
+
+  /* Primary — deep forest stays but much darker */
+  --primary: 150 60% 8%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary — rich brass stays legible */
+  --secondary: 38 80% 30%;
+  --secondary-foreground: 0 0% 100%;
+
+  /* Sidebar keeps dark background, but text becomes full white */
+  --sidebar: 150 50% 8%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 150 30% 20%;
+  --sidebar-accent: 150 40% 15%;
+  --sidebar-accent-foreground: 0 0% 100%;
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 150 40% 5%;
+  --popover-border: 150 30% 30%;
+
+  /* Accent */
+  --accent: 0 0% 88%;
+  --accent-foreground: 150 40% 5%;
+
+  /* Destructive */
+  --destructive: 0 80% 30%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+/* ── Minimum touch target enforcement (WCAG 2.5.5: 44×44px) ─────────────── */
+/* Apply to standalone interactive controls that may appear small visually.
+   We use a class-based approach to avoid layout issues with inline links. */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Buttons and inputs in forms always get 44px minimum height */
+@layer base {
+  button:not(.touch-target-skip),
+  input:not([type="checkbox"]):not([type="radio"]):not(.touch-target-skip),
+  select:not(.touch-target-skip),
+  textarea:not(.touch-target-skip) {
+    min-height: 44px;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

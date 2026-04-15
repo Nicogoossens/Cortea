@@ -707,7 +707,7 @@ export default function Admin() {
       const next = prev.filter((u) => u.id !== id);
       const newTotal = Math.max(0, totalUsers - 1);
       setTotalUsers(newTotal);
-      const newTotalPages = Math.max(1, Math.ceil(newTotal / 20));
+      const newTotalPages = Math.max(1, Math.ceil(newTotal / 50));
       setTotalPages(newTotalPages);
       if (next.length === 0 && currentPage > 1) {
         const prevPage = currentPage - 1;

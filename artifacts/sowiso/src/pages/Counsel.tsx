@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
@@ -26,6 +26,16 @@ const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
 const BASIC_FREE_DOMAINS: DomainKey[] = ["counsel.domains.dining"];
 
+const SITUATION_CHIPS_KEYS = [
+  "counsel.situation_chips.chinese_dinner",
+  "counsel.situation_chips.british_gala",
+  "counsel.situation_chips.arabic_reception",
+  "counsel.situation_chips.japanese_meeting",
+  "counsel.situation_chips.french_dinner",
+  "counsel.situation_chips.indian_wedding",
+  "counsel.situation_chips.yacht",
+] as const;
+
 function getStoredQuestionCount(userId: string | null): number {
   if (!userId) return 0;
   return parseInt(localStorage.getItem(`counsel_q_${userId}`) ?? "0", 10);
@@ -43,6 +53,7 @@ export default function Counsel() {
   const { result: qualityResult, checking: qualityChecking, check: checkQuality, reset: resetQuality } = useRegisterQuality(locale);
   const { data: profile } = useGetProfile();
   const { userId, isAuthenticated } = useAuth();
+  const search = useSearch();
 
   const regionActive = isRegionActive(activeRegion);
   const tier = profile?.subscription_tier ?? "guest";
@@ -71,6 +82,10 @@ export default function Counsel() {
   const effectiveRegion: RegionCode = sessionRegion ?? activeRegion;
   const isOverriding = sessionRegion !== null;
 
+  const prefilledSituation = new URLSearchParams(search).get("situation") ?? "";
+  const [situationContext, setSituationContext] = useState(prefilledSituation);
+  const [showSituationPanel, setShowSituationPanel] = useState(!!prefilledSituation);
+
   function isDomainAccessible(key: DomainKey): boolean {
     if (hasFullAccess) return true;
     if (hasBasicAccess && !basicLimitReached) return BASIC_FREE_DOMAINS.includes(key);
@@ -93,6 +108,7 @@ export default function Counsel() {
           query: query.trim() || undefined,
           domain: domainLabel,
           region_code: effectiveRegion,
+          situation: situationContext.trim() || undefined,
         }),
       });
 
@@ -124,6 +140,11 @@ export default function Counsel() {
     resetQuality();
   };
 
+  const handleClearSituation = () => {
+    setSituationContext("");
+    setShowSituationPanel(false);
+  };
+
   const canSubmit = selectedDomain
     ? isDomainAccessible(selectedDomain) && (query.trim().length > 0 || selectedDomain !== null)
     : false;
@@ -140,6 +161,77 @@ export default function Counsel() {
         <p className="text-muted-foreground text-lg font-light leading-relaxed max-w-2xl mx-auto">
           {t("counsel.subtitle")}
         </p>
+      </div>
+
+      {/* ── Pre-Session Context Mode ── */}
+      <div className="space-y-3">
+        <button
+          onClick={() => setShowSituationPanel((v) => !v)}
+          className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-sm border text-left transition-all group ${
+            situationContext
+              ? "border-primary/40 bg-primary/5"
+              : "border-border/50 hover:border-primary/30 hover:bg-muted/20"
+          }`}
+          aria-expanded={showSituationPanel}
+        >
+          <CalendarCheck className={`w-4 h-4 flex-shrink-0 ${situationContext ? "text-primary" : "text-muted-foreground/60"}`} aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className={`text-xs font-mono uppercase tracking-widest ${situationContext ? "text-primary" : "text-muted-foreground/70"}`}>
+              {situationContext ? t("counsel.situation_active") : t("counsel.situation_mode")}
+            </p>
+            {situationContext && (
+              <p className="text-sm text-foreground/80 mt-0.5 truncate">{situationContext}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {situationContext && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleClearSituation(); }}
+                className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/50 hover:text-destructive transition-colors"
+                aria-label={t("counsel.situation_clear")}
+              >
+                <X className="w-3 h-3" aria-hidden="true" />
+                {t("counsel.situation_clear")}
+              </button>
+            )}
+            <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${showSituationPanel ? "rotate-180" : ""}`} aria-hidden="true" />
+          </div>
+        </button>
+
+        {showSituationPanel && (
+          <div className="border border-border/50 rounded-sm bg-muted/10 p-4 space-y-3 animate-in fade-in duration-200">
+            <label className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 block">
+              {t("counsel.situation_label")}
+            </label>
+            <textarea
+              rows={2}
+              placeholder={t("counsel.situation_placeholder")}
+              value={situationContext}
+              onChange={(e) => setSituationContext(e.target.value)}
+              className="w-full resize-none bg-background border border-border/60 focus:border-primary/50 rounded-sm px-3 py-2 text-sm outline-none transition-colors"
+            />
+            <div className="flex flex-wrap gap-2">
+              {SITUATION_CHIPS_KEYS.map((key) => {
+                const label = t(key as Parameters<typeof t>[0]);
+                const isActive = situationContext === label;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSituationContext(isActive ? "" : label)}
+                    className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground/50 font-mono">{t("counsel.situation_hint")}</p>
+          </div>
+        )}
       </div>
 
       {/* ── Domain Overview — always visible ── */}

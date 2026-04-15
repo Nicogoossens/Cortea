@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Layers } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -13,13 +13,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
 
   const navigation = [
-    { key: "nav.dashboard", href: "/",           icon: Landmark },
-    { key: "nav.atelier",   href: "/atelier",    icon: BookOpen },
-    { key: "nav.counsel",   href: "/counsel",    icon: Shield   },
-    { key: "nav.compass",   href: "/compass",    icon: Compass  },
-    { key: "nav.mirror",    href: "/mirror",     icon: Scan, ambassadorOnly: true },
-    { key: "nav.profile",   href: "/profile",    icon: User     },
-    { key: "nav.membership",href: "/membership", icon: Crown    },
+    { key: "nav.dashboard",   href: "/",            icon: Landmark },
+    { key: "nav.atelier",     href: "/atelier",     icon: BookOpen },
+    { key: "nav.counsel",     href: "/counsel",     icon: Shield   },
+    { key: "nav.compass",     href: "/compass",     icon: Compass  },
+    { key: "nav.situations",  href: "/situations",  icon: Layers   },
+    { key: "nav.mirror",      href: "/mirror",      icon: Scan, ambassadorOnly: true },
+    { key: "nav.profile",     href: "/profile",     icon: User     },
+    { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];
 
   const MAIN_CONTENT_ID = "main-content";

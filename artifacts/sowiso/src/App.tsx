@@ -20,6 +20,8 @@ import Scenario from "@/pages/Scenario";
 import Counsel from "@/pages/Counsel";
 import Compass from "@/pages/Compass";
 import CompassRegion from "@/pages/CompassRegion";
+import CompassCluster from "@/pages/CompassCluster";
+import Situations from "@/pages/Situations";
 import Profile from "@/pages/Profile";
 import Register from "@/pages/Register";
 import SignIn from "@/pages/SignIn";
@@ -148,7 +150,9 @@ function AppRouter() {
         <Route path="/atelier/:id" component={Scenario} />
         <Route path="/counsel" component={Counsel} />
         <Route path="/compass" component={Compass} />
+        <Route path="/compass/cluster/:id" component={CompassCluster} />
         <Route path="/compass/:code" component={CompassRegion} />
+        <Route path="/situations" component={Situations} />
         <Route path="/profile" component={Profile} />
         <Route path="/register" component={Register} />
         <Route path="/signin" component={SignIn} />

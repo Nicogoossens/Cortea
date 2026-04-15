@@ -316,6 +316,13 @@ export const GetScenariosAgeGroup = {
   "55+": "55+",
 } as const;
 
+export type GetScenarioParams = {
+  /**
+   * ISO 639-1 language code for scenario content localization
+   */
+  lang?: string;
+};
+
 export type GetNobleScoreLogParams = {
   limit?: number;
 };

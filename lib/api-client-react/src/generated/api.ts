@@ -27,6 +27,7 @@ import type {
   GetCultureCompassRegionParams,
   GetCultureProtocolsParams,
   GetNobleScoreLogParams,
+  GetScenarioParams,
   GetScenariosParams,
   GetTranslations200,
   GetTranslationsParams,
@@ -956,22 +957,41 @@ export function useGetScenarios<
 /**
  * @summary Get a specific scenario by ID
  */
-export const getGetScenarioUrl = (scenarioId: number) => {
-  return `/api/scenarios/${scenarioId}`;
+export const getGetScenarioUrl = (
+  scenarioId: number,
+  params?: GetScenarioParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/scenarios/${scenarioId}?${stringifiedParams}`
+    : `/api/scenarios/${scenarioId}`;
 };
 
 export const getScenario = async (
   scenarioId: number,
+  params?: GetScenarioParams,
   options?: RequestInit,
 ): Promise<Scenario> => {
-  return customFetch<Scenario>(getGetScenarioUrl(scenarioId), {
+  return customFetch<Scenario>(getGetScenarioUrl(scenarioId, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetScenarioQueryKey = (scenarioId: number) => {
-  return [`/api/scenarios/${scenarioId}`] as const;
+export const getGetScenarioQueryKey = (
+  scenarioId: number,
+  params?: GetScenarioParams,
+) => {
+  return [`/api/scenarios/${scenarioId}`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetScenarioQueryOptions = <
@@ -979,6 +999,7 @@ export const getGetScenarioQueryOptions = <
   TError = ErrorType<ErrorResponse>,
 >(
   scenarioId: number,
+  params?: GetScenarioParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getScenario>>,
@@ -990,11 +1011,12 @@ export const getGetScenarioQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetScenarioQueryKey(scenarioId);
+  const queryKey =
+    queryOptions?.queryKey ?? getGetScenarioQueryKey(scenarioId, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getScenario>>> = ({
     signal,
-  }) => getScenario(scenarioId, { signal, ...requestOptions });
+  }) => getScenario(scenarioId, params, { signal, ...requestOptions });
 
   return {
     queryKey,
@@ -1022,6 +1044,7 @@ export function useGetScenario<
   TError = ErrorType<ErrorResponse>,
 >(
   scenarioId: number,
+  params?: GetScenarioParams,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getScenario>>,
@@ -1031,7 +1054,7 @@ export function useGetScenario<
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetScenarioQueryOptions(scenarioId, options);
+  const queryOptions = getGetScenarioQueryOptions(scenarioId, params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

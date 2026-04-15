@@ -21,6 +21,7 @@ export * from "./getCultureCompassRegionParams";
 export * from "./getCultureProtocolsContext";
 export * from "./getCultureProtocolsParams";
 export * from "./getNobleScoreLogParams";
+export * from "./getScenarioParams";
 export * from "./getScenariosAgeGroup";
 export * from "./getScenariosParams";
 export * from "./getTranslations200";

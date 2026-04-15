@@ -341,6 +341,13 @@ export const GetScenarioParams = zod.object({
   scenarioId: zod.coerce.number(),
 });
 
+export const GetScenarioQueryParams = zod.object({
+  lang: zod.coerce
+    .string()
+    .optional()
+    .describe("ISO 639-1 language code for scenario content localization"),
+});
+
 export const GetScenarioResponse = zod.object({
   id: zod.number(),
   title: zod.string(),

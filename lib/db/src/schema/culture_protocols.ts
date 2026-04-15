@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,7 +13,9 @@ export const cultureProtocolsTable = pgTable("culture_protocols", {
   source_reference: text("source_reference"),
   valid_from: timestamp("valid_from"),
   valid_until: timestamp("valid_until"),
-});
+}, (t) => [
+  unique("culture_protocols_region_pillar_rule_key").on(t.region_code, t.pillar, t.rule_type),
+]);
 
 export const insertCultureProtocolSchema = createInsertSchema(cultureProtocolsTable).omit({ id: true });
 export type InsertCultureProtocol = z.infer<typeof insertCultureProtocolSchema>;

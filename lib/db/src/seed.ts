@@ -831,24 +831,31 @@ const FLAG_FORCE = process.argv.includes("--force");
 async function seed() {
   console.log("Seeding SOWISO database (Atelier content)…");
 
-  // Skip if already populated (unless --force is passed)
-  if (!FLAG_FORCE) {
-    const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(scenariosTable);
-    if (count > 0) {
-      console.log(`  Scenarios table already has ${count} rows — skipping (use --force to reseed).`);
-      process.exit(0);
-    }
-  } else {
+  if (FLAG_FORCE) {
     // --force: clear and reseed (only safe in dev/staging with explicit intent)
     await db.execute(sql`TRUNCATE TABLE culture_protocols, scenarios RESTART IDENTITY CASCADE`);
-    console.log("  --force: tables cleared for reseed");
+    console.log("  --force: tables cleared for full reseed");
+    await db.insert(cultureProtocolsTable).values(protocols);
+    console.log(`  ${protocols.length} culture protocols inserted`);
+    await db.insert(scenariosTable).values(scenarios);
+    console.log(`  ${scenarios.length} scenarios inserted`);
+  } else {
+    // Idempotent upsert: insert rows that don't yet exist, keyed by natural unique constraints.
+    // New records added to seed data in future deploys will be inserted; existing rows are skipped.
+    const protocolResult = await db
+      .insert(cultureProtocolsTable)
+      .values(protocols)
+      .onConflictDoNothing({ target: [cultureProtocolsTable.region_code, cultureProtocolsTable.pillar, cultureProtocolsTable.rule_type] });
+    const protocolsAdded = protocolResult.rowCount ?? 0;
+    console.log(`  Culture protocols: ${protocolsAdded} new rows inserted (${protocols.length} total in seed, ${protocols.length - protocolsAdded} already present)`);
+
+    const scenarioResult = await db
+      .insert(scenariosTable)
+      .values(scenarios)
+      .onConflictDoNothing({ target: [scenariosTable.region_code, scenariosTable.pillar, scenariosTable.title] });
+    const scenariosAdded = scenarioResult.rowCount ?? 0;
+    console.log(`  Scenarios: ${scenariosAdded} new rows inserted (${scenarios.length} total in seed, ${scenarios.length - scenariosAdded} already present)`);
   }
-
-  await db.insert(cultureProtocolsTable).values(protocols);
-  console.log(`  ${protocols.length} culture protocols inserted (UK/CN/CA x 5 pillars x 5 rules each)`);
-
-  await db.insert(scenariosTable).values(scenarios);
-  console.log(`  ${scenarios.length} scenarios inserted (3 per pillar per region = 3 x 5 x 3 = 45)`);
 
   console.log("Atelier seed complete.");
   process.exit(0);

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, json, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -28,7 +28,9 @@ export const scenariosTable = pgTable("scenarios", {
   noble_score_impact: integer("noble_score_impact").notNull().default(5),
   content_json: json("content_json").$type<ScenarioContent>().notNull(),
   content_i18n: json("content_i18n").$type<Record<string, ScenarioContent>>(),
-});
+}, (t) => [
+  unique("scenarios_region_pillar_title_key").on(t.region_code, t.pillar, t.title),
+]);
 
 export const insertScenarioSchema = createInsertSchema(scenariosTable).omit({ id: true });
 export type InsertScenario = z.infer<typeof insertScenarioSchema>;

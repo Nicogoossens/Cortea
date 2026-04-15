@@ -21,4 +21,7 @@ node scripts/seed-translations.mjs
 echo "--- Ensuring admin account ---"
 node scripts/ensure-admin.mjs
 
+echo "--- Translating untranslated scenarios (skips already-translated rows) ---"
+node scripts/scenario-translate.mjs || echo "  Warning: scenario-translate encountered errors (non-fatal)"
+
 echo "=== Post-merge complete ==="

@@ -211,6 +211,7 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
 router.post("/admin/content/seed", requireAdmin, async (req, res) => {
   try {
     const results: string[] = [];
+    let anyFailed = false;
 
     const run = async (label: string, cmd: string) => {
       try {
@@ -224,6 +225,7 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         results.push(`[${label}] ERROR: ${msg}`);
+        anyFailed = true;
       }
     };
 
@@ -231,8 +233,9 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
     await run("Compass", "pnpm --filter db seed:compass");
     await run("Translations", "node scripts/seed-translations.mjs");
     await run("Admin", "node scripts/ensure-admin.mjs");
+    await run("Scenario Translations", "node scripts/scenario-translate.mjs");
 
-    return res.json({ ok: true, results });
+    return res.status(anyFailed ? 207 : 200).json({ ok: !anyFailed, results });
   } catch (err) {
     req.log?.error({ err }, "Admin: seed failed");
     return res.status(500).json({ error: "A difficulty arose triggering the seed." });

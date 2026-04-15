@@ -255,8 +255,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
       });
       const data = await res.json() as { ok: boolean; results: string[] };
       setSeedOutput(data.results ?? []);
-      setSeedState(res.ok ? "done" : "error");
-      if (res.ok) fetchStatus();
+      setSeedState(data.ok ? "done" : "error");
+      if (data.ok) fetchStatus();
     } catch (err) {
       setSeedOutput([String(err)]);
       setSeedState("error");

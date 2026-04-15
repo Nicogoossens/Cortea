@@ -72,7 +72,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
 
 function UserPreferencesSync() {
-  const { isAuthenticated, getAuthHeaders } = useAuth();
+  const { isAuthenticated, getAuthHeaders, login } = useAuth();
   const { locale, setLocale } = useLanguage();
   const { autoApplyAgeFont } = useAccessibility();
   const syncedRef = useRef<string | null>(null);
@@ -90,7 +90,7 @@ function UserPreferencesSync() {
     fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
       .then((r) => r.ok ? r.json() : null)
       .catch(() => null)
-      .then((profile: { language_code?: string; age_group?: string } | null) => {
+      .then((profile: { language_code?: string; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
         if (!profile) return;
 
         if (profile.language_code) {
@@ -106,8 +106,12 @@ function UserPreferencesSync() {
         if (profile.age_group && AGE_FONT_GROUPS.has(profile.age_group)) {
           autoApplyAgeFont("large");
         }
+
+        if (profile.is_admin !== undefined) {
+          login(profile.id ?? "", { isAdmin: profile.is_admin });
+        }
       });
-  }, [isAuthenticated, getAuthHeaders, locale, setLocale, autoApplyAgeFont]);
+  }, [isAuthenticated, getAuthHeaders, locale, setLocale, autoApplyAgeFont, login]);
 
   return null;
 }

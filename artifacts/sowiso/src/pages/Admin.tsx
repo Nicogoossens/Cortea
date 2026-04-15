@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
-  BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users,
+  BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -60,17 +60,39 @@ function TierBadge({ tier }: { tier: string }) {
 
 // ── User row ──────────────────────────────────────────────────────────────────
 
-function UserRow({ user, authHeaders, onUpdated }: {
+function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   user: AdminUser;
   authHeaders: Record<string, string>;
   onUpdated: (updated: AdminUser) => void;
+  onDeleted: (id: string) => void;
 }) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [actionState, setActionState] = useState<ActionState>("idle");
   const [tierValue, setTierValue] = useState(user.subscription_tier);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteState, setDeleteState] = useState<ActionState>("idle");
 
   const isSuspended = !!user.suspended_at;
+
+  async function deleteUser() {
+    setDeleteState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      if (res.ok) {
+        onDeleted(user.id);
+      } else {
+        setDeleteState("error");
+        setTimeout(() => setDeleteState("idle"), 2000);
+      }
+    } catch {
+      setDeleteState("error");
+      setTimeout(() => setDeleteState("idle"), 2000);
+    }
+  }
 
   async function patchUser(payload: Record<string, unknown>) {
     setActionState("loading");
@@ -210,6 +232,52 @@ function UserRow({ user, authHeaders, onUpdated }: {
             {actionState === "done" && <span className="text-xs text-green-600 font-mono flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />{t("admin.saved")}</span>}
             {actionState === "error" && <span className="text-xs text-destructive font-mono">{t("admin.error")}</span>}
           </div>
+
+          {/* Delete section */}
+          {!showDeleteConfirm ? (
+            <div className="pt-2 border-t border-border/30">
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-red-300/60 text-red-600/70 hover:bg-red-50 hover:text-red-700 hover:border-red-400"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Account
+              </Button>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-red-200/60 bg-red-50/50 rounded-sm p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800 font-mono">
+                  Permanently delete <strong>{user.full_name ?? user.email}</strong>? This cannot be undone. All their data, progress, and score history will be removed.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs gap-1.5 border-red-500 bg-red-600 text-white hover:bg-red-700"
+                  disabled={deleteState === "loading"}
+                  onClick={deleteUser}
+                >
+                  {deleteState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Confirm Delete
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs"
+                  disabled={deleteState === "loading"}
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                {deleteState === "error" && <span className="text-xs text-destructive font-mono flex items-center">Error — try again</span>}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -522,6 +590,10 @@ export default function Admin() {
     setUsers((prev) => prev.map((u) => u.id === updated.id ? updated : u));
   }
 
+  function handleUserDeleted(id: string) {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto py-24 text-center space-y-6">
@@ -620,6 +692,7 @@ export default function Admin() {
                       user={u}
                       authHeaders={authHeaders}
                       onUpdated={handleUserUpdated}
+                      onDeleted={handleUserDeleted}
                     />
                   ))}
                 </div>

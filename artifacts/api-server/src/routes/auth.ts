@@ -135,6 +135,10 @@ router.get("/auth/verify", async (req, res) => {
       return res.status(404).json({ error: "This verification link is not recognised." });
     }
 
+    if (user.suspended_at) {
+      return res.status(403).json({ error: "This account has been suspended. Please contact support." });
+    }
+
     if (user.email_verified) {
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable).set({ session_token: refreshedToken }).where(eq(usersTable.id, user.id));
@@ -254,6 +258,10 @@ router.post("/auth/signin", async (req, res) => {
       return res.status(400).json({
         error: "This address has not yet been verified. Please check your inbox for the verification link.",
       });
+    }
+
+    if (user.suspended_at) {
+      return res.status(403).json({ error: "This account has been suspended. Please contact support." });
     }
 
     const token = generateToken();

@@ -4,7 +4,7 @@ import { promisify } from "util";
 import path from "path";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, type CompassLocaleMap } from "@workspace/db";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap } from "@workspace/db";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
 import { z } from "zod";
 
@@ -160,6 +160,30 @@ router.patch("/admin/users/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Admin: failed to patch user");
     return res.status(500).json({ error: "A difficulty arose updating the user." });
+  }
+});
+
+/** DELETE /admin/users/:id — permanently remove a user and all their data */
+router.delete("/admin/users/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = String(req.params.id);
+    const requesterId = (req as Request & { resolvedUserId: string }).resolvedUserId;
+
+    if (id === requesterId) {
+      return res.status(400).json({ error: "An administrator may not delete their own account through this endpoint." });
+    }
+
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    if (!existing) return res.status(404).json({ error: "User not found." });
+
+    await db.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, id));
+    await db.delete(zuil_voortgangTable).where(eq(zuil_voortgangTable.user_id, id));
+    await db.delete(usersTable).where(eq(usersTable.id, id));
+
+    return res.json({ message: "The user's record has been permanently removed." });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to delete user");
+    return res.status(500).json({ error: "A difficulty arose deleting the user." });
   }
 });
 

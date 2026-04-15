@@ -310,6 +310,7 @@
   "admin.saved": "Guardado",
   "admin.error": "Erro",
   "nav.membership": "Associação",
+  "nav.mirror": "O Espelho",
   "counsel.session_override_label": "Para esta consulta",
   "counsel.session_override_change": "Utilizar região diferente",
   "counsel.session_override_reset": "Regressar à região do perfil",

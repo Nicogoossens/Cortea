@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage, ALL_LOCALES, SupportedLocale } from "@/l
 import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AccessibilityProvider, useAccessibility } from "@/lib/accessibility";
+import { PrivacyProvider } from "@/lib/privacy";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { useEffect, useRef } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
@@ -27,6 +28,7 @@ import Onboarding from "@/pages/Onboarding";
 import Admin from "@/pages/Admin";
 import Membership from "@/pages/Membership";
 import ReplitCallback from "@/pages/ReplitCallback";
+import Mirror from "@/pages/Mirror";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +140,7 @@ function Router() {
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/admin" component={Admin} />
         <Route path="/membership" component={Membership} />
+        <Route path="/mirror" component={Mirror} />
         <Route path="/replit-callback" component={ReplitCallback} />
         <Route component={NotFound} />
       </Switch>
@@ -150,6 +153,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AuthTokenSync />
+        <PrivacyProvider>
         <AccessibilityProvider>
           <LanguageProvider>
             <UserPreferencesSync />
@@ -164,6 +168,7 @@ function App() {
             </AppWithRegion>
           </LanguageProvider>
         </AccessibilityProvider>
+        </PrivacyProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2 } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -17,6 +17,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.atelier",   href: "/atelier",    icon: BookOpen },
     { key: "nav.counsel",   href: "/counsel",    icon: Shield   },
     { key: "nav.compass",   href: "/compass",    icon: Compass  },
+    { key: "nav.mirror",    href: "/mirror",     icon: Scan, ambassadorOnly: true },
     { key: "nav.profile",   href: "/profile",    icon: User     },
     { key: "nav.membership",href: "/membership", icon: Crown    },
   ];
@@ -60,7 +61,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <nav aria-label={t("nav.aria_label")} className="space-y-2">
             {navigation.map((item) => {
               const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-              const isMembership = item.href === "/membership";
+              const isGolden = item.href === "/membership" || ("ambassadorOnly" in item && item.ambassadorOnly);
               return (
                 <Link key={item.key} href={item.href}>
                   <div
@@ -70,7 +71,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     onKeyDown={(e) => { if (e.key === "Enter") setIsMobileMenuOpen(false); }}
                     aria-current={isActive ? "page" : undefined}
                     className={`flex items-center gap-3 px-4 py-3 rounded-sm transition-colors cursor-pointer ${
-                      isMembership
+                      isGolden
                         ? "text-amber-600/80 hover:bg-amber-500/10"
                         : isActive
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -147,13 +148,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto" aria-label={t("nav.aria_label")}>
           {navigation.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-            const isMembership = item.href === "/membership";
+            const isGolden = item.href === "/membership" || ("ambassadorOnly" in item && item.ambassadorOnly);
             return (
               <Link key={item.key} href={item.href} className="block">
                 <div
                   aria-current={isActive ? "page" : undefined}
                   className={`flex items-center gap-3 px-4 py-3 rounded-sm transition-all duration-200 ${
-                    isMembership
+                    isGolden
                       ? isActive
                         ? "bg-amber-500/15 text-amber-700 translate-x-2"
                         : "text-amber-600/70 hover:bg-amber-500/10 hover:text-amber-700 hover:translate-x-1"

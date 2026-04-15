@@ -1248,8 +1248,10 @@ async function seedCompass() {
 export { seedCompass as runCompassSeed };
 
 if (process.argv[1] && process.argv[1].includes("seed-compass.ts")) {
-  seedCompass().catch((err) => {
-    console.error("Compass seed failed:", err);
-    process.exit(1);
-  });
+  seedCompass()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("Compass seed failed:", err);
+      process.exit(1);
+    });
 }

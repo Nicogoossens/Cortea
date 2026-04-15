@@ -91,11 +91,14 @@ System prompts live in the `LOCALE_PROMPTS` object at the top of
 
 To add a new locale (e.g. Belgian Dutch `nl-BE`):
 
-1. Add a new `translationsTable` row with `language_code = "nl-BE"`.
+1. Ensure the translation rows have `language_code = "nl"` (the base language)
+   and `region_link = "nl-BE"` (the full locale tag). This is the schema convention:
+   `language_code` is always the base code; `region_link` carries the full locale.
 2. Add a `"nl-BE"` key to `LOCALE_PROMPTS` describing Belgian aristocratic norms
    (use of `u`, Flemish literary vocabulary, avoidance of Dutch-Netherlands
-   idioms, etc.).
-3. Run the worker with `--locale nl-BE`.
+   idioms, etc.). Optionally add `"nl-BE:high"` / `"nl-BE:medium"` variants.
+3. Run the worker with `--locale nl-BE` (full locale → filters `WHERE region_link = 'nl-BE'`,
+   leaving `nl-NL` rows untouched).
 
 ### Required environment variables
 
@@ -104,6 +107,18 @@ To add a new locale (e.g. Belgian Dutch `nl-BE`):
 | `DATABASE_URL` | PostgreSQL connection string |
 | `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` | Anthropic proxy base URL (auto-set by Replit) |
 | `AI_INTEGRATIONS_ANTHROPIC_API_KEY` | Anthropic proxy key (auto-set by Replit) |
+
+### Schema setup note
+
+The `quality_reviewed_at` column was added to `translations` via `pnpm run db:push`
+(Drizzle schema-push — this project does not use migration files). If deploying to a
+fresh database that has not received the push, run:
+
+```bash
+pnpm --filter @workspace/db run db:push
+```
+
+The column is nullable, so existing rows are not affected.
 
 ---
 

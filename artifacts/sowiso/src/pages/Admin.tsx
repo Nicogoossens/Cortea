@@ -72,6 +72,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   const [tierValue, setTierValue] = useState(user.subscription_tier);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteState, setDeleteState] = useState<ActionState>("idle");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const isSuspended = !!user.suspended_at;
 
@@ -202,7 +203,28 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               variant="outline"
               className={`font-mono text-xs gap-1.5 ${isSuspended ? "border-green-400/60 text-green-700 hover:bg-green-50" : "border-red-400/60 text-red-700 hover:bg-red-50"}`}
               disabled={actionState === "loading"}
-              onClick={() => patchUser({ suspended_at: isSuspended ? null : new Date().toISOString() })}
+              onClick={async () => {
+                setActionState("loading");
+                try {
+                  const endpoint = isSuspended ? "unsuspend" : "suspend";
+                  const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/${endpoint}`, {
+                    method: "PATCH",
+                    headers: authHeaders,
+                  });
+                  if (res.ok) {
+                    const updated = await res.json() as AdminUser;
+                    onUpdated(updated);
+                    setActionState("done");
+                    setTimeout(() => setActionState("idle"), 1500);
+                  } else {
+                    setActionState("error");
+                    setTimeout(() => setActionState("idle"), 2000);
+                  }
+                } catch {
+                  setActionState("error");
+                  setTimeout(() => setActionState("idle"), 2000);
+                }
+              }}
             >
               {isSuspended
                 ? <><CheckCircle2 className="w-3.5 h-3.5" />{t("admin.action_unsuspend")}</>
@@ -247,19 +269,30 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               </Button>
             </div>
           ) : (
-            <div className="pt-2 border-t border-red-200/60 bg-red-50/50 rounded-sm p-3 space-y-2">
+            <div className="pt-2 border-t border-red-200/60 bg-red-50/50 rounded-sm p-3 space-y-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-red-800 font-mono">
-                  Permanently delete <strong>{user.full_name ?? user.email}</strong>? This cannot be undone. All their data, progress, and score history will be removed.
+                  Permanently delete <strong>{user.full_name ?? user.email}</strong>? All data, progress, and score history will be removed. This cannot be undone.
                 </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-red-700 font-mono">Type <strong>DELETE</strong> to confirm:</p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  className="h-7 px-2 w-28 rounded-sm border border-red-300 bg-white text-xs font-mono text-red-800 placeholder:text-red-300 focus:outline-none focus:ring-1 focus:ring-red-400"
+                  autoComplete="off"
+                />
               </div>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="font-mono text-xs gap-1.5 border-red-500 bg-red-600 text-white hover:bg-red-700"
-                  disabled={deleteState === "loading"}
+                  className="font-mono text-xs gap-1.5 border-red-500 bg-red-600 text-white hover:bg-red-700 disabled:opacity-40"
+                  disabled={deleteState === "loading" || deleteConfirmText !== "DELETE"}
                   onClick={deleteUser}
                 >
                   {deleteState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -270,7 +303,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                   variant="outline"
                   className="font-mono text-xs"
                   disabled={deleteState === "loading"}
-                  onClick={() => setShowDeleteConfirm(false)}
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
                 >
                   Cancel
                 </Button>
@@ -561,14 +594,21 @@ export default function Admin() {
   const [searched, setSearched] = useState(false);
   const authHeaders = getAuthHeaders();
 
-  const fetchUsers = useCallback(async (q: string) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  const fetchUsers = useCallback(async (q: string, page = 1) => {
     setLoading(true);
     try {
-      const url = `${API_BASE}/api/admin/users?q=${encodeURIComponent(q)}&limit=50`;
+      const url = `${API_BASE}/api/admin/users?q=${encodeURIComponent(q)}&page=${page}&limit=50`;
       const res = await fetch(url, { headers: authHeaders });
       if (res.ok) {
-        const data = await res.json() as { users: AdminUser[] };
+        const data = await res.json() as { users: AdminUser[]; total: number; pages: number; page: number };
         setUsers(data.users);
+        setTotalPages(data.pages ?? 1);
+        setTotalUsers(data.total ?? 0);
+        setCurrentPage(data.page ?? 1);
       }
     } catch {
     } finally {
@@ -583,7 +623,7 @@ export default function Admin() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    fetchUsers(query);
+    fetchUsers(query, 1);
   }
 
   function handleUserUpdated(updated: AdminUser) {
@@ -675,9 +715,16 @@ export default function Admin() {
 
           {!loading && searched && (
             <div className="space-y-3">
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-                {t("admin.users_found", { n: users.length })}
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+                  {t("admin.users_found", { n: totalUsers })}
+                </p>
+                {totalPages > 1 && (
+                  <p className="text-xs font-mono text-muted-foreground">
+                    Page {currentPage} / {totalPages}
+                  </p>
+                )}
+              </div>
               {users.length === 0 ? (
                 <Card className="bg-card border-border">
                   <CardContent className="py-12 text-center">
@@ -695,6 +742,31 @@ export default function Admin() {
                       onDeleted={handleUserDeleted}
                     />
                   ))}
+                </div>
+              )}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs"
+                    disabled={currentPage <= 1 || loading}
+                    onClick={() => fetchUsers(query, currentPage - 1)}
+                  >
+                    ← Prev
+                  </Button>
+                  <span className="text-xs font-mono text-muted-foreground px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs"
+                    disabled={currentPage >= totalPages || loading}
+                    onClick={() => fetchUsers(query, currentPage + 1)}
+                  >
+                    Next →
+                  </Button>
                 </div>
               )}
             </div>

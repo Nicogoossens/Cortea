@@ -51,18 +51,28 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction): Pr
 
 const SearchQuerySchema = z.object({
   q: z.string().optional().default(""),
+  page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
-  offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
-/** GET /admin/users — list / search users */
+/** GET /admin/users — list / search users with true pagination */
 router.get("/admin/users", requireAdmin, async (req, res) => {
   try {
     const parsed = SearchQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid query parameters." });
     }
-    const { q, limit, offset } = parsed.data;
+    const { q, page, limit } = parsed.data;
+    const offset = (page - 1) * limit;
+
+    const whereClause = q
+      ? or(ilike(usersTable.email, `%${q}%`), ilike(usersTable.full_name, `%${q}%`))
+      : undefined;
+
+    const [totalRow] = await db
+      .select({ total: count() })
+      .from(usersTable)
+      .where(whereClause);
 
     const rows = await db
       .select({
@@ -82,19 +92,13 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
         onboarding_completed: usersTable.onboarding_completed,
       })
       .from(usersTable)
-      .where(
-        q
-          ? or(
-              ilike(usersTable.email, `%${q}%`),
-              ilike(usersTable.full_name, `%${q}%`),
-            )
-          : undefined
-      )
+      .where(whereClause)
       .orderBy(desc(usersTable.created_at))
       .limit(limit)
       .offset(offset);
 
-    return res.json({ users: rows, total: rows.length, limit, offset });
+    const total = totalRow?.total ?? 0;
+    return res.json({ users: rows, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (err) {
     req.log.error({ err }, "Admin: failed to list users");
     return res.status(500).json({ error: "A difficulty arose listing users." });
@@ -160,6 +164,48 @@ router.patch("/admin/users/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Admin: failed to patch user");
     return res.status(500).json({ error: "A difficulty arose updating the user." });
+  }
+});
+
+/** PATCH /admin/users/:id/suspend — suspend a user account */
+router.patch("/admin/users/:id/suspend", requireAdmin, async (req, res) => {
+  try {
+    const id = String(req.params.id);
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    if (!existing) return res.status(404).json({ error: "User not found." });
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ suspended_at: new Date() })
+      .where(eq(usersTable.id, id))
+      .returning();
+
+    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    return res.json(safeUser);
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to suspend user");
+    return res.status(500).json({ error: "A difficulty arose suspending the user." });
+  }
+});
+
+/** PATCH /admin/users/:id/unsuspend — reinstate a suspended user */
+router.patch("/admin/users/:id/unsuspend", requireAdmin, async (req, res) => {
+  try {
+    const id = String(req.params.id);
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    if (!existing) return res.status(404).json({ error: "User not found." });
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ suspended_at: null })
+      .where(eq(usersTable.id, id))
+      .returning();
+
+    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    return res.json(safeUser);
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to unsuspend user");
+    return res.status(500).json({ error: "A difficulty arose reinstating the user." });
   }
 });
 

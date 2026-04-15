@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type SupportedLocale, ALL_LOCALES } from "@/lib/i18n";
+import { useActiveRegion, type RegionCode, COMPASS_REGIONS } from "@/lib/active-region";
 import { UserPlus, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -19,7 +20,33 @@ const GENDER_OPTION_KEYS = [
 const currentYear = new Date().getFullYear();
 
 export default function Register() {
-  const { t, locale } = useLanguage();
+  const { t, locale, setLocale } = useLanguage();
+  const { activeRegion, setActiveRegion } = useActiveRegion();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    const regionParam = params.get("region");
+
+    if (langParam) {
+      const matchedLocale = ALL_LOCALES.find(
+        (l) => l === langParam || l.startsWith(langParam + "-")
+      ) as SupportedLocale | undefined;
+      if (matchedLocale && matchedLocale !== locale) {
+        setLocale(matchedLocale);
+      }
+    }
+
+    if (regionParam) {
+      const validCodes = COMPASS_REGIONS.map((r) => r.code);
+      if (validCodes.includes(regionParam as RegionCode) && regionParam !== activeRegion) {
+        setActiveRegion(regionParam as RegionCode);
+      }
+    }
+  // Only run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [form, setForm] = useState({
     email: "",
     full_name: "",
@@ -61,6 +88,7 @@ export default function Register() {
     setError(null);
 
     try {
+      const baseLang = locale.split("-")[0];
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,7 +97,9 @@ export default function Register() {
           full_name: form.full_name.trim(),
           birth_year: parseInt(form.birth_year, 10),
           gender_identity: form.gender_identity || undefined,
-          locale: locale.split("-")[0],
+          locale: baseLang,
+          language_code: baseLang,
+          active_region: activeRegion,
         }),
       });
 

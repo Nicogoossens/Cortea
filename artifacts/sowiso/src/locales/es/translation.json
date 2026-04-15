@@ -458,5 +458,11 @@
   "profile.compass.composure": "Compostura",
   "profile.compass.discernment": "Discernimiento",
   "profile.compass.diplomacy": "Diplomacia",
-  "profile.compass.presence": "Presencia"
+  "profile.compass.presence": "Presencia",
+  "landing.your_language": "Su idioma",
+  "landing.your_region": "Su región",
+  "landing.region_intro": "Seleccione el contexto de etiqueta para su sesión",
+  "landing.signin_prompt": "¿Ya es miembro?",
+  "landing.signin_link": "Iniciar sesión",
+  "landing.more_languages": "Más idiomas"
 }

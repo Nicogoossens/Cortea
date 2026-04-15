@@ -118,16 +118,32 @@ function UserPreferencesSync() {
   return null;
 }
 
-function HomeRoute() {
+function AppRouter() {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Home /> : <Welcome />;
-}
 
-function Router() {
+  if (!isAuthenticated) {
+    return (
+      <Switch>
+        <Route path="/" component={Welcome} />
+        <Route>
+          <Shell>
+            <Switch>
+              <Route path="/register" component={Register} />
+              <Route path="/signin" component={SignIn} />
+              <Route path="/verify-email" component={EmailVerify} />
+              <Route path="/replit-callback" component={ReplitCallback} />
+              <Route component={NotFound} />
+            </Switch>
+          </Shell>
+        </Route>
+      </Switch>
+    );
+  }
+
   return (
     <Shell>
       <Switch>
-        <Route path="/" component={HomeRoute} />
+        <Route path="/" component={Home} />
         <Route path="/atelier" component={Atelier} />
         <Route path="/atelier/:id" component={Scenario} />
         <Route path="/counsel" component={Counsel} />
@@ -146,6 +162,10 @@ function Router() {
       </Switch>
     </Shell>
   );
+}
+
+function Router() {
+  return <AppRouter />;
 }
 
 function App() {

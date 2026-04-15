@@ -458,5 +458,11 @@
   "profile.compass.composure": "Besonnenheit",
   "profile.compass.discernment": "Urteilsvermögen",
   "profile.compass.diplomacy": "Diplomatie",
-  "profile.compass.presence": "Präsenz"
+  "profile.compass.presence": "Präsenz",
+  "landing.your_language": "Ihre Sprache",
+  "landing.your_region": "Ihre Region",
+  "landing.region_intro": "Wählen Sie den Etikette-Kontext für Ihre Sitzung",
+  "landing.signin_prompt": "Bereits Mitglied?",
+  "landing.signin_link": "Anmelden",
+  "landing.more_languages": "Weitere Sprachen"
 }

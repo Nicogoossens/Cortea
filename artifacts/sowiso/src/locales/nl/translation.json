@@ -458,5 +458,11 @@
   "profile.compass.composure": "Kalmte",
   "profile.compass.discernment": "Onderscheidingsvermogen",
   "profile.compass.diplomacy": "Diplomatie",
-  "profile.compass.presence": "Aanwezigheid"
+  "profile.compass.presence": "Aanwezigheid",
+  "landing.your_language": "Uw taal",
+  "landing.your_region": "Uw regio",
+  "landing.region_intro": "Selecteer de etiquettecontext voor uw sessie",
+  "landing.signin_prompt": "Al lid?",
+  "landing.signin_link": "Inloggen",
+  "landing.more_languages": "Meer talen"
 }

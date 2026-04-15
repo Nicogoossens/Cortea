@@ -458,5 +458,11 @@
   "profile.compass.composure": "Maîtrise de soi",
   "profile.compass.discernment": "Discernement",
   "profile.compass.diplomacy": "Diplomatie",
-  "profile.compass.presence": "Présence"
+  "profile.compass.presence": "Présence",
+  "landing.your_language": "Votre langue",
+  "landing.your_region": "Votre région",
+  "landing.region_intro": "Sélectionnez le contexte d'étiquette pour votre session",
+  "landing.signin_prompt": "Déjà membre ?",
+  "landing.signin_link": "Se connecter",
+  "landing.more_languages": "Plus de langues"
 }

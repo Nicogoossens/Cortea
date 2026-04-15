@@ -458,5 +458,11 @@
   "profile.compass.composure": "沈着さ",
   "profile.compass.discernment": "識別力",
   "profile.compass.diplomacy": "外交力",
-  "profile.compass.presence": "存在感"
+  "profile.compass.presence": "存在感",
+  "landing.your_language": "言語",
+  "landing.your_region": "地域",
+  "landing.region_intro": "セッションのマナーコンテキストを選択してください",
+  "landing.signin_prompt": "すでにメンバーですか？",
+  "landing.signin_link": "サインイン",
+  "landing.more_languages": "その他の言語"
 }

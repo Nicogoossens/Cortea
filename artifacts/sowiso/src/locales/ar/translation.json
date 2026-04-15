@@ -458,5 +458,11 @@
   "profile.compass.composure": "الهدوء",
   "profile.compass.discernment": "الفطنة",
   "profile.compass.diplomacy": "الدبلوماسية",
-  "profile.compass.presence": "الحضور"
+  "profile.compass.presence": "الحضور",
+  "landing.your_language": "لغتك",
+  "landing.your_region": "منطقتك",
+  "landing.region_intro": "اختر سياق الآداب لجلستك",
+  "landing.signin_prompt": "هل أنت عضو بالفعل؟",
+  "landing.signin_link": "تسجيل الدخول",
+  "landing.more_languages": "المزيد من اللغات"
 }

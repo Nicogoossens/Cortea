@@ -55,10 +55,22 @@ node scripts/elite-register-worker.mjs --locale fr --dry-run --verbose
 
 | Flag | Description |
 |------|-------------|
-| `--locale <code>` | Restrict to a single `language_code` (e.g. `nl`, `fr`, `de`) |
+| `--locale <code>` | Restrict to a single locale. Accepts a base code (`nl`, `fr`) **or** a full locale (`nl-NL`, `en-GB`). Base codes filter on `language_code`; full locales filter on `region_link`, guaranteeing region-level isolation (e.g. `--locale nl-NL` leaves `nl-BE` rows untouched). |
 | `--dry-run` | Print planned rewrites; do **not** write to the database |
 | `--verbose` | Show every evaluated string, even those that pass |
 | `--force` | Re-evaluate rows that already have `quality_reviewed_at` set |
+
+### Locale filtering in detail
+
+The `--locale` flag detects whether a code contains a hyphen:
+
+| Argument | Filter applied | Example rows matched |
+|----------|---------------|---------------------|
+| `--locale nl` | `WHERE language_code = 'nl'` | All Dutch rows (nl-NL and nl-BE) |
+| `--locale nl-NL` | `WHERE region_link = 'nl-NL'` | Only Netherlands Dutch rows |
+| `--locale nl-BE` | `WHERE region_link = 'nl-BE'` | Only Belgian Dutch / Flemish rows |
+| `--locale en-GB` | `WHERE region_link = 'en-GB'` | Only British English rows |
+| `--locale en-US` | `WHERE region_link = 'en-US'` | Only American English rows |
 
 ### Protected keys
 

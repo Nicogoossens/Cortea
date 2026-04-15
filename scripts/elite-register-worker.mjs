@@ -322,7 +322,16 @@ async function main() {
   console.log(
     `Mode:    ${FLAG_DRY_RUN ? "DRY RUN — no database writes" : "LIVE — rewrites will be saved"}`
   );
-  if (FLAG_LOCALE) console.log(`Filter:  language_code = ${FLAG_LOCALE}`);
+  // --locale supports both base codes ("nl") and full locale codes ("nl-NL", "en-GB")
+  // A full locale is matched against region_link; a base code against language_code.
+  const isFullLocale = FLAG_LOCALE ? FLAG_LOCALE.includes("-") : false;
+  if (FLAG_LOCALE) {
+    console.log(
+      isFullLocale
+        ? `Filter:  region_link = ${FLAG_LOCALE}`
+        : `Filter:  language_code = ${FLAG_LOCALE}`
+    );
+  }
   if (FLAG_FORCE)  console.log("Force:   re-evaluating already-reviewed strings");
   console.log("─".repeat(60));
 
@@ -331,7 +340,13 @@ async function main() {
 
   if (FLAG_LOCALE) {
     params.push(FLAG_LOCALE);
-    conditions.push(`language_code = $${params.length}`);
+    if (isFullLocale) {
+      // Full locale (e.g. nl-NL, en-GB) — match against region_link only
+      conditions.push(`region_link = $${params.length}`);
+    } else {
+      // Base language code (e.g. nl, fr) — match against language_code
+      conditions.push(`language_code = $${params.length}`);
+    }
   }
   if (!FLAG_FORCE) {
     conditions.push("quality_reviewed_at IS NULL");

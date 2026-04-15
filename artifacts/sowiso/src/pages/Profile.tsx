@@ -71,20 +71,20 @@ interface EnrichedLogEntry {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-const AMBITION_LEVELS: { key: string; label: string; description: string }[] = [
-  { key: "curious",       label: "Curious",       description: "Exploring the foundations of refined conduct" },
-  { key: "casual",        label: "Casual",         description: "Cultivating grace in everyday social settings" },
-  { key: "aspirational",  label: "Aspirational",   description: "Actively refining one's presence and manners" },
-  { key: "professional",  label: "Professional",   description: "Mastering workplace and business etiquette" },
-  { key: "distinguished", label: "Distinguished",  description: "Commanding elite social and formal environments" },
-  { key: "diplomatic",    label: "Diplomatic",     description: "International ceremony and protocol at the highest level" },
+const AMBITION_LEVELS: { key: string; labelKey: string; descKey: string }[] = [
+  { key: "curious",       labelKey: "ambition.curious.label",       descKey: "ambition.curious.desc" },
+  { key: "casual",        labelKey: "ambition.casual.label",        descKey: "ambition.casual.desc" },
+  { key: "aspirational",  labelKey: "ambition.aspirational.label",  descKey: "ambition.aspirational.desc" },
+  { key: "professional",  labelKey: "ambition.professional.label",  descKey: "ambition.professional.desc" },
+  { key: "distinguished", labelKey: "ambition.distinguished.label", descKey: "ambition.distinguished.desc" },
+  { key: "diplomatic",    labelKey: "ambition.diplomatic.label",    descKey: "ambition.diplomatic.desc" },
 ];
 
-const OBJECTIVE_OPTIONS: { key: string; label: string }[] = [
-  { key: "business", label: "Business & Professional" },
-  { key: "elite", label: "Elite Society" },
-  { key: "romantic", label: "Romantic & Social" },
-  { key: "world_traveller", label: "World Traveller" },
+const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
+  { key: "business",        labelKey: "objective.business" },
+  { key: "elite",           labelKey: "objective.elite" },
+  { key: "romantic",        labelKey: "objective.romantic" },
+  { key: "world_traveller", labelKey: "objective.world_traveller" },
 ];
 
 const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = {
@@ -271,7 +271,7 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 1_500_000) {
-      alert("Please choose an image smaller than 1.5 MB.");
+      alert(t("profile.avatar_too_large"));
       return;
     }
     const reader = new FileReader();
@@ -377,7 +377,7 @@ export default function Profile() {
           <div
             className="w-20 h-20 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center shadow-sm overflow-hidden cursor-pointer"
             onClick={() => avatarInputRef.current?.click()}
-            aria-label="Change profile photo"
+            aria-label={t("profile.upload_avatar")}
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt={profileData?.full_name ?? "Avatar"} className="w-full h-full object-cover" />
@@ -388,7 +388,7 @@ export default function Profile() {
           <button
             onClick={() => avatarInputRef.current?.click()}
             className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Upload avatar"
+            aria-label={t("profile.upload_avatar_btn")}
           >
             <Camera className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
@@ -426,7 +426,7 @@ export default function Profile() {
                 onClick={() => setEditingFullName(true)}
                 aria-label="Edit full name"
               >
-                {profileData?.full_name ?? <span className="text-muted-foreground font-light italic text-xl">Add your name</span>}
+                {profileData?.full_name ?? <span className="text-muted-foreground font-light italic text-xl">{t("profile.set_name_placeholder")}</span>}
                 <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
@@ -462,7 +462,7 @@ export default function Profile() {
                 onClick={() => setEditingUsername(true)}
                 aria-label="Edit username"
               >
-                {profileData?.username ?? <span className="italic text-muted-foreground/50 font-sans font-light">set username</span>}
+                {profileData?.username ?? <span className="italic text-muted-foreground/50 font-sans font-light">{t("profile.set_username_placeholder")}</span>}
                 <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
@@ -475,26 +475,26 @@ export default function Profile() {
             <div className="space-y-1.5 w-full">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <Target className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                {AMBITION_LEVELS.map(({ key, label }) => (
+                {AMBITION_LEVELS.map(({ key, labelKey, descKey }) => (
                   <button
                     key={key}
                     onClick={() => handleAmbitionChange(key)}
                     disabled={ambitionSave === "saving"}
-                    title={AMBITION_LEVELS.find((l) => l.key === key)?.description}
+                    title={t(descKey)}
                     className={`px-2.5 py-0.5 rounded-full text-xs border transition-all ${
                       profileData?.ambition_level === key
                         ? "bg-primary/10 text-primary border-primary/30 font-medium"
                         : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
                     }`}
                   >
-                    {label}
+                    {t(labelKey)}
                   </button>
                 ))}
                 <SaveIndicator state={ambitionSave} t={t} />
               </div>
               {profileData?.ambition_level && (
                 <p className="text-xs text-muted-foreground/60 font-light pl-6 italic">
-                  {AMBITION_LEVELS.find((l) => l.key === profileData.ambition_level)?.description ?? ""}
+                  {t(AMBITION_LEVELS.find((l) => l.key === profileData.ambition_level)?.descKey ?? "")}
                 </p>
               )}
             </div>
@@ -624,10 +624,10 @@ export default function Profile() {
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2">
             <Target className="w-4 h-4 text-primary/60" aria-hidden="true" />
-            Interests & Objectives
+            {t("profile.interests_title")}
           </CardTitle>
           <CardDescription>
-            These preferences guide your personalised exercises and recommendations across the platform.
+            {t("profile.interests_subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -635,7 +635,7 @@ export default function Profile() {
           {/* Country of origin */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Country of Origin</label>
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
               <SaveIndicator state={countrySave} t={t} />
             </div>
             {editingCountry ? (
@@ -663,7 +663,7 @@ export default function Profile() {
                 onClick={() => setEditingCountry(true)}
                 className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
               >
-                {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">Not specified</span>}
+                {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
                 <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
@@ -672,11 +672,11 @@ export default function Profile() {
           {/* Objectives */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">Objectives</label>
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.objectives_label")}</label>
               <SaveIndicator state={objectivesSave} t={t} />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {OBJECTIVE_OPTIONS.map(({ key, label }) => {
+              {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
                 const isActive = (profileData?.objectives ?? []).includes(key);
                 return (
                   <button
@@ -689,7 +689,7 @@ export default function Profile() {
                         : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
                     }`}
                   >
-                    {label}
+                    {t(labelKey)}
                   </button>
                 );
               })}
@@ -698,7 +698,7 @@ export default function Profile() {
 
           {/* Sports & Leisure */}
           <InterestSelector
-            label="Sports & Leisure"
+            label={t("profile.sports_leisure_label")}
             field="sports"
             presets={INTEREST_PRESETS.sports}
             tags={profileData?.interests_sports ?? []}
@@ -717,7 +717,7 @@ export default function Profile() {
 
           {/* Culinary Interests */}
           <InterestSelector
-            label="Culinary Interests"
+            label={t("profile.culinary_interests_label")}
             field="cuisine"
             presets={INTEREST_PRESETS.cuisine}
             tags={profileData?.interests_cuisine ?? []}
@@ -736,7 +736,7 @@ export default function Profile() {
 
           {/* Dress Code Preferences */}
           <InterestSelector
-            label="Dress Code Preferences"
+            label={t("profile.dress_code_prefs_label")}
             field="dress_code"
             presets={INTEREST_PRESETS.dress_code}
             tags={profileData?.interests_dress_code ?? []}
@@ -1059,7 +1059,7 @@ function InterestSelector({
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter" && customInputValue.trim()) { e.preventDefault(); onAddCustom(); }
           }}
-          placeholder="Add a custom interest…"
+          placeholder={t("profile.add_custom_interest")}
           className="h-8 text-sm border-border/40 focus:border-primary/40 flex-1 font-light placeholder:italic placeholder:text-muted-foreground/40"
         />
         <Button

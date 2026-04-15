@@ -12,38 +12,67 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const i18nPath = join(__dirname, "../src/lib/i18n.tsx");
 const source = readFileSync(i18nPath, "utf8");
 
-// Extract language blocks by parsing the STATIC_TRANSLATIONS object
-const blockRegex = /^\s{2}(\w{2}):\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/gm;
-const keyRegex = /"([^"]+)":\s*"[^"]*"/g;
+/**
+ * Extract all key→value pairs for a language block using a line-by-line depth tracker.
+ * This handles arbitrarily large blocks and values that contain { or }.
+ */
+function extractLangBlock(src, lang) {
+  const lines = src.split("\n");
+  const startPattern = new RegExp(`^  ${lang}: \\{`);
+  let depth = 0;
+  let inBlock = false;
+  const blockLines = [];
 
-const langs = {};
-let match;
-while ((match = blockRegex.exec(source)) !== null) {
-  const lang = match[1];
-  const block = match[2];
-  const keys = [];
-  let km;
-  while ((km = keyRegex.exec(block)) !== null) {
-    keys.push(km[1]);
+  for (const line of lines) {
+    if (!inBlock && startPattern.test(line)) {
+      inBlock = true;
+      depth = 1;
+      continue;
+    }
+    if (!inBlock) continue;
+
+    // Count braces carefully — but only count structural braces, not those inside strings.
+    // Since all values are simple strings (no embedded { in structural positions), this works:
+    const opens = (line.match(/\{/g) || []).length;
+    const closes = (line.match(/\}/g) || []).length;
+    depth += opens - closes;
+
+    if (depth <= 0) break;
+    blockLines.push(line);
   }
-  langs[lang] = new Set(keys);
+
+  const kvRegex = /^\s+"([^"]+)":\s+"((?:[^"\\]|\\.)*)"/;
+  const map = new Set();
+  for (const line of blockLines) {
+    const m = line.match(kvRegex);
+    if (m) map.add(m[1]);
+  }
+  return map;
 }
 
-const allLangs = Object.keys(langs);
-if (!langs["en"]) {
-  console.error("Could not parse English translations block.");
+// Detect all language codes present in the file
+const langCodeRegex = /^  (\w{2}): \{/gm;
+const allLangs = [];
+let lm;
+while ((lm = langCodeRegex.exec(source)) !== null) {
+  allLangs.push(lm[1]);
+}
+
+if (!allLangs.includes("en")) {
+  console.error("Could not find English translations block.");
   process.exit(1);
 }
 
-const enKeys = [...langs["en"]];
-let missing = 0;
+const enKeys = [...extractLangBlock(source, "en")];
 
 console.log(`\nSOWISO i18n Audit — ${enKeys.length} English keys\n`);
 console.log("Languages checked:", allLangs.join(", "));
 console.log("─".repeat(60));
 
+let missing = 0;
+
 for (const lang of allLangs.filter((l) => l !== "en")) {
-  const langKeys = langs[lang] || new Set();
+  const langKeys = extractLangBlock(source, lang);
   const missingKeys = enKeys.filter((k) => !langKeys.has(k));
   if (missingKeys.length === 0) {
     console.log(`✓  ${lang.padEnd(4)} — complete (${langKeys.size} keys)`);

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { useGetProfile, useUpdateProfile } from "@workspace/api-client-react";
+import { useGetProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,41 +23,41 @@ interface Plan {
 }
 
 const TIER_META: Record<SubscriptionTier, {
-  tagline: string;
+  taglineKey: string;
   icon: typeof Globe;
   accent: string;
-  features: string[];
+  featureKeys: string[];
 }> = {
   guest: {
-    tagline: "A considered introduction",
+    taglineKey: "membership.guest.tagline",
     icon: Sparkles,
     accent: "var(--muted-foreground)",
-    features: [
-      "One region of the world",
-      "Introductory scenarios",
-      "A glimpse of the Compass",
+    featureKeys: [
+      "membership.guest.feature1",
+      "membership.guest.feature2",
+      "membership.guest.feature3",
     ],
   },
   traveller: {
-    tagline: "Expand your world",
+    taglineKey: "membership.traveller.tagline",
     icon: Globe,
     accent: "var(--primary)",
-    features: [
-      "All regions, fully unlocked",
-      "Complete Cultural Compass",
-      "AI-Counsel, without restraint",
-      "All scenario difficulties",
+    featureKeys: [
+      "membership.traveller.feature1",
+      "membership.traveller.feature2",
+      "membership.traveller.feature3",
+      "membership.traveller.feature4",
     ],
   },
   ambassador: {
-    tagline: "Refine your presence",
+    taglineKey: "membership.ambassador.tagline",
     icon: Crown,
     accent: "#9b7c4a",
-    features: [
-      "Every Traveller privilege",
-      "Mirror — private reflection",
-      "Inner Circle access",
-      "Sensory Awareness module",
+    featureKeys: [
+      "membership.ambassador.feature1",
+      "membership.ambassador.feature2",
+      "membership.ambassador.feature3",
+      "membership.ambassador.feature4",
     ],
   },
 };
@@ -140,10 +139,10 @@ export default function Membership() {
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
 
       <div className="space-y-4">
-        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Membership</p>
-        <h1 className="text-4xl md:text-5xl font-serif text-foreground">The Three Standings</h1>
+        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{t("membership.eyebrow")}</p>
+        <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("membership.title")}</h1>
         <p className="text-muted-foreground text-lg font-light leading-relaxed max-w-2xl">
-          Every distinguished person begins as a guest. Where you journey from here is a matter of intention.
+          {t("membership.subtitle")}
         </p>
       </div>
 
@@ -156,7 +155,7 @@ export default function Membership() {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Monthly
+          {t("membership.billing_monthly")}
         </button>
         <button
           onClick={() => setBilling("yearly")}
@@ -166,9 +165,9 @@ export default function Membership() {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Yearly
+          {t("membership.billing_yearly")}
           <span className="text-[10px] font-mono uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded-[2px]">
-            save ~20%
+            {t("membership.billing_yearly_save")}
           </span>
         </button>
       </div>
@@ -202,7 +201,7 @@ export default function Membership() {
                 {isCurrentTier && (
                   <div className="absolute top-4 right-4">
                     <span className="text-[10px] font-mono uppercase tracking-widest bg-primary/10 text-primary px-2 py-1 rounded-[2px] border border-primary/20">
-                      Current
+                      {t("membership.current_badge")}
                     </span>
                   </div>
                 )}
@@ -222,7 +221,7 @@ export default function Membership() {
                     />
                   </div>
                   <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-1">
-                    {meta.tagline}
+                    {t(meta.taglineKey)}
                   </p>
                   <h2 className="font-serif text-2xl text-foreground">{
                     plan?.displayName ?? (tier === "guest" ? "The Guest" : tier === "traveller" ? "The Traveller" : "The Ambassador")
@@ -230,30 +229,30 @@ export default function Membership() {
 
                   <div className="pt-4">
                     {tier === "guest" ? (
-                      <div className="font-serif text-3xl text-foreground">Gratis</div>
+                      <div className="font-serif text-3xl text-foreground">{t("membership.price_free")}</div>
                     ) : amount !== null ? (
                       <div className="flex items-baseline gap-1">
                         <span className="font-serif text-3xl text-foreground">{formatPrice(amount, plan?.currency ?? "eur")}</span>
                         <span className="text-sm text-muted-foreground font-light">
-                          /{billing === "monthly" ? "mo" : "yr"}
+                          /{billing === "monthly" ? t("membership.billing_per_month") : t("membership.billing_per_year")}
                         </span>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-sm font-light italic">Pricing not yet configured</div>
+                      <div className="text-muted-foreground text-sm font-light italic">{t("membership.price_not_configured")}</div>
                     )}
                   </div>
                 </CardHeader>
 
                 <CardContent className="px-6 pb-8 space-y-6">
                   <ul className="space-y-3" aria-label={`Features of ${tier}`}>
-                    {meta.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2.5">
+                    {meta.featureKeys.map((featureKey) => (
+                      <li key={featureKey} className="flex items-start gap-2.5">
                         <Check
                           className="h-4 w-4 mt-0.5 flex-shrink-0"
                           style={{ color: meta.accent }}
                           aria-hidden="true"
                         />
-                        <span className="text-sm text-muted-foreground font-light">{feature}</span>
+                        <span className="text-sm text-muted-foreground font-light">{t(featureKey)}</span>
                       </li>
                     ))}
                   </ul>
@@ -261,7 +260,7 @@ export default function Membership() {
                   <div className="pt-2">
                     {tier === "guest" ? (
                       <div className="text-xs text-center text-muted-foreground/60 font-mono uppercase tracking-widest py-2">
-                        Your current standing
+                        {t("membership.current_standing")}
                       </div>
                     ) : isCurrentTier ? (
                       <Button
@@ -273,7 +272,7 @@ export default function Membership() {
                         {managingBilling ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Manage membership"
+                          t("membership.manage")
                         )}
                       </Button>
                     ) : (
@@ -291,7 +290,7 @@ export default function Membership() {
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            {tier === "traveller" ? "Expand your world" : "Elevate your standing"}
+                            {tier === "traveller" ? t("membership.cta_traveller") : t("membership.cta_ambassador")}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                           </>
                         )}
@@ -307,7 +306,7 @@ export default function Membership() {
 
       <div className="border-t border-border/30 pt-8 text-center">
         <p className="text-xs text-muted-foreground/60 font-mono uppercase tracking-widest">
-          All memberships renew automatically and may be cancelled at any time
+          {t("membership.footer_note")}
         </p>
       </div>
 

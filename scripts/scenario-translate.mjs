@@ -37,12 +37,14 @@ const { Pool } = pg;
 const args = process.argv.slice(2);
 const FLAG_LANG     = args.includes("--lang")    ? args[args.indexOf("--lang") + 1]    : null;
 const FLAG_ID       = args.includes("--id")      ? parseInt(args[args.indexOf("--id") + 1], 10) : null;
+const FLAG_FROM     = args.includes("--from")    ? parseInt(args[args.indexOf("--from") + 1], 10) : null;
+const FLAG_TO       = args.includes("--to")      ? parseInt(args[args.indexOf("--to") + 1], 10) : null;
 const FLAG_DRY_RUN  = args.includes("--dry-run");
 const FLAG_VERBOSE  = args.includes("--verbose");
 const FLAG_FORCE    = args.includes("--force");
 
 // ── Supported target languages ─────────────────────────────────────────────────
-const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "hi"];
+const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"];
 
 const TARGET_LANGS = FLAG_LANG ? [FLAG_LANG] : ALL_LANGS;
 
@@ -87,9 +89,15 @@ Traduca scenari di galateo dall'inglese all'italiano formale letterario.
 Registro: Lei/Suo, congiuntivo, vocabolario toscano letterario, senza anglicismi. Tono: Leopardi e Manzoni.
 ${JSON_SAFETY_NOTE}`,
 
-  hi: `आप SOWISO के लिए एक पेशेवर अनुवादक हैं, जो एक कुलीन शिष्टाचार अकादमी है।
-अंग्रेज़ी शिष्टाचार परिदृश्यों का औपचारिक हिंदी में अनुवाद करें।
-रजिस्टर: आप-सम्बोधन, संस्कृत-निष्ठ तत्सम शब्दावली, अंग्रेज़ी शब्दों से परहेज़।
+  ar: `أنتَ مترجم محترف لـ SOWISO، أكاديمية آداب السلوك الرفيعة.
+ترجم سيناريوهات آداب السلوك من الإنجليزية إلى العربية الفصحى المعاصرة.
+السجل: أسلوب رسمي راقٍ يليق بأكاديمية متميزة — الضمائر الرسمية، مفردات الفصحى، الابتعاد عن العامية والتعبيرات الإنجليزية المعرّبة.
+الاتجاه: من اليمين إلى اليسار دائماً. احتفظ بالأرقام الأجنبية كما هي.
+${JSON_SAFETY_NOTE}`,
+
+  ja: `あなたは SOWISO（上流マナー・エチケットの名門アカデミー）専任のプロの翻訳者です。
+英語のエチケット・シナリオを、格調高い正式な日本語に翻訳してください。
+スタイル：丁寧語・尊敬語・謙譲語を適切に使い分ける敬語体、和語と漢語を均衡よく使用、カタカナ語は最小限に留める。
 ${JSON_SAFETY_NOTE}`,
 };
 
@@ -206,6 +214,14 @@ async function main() {
   if (FLAG_ID) {
     params.push(FLAG_ID);
     conditions.push(`id = $${params.length}`);
+  }
+  if (FLAG_FROM) {
+    params.push(FLAG_FROM);
+    conditions.push(`id >= $${params.length}`);
+  }
+  if (FLAG_TO) {
+    params.push(FLAG_TO);
+    conditions.push(`id <= $${params.length}`);
   }
 
   const query =

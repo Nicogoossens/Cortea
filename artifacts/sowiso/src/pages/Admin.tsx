@@ -296,7 +296,7 @@ export default function Admin() {
       {!loading && searched && (
         <div className="space-y-3">
           <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-            {t("admin.users_found").replace("{n}", String(users.length))}
+            {t("admin.users_found", { n: users.length })}
           </p>
           {users.length === 0 ? (
             <Card className="bg-card border-border">

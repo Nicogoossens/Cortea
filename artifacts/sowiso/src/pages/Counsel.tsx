@@ -180,7 +180,7 @@ export default function Counsel() {
                   )}
                   {hasBasicAccess && isBasicFree && !isSelected && accessible && (
                     <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60 border border-primary/20 rounded-[2px] px-1.5 py-0.5">
-                      {t("counsel.domains.remaining").replace("{count}", String(questionsRemaining))}
+                      {t("counsel.domains.remaining", { count: questionsRemaining })}
                     </span>
                   )}
                 </span>
@@ -220,7 +220,7 @@ export default function Counsel() {
             <span>{t("nav.counsel")}</span>
           </div>
           <p className="text-muted-foreground font-light leading-relaxed">
-            {t("counsel.gate.limit_desc").replace("{count}", String(BASIC_QUESTION_LIMIT))}
+            {t("counsel.gate.limit_desc", { count: BASIC_QUESTION_LIMIT })}
           </p>
           <Link href="/membership">
             <div className="inline-flex items-center gap-2 mt-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
@@ -351,9 +351,7 @@ export default function Counsel() {
 
                 {hasBasicAccess && (
                   <p className="text-xs text-muted-foreground/60 font-mono">
-                    {t("counsel.consultations_remaining")
-                      .replace("{remaining}", String(questionsRemaining))
-                      .replace("{limit}", String(BASIC_QUESTION_LIMIT))}
+                    {t("counsel.consultations_remaining", { remaining: questionsRemaining, limit: BASIC_QUESTION_LIMIT })}
                   </p>
                 )}
 

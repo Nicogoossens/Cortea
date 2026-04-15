@@ -1,3 +1,4 @@
+import "@/i18n"; // initialise i18next before any component renders
 import { Shell } from "./components/layout/Shell";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

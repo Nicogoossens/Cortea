@@ -103,7 +103,7 @@ export default function Onboarding() {
 
       <div className="text-center space-y-1">
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          {t("onboarding.step_of").replace("{current}", String(step)).replace("{total}", "3")} — {stepLabels[step]}
+          {t("onboarding.step_of", { current: step, total: 3 })} — {stepLabels[step]}
         </p>
       </div>
 

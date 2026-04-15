@@ -35,12 +35,12 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### Key Design Decisions
 
-- **Locale vs Region**: `locale` (8 languages) controls UI text; `activeRegion` (14 `RegionCode` values) controls etiquette context
+- **Locale vs Region**: `locale` (9 languages) controls UI text; `activeRegion` (18 `RegionCode` values) controls etiquette context
 - **ACTIVE_REGIONS**: Only `["GB", "CN", "CA"]` have seeded Atelier + Compass data
 - **API routes**: All mounted at `/api` prefix in `app.ts`. Route handlers use paths WITHOUT `/api/` prefix
 - **Counsel AI**: `artifacts/api-server/src/routes/counsel.ts` — POST `/api/counsel` calls Anthropic; uses `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` + `AI_INTEGRATIONS_ANTHROPIC_API_KEY` env vars
 - **Region detection**: GET `/api/detect-region` returns IP-guessed region (session-only, GDPR-safe; no persistence unless user confirms)
-- **i18n**: 144+ keys × 8 languages in `artifacts/sowiso/src/lib/i18n.tsx`. Use `useLanguage()` for translated strings. Includes `register.*` and `verify.*` key groups.
+- **i18n (Task #6 — complete)**: react-i18next with `i18next-http-backend`. 9 locales: en, nl, fr, de, es, pt, it, ar (RTL), ja. 386 keys each. Bundled JSON in `src/locales/{lang}/translation.json`; DB-backed via `GET /api/translations?language_code={lng}` (upsert with `ON CONFLICT`). RTL direction applied to `<html dir="rtl">` for Arabic. Accessibility panel with high-contrast + text-size controls. All 60 scenarios translated into ar + ja.
 - **Content labels**: `pillarDomainKey()`, `levelKey()`, `triggerLabel()` in `artifacts/sowiso/src/lib/content-labels.ts`
 - **Noble Score**: 5 levels (Aware 0–19, Composed 20–39, Refined 40–59, Distinguished 60–79, Sovereign 80–100)
 - **Auth model (deliberate design decision)**: SOWISO uses magic-link email authentication — no passwords, no OAuth, no SMS. `POST /api/auth/signin` emails a one-time link; `GET /api/auth/verify` exchanges the token for a session. Session token is stored server-side in the DB and sent as a Bearer token. All protected routes resolve user identity from this token only (no query-param identity). This is intentional for the current scope.

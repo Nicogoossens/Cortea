@@ -15,7 +15,7 @@ import {
   ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
-import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, hi } from "date-fns/locale";
+import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
 import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey } from "@/lib/content-labels";
@@ -30,7 +30,9 @@ const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
   "nl-NL": nl, "fr-FR": fr, "de-DE": de,
   "es-ES": es, "es-MX": es,
   "pt-PT": pt, "pt-BR": ptBR,
-  "it-IT": it, "hi-IN": hi,
+  "it-IT": it,
+  "ar-SA": ar,
+  "ja-JP": ja,
 };
 
 interface UserProfileData {

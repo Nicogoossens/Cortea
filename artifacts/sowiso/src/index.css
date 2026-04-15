@@ -271,3 +271,44 @@
     @apply font-serif tracking-tight;
   }
 }
+
+/* ── RTL (Arabic) layout support ─────────────────────────────────────────── */
+
+/* Ensure Arabic text renders with a suitable system font stack */
+[dir="rtl"] {
+  font-family: "Segoe UI", Tahoma, "Arial Unicode MS", Arial, sans-serif;
+}
+
+/* Sidebar layout: flip the main flex row for RTL */
+[dir="rtl"] .md\:flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Flip directional icons (arrows, chevrons pointing left) */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Sidebar inner padding mirrors */
+[dir="rtl"] .sidebar-inner {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
+/* Context bar pills: reverse order */
+[dir="rtl"] [role="toolbar"] {
+  flex-direction: row-reverse;
+}
+
+/* Playfair Display headings stay LTR for brand identity, body text adapts */
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  text-align: right;
+}
+
+/* Form inputs: text direction */
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  text-align: right;
+}

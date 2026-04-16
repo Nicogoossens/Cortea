@@ -8,53 +8,27 @@ import { LandingLayout } from "@/components/layout/LandingLayout";
 
 type Phase = "hero" | "quiz" | "result";
 
-interface Question {
-  id: number;
-  scenario: string;
-  options: { label: string; text: string }[];
-  correctIndex: number;
-  explanation: string;
-}
-
-const QUESTIONS: Question[] = [
+const QUESTION_KEYS = [
   {
     id: 1,
-    scenario:
-      "You have been invited to dinner at a private residence. The invitation states seven o'clock. At what time should you arrive?",
-    options: [
-      { label: "A", text: "Six forty-five — to assist with final preparations." },
-      { label: "B", text: "Seven o'clock precisely — punctuality is a virtue." },
-      { label: "C", text: "Between seven ten and seven fifteen — the customary quarter." },
-    ],
+    scenarioKey: "welcome.quiz_q1_scenario" as const,
+    optionKeys: ["welcome.quiz_q1_opt_a", "welcome.quiz_q1_opt_b", "welcome.quiz_q1_opt_c"] as const,
     correctIndex: 2,
-    explanation:
-      "Arriving slightly after the stated hour — the so-called 'gentleman's quarter' — allows the host to conclude their preparations with composure. Arriving early is considered an imposition.",
+    explanationKey: "welcome.quiz_q1_explanation" as const,
   },
   {
     id: 2,
-    scenario:
-      "You are seated at a formally laid table. Bread rolls are placed on either side of your setting. Which is yours?",
-    options: [
-      { label: "A", text: "The one to my left." },
-      { label: "B", text: "The one to my right." },
-      { label: "C", text: "Whichever appears freshest." },
-    ],
+    scenarioKey: "welcome.quiz_q2_scenario" as const,
+    optionKeys: ["welcome.quiz_q2_opt_a", "welcome.quiz_q2_opt_b", "welcome.quiz_q2_opt_c"] as const,
     correctIndex: 0,
-    explanation:
-      "The mnemonic BMW guides the formal table: Bread to the left, Meal in the centre, Water and Wine to the right. The bread roll to your left is always yours.",
+    explanationKey: "welcome.quiz_q2_explanation" as const,
   },
   {
     id: 3,
-    scenario:
-      "During a business dinner in Tokyo, your host presents their meishi — business card — with both hands and a respectful bow. How do you respond?",
-    options: [
-      { label: "A", text: "Accept with one hand and a warm smile, then set it aside." },
-      { label: "B", text: "Accept with both hands, study it attentively, and place it respectfully on the table." },
-      { label: "C", text: "Accept graciously and immediately reciprocate with your own card." },
-    ],
+    scenarioKey: "welcome.quiz_q3_scenario" as const,
+    optionKeys: ["welcome.quiz_q3_opt_a", "welcome.quiz_q3_opt_b", "welcome.quiz_q3_opt_c"] as const,
     correctIndex: 1,
-    explanation:
-      "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately.",
+    explanationKey: "welcome.quiz_q3_explanation" as const,
   },
 ];
 
@@ -125,8 +99,8 @@ export default function Welcome() {
   const [answers, setAnswers] = useState<(number | null)[]>([null, null, null]);
   const [revealed, setRevealed] = useState(false);
 
-  const question = QUESTIONS[currentQ];
-  const score = answers.filter((a, i) => a === QUESTIONS[i].correctIndex).length;
+  const qKey = QUESTION_KEYS[currentQ];
+  const score = answers.filter((a, i) => a === QUESTION_KEYS[i].correctIndex).length;
 
   const baseLang = locale.split("-")[0];
 
@@ -139,7 +113,7 @@ export default function Welcome() {
   }
 
   function advance() {
-    if (currentQ < QUESTIONS.length - 1) {
+    if (currentQ < QUESTION_KEYS.length - 1) {
       setCurrentQ(currentQ + 1);
       setRevealed(false);
     } else {
@@ -230,7 +204,8 @@ export default function Welcome() {
 
   if (phase === "quiz") {
     const selected = answers[currentQ];
-    const isCorrect = selected === question.correctIndex;
+    const isCorrect = selected === qKey.correctIndex;
+    const optionLabels = ["A", "B", "C"];
 
     return (
       <LandingLayout>
@@ -246,7 +221,7 @@ export default function Welcome() {
                 {t("welcome.quiz_back")}
               </button>
               <div className="flex items-center gap-3 flex-1">
-                {QUESTIONS.map((_, i) => (
+                {QUESTION_KEYS.map((_, i) => (
                   <div
                     key={i}
                     className={`h-1 flex-1 rounded-full transition-all duration-500 ${
@@ -263,18 +238,18 @@ export default function Welcome() {
 
             <div className="space-y-3">
               <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("welcome.quiz_scenario")} {question.id} {t("welcome.quiz_of")} {QUESTIONS.length}
+                {t("welcome.quiz_scenario")} {qKey.id} {t("welcome.quiz_of")} {QUESTION_KEYS.length}
               </p>
               <p className="text-xl md:text-2xl font-serif text-foreground leading-relaxed">
-                {question.scenario}
+                {t(qKey.scenarioKey)}
               </p>
             </div>
 
             <div className="space-y-3">
-              {question.options.map((opt, idx) => {
+              {qKey.optionKeys.map((optKey, idx) => {
                 let variant: "correct" | "incorrect" | "neutral" | "dimmed" = "neutral";
                 if (revealed) {
-                  if (idx === question.correctIndex) variant = "correct";
+                  if (idx === qKey.correctIndex) variant = "correct";
                   else if (idx === selected) variant = "incorrect";
                   else variant = "dimmed";
                 }
@@ -298,13 +273,13 @@ export default function Welcome() {
                       variant === "correct" ? "text-green-600" :
                       variant === "incorrect" ? "text-red-500" : "text-muted-foreground"
                     }`}>
-                      {opt.label}
+                      {optionLabels[idx]}
                     </span>
-                    <span className="font-light leading-relaxed">{opt.text}</span>
-                    {revealed && idx === question.correctIndex && (
+                    <span className="font-light leading-relaxed">{t(optKey)}</span>
+                    {revealed && idx === qKey.correctIndex && (
                       <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto shrink-0 mt-0.5" aria-hidden="true" />
                     )}
-                    {revealed && idx === selected && idx !== question.correctIndex && (
+                    {revealed && idx === selected && idx !== qKey.correctIndex && (
                       <XCircle className="w-4 h-4 text-red-500 ml-auto shrink-0 mt-0.5" aria-hidden="true" />
                     )}
                   </button>
@@ -322,7 +297,7 @@ export default function Welcome() {
                   <span className="font-semibold font-mono text-xs uppercase tracking-wider mr-2">
                     {isCorrect ? t("welcome.quiz_correct") : t("welcome.quiz_not_quite")}
                   </span>
-                  {question.explanation}
+                  {t(qKey.explanationKey)}
                 </div>
 
                 <div className="flex justify-end">
@@ -330,7 +305,7 @@ export default function Welcome() {
                     onClick={advance}
                     className="font-serif bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-sm"
                   >
-                    {currentQ < QUESTIONS.length - 1 ? t("welcome.quiz_next") : t("welcome.quiz_result")}
+                    {currentQ < QUESTION_KEYS.length - 1 ? t("welcome.quiz_next") : t("welcome.quiz_result")}
                     <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </Button>
                 </div>

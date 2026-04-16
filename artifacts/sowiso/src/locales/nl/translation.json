@@ -546,5 +546,20 @@
   "compass.lock.teaser": "Ontgrendel de etiquettecodes, kardinale taboes en het culturele kompas van deze regio — essentiële kennis voor wie tussen werelden beweegt.",
   "atelier.lock.teaser": "Gevorderde scenario's dompelen u onder in de verfijnde eisen van distinctie — complexe dilemma's, concurrerende conventies en de onzichtbare codes die de verfijnde van de uitzonderlijke scheiden.",
   "welcome.module_mirror_desc": "Discrete verschijningsanalyse op uw apparaat",
-  "welcome.quiz_back": "Terug"
+  "welcome.quiz_back": "Terug",
+  "welcome.quiz_q1_scenario": "U bent uitgenodigd voor een privédiner. De uitnodiging vermeldt zeven uur. Op welk tijdstip dient u te arriveren?",
+  "welcome.quiz_q1_opt_a": "Kwart voor zeven — om te helpen met de laatste voorbereidingen.",
+  "welcome.quiz_q1_opt_b": "Precies om zeven uur — stiptheid is een deugd.",
+  "welcome.quiz_q1_opt_c": "Tussen tien en kwartier over zeven — het gebruikelijke kwartier.",
+  "welcome.quiz_q1_explanation": "Iets later arriveren dan het vermelde uur — het zogenaamde 'kwartier van de gastheer' — stelt de gastheer in staat zijn voorbereidingen rustig af te ronden. Te vroeg arriveren wordt beschouwd als een belasting.",
+  "welcome.quiz_q2_scenario": "U zit aan een formeel gedekte tafel. Broodjes zijn aan beide zijden van uw couvert geplaatst. Welk is van u?",
+  "welcome.quiz_q2_opt_a": "Het broodje aan mijn linkerhand.",
+  "welcome.quiz_q2_opt_b": "Het broodje aan mijn rechterhand.",
+  "welcome.quiz_q2_opt_c": "Het meest verse exemplaar.",
+  "welcome.quiz_q2_explanation": "Het geheugensteuntje BMW helpt bij de formele tafel: Brood links, Maaltijd in het midden, Water en Wijn rechts. Het broodje links van u is altijd het uwe.",
+  "welcome.quiz_q3_scenario": "Tijdens een zakelijk diner in Tokio overhandigt uw gastheer zijn meishi — visitekaartje — met beide handen en een respectvolle buiging. Hoe reageert u?",
+  "welcome.quiz_q3_opt_a": "Aanvaarden met één hand en een warme glimlach, dan terzijde leggen.",
+  "welcome.quiz_q3_opt_b": "Aanvaarden met beide handen, aandachtig bekijken en respectvol op tafel plaatsen.",
+  "welcome.quiz_q3_opt_c": "Dankbaar aanvaarden en onmiddellijk uw eigen kaartje overhandigen.",
+  "welcome.quiz_q3_explanation": "In de Japanse zakenwereld is de meishi een verlengstuk van de persoon. Het moet met beide handen worden ontvangen, met oprechte aandacht worden bekeken en zorgvuldig op tafel worden geplaatst — nooit beschreven of onmiddellijk weggestopt."
 }

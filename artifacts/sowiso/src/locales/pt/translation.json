@@ -540,5 +540,20 @@
   "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
   "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional.",
   "welcome.module_mirror_desc": "Discreet on-device presentation analysis",
-  "welcome.quiz_back": "Back"
+  "welcome.quiz_back": "Back",
+  "welcome.quiz_q1_scenario": "You have been invited to dinner at a private residence. The invitation states seven o'clock. At what time should you arrive?",
+  "welcome.quiz_q1_opt_a": "Six forty-five — to assist with final preparations.",
+  "welcome.quiz_q1_opt_b": "Seven o'clock precisely — punctuality is a virtue.",
+  "welcome.quiz_q1_opt_c": "Between seven ten and seven fifteen — the customary quarter.",
+  "welcome.quiz_q1_explanation": "Arriving slightly after the stated hour — the so-called 'gentleman's quarter' — allows the host to conclude their preparations with composure. Arriving early is considered an imposition.",
+  "welcome.quiz_q2_scenario": "You are seated at a formally laid table. Bread rolls are placed on either side of your setting. Which is yours?",
+  "welcome.quiz_q2_opt_a": "The one to my left.",
+  "welcome.quiz_q2_opt_b": "The one to my right.",
+  "welcome.quiz_q2_opt_c": "Whichever appears freshest.",
+  "welcome.quiz_q2_explanation": "The mnemonic BMW guides the formal table: Bread to the left, Meal in the centre, Water and Wine to the right. The bread roll to your left is always yours.",
+  "welcome.quiz_q3_scenario": "During a business dinner in Tokyo, your host presents their meishi — business card — with both hands and a respectful bow. How do you respond?",
+  "welcome.quiz_q3_opt_a": "Accept with one hand and a warm smile, then set it aside.",
+  "welcome.quiz_q3_opt_b": "Accept with both hands, study it attentively, and place it respectfully on the table.",
+  "welcome.quiz_q3_opt_c": "Accept graciously and immediately reciprocate with your own card.",
+  "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately."
 }

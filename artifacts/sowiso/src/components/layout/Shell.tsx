@@ -12,16 +12,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
 
-  const navigation = [
-    { key: "nav.dashboard",   href: "/",            icon: Landmark },
+  const allNavigation = [
+    { key: "nav.dashboard",   href: "/",            icon: Landmark, authOnly: true  },
     { key: "nav.atelier",     href: "/atelier",     icon: BookOpen },
     { key: "nav.counsel",     href: "/counsel",     icon: Shield   },
     { key: "nav.compass",     href: "/compass",     icon: Compass  },
     { key: "nav.situations",  href: "/situations",  icon: Layers   },
     { key: "nav.mirror",      href: "/mirror",      icon: Scan, ambassadorOnly: true },
-    { key: "nav.profile",     href: "/profile",     icon: User     },
+    { key: "nav.profile",     href: "/profile",     icon: User,    authOnly: true   },
     { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];
+
+  const navigation = allNavigation.filter(
+    (item) => !("authOnly" in item && item.authOnly) || isAuthenticated
+  );
 
   const MAIN_CONTENT_ID = "main-content";
 

@@ -9,6 +9,7 @@ import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionA
 import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useRegisterQuality } from "@/hooks/useRegisterQuality";
+import { LockOverlay } from "@/components/LockOverlay";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -234,12 +235,12 @@ export default function Counsel() {
         )}
       </div>
 
-      {/* ── Domain Overview — always visible ── */}
-      <div className="space-y-3">
+      {/* ── Domain Overview — gated for guests ── */}
+      <div className={`space-y-3 ${isGuest ? "relative" : ""}`}>
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 px-0.5">
           {t("counsel.select_domain")}
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${isGuest ? "pointer-events-none select-none opacity-30 blur-[2px]" : ""}`}>
           {DOMAIN_KEYS.map((key) => {
             const label = t(key as Parameters<typeof t>[0]);
             const accessible = isDomainAccessible(key);
@@ -280,29 +281,15 @@ export default function Counsel() {
             );
           })}
         </div>
+        {isGuest && (
+          <LockOverlay
+            variant="section"
+            requiredTier="traveller"
+            teaser={t("counsel.lock.teaser")}
+            isAuthenticated={false}
+          />
+        )}
       </div>
-
-      {/* ── Access Gate: Guest (not registered) ── */}
-      {isGuest && (
-        <div className="border border-border/40 rounded-sm bg-muted/10 px-6 py-8 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{t("nav.counsel")}</span>
-          </div>
-          <p className="text-muted-foreground font-light leading-relaxed">
-            {t("counsel.gate.guest_desc")}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-2">
-            <Link href="/signin">
-              <div className="inline-flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
-                <UserPlus className="h-4 w-4" aria-hidden="true" />
-                {t("counsel.gate.guest_cta")}
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-              </div>
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* ── Access Gate: Basic user limit reached ── */}
       {hasBasicAccess && basicLimitReached && (

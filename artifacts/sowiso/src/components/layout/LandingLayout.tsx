@@ -102,8 +102,8 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
-          {(["nav.atelier", "nav.compass", "nav.counsel", "nav.mirror"] as const).map((key, i) => {
-            const paths = ["/atelier", "/compass", "/counsel", "/mirror"];
+          {(["nav.atelier", "nav.counsel", "nav.compass", "nav.situations", "nav.mirror"] as const).map((key, i) => {
+            const paths = ["/atelier", "/counsel", "/compass", "/situations", "/mirror"];
             return (
               <Link key={key} href={paths[i]}>
                 <span className="text-xs font-mono tracking-wide text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer">

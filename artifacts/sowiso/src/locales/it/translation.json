@@ -556,5 +556,7 @@
   "welcome.quiz_q3_opt_a": "Accept with one hand and a warm smile, then set it aside.",
   "welcome.quiz_q3_opt_b": "Accept with both hands, study it attentively, and place it respectfully on the table.",
   "welcome.quiz_q3_opt_c": "Accept graciously and immediately reciprocate with your own card.",
-  "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately."
+  "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately.",
+  "counsel.lock.teaser": "Il Consiglio è la vostra guida discreta attraverso i domini del galateo — dalla tavola formale alla corrispondenza digitale.",
+  "situations.lock.teaser": "Situazioni vi guida attraverso le aspettative non dette di ogni contesto sociale — cene, cerimonie e occasioni formali."
 }

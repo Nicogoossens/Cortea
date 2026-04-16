@@ -136,7 +136,9 @@ function AppRouter() {
               <Route path="/compass/cluster/:id" component={CompassCluster} />
               <Route path="/compass/:code" component={CompassRegion} />
               <Route path="/counsel" component={Counsel} />
+              <Route path="/situations" component={Situations} />
               <Route path="/mirror" component={Mirror} />
+              <Route path="/membership" component={Membership} />
               <Route path="/register" component={Register} />
               <Route path="/signin" component={SignIn} />
               <Route path="/verify-email" component={EmailVerify} />

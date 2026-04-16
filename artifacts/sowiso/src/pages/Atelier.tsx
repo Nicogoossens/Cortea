@@ -19,6 +19,7 @@ import { useState } from "react";
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
 
 const GUEST_DIFFICULTY_MAX = 2;
+const GUEST_FREE_SCENARIO_CAP = 3;
 
 function scoreToDifficultyMax(score: number): number {
   if (score >= 80) return 5;
@@ -66,9 +67,13 @@ export default function Atelier() {
     5: "pillar.5.name",
   };
 
-  const accessibleScenarios = allScenarios?.filter((s) => s.difficulty_level <= difficultyMax);
-  const lockedScenarios = allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
-  const hasLockedScenarios = isGuest && (lockedScenarios?.length ?? 0) > 0;
+  const accessibleScenarios = isGuest
+    ? allScenarios?.slice(0, GUEST_FREE_SCENARIO_CAP)
+    : allScenarios?.filter((s) => s.difficulty_level <= difficultyMax);
+  const lockedScenarios = isGuest
+    ? allScenarios?.slice(GUEST_FREE_SCENARIO_CAP)
+    : allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
+  const hasLockedScenarios = (lockedScenarios?.length ?? 0) > 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

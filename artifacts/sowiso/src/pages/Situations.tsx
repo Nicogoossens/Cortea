@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocale } from "@/lib/i18n";
 import { useActiveRegion } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
+import { LockOverlay } from "@/components/LockOverlay";
 import { Utensils, Briefcase, Heart, Star, Anchor, Hand, Gift, Lock, Crown } from "lucide-react";
 
 interface Situation {
@@ -223,9 +225,11 @@ export default function Situations() {
   const { t, locale } = useLocale();
   const { activeRegion } = useActiveRegion();
   const { data: profile } = useGetProfile();
+  const { isAuthenticated } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
 
   const tier = profile?.subscription_tier ?? "guest";
+  const isGuest = !isAuthenticated;
   const isAmbassador = tier === "ambassador";
 
   const selectedSituation = SITUATIONS.find((s) => s.id === selected);
@@ -234,6 +238,38 @@ export default function Situations() {
   const allTips = selectedSituation
     ? [...selectedSituation.tips.universal, ...regionTips]
     : [];
+
+  if (isGuest) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
+        <div className="space-y-4 max-w-3xl">
+          <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("situations.title")}</h1>
+          <p className="text-muted-foreground text-lg font-light leading-relaxed">
+            {t("situations.subtitle")}
+          </p>
+        </div>
+        <div className="relative min-h-[320px]">
+          <div className="pointer-events-none select-none opacity-25 blur-[3px] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {SITUATIONS.slice(0, 8).map((sit) => {
+              const Icon = sit.icon;
+              return (
+                <div key={sit.id} className="flex flex-col items-center gap-2 p-4 rounded-sm border border-border/60 text-center">
+                  <Icon className="w-6 h-6 text-primary/70" aria-hidden="true" />
+                  <span className="text-xs font-medium leading-tight">{t(sit.nameKey as Parameters<typeof t>[0])}</span>
+                </div>
+              );
+            })}
+          </div>
+          <LockOverlay
+            variant="section"
+            requiredTier="traveller"
+            teaser={t("situations.lock.teaser")}
+            isAuthenticated={false}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">

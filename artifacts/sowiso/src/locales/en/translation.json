@@ -562,5 +562,7 @@
   "welcome.quiz_q3_opt_a": "Accept with one hand and a warm smile, then set it aside.",
   "welcome.quiz_q3_opt_b": "Accept with both hands, study it attentively, and place it respectfully on the table.",
   "welcome.quiz_q3_opt_c": "Accept graciously and immediately reciprocate with your own card.",
-  "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately."
+  "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately.",
+  "counsel.lock.teaser": "The Counsel is your discreet guide across etiquette domains — from the formal table to digital correspondence.",
+  "situations.lock.teaser": "Situations guides you through the unspoken expectations of every social setting — dinners, ceremonies, and formal occasions."
 }

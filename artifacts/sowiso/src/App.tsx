@@ -130,6 +130,13 @@ function AppRouter() {
         <Route>
           <Shell>
             <Switch>
+              <Route path="/atelier" component={Atelier} />
+              <Route path="/atelier/:id" component={Scenario} />
+              <Route path="/compass" component={Compass} />
+              <Route path="/compass/cluster/:id" component={CompassCluster} />
+              <Route path="/compass/:code" component={CompassRegion} />
+              <Route path="/counsel" component={Counsel} />
+              <Route path="/mirror" component={Mirror} />
               <Route path="/register" component={Register} />
               <Route path="/signin" component={SignIn} />
               <Route path="/verify-email" component={EmailVerify} />

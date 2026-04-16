@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, Globe } from "lucide-react";
-import { useLanguage, LOCALE_GROUPS, getLocaleDefinition, type SupportedLocale } from "@/lib/i18n";
+import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
 import { LandingLayout } from "@/components/layout/LandingLayout";
 
@@ -115,57 +115,6 @@ function RegionPicker() {
   );
 }
 
-const FEATURED_LANG_LOCALES: SupportedLocale[] = ["en-GB", "fr-FR", "nl-NL", "de-DE"];
-
-function HeroLanguagePicker() {
-  const { locale, setLocale, t } = useLanguage();
-  const [showAll, setShowAll] = useState(false);
-
-  const visibleGroups = showAll
-    ? LOCALE_GROUPS
-    : LOCALE_GROUPS.filter((g) => FEATURED_LANG_LOCALES.includes(g.locales[0].locale));
-
-  return (
-    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center gap-2">
-        <Globe className="w-3.5 h-3.5 text-muted-foreground/60" aria-hidden="true" />
-        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60">
-          {t("landing.your_language")}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-2" role="listbox" aria-label={t("landing.your_language")}>
-        {visibleGroups.map((group) => {
-          const rep = group.locales[0];
-          const isSelected = group.locales.some((l) => l.locale === locale);
-          return (
-            <button
-              key={group.groupLabel}
-              role="option"
-              aria-selected={isSelected}
-              onClick={() => setLocale(rep.locale as SupportedLocale)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-mono transition-all duration-200 ${
-                isSelected
-                  ? "border-primary bg-primary/10 text-primary font-semibold scale-105"
-                  : "border-border/50 bg-card text-foreground/60 hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
-              }`}
-            >
-              <FlagEmoji countryCode={rep.flag} />
-              <span>{group.groupLabel}</span>
-            </button>
-          );
-        })}
-        {!showAll && (
-          <button
-            onClick={() => setShowAll(true)}
-            className="px-3 py-1.5 rounded-sm border border-border/30 bg-transparent text-xs font-mono text-muted-foreground/50 hover:text-muted-foreground hover:border-border/60 transition-colors"
-          >
-            {t("landing.more_languages")}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function Welcome() {
   const [, navigate] = useLocation();
@@ -235,8 +184,7 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="w-full space-y-8 border-t border-border/30 pt-10">
-            <HeroLanguagePicker />
+          <div className="w-full border-t border-border/30 pt-10">
             <RegionPicker />
           </div>
 
@@ -261,11 +209,12 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full border-t border-border/20 pt-8 animate-in fade-in duration-700" style={{ animationDelay: "500ms" }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full border-t border-border/20 pt-8 animate-in fade-in duration-700" style={{ animationDelay: "500ms" }}>
             {[
-              { icon: BookOpen, labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc" },
-              { icon: Shield,   labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc" },
-              { icon: Compass,  labelKey: "nav.compass", descKey: "welcome.module_compass_desc" },
+              { icon: BookOpen,  labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc" },
+              { icon: Shield,    labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc" },
+              { icon: Compass,   labelKey: "nav.compass", descKey: "welcome.module_compass_desc" },
+              { icon: ScanFace,  labelKey: "nav.mirror",  descKey: "welcome.module_mirror_desc"  },
             ].map(({ icon: Icon, labelKey, descKey }) => (
               <div key={labelKey} className="text-center space-y-2">
                 <Icon className="w-6 h-6 mx-auto text-primary/60" aria-hidden="true" />
@@ -287,19 +236,29 @@ export default function Welcome() {
       <LandingLayout>
         <div className="flex-1 flex flex-col px-6 md:px-12 py-10 max-w-2xl mx-auto w-full">
           <div className="space-y-10 animate-in fade-in duration-500">
-            <div className="flex items-center gap-3">
-              {QUESTIONS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1 flex-1 rounded-full transition-all duration-500 ${
-                    i < currentQ
-                      ? "bg-primary"
-                      : i === currentQ
-                      ? "bg-primary/50"
-                      : "bg-border"
-                  }`}
-                />
-              ))}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => { setPhase("hero"); setCurrentQ(0); setAnswers([null, null, null]); setRevealed(false); }}
+                className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground/60 hover:text-muted-foreground transition-colors shrink-0"
+                aria-label={t("welcome.quiz_back")}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+                {t("welcome.quiz_back")}
+              </button>
+              <div className="flex items-center gap-3 flex-1">
+                {QUESTIONS.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-500 ${
+                      i < currentQ
+                        ? "bg-primary"
+                        : i === currentQ
+                        ? "bg-primary/50"
+                        : "bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="space-y-3">

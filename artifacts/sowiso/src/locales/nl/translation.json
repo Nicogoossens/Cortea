@@ -24,7 +24,7 @@
   "home.cultural_compass": "Cultureel Kompas",
   "welcome.hero_title_1": "Hoe verfijnd",
   "welcome.hero_title_2": "bent u?",
-  "welcome.hero_subtitle": "Verbeter uw communicatie en etiquette in elke cultuur. Leer de tradities van andere regio's en bouw sterkere, betekenisvollere relaties op — overal ter wereld.",
+  "welcome.hero_subtitle": "Verfijn uw communicatie en etiquette over culturen heen. Leer de tradities van verschillende regio's, verbeter uw reacties in elke sociale situatie, en bouw sterkere, meer betekenisvolle relaties op — waar ter wereld u zich ook bevindt.",
   "welcome.begin": "Begin de toetsing",
   "welcome.module_atelier_desc": "Etiquettetraining via scenario's",
   "welcome.module_counsel_desc": "Discrete AI-begeleiding in 30 seconden",
@@ -178,7 +178,7 @@
   "scenario.not_found": "Scenario Niet Gevonden",
   "common.loading": "Laden…",
   "common.error": "Er is iets misgegaan.",
-  "common.not_found": "Pagina Niet Gevonden",
+  "common.not_found": "Niet gevonden",
   "common.return_home": "Terug naar Start",
   "locale.select": "Taal",
   "locale.choose_region": "Kies uw taal",
@@ -472,7 +472,6 @@
   "landing.signin_link": "Inloggen",
   "landing.more_languages": "Meer talen",
   "nav.situations": "Situaties",
-  "common.not_found": "Niet gevonden",
   "compass.view_clusters": "Per cluster",
   "compass.view_regions": "Alle regio's",
   "compass.countries": "regio's",
@@ -545,5 +544,7 @@
   "lock.cta.upgrade": "Vergroot uw wereld",
   "mirror.lock.teaser": "De Spiegel analyseert uw verschijning vanuit het perspectief van gelegenheid en rang — discreet, op uw apparaat en uiterst precies.",
   "compass.lock.teaser": "Ontgrendel de etiquettecodes, kardinale taboes en het culturele kompas van deze regio — essentiële kennis voor wie tussen werelden beweegt.",
-  "atelier.lock.teaser": "Gevorderde scenario's dompelen u onder in de verfijnde eisen van distinctie — complexe dilemma's, concurrerende conventies en de onzichtbare codes die de verfijnde van de uitzonderlijke scheiden."
+  "atelier.lock.teaser": "Gevorderde scenario's dompelen u onder in de verfijnde eisen van distinctie — complexe dilemma's, concurrerende conventies en de onzichtbare codes die de verfijnde van de uitzonderlijke scheiden.",
+  "welcome.module_mirror_desc": "Discrete verschijningsanalyse op uw apparaat",
+  "welcome.quiz_back": "Terug"
 }

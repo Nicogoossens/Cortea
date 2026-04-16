@@ -25,7 +25,7 @@
   "home.continue_studies": "Continue your journey",
   "welcome.hero_title_1": "How refined",
   "welcome.hero_title_2": "are you?",
-  "welcome.hero_subtitle": "Elevate your communication and etiquette across cultures. Learn the traditions of different regions and build stronger, more meaningful relationships — wherever in the world you find yourself.",
+  "welcome.hero_subtitle": "Elevate your communication and etiquette across cultures. Learn the traditions of different regions, refine your responses to every social occasion, and build stronger, more meaningful relationships — wherever in the world you find yourself.",
   "welcome.begin": "Begin the Assessment",
   "welcome.module_atelier_desc": "Scenario-based etiquette training",
   "welcome.module_counsel_desc": "Discreet AI guidance in 30 seconds",
@@ -204,7 +204,7 @@
   "scenario.not_found": "Scenario Not Found",
   "common.loading": "Loading…",
   "common.error": "Something went amiss.",
-  "common.not_found": "Page Not Found",
+  "common.not_found": "Not found",
   "common.return_home": "Return Home",
   "locale.select": "Language",
   "locale.choose_region": "Choose your language",
@@ -472,7 +472,6 @@
   "landing.signin_link": "Sign in",
   "landing.more_languages": "More languages",
   "nav.situations": "Situations",
-  "common.not_found": "Not found",
   "compass.view_clusters": "By Cluster",
   "compass.view_regions": "All Regions",
   "compass.countries": "regions",
@@ -545,5 +544,7 @@
   "lock.cta.upgrade": "Expand your world",
   "mirror.lock.teaser": "The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise.",
   "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
-  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional."
+  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional.",
+  "welcome.module_mirror_desc": "Discreet on-device presentation analysis",
+  "welcome.quiz_back": "Back"
 }

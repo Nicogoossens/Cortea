@@ -101,6 +101,19 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
 
+        <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
+          {(["nav.atelier", "nav.compass", "nav.counsel"] as const).map((key, i) => {
+            const paths = ["/atelier", "/compass", "/counsel"];
+            return (
+              <Link key={key} href={paths[i]}>
+                <span className="text-xs font-mono tracking-wide text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer">
+                  {t(key)}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
         <div className="flex items-center gap-4">
           <LandingLanguageSwitcher />
           <div className="w-px h-4 bg-border/60" aria-hidden="true" />

@@ -538,5 +538,7 @@
   "lock.cta.upgrade": "Expand your world",
   "mirror.lock.teaser": "The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise.",
   "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
-  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional."
+  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional.",
+  "welcome.module_mirror_desc": "Discreet on-device presentation analysis",
+  "welcome.quiz_back": "Back"
 }

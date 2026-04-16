@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
@@ -108,7 +108,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <div className="pt-4 border-t border-sidebar-border/50 space-y-2">
               {isAuthenticated ? (
                 <button
-                  onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                  onClick={() => { logout(); setIsMobileMenuOpen(false); navigate("/"); }}
                   className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors w-full"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -196,7 +196,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </p>
               )}
               <button
-                onClick={logout}
+                onClick={() => { logout(); navigate("/"); }}
                 className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer w-full"
               >
                 <LogOut className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />

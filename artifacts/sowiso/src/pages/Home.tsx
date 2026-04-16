@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { useGetProfile, useGetNobleScore, useGetPillarProgress, useCreateProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown } from "lucide-react";
 import { useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -30,6 +30,9 @@ export default function Home() {
 
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;
 
+  const isAmbassador = profile?.subscription_tier === "ambassador";
+  const mirrorHref = !userId ? "/signin" : isAmbassador ? "/mirror" : "/membership";
+
   if (isLoading) {
     return (
       <div className="space-y-8 animate-in fade-in duration-500" aria-label={t("common.loading")} aria-live="polite">
@@ -41,8 +44,8 @@ export default function Home() {
           <Skeleton className="h-48 rounded-sm" />
           <Skeleton className="h-48 rounded-sm md:col-span-2" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-sm" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-sm" />)}
         </div>
       </div>
     );
@@ -119,7 +122,7 @@ export default function Home() {
 
       <div className="space-y-6">
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("home.continue_studies")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
 
           <Link href="/atelier" className="group">
             <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
@@ -168,6 +171,32 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex justify-end">
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" aria-hidden="true" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href={mirrorHref} className="group">
+            <Card className="h-full border-amber-200/50 bg-card transition-all duration-300 hover:shadow-md hover:border-amber-400/40 cursor-pointer relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-400/60 to-amber-600/30" aria-hidden="true" />
+              <CardHeader>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="h-12 w-12 rounded-sm bg-amber-50/60 flex items-center justify-center group-hover:bg-amber-100/60 transition-colors">
+                    <Scan className="h-6 w-6 text-amber-700/70" aria-hidden="true" />
+                  </div>
+                  {!isAmbassador && (
+                    <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-amber-700/60 border border-amber-300/50 rounded-[2px] px-1.5 py-0.5 bg-amber-50/50">
+                      <Crown className="h-2.5 w-2.5" aria-hidden="true" />
+                      {t("mirror.tier_label")}
+                    </span>
+                  )}
+                </div>
+                <CardTitle className="font-serif text-xl text-amber-900/80 group-hover:text-amber-900 transition-colors">{t("nav.mirror")}</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  {isAmbassador ? t("mirror.subtitle") : t("mirror.access_prompt")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-end">
+                <ArrowRight className="h-5 w-5 text-amber-400/60 group-hover:text-amber-600 transition-all group-hover:translate-x-1" aria-hidden="true" />
               </CardContent>
             </Card>
           </Link>

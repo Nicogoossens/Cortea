@@ -7,10 +7,11 @@ import { useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
+import { LockOverlay } from "@/components/LockOverlay";
 
 export default function Home() {
   const { t } = useLanguage();
-  const { userId } = useAuth();
+  const { userId, isAuthenticated } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
@@ -192,12 +193,19 @@ export default function Home() {
                 </div>
                 <CardTitle className="font-serif text-xl text-amber-900/80 group-hover:text-amber-900 transition-colors">{t("nav.mirror")}</CardTitle>
                 <CardDescription className="text-base leading-relaxed">
-                  {isAmbassador ? t("mirror.subtitle") : t("mirror.access_prompt")}
+                  {t("mirror.subtitle")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-end">
                 <ArrowRight className="h-5 w-5 text-amber-400/60 group-hover:text-amber-600 transition-all group-hover:translate-x-1" aria-hidden="true" />
               </CardContent>
+              {!isAmbassador && (
+                <LockOverlay
+                  requiredTier="ambassador"
+                  teaser={t("mirror.lock.teaser")}
+                  isAuthenticated={isAuthenticated}
+                />
+              )}
             </Card>
           </Link>
 

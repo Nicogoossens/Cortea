@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TierGate } from "@/components/TierGate";
+import { LockOverlay } from "@/components/LockOverlay";
+import { useAuth } from "@/lib/auth";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "wouter";
 import {
@@ -148,6 +150,7 @@ type CameraState = "idle" | "loading_model" | "requesting" | "active" | "denied"
 
 export default function Mirror() {
   const { data: profile } = useGetProfile();
+  const { isAuthenticated } = useAuth();
   const { canUseCamera } = usePrivacy();
 
   const tier = profile?.subscription_tier ?? "guest";
@@ -232,10 +235,39 @@ export default function Mirror() {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="space-y-2">
-          <h1 className="text-4xl font-serif text-foreground">The Mirror</h1>
-          <p className="text-muted-foreground text-lg font-light">Your private reflection.</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-serif text-foreground">The Mirror</h1>
+            <Badge variant="outline" className="font-mono text-xs tracking-widest uppercase border-amber-400/40 text-amber-600">Ambassador</Badge>
+          </div>
+          <p className="text-muted-foreground text-lg font-light max-w-2xl">
+            Present yourself and receive a discreet, on-device assessment of your dress code. No images are transmitted — all analysis runs locally in your browser.
+          </p>
         </div>
-        <TierGate feature="The Mirror" requiredTier="ambassador" />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3 space-y-4">
+            <div className="relative aspect-[4/3] rounded-sm overflow-hidden bg-muted border border-border">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-muted-foreground blur-[2px]" aria-hidden="true">
+                <Camera className="h-12 w-12 opacity-20" />
+                <p className="text-sm font-light">Activate the mirror to begin your reflection.</p>
+              </div>
+              <LockOverlay
+                requiredTier="ambassador"
+                teaser="The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise."
+                isAuthenticated={isAuthenticated}
+                variant="section"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button disabled className="flex items-center gap-2 opacity-40 cursor-not-allowed">
+                <Camera className="h-4 w-4" />
+                Activate Mirror
+              </Button>
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <TierGate feature="The Mirror" requiredTier="ambassador" isAuthenticated={isAuthenticated} teaser="Receive a real-time, on-device appraisal of your dress code — refined, private, and precise." />
+          </div>
+        </div>
       </div>
     );
   }

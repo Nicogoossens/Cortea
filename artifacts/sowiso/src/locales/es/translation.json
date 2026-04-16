@@ -169,7 +169,7 @@
   "scenario.not_found": "Escenario No Encontrado",
   "common.loading": "Cargando…",
   "common.error": "Algo salió mal.",
-  "common.not_found": "Página No Encontrada",
+  "common.not_found": "Not found",
   "common.return_home": "Volver al Inicio",
   "locale.select": "Idioma",
   "locale.choose_region": "Elija su idioma",
@@ -464,10 +464,8 @@
   "landing.region_intro": "Seleccione el contexto de etiqueta para su sesión",
   "landing.signin_prompt": "¿Ya es miembro?",
   "landing.signin_link": "Iniciar sesión",
-  "landing.more_languages": "Más idiomas"
-,
+  "landing.more_languages": "Más idiomas",
   "nav.situations": "Situations",
-  "common.not_found": "Not found",
   "compass.view_clusters": "By Cluster",
   "compass.view_regions": "All Regions",
   "compass.countries": "regions",
@@ -535,5 +533,10 @@
   "counsel.situation_chips.yacht": "Yacht gathering",
   "counsel.situation_active": "Context set",
   "counsel.situation_clear": "Clear",
-  "counsel.situation_hint": "This context will be shared with The Counsel to calibrate its guidance."
+  "counsel.situation_hint": "This context will be shared with The Counsel to calibrate its guidance.",
+  "lock.cta.register": "Begin your journey",
+  "lock.cta.upgrade": "Expand your world",
+  "mirror.lock.teaser": "The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise.",
+  "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
+  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional."
 }

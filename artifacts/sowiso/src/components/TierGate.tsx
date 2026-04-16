@@ -6,6 +6,8 @@ interface TierGateProps {
   requiredTier: "traveller" | "ambassador";
   children?: React.ReactNode;
   inline?: boolean;
+  isAuthenticated?: boolean;
+  teaser?: string;
 }
 
 const TIER_NAMES: Record<"traveller" | "ambassador", string> = {
@@ -18,7 +20,10 @@ const TIER_PHRASES: Record<"traveller" | "ambassador", string> = {
   ambassador: "Refine your presence",
 };
 
-export function TierGate({ feature, requiredTier, children, inline = false }: TierGateProps) {
+export function TierGate({ feature, requiredTier, children, inline = false, isAuthenticated = false, teaser }: TierGateProps) {
+  const href = isAuthenticated ? "/membership" : "/register";
+  const ctaText = isAuthenticated ? TIER_PHRASES[requiredTier] : "Begin your journey";
+
   if (inline) {
     return (
       <div className="relative">
@@ -26,7 +31,7 @@ export function TierGate({ feature, requiredTier, children, inline = false }: Ti
           {children}
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Link href="/membership">
+          <Link href={href}>
             <div className="flex items-center gap-2 px-4 py-2 bg-background/95 border border-border/60 rounded-sm shadow-sm text-sm cursor-pointer hover:border-primary/40 transition-all group">
               <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               <span className="text-muted-foreground font-light">
@@ -35,7 +40,7 @@ export function TierGate({ feature, requiredTier, children, inline = false }: Ti
                 {". "}
               </span>
               <span className="text-primary text-xs group-hover:underline underline-offset-2">
-                {TIER_PHRASES[requiredTier]}
+                {ctaText}
                 <ArrowRight className="inline h-3 w-3 ml-0.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
               </span>
             </div>
@@ -51,14 +56,17 @@ export function TierGate({ feature, requiredTier, children, inline = false }: Ti
         <Lock className="h-3.5 w-3.5" aria-hidden="true" />
         <span>{feature}</span>
       </div>
+      {teaser && (
+        <p className="text-muted-foreground font-light leading-relaxed text-sm">{teaser}</p>
+      )}
       <p className="text-muted-foreground font-light leading-relaxed">
         This domain belongs to the repertoire of{" "}
         <span className="text-foreground font-medium">{TIER_NAMES[requiredTier]}</span>.
         {" "}Shall we expand your access?
       </p>
-      <Link href="/membership">
+      <Link href={href}>
         <div className="inline-flex items-center gap-2 mt-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
-          {TIER_PHRASES[requiredTier]}
+          {ctaText}
           <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
         </div>
       </Link>

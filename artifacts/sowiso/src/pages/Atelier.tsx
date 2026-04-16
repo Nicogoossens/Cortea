@@ -12,6 +12,8 @@ import { Clock, TrendingUp, BookOpen, Lock } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { TierGate } from "@/components/TierGate";
+import { LockOverlay } from "@/components/LockOverlay";
+import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
@@ -28,6 +30,7 @@ function scoreToDifficultyMax(score: number): number {
 
 export default function Atelier() {
   const { t, locale } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
 
@@ -185,35 +188,43 @@ export default function Atelier() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {lockedScenarios?.slice(0, 3).map((scenario) => (
-                  <Link key={scenario.id} href="/membership" aria-label={`Locked: ${scenario.title}`}>
-                    <Card className="h-full border-border/50 bg-card/60 overflow-hidden relative cursor-pointer hover:border-primary/20 transition-all duration-300 flex flex-col">
-                      <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <Badge variant="outline" className="bg-muted/50 text-muted-foreground/50 font-mono text-xs rounded-sm px-2">
-                            {t("atelier.pillar")} {scenario.pillar}
-                          </Badge>
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground/40" aria-hidden="true" />
-                        </div>
-                        <CardTitle className="font-serif text-xl line-clamp-2 text-muted-foreground/50 blur-[3px]">{scenario.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1">
-                        <p className="text-muted-foreground/30 text-sm line-clamp-3 blur-[4px]">
-                          {scenario.content_json.situation}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="pt-4 border-t border-border/30 text-xs text-muted-foreground/30 flex justify-between items-center bg-muted/10">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>{scenario.estimated_minutes || 2} {t("atelier.duration")}</span>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                ))}
+                {lockedScenarios?.slice(0, 3).map((scenario) => {
+                  const lockHref = isAuthenticated ? "/membership" : "/register";
+                  return (
+                    <Link key={scenario.id} href={lockHref} aria-label={`Locked: ${scenario.title}`}>
+                      <Card className="h-full border-border/50 bg-card/60 overflow-hidden relative cursor-pointer hover:border-primary/20 transition-all duration-300 flex flex-col group">
+                        <CardHeader className="pb-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <Badge variant="outline" className="bg-muted/50 text-muted-foreground/50 font-mono text-xs rounded-sm px-2">
+                              {t("atelier.pillar")} {scenario.pillar}
+                            </Badge>
+                            <Lock className="h-3.5 w-3.5 text-muted-foreground/40" aria-hidden="true" />
+                          </div>
+                          <CardTitle className="font-serif text-xl line-clamp-2 text-muted-foreground/50 blur-[3px]">{scenario.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1">
+                          <p className="text-muted-foreground/30 text-sm line-clamp-3 blur-[4px]">
+                            {scenario.content_json.situation}
+                          </p>
+                        </CardContent>
+                        <CardFooter className="pt-4 border-t border-border/30 text-xs text-muted-foreground/30 flex justify-between items-center bg-muted/10">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>{scenario.estimated_minutes || 2} {t("atelier.duration")}</span>
+                          </div>
+                        </CardFooter>
+                        <LockOverlay
+                          requiredTier="traveller"
+                          teaser={t("atelier.lock.teaser")}
+                          isAuthenticated={isAuthenticated}
+                        />
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
 
-              <TierGate feature="Advanced Scenarios" requiredTier="traveller" />
+              <TierGate feature="Advanced Scenarios" requiredTier="traveller" isAuthenticated={isAuthenticated} />
             </div>
           )}
         </div>

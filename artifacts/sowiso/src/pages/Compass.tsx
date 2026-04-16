@@ -8,14 +8,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Compass as CompassIcon, Globe, Lock, LayoutGrid, List } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { CULTURE_CLUSTERS } from "@/lib/clusters";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
+import { LockOverlay } from "@/components/LockOverlay";
 import { useState } from "react";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 export default function Compass() {
   const { t, locale } = useLocale();
+  const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();
   const [view, setView] = useState<"clusters" | "regions">("clusters");
 
@@ -147,8 +150,9 @@ export default function Compass() {
                 const isLocked = !allUnlocked && !GUEST_UNLOCKED_REGIONS.includes(region.region_code);
 
                 if (isLocked) {
+                  const lockHref = isAuthenticated ? "/membership" : "/register";
                   return (
-                    <Link key={region.region_code} href="/membership" aria-label={`Unlock ${region.region_name}`}>
+                    <Link key={region.region_code} href={lockHref} aria-label={`Unlock ${region.region_name}`}>
                       <Card className="h-full border-border bg-card/60 overflow-hidden group cursor-pointer hover:border-primary/20 transition-all duration-300 relative">
                         <div className="h-2 w-full bg-muted" aria-hidden="true" />
                         <CardHeader>
@@ -171,11 +175,11 @@ export default function Compass() {
                             <p className="text-sm text-muted-foreground line-clamp-2 blur-[4px]">{region.biggest_taboo}</p>
                           </div>
                         </CardContent>
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-background/90 border border-border/60 rounded-sm px-4 py-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                            This domain belongs to The Traveller
-                          </div>
-                        </div>
+                        <LockOverlay
+                          requiredTier="traveller"
+                          teaser={t("compass.lock.teaser")}
+                          isAuthenticated={isAuthenticated}
+                        />
                       </Card>
                     </Link>
                   );

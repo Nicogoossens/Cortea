@@ -201,7 +201,7 @@
   "scenario.not_found": "シナリオが見つかりません",
   "common.loading": "読み込み中…",
   "common.error": "何か不具合が生じました。",
-  "common.not_found": "ページが見つかりません",
+  "common.not_found": "Not found",
   "common.return_home": "ホームへ戻る",
   "locale.select": "言語",
   "locale.choose_region": "言語をお選びください",
@@ -464,10 +464,8 @@
   "landing.region_intro": "セッションのマナーコンテキストを選択してください",
   "landing.signin_prompt": "すでにメンバーですか？",
   "landing.signin_link": "サインイン",
-  "landing.more_languages": "その他の言語"
-,
+  "landing.more_languages": "その他の言語",
   "nav.situations": "Situations",
-  "common.not_found": "Not found",
   "compass.view_clusters": "By Cluster",
   "compass.view_regions": "All Regions",
   "compass.countries": "regions",
@@ -535,5 +533,10 @@
   "counsel.situation_chips.yacht": "Yacht gathering",
   "counsel.situation_active": "Context set",
   "counsel.situation_clear": "Clear",
-  "counsel.situation_hint": "This context will be shared with The Counsel to calibrate its guidance."
+  "counsel.situation_hint": "This context will be shared with The Counsel to calibrate its guidance.",
+  "lock.cta.register": "Begin your journey",
+  "lock.cta.upgrade": "Expand your world",
+  "mirror.lock.teaser": "The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise.",
+  "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
+  "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional."
 }

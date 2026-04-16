@@ -540,5 +540,10 @@
   "counsel.situation_chips.yacht": "Jacht samenzijn",
   "counsel.situation_active": "Context ingesteld",
   "counsel.situation_clear": "Wissen",
-  "counsel.situation_hint": "Deze context wordt gedeeld met The Counsel om de begeleiding te kalibreren."
+  "counsel.situation_hint": "Deze context wordt gedeeld met The Counsel om de begeleiding te kalibreren.",
+  "lock.cta.register": "Begin uw reis",
+  "lock.cta.upgrade": "Vergroot uw wereld",
+  "mirror.lock.teaser": "De Spiegel analyseert uw verschijning vanuit het perspectief van gelegenheid en rang — discreet, op uw apparaat en uiterst precies.",
+  "compass.lock.teaser": "Ontgrendel de etiquettecodes, kardinale taboes en het culturele kompas van deze regio — essentiële kennis voor wie tussen werelden beweegt.",
+  "atelier.lock.teaser": "Gevorderde scenario's dompelen u onder in de verfijnde eisen van distinctie — complexe dilemma's, concurrerende conventies en de onzichtbare codes die de verfijnde van de uitzonderlijke scheiden."
 }

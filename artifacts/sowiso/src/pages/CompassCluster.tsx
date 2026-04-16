@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, CheckCircle2, AlertTriangle, Lock, Crown } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
-import { getCluster } from "@/lib/clusters";
-import { FlagEmoji } from "@/lib/active-region";
+import { getCluster, getClusterBrief } from "@/lib/clusters";
+import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -17,6 +17,7 @@ export default function CompassCluster() {
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useLocale();
   const cluster = getCluster(id ?? "");
+  const { activeRegion } = useActiveRegion();
 
   const { data: profile } = useGetProfile();
   const tier = profile?.subscription_tier ?? "guest";
@@ -43,6 +44,13 @@ export default function CompassCluster() {
     (cluster.members as string[]).includes(r.region_code)
   ) ?? [];
 
+  const { dos, donts } = getClusterBrief(cluster, locale);
+
+  function getCountryName(code: string): string {
+    const region = COMPASS_REGIONS.find((r) => r.code === code);
+    return region?.names[locale as keyof typeof region.names] ?? region?.names.en ?? code;
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500 pb-16">
       <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -52,10 +60,11 @@ export default function CompassCluster() {
 
       {/* Header */}
       <div className="pb-6 border-b border-border/60">
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-3 mb-4 items-center">
           {cluster.members.map((code) => (
-            <span key={code} className="text-3xl" aria-hidden="true">
-              <FlagEmoji code={code} />
+            <span key={code} className="flex flex-col items-center gap-0.5">
+              <FlagEmoji code={code} className="text-3xl leading-none" />
+              <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-wide">{getCountryName(code)}</span>
             </span>
           ))}
         </div>
@@ -84,7 +93,7 @@ export default function CompassCluster() {
               {t("compass.dos")}
             </h3>
             <ul className="space-y-2.5" aria-label={t("compass.dos")}>
-              {cluster.dos.map((item, i) => (
+              {dos.map((item, i) => (
                 <li key={i} className="flex gap-3 items-start text-sm">
                   <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <span className="text-foreground/80 leading-snug">{item}</span>
@@ -98,7 +107,7 @@ export default function CompassCluster() {
               {t("compass.donts")}
             </h3>
             <ul className="space-y-2.5" aria-label={t("compass.donts")}>
-              {cluster.donts.map((item, i) => (
+              {donts.map((item, i) => (
                 <li key={i} className="flex gap-3 items-start text-sm">
                   <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <span className="text-foreground/80 leading-snug">{item}</span>
@@ -177,6 +186,8 @@ export default function CompassCluster() {
             {cluster.members.map((code) => {
               const region = clusterRegions.find((r) => r.region_code === code);
               const isLocked = !allUnlocked && !GUEST_UNLOCKED_REGIONS.includes(code);
+              const isUserRegion = code === activeRegion;
+              const countryName = getCountryName(code);
 
               if (isLocked || !region) {
                 return (
@@ -184,11 +195,9 @@ export default function CompassCluster() {
                     <Card className="border-border/30 bg-muted/10 cursor-pointer hover:border-primary/20 transition-colors group relative overflow-hidden">
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl opacity-30"><FlagEmoji code={code} /></span>
+                          <FlagEmoji code={code} className="text-3xl leading-none opacity-30" />
                           <div>
-                            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/40">
-                              {code}
-                            </p>
+                            <p className="text-sm font-serif text-muted-foreground/40">{countryName}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <Lock className="w-3 h-3 text-muted-foreground/30" aria-hidden="true" />
                               <span className="text-xs text-muted-foreground/40">{t("compass.unlock_region")}</span>
@@ -203,16 +212,29 @@ export default function CompassCluster() {
 
               return (
                 <Link key={code} href={`/compass/${code}`}>
-                  <Card className="border-border bg-card cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all group">
+                  <Card className={`border-bg-card cursor-pointer transition-all group ${
+                    isUserRegion
+                      ? "border-primary/50 ring-1 ring-primary/20 bg-primary/[0.02]"
+                      : "border-border hover:border-primary/40 hover:shadow-sm"
+                  }`}>
                     <CardHeader className="pb-2">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl"><FlagEmoji code={code} /></span>
-                        <div>
-                          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{code}</p>
-                          <CardTitle className="font-serif text-lg group-hover:text-primary transition-colors">
-                            {region.region_name}
-                          </CardTitle>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FlagEmoji code={code} className="text-3xl leading-none" />
+                          <div>
+                            <CardTitle className="font-serif text-lg group-hover:text-primary transition-colors">
+                              {region.region_name}
+                            </CardTitle>
+                            {countryName !== region.region_name && (
+                              <p className="text-[10px] font-mono text-muted-foreground/50 uppercase tracking-wide">{code}</p>
+                            )}
+                          </div>
                         </div>
+                        {isUserRegion && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5 rounded-full shrink-0">
+                            {t("compass.your_region")}
+                          </span>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">

@@ -176,22 +176,17 @@ export function useActiveRegion(): ActiveRegionContextValue {
 }
 
 /**
- * Renders a small, legible country code badge instead of an emoji flag.
- * Flag Unicode emojis are unreliable in many browser/OS combinations.
+ * Renders a real Unicode emoji flag for the given ISO 3166-1 alpha-2 code.
+ * Regional Indicator Symbol Letters are formed by offsetting from 'A' (U+1F1E6).
  */
-export function FlagEmoji({ code }: { code: string }) {
-  const display = code.toUpperCase().slice(0, 2);
+export function FlagEmoji({ code, className }: { code: string; className?: string }) {
+  const upper = code.toUpperCase().slice(0, 2);
+  const flag = [...upper]
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join("");
   return (
-    <span
-      aria-hidden="true"
-      className="inline-flex items-center justify-center text-[9px] font-bold leading-none tracking-wider rounded-[2px] px-[3px] py-[2px] border border-current/20 font-mono shrink-0"
-      style={{
-        minWidth: "1.5rem",
-        color: "var(--muted-foreground)",
-        backgroundColor: "color-mix(in srgb, currentColor 8%, transparent)",
-      }}
-    >
-      {display}
+    <span aria-hidden="true" className={className ?? "text-xl leading-none"}>
+      {flag}
     </span>
   );
 }

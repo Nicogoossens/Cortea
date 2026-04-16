@@ -49,14 +49,18 @@ export default function Atelier() {
 
   const queryParams = {
     region_code: activeRegion,
-    ...(selectedPillar > 0 ? { pillar: selectedPillar } : {}),
+    ...(isGuest
+      ? {}
+      : selectedPillar > 0
+        ? { pillar: selectedPillar }
+        : {}),
     difficulty_max: 5,
     limit: 50,
     lang,
   };
 
   const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, selectedPillar, lang] }
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isGuest ? 0 : selectedPillar, lang] }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {
@@ -105,24 +109,26 @@ export default function Atelier() {
         </div>
       )}
 
-      {/* Pillar filter tabs */}
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
-        {PILLARS.map((p) => (
-          <button
-            key={p}
-            role="tab"
-            aria-selected={selectedPillar === p}
-            onClick={() => setSelectedPillar(p)}
-            className={`px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-sm transition-colors border
-              ${selectedPillar === p
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
-              }`}
-          >
-            {p === 0 ? t("atelier.all_pillars") : `${t("atelier.pillar")} ${p} · ${t(PILLAR_DOMAIN_NAMES[p] as Parameters<typeof t>[0])}`}
-          </button>
-        ))}
-      </div>
+      {/* Pillar filter tabs — hidden for guests */}
+      {!isGuest && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
+          {PILLARS.map((p) => (
+            <button
+              key={p}
+              role="tab"
+              aria-selected={selectedPillar === p}
+              onClick={() => setSelectedPillar(p)}
+              className={`px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-sm transition-colors border
+                ${selectedPillar === p
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+                }`}
+            >
+              {p === 0 ? t("atelier.all_pillars") : `${t("atelier.pillar")} ${p} · ${t(PILLAR_DOMAIN_NAMES[p] as Parameters<typeof t>[0])}`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-label={t("common.loading")} aria-live="polite">

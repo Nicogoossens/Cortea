@@ -123,57 +123,77 @@ function UserPreferencesSync() {
 function AppRouter() {
   const { isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/" component={Welcome} />
-        <Route>
+  return (
+    <Switch>
+      {/*
+        These routes are auth-state-agnostic: they must NOT remount when
+        isAuthenticated changes mid-flow (e.g. email verification).
+        Placing them here — before the auth-conditional block — means the
+        same component instance stays mounted regardless of auth state.
+      */}
+      <Route path="/verify-email">
+        <Shell>
+          <EmailVerify />
+        </Shell>
+      </Route>
+      <Route path="/onboarding">
+        <Shell>
+          <Onboarding />
+        </Shell>
+      </Route>
+      <Route path="/replit-callback">
+        <Shell>
+          <ReplitCallback />
+        </Shell>
+      </Route>
+
+      {/* Auth-conditional routing */}
+      <Route>
+        {!isAuthenticated ? (
+          <Switch>
+            <Route path="/" component={Welcome} />
+            <Route>
+              <Shell>
+                <Switch>
+                  <Route path="/atelier" component={Atelier} />
+                  <Route path="/atelier/:id" component={Scenario} />
+                  <Route path="/compass" component={Compass} />
+                  <Route path="/compass/cluster/:id" component={CompassCluster} />
+                  <Route path="/compass/:code" component={CompassRegion} />
+                  <Route path="/counsel" component={Counsel} />
+                  <Route path="/situations" component={Situations} />
+                  <Route path="/mirror" component={Mirror} />
+                  <Route path="/membership" component={Membership} />
+                  <Route path="/register" component={Register} />
+                  <Route path="/signin" component={SignIn} />
+                  <Route component={NotFound} />
+                </Switch>
+              </Shell>
+            </Route>
+          </Switch>
+        ) : (
           <Shell>
             <Switch>
+              <Route path="/" component={Home} />
               <Route path="/atelier" component={Atelier} />
               <Route path="/atelier/:id" component={Scenario} />
+              <Route path="/counsel" component={Counsel} />
               <Route path="/compass" component={Compass} />
               <Route path="/compass/cluster/:id" component={CompassCluster} />
               <Route path="/compass/:code" component={CompassRegion} />
-              <Route path="/counsel" component={Counsel} />
               <Route path="/situations" component={Situations} />
-              <Route path="/mirror" component={Mirror} />
-              <Route path="/membership" component={Membership} />
+              <Route path="/profile" component={Profile} />
               <Route path="/register" component={Register} />
               <Route path="/signin" component={SignIn} />
-              <Route path="/verify-email" component={EmailVerify} />
-              <Route path="/replit-callback" component={ReplitCallback} />
+              <Route path="/admin" component={Admin} />
+              <Route path="/membership" component={Membership} />
+              <Route path="/mirror" component={Mirror} />
               <Route component={NotFound} />
             </Switch>
           </Shell>
-        </Route>
-      </Switch>
-    );
-  }
-
-  return (
-    <Shell>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/atelier" component={Atelier} />
-        <Route path="/atelier/:id" component={Scenario} />
-        <Route path="/counsel" component={Counsel} />
-        <Route path="/compass" component={Compass} />
-        <Route path="/compass/cluster/:id" component={CompassCluster} />
-        <Route path="/compass/:code" component={CompassRegion} />
-        <Route path="/situations" component={Situations} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/register" component={Register} />
-        <Route path="/signin" component={SignIn} />
-        <Route path="/verify-email" component={EmailVerify} />
-        <Route path="/onboarding" component={Onboarding} />
-        <Route path="/admin" component={Admin} />
-        <Route path="/membership" component={Membership} />
-        <Route path="/mirror" component={Mirror} />
-        <Route path="/replit-callback" component={ReplitCallback} />
-        <Route component={NotFound} />
-      </Switch>
-    </Shell>
+        )}
+      </Route>
+    </Switch>
   );
 }
 

@@ -191,7 +191,27 @@ export default function CompassCluster() {
               const isUserRegion = code === activeRegion;
               const countryName = getCountryName(code);
 
-              if (isLocked || !region) {
+              if (!region) {
+                return (
+                  <div key={code}>
+                    <Card className="border-border/20 bg-muted/5 relative overflow-hidden">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center gap-3">
+                          <FlagEmoji code={code} className="text-3xl leading-none opacity-20" />
+                          <div>
+                            <p className="text-sm font-serif text-muted-foreground/30">{countryName}</p>
+                            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/30 mt-0.5">
+                              {t("compass.coming_soon")}
+                            </p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                );
+              }
+
+              if (isLocked) {
                 const lockHref = isVisitor ? "/register" : "/membership";
                 return (
                   <Link key={code} href={lockHref}>

@@ -484,6 +484,8 @@
   "compass.hs_yacht": "Yacht and charter etiquette on the Cote dAzur and Adriatic.",
   "compass.guest_hint": "As a guest, one region is open to you.",
   "compass.guest_cta": "Expand your world",
+  "compass.registered_hint": "Votre région active est ouverte. Passez au niveau supérieur pour explorer toutes les régions.",
+  "compass.registered_cta": "Devenir Voyageur →",
   "clusters.anglosaxon.name": "Anglo-Saxon World",
   "clusters.anglosaxon.philosophy": "Understatement, pragmatism, and quiet confidence",
   "clusters.western_europe.name": "Continental Western Europe",

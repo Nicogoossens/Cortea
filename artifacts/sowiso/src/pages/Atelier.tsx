@@ -39,9 +39,10 @@ export default function Atelier() {
   const { data: profile } = useGetProfile();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const isGuest = tier === "guest";
+  const isVisitor = !isAuthenticated;
+  const hasFullAccess = tier === "traveller" || tier === "ambassador";
   const scoreDifficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);
-  const difficultyMax = isGuest
+  const difficultyMax = isVisitor
     ? Math.min(scoreDifficultyMax, GUEST_DIFFICULTY_MAX)
     : scoreDifficultyMax;
 
@@ -49,7 +50,7 @@ export default function Atelier() {
 
   const queryParams = {
     region_code: activeRegion,
-    ...(isGuest
+    ...(isVisitor
       ? {}
       : selectedPillar > 0
         ? { pillar: selectedPillar }
@@ -60,7 +61,7 @@ export default function Atelier() {
   };
 
   const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isGuest ? 0 : selectedPillar, lang] }
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang] }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {
@@ -71,10 +72,10 @@ export default function Atelier() {
     5: "pillar.5.name",
   };
 
-  const accessibleScenarios = isGuest
+  const accessibleScenarios = isVisitor
     ? allScenarios?.slice(0, GUEST_FREE_SCENARIO_CAP)
     : allScenarios?.filter((s) => s.difficulty_level <= difficultyMax);
-  const lockedScenarios = isGuest
+  const lockedScenarios = isVisitor
     ? allScenarios?.slice(GUEST_FREE_SCENARIO_CAP)
     : allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
   const hasLockedScenarios = (lockedScenarios?.length ?? 0) > 0;
@@ -95,13 +96,13 @@ export default function Atelier() {
         <span className="text-muted-foreground/60 text-xs">{t("atelier.region")}</span>
       </div>
 
-      {/* Guest preview banner */}
-      {isGuest && (
+      {/* Visitor preview banner — shown only to unauthenticated visitors */}
+      {isVisitor && (
         <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-border/40 bg-muted/20 text-sm">
           <BookOpen className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
           <p className="text-foreground/80">
             <span className="font-medium">{t("atelier.guest.preview_label")}</span> —{" "}
-            <Link href="/membership" className="text-primary underline underline-offset-2 hover:text-primary/80">
+            <Link href="/register" className="text-primary underline underline-offset-2 hover:text-primary/80">
               {t("atelier.guest.register_link")}
             </Link>{" "}
             {t("atelier.guest.register_prompt")}
@@ -109,8 +110,8 @@ export default function Atelier() {
         </div>
       )}
 
-      {/* Pillar filter tabs — hidden for guests */}
-      {!isGuest && (
+      {/* Pillar filter tabs — hidden for unauthenticated visitors */}
+      {!isVisitor && (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
           {PILLARS.map((p) => (
             <button

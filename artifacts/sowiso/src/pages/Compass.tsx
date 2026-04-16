@@ -24,6 +24,7 @@ export default function Compass() {
   const [view, setView] = useState<"clusters" | "regions">("clusters");
 
   const tier = profile?.subscription_tier ?? "guest";
+  const isVisitor = !isAuthenticated;
   const allUnlocked = tier === "traveller" || tier === "ambassador";
 
   const { data: regions, isLoading } = useGetCultureCompass(
@@ -50,11 +51,19 @@ export default function Compass() {
         <p className="text-muted-foreground text-lg font-light leading-relaxed">
           {t("compass.subtitle")}
         </p>
-        {!allUnlocked && (
+        {isVisitor && (
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-muted pl-3">
             {t("compass.guest_hint")}{" "}
-            <Link href="/membership">
+            <Link href="/register">
               <span className="text-primary cursor-pointer hover:underline underline-offset-2">{t("compass.guest_cta")}</span>
+            </Link>
+          </p>
+        )}
+        {!isVisitor && !allUnlocked && (
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-muted pl-3">
+            {t("compass.registered_hint")}{" "}
+            <Link href="/membership">
+              <span className="text-primary cursor-pointer hover:underline underline-offset-2">{t("compass.registered_cta")}</span>
             </Link>
           </p>
         )}
@@ -173,7 +182,7 @@ export default function Compass() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               {regions?.map((region) => {
-                const isLocked = !allUnlocked && !GUEST_UNLOCKED_REGIONS.includes(region.region_code);
+                const isLocked = !allUnlocked && isVisitor && !GUEST_UNLOCKED_REGIONS.includes(region.region_code);
                 const isUserRegion = region.region_code === activeRegion;
 
                 if (isLocked) {

@@ -87,7 +87,7 @@ export default function CompassRegion() {
             variant="section"
             requiredTier="traveller"
             teaser={t("compass.lock.teaser")}
-            isAuthenticated={false}
+            isAuthenticated={isAuthenticated}
           />
         </div>
       </div>

@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2, AlertTriangle, Lock, Crown } from "lucide-reac
 import { useLocale } from "@/lib/i18n";
 import { getCluster, getClusterBrief } from "@/lib/clusters";
 import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region";
+import { useAuth } from "@/lib/auth";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -19,9 +20,10 @@ export default function CompassCluster() {
   const cluster = getCluster(id ?? "");
   const { activeRegion } = useActiveRegion();
 
+  const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();
   const tier = profile?.subscription_tier ?? "guest";
-  const allUnlocked = tier === "traveller" || tier === "ambassador";
+  const isVisitor = !isAuthenticated;
   const isAmbassador = tier === "ambassador";
 
   const { data: regions, isLoading } = useGetCultureCompass(
@@ -160,7 +162,7 @@ export default function CompassCluster() {
               <p className="text-sm text-muted-foreground/40 leading-relaxed blur-[3px] select-none" aria-hidden="true">
                 {t("compass.high_society_desc")}
               </p>
-              <Link href="/membership">
+              <Link href={isVisitor ? "/register" : "/membership"}>
                 <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-primary hover:underline underline-offset-2 cursor-pointer">
                   <Crown className="w-3 h-3" />
                   {t("compass.unlock_ambassador")}
@@ -185,13 +187,14 @@ export default function CompassCluster() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {cluster.members.map((code) => {
               const region = clusterRegions.find((r) => r.region_code === code);
-              const isLocked = !allUnlocked && !GUEST_UNLOCKED_REGIONS.includes(code);
+              const isLocked = isVisitor && !GUEST_UNLOCKED_REGIONS.includes(code);
               const isUserRegion = code === activeRegion;
               const countryName = getCountryName(code);
 
               if (isLocked || !region) {
+                const lockHref = isVisitor ? "/register" : "/membership";
                 return (
-                  <Link key={code} href="/membership">
+                  <Link key={code} href={lockHref}>
                     <Card className="border-border/30 bg-muted/10 cursor-pointer hover:border-primary/20 transition-colors group relative overflow-hidden">
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-3">

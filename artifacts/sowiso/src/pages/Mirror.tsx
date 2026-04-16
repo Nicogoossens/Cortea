@@ -154,7 +154,7 @@ export default function Mirror() {
   const { canUseCamera } = usePrivacy();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasAccess = tier === "ambassador";
+  const hasAccess = isAuthenticated && tier === "ambassador";
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

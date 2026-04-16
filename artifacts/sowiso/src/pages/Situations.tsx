@@ -6,7 +6,7 @@ import { useActiveRegion } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
-import { Utensils, Briefcase, Heart, Star, Anchor, Hand, Gift, Lock, Crown } from "lucide-react";
+import { Utensils, Briefcase, Heart, Star, Anchor, Hand, Gift, Lock, Crown, ArrowRight } from "lucide-react";
 
 interface Situation {
   id: string;
@@ -248,24 +248,34 @@ export default function Situations() {
             {t("situations.subtitle")}
           </p>
         </div>
-        <div className="relative min-h-[320px]">
-          <div className="pointer-events-none select-none opacity-25 blur-[3px] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="relative">
+          <div className="pointer-events-none select-none grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 opacity-60">
             {SITUATIONS.slice(0, 8).map((sit) => {
               const Icon = sit.icon;
               return (
-                <div key={sit.id} className="flex flex-col items-center gap-2 p-4 rounded-sm border border-border/60 text-center">
+                <div key={sit.id} className="flex flex-col items-center gap-2 p-4 rounded-sm border border-border/60 text-center bg-background">
                   <Icon className="w-6 h-6 text-primary/70" aria-hidden="true" />
                   <span className="text-xs font-medium leading-tight">{t(sit.nameKey as Parameters<typeof t>[0])}</span>
                 </div>
               );
             })}
           </div>
-          <LockOverlay
-            variant="section"
-            requiredTier="traveller"
-            teaser={t("situations.lock.teaser")}
-            isAuthenticated={false}
-          />
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+        </div>
+        <div className="text-center space-y-4 pt-2 pb-4">
+          <div className="flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>The Traveller</span>
+          </div>
+          <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-sm mx-auto">
+            {t("situations.lock.teaser")}
+          </p>
+          <Link href="/register">
+            <div className="inline-flex items-center gap-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
+              {t("lock.cta.register")}
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+            </div>
+          </Link>
         </div>
       </div>
     );

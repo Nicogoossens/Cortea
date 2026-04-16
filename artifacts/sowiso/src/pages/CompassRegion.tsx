@@ -7,10 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
+import { LockOverlay } from "@/components/LockOverlay";
+
+const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 export default function CompassRegion() {
   const { code } = useParams<{ code: string }>();
   const { t, locale } = useLocale();
+  const { isAuthenticated } = useAuth();
   const regionCode = code || "";
 
   const { data: detail, isLoading } = useGetCultureCompassRegion(
@@ -52,6 +57,39 @@ export default function CompassRegion() {
         <Link href="/compass" className="text-primary hover:underline mt-4 inline-block">
           {t("compass.back")}
         </Link>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated && !GUEST_UNLOCKED_REGIONS.includes(regionCode)) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
+        <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+          {t("compass.back")}
+        </Link>
+        <div className="flex items-center gap-6">
+          <div className="text-6xl drop-shadow-sm" aria-label={detail.region_name}>{detail.flag_emoji}</div>
+          <div>
+            <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-2">{detail.region_name}</h1>
+            <p className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{detail.region_code}</p>
+          </div>
+        </div>
+        <div className="relative min-h-[200px]">
+          <div className="pointer-events-none select-none opacity-40 blur-[2px] space-y-6">
+            <div className="bg-primary/5 border border-primary/20 rounded-sm p-6 h-40" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="border border-border/40 rounded-sm p-6 h-28" />
+              <div className="border border-border/40 rounded-sm p-6 h-28" />
+            </div>
+          </div>
+          <LockOverlay
+            variant="section"
+            requiredTier="traveller"
+            teaser={t("compass.lock.teaser")}
+            isAuthenticated={false}
+          />
+        </div>
       </div>
     );
   }

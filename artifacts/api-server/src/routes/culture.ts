@@ -40,6 +40,7 @@ const ProtocolsQuerySchema = z.object({
   region_code: z.string().min(1),
   pillar: z.coerce.number().int().min(1).max(5).optional(),
   context: z.string().optional(),
+  locale: z.string().optional(),
 });
 
 const RegionCodeParamSchema = z.object({
@@ -57,7 +58,7 @@ router.get("/culture/protocols", async (req, res) => {
       return res.status(400).json({ message: "A region must be specified to retrieve cultural protocols." });
     }
 
-    const { region_code, pillar, context } = parsed.data;
+    const { region_code, pillar, context, locale } = parsed.data;
     const conditions = [eq(cultureProtocolsTable.region_code, region_code)];
 
     if (pillar !== undefined) {
@@ -72,7 +73,21 @@ router.get("/culture/protocols", async (req, res) => {
       .from(cultureProtocolsTable)
       .where(and(...conditions));
 
-    return res.json(protocols);
+    // Resolve locale-aware display text
+    // lang is the base language code (e.g. "nl" from "nl-NL", "fr" from "fr-FR")
+    const lang = locale ? locale.split("-")[0].toLowerCase() : "en";
+
+    const enriched = protocols.map((p) => {
+      const i18n = p.rule_cc_i18n as Record<string, string> | null;
+      const display_rule =
+        (lang !== "en" && i18n?.[lang])
+          ? i18n[lang]
+          : (p.rule_cc ?? p.rule_description);
+
+      return { ...p, display_rule };
+    });
+
+    return res.json(enriched);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch culture protocols");
     return res.status(500).json({ message: "Cultural protocols are momentarily unavailable. Please allow a moment." });

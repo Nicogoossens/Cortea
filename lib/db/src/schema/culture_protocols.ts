@@ -21,6 +21,7 @@ export const cultureProtocolsTable = pgTable("culture_protocols", {
   subcategory: text("subcategory"),
   rule_raw: text("rule_raw"),
   rule_cc: text("rule_cc"),
+  rule_cc_i18n: jsonb("rule_cc_i18n").$type<Record<string, string>>(),
   personas: jsonb("personas").$type<string[]>(),
   modules: jsonb("modules").$type<string[]>(),
   urgency: integer("urgency").default(2),

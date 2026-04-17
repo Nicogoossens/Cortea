@@ -670,6 +670,108 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
   }
 });
 
+// ── CC Translation helper ─────────────────────────────────────────────────────
+
+const CC_TARGET_LANGUAGES: Record<string, string> = {
+  nl: "Dutch",
+  fr: "French",
+  de: "German",
+  es: "Spanish",
+  pt: "Portuguese",
+  it: "Italian",
+  ar: "Arabic",
+  ja: "Japanese",
+};
+
+/**
+ * Translates a rule_cc string into all 8 non-English supported languages
+ * using a single Claude call. Returns a Record<langCode, translatedText>.
+ */
+async function translateRuleCc(
+  ruleCc: string,
+  pillarCode: string,
+  subcategory: string,
+  req: Request,
+): Promise<Record<string, string>> {
+  const anthropicBase = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+  const anthropicKey  = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+  if (!anthropicBase || !anthropicKey) return {};
+
+  const languageList = Object.entries(CC_TARGET_LANGUAGES)
+    .map(([code, name]) => `"${code}": "${name}"`)
+    .join(", ");
+
+  const systemPrompt = `You are a professional cultural etiquette translator.
+You translate etiquette rules from English into multiple languages.
+Rules:
+- Preserve the mentor/coaching tone of the original
+- Keep proper nouns and culture-specific terms as-is
+- Output ONLY valid JSON, no other text
+- Each translation must be natural, idiomatic, and accurate`;
+
+  const userMessage = `Translate this etiquette rule (pillar: ${pillarCode}, subcategory: ${subcategory}) into the following languages.
+Return ONLY a JSON object with language codes as keys.
+
+Rule (English): "${ruleCc}"
+
+Target languages: { ${languageList} }
+
+Expected output format:
+{
+  "nl": "<Dutch translation>",
+  "fr": "<French translation>",
+  "de": "<German translation>",
+  "es": "<Spanish translation>",
+  "pt": "<Portuguese translation>",
+  "it": "<Italian translation>",
+  "ar": "<Arabic translation>",
+  "ja": "<Japanese translation>"
+}`;
+
+  const aiResponse = await fetch(`${anthropicBase}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 2000,
+      temperature: 0.1,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    req.log?.warn({ status: aiResponse.status }, "CC Translation: AI call failed");
+    return {};
+  }
+
+  const aiData = await aiResponse.json() as { content: Array<{ text: string }> };
+  const rawText = aiData.content?.[0]?.text?.trim() ?? "";
+
+  let jsonText = rawText;
+  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) jsonText = jsonMatch[0];
+
+  try {
+    const parsed = JSON.parse(jsonText) as Record<string, unknown>;
+    const result: Record<string, string> = {};
+    for (const lang of Object.keys(CC_TARGET_LANGUAGES)) {
+      if (typeof parsed[lang] === "string" && (parsed[lang] as string).length > 0) {
+        result[lang] = parsed[lang] as string;
+      }
+    }
+    req.log?.info({ langs: Object.keys(result) }, "CC Translation: completed");
+    return result;
+  } catch {
+    req.log?.warn({ rawText: rawText.substring(0, 300) }, "CC Translation: could not parse AI JSON");
+    return {};
+  }
+}
+
 /** POST /admin/cc-save — persist an approved CC record to culture_protocols */
 router.post("/admin/cc-save", requireAdmin, async (req, res) => {
   try {
@@ -759,7 +861,21 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
       verified: false,
     }).returning();
 
-    return res.json({ ok: true, id: inserted.id });
+    // ── Automatic multilingual translation of rule_cc ─────────────────────────
+    let translations: Record<string, string> = {};
+    try {
+      translations = await translateRuleCc(data.rule_cc, data.pillar, data.subcategory, req);
+      if (Object.keys(translations).length > 0) {
+        await db
+          .update(cultureProtocolsTable)
+          .set({ rule_cc_i18n: translations })
+          .where(eq(cultureProtocolsTable.id, inserted.id));
+      }
+    } catch (translErr) {
+      req.log?.warn({ translErr, id: inserted.id }, "CC Save: translation step failed — record saved without translations");
+    }
+
+    return res.json({ ok: true, id: inserted.id, translations });
   } catch (err) {
     req.log?.error({ err }, "CC Save: failed to persist record");
     return res.status(500).json({ error: "A difficulty arose saving the record." });

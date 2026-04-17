@@ -63,6 +63,12 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   - **Profile.tsx**: Refinement Compass card with SVG pentagon radar chart (5 etiquette-language dimensions: Attentiveness, Composure, Discernment, Diplomacy, Presence). Fetches `GET /api/users/behavior-profile` in parallel with profile fetch. Card only appears for authenticated users with a behavior profile.
   - All user-facing labels are in etiquette language — no psychological labels shown to the user
 
+- **CC Screening Worker (Task #24)**: Admin tool for extracting etiquette rules from book fragments. Key implementation:
+  - **Routes**: `POST /api/admin/cc-screen` (AI extraction) + `POST /api/admin/cc-save` (persist)
+  - **Multilingual**: `cc-save` automatically translates `rule_cc` into 8 languages (nl/fr/de/es/pt/it/ar/ja) via single Claude call after insert, stored in `rule_cc_i18n jsonb` column on `culture_protocols`
+  - **Culture protocols API**: `GET /api/culture/protocols?locale=nl-NL` resolves locale-aware `display_rule` field per record (`rule_cc_i18n[lang]` → `rule_cc` → `rule_description` fallback chain)
+  - **Admin UI**: After save, translations panel shows all 8 language versions of `rule_cc` immediately
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
 
 ## Subscription Tiers (Task #4)

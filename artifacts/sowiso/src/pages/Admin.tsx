@@ -712,6 +712,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
   const [editedRecord, setEditedRecord] = useState<string>("");
   const [saveState, setSaveState] = useState<ActionState>("idle");
   const [savedId, setSavedId] = useState<number | null>(null);
+  const [savedTranslations, setSavedTranslations] = useState<Record<string, string>>({});
 
   async function handleScreen() {
     if (!fragment.trim() || !sourcePage.trim()) return;
@@ -758,9 +759,10 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify(parsed),
       });
-      const data = await res.json() as { ok?: boolean; id?: number; error?: string };
+      const data = await res.json() as { ok?: boolean; id?: number; error?: string; translations?: Record<string, string> };
       if (res.ok && data.ok) {
         setSavedId(data.id ?? null);
+        setSavedTranslations(data.translations ?? {});
         setSaveState("done");
       } else {
         setSaveState("error");
@@ -780,6 +782,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
     setEditedRecord("");
     setSaveState("idle");
     setSavedId(null);
+    setSavedTranslations({});
   }
 
   return (
@@ -964,9 +967,29 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-sm p-3 rounded-sm border bg-green-50 border-green-200 text-green-800">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Record opgeslagen · ID: <span className="font-mono">{savedId}</span> · verified: false — klaar voor redactionele review.</span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm p-3 rounded-sm border bg-green-50 border-green-200 text-green-800">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>Record opgeslagen · ID: <span className="font-mono">{savedId}</span> · verified: false — klaar voor redactionele review.</span>
+                </div>
+                {Object.keys(savedTranslations).length > 0 && (
+                  <div className="border border-border rounded-sm p-3 space-y-2">
+                    <p className="text-xs font-mono uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+                      <span>🌐</span> Automatische vertalingen (rule_cc_i18n)
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {Object.entries(savedTranslations).map(([lang, text]) => (
+                        <div key={lang} className="text-xs bg-muted/30 rounded-sm px-2 py-1.5">
+                          <span className="font-mono font-medium uppercase text-muted-foreground mr-2">{lang}</span>
+                          <span className="font-light">{text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Object.keys(savedTranslations).length === 0 && (
+                  <p className="text-xs text-muted-foreground font-mono">Vertaling niet beschikbaar (AI niet bereikbaar of fout opgetreden).</p>
+                )}
               </div>
             )}
           </CardContent>

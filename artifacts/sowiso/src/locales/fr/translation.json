@@ -573,5 +573,6 @@
   "situations.lock.teaser": "Situations vous guide à travers les attentes implicites de chaque cadre social — dîners, cérémonies et occasions formelles.",
   "home.welcome_back": "Bienvenue, {{name}}.",
   "home.welcome_back_score": "Votre Noble Score s'élève à {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} points pour atteindre {{next_level}}.",
   "home.welcome_back_dismiss": "Fermer"
 }

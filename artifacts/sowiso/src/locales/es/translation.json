@@ -573,5 +573,6 @@
   "situations.lock.teaser": "Situaciones le guía a través de las expectativas tácitas de cada entorno social — cenas, ceremonias y ocasiones formales.",
   "home.welcome_back": "Bienvenido de nuevo, {{name}}.",
   "home.welcome_back_score": "Su Noble Score es {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} puntos para {{next_level}}.",
   "home.welcome_back_dismiss": "Cerrar"
 }

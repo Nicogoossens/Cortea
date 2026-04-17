@@ -114,6 +114,14 @@ export default function Home() {
                 {t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })}
               </p>
             )}
+            {nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0 && (
+              <p className="mt-0.5 text-sm text-primary/70 font-light">
+                {t("home.welcome_back_next_rank", {
+                  remaining: nobleScore.next_level_threshold - nobleScore.total_score,
+                  next_level: t(levelKey(nobleScore.next_level_name)),
+                })}
+              </p>
+            )}
           </div>
           <button
             onClick={handleDismiss}

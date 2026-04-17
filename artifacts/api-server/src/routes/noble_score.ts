@@ -115,6 +115,7 @@ router.get("/noble-score", async (req, res) => {
         level_name: GLOBAL_LEVELS[0].name,
         level_color: GLOBAL_LEVELS[0].color,
         next_level_threshold: GLOBAL_LEVELS[1].min,
+        next_level_name: GLOBAL_LEVELS[1].name,
         pillars: emptyPillars,
       });
     }
@@ -148,6 +149,7 @@ router.get("/noble-score", async (req, res) => {
       level_name: currentLevel.name,
       level_color: currentLevel.color,
       next_level_threshold: nextLevel?.min ?? 100,
+      next_level_name: nextLevel?.name ?? null,
       pillars,
     });
   } catch (err) {

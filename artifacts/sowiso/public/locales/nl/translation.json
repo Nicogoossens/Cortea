@@ -579,5 +579,6 @@
   "situations.lock.teaser": "Situaties begeleidt u door de onuitgesproken verwachtingen van elke sociale gelegenheid — diners, ceremonies en formele aangelegenheden.",
   "home.welcome_back": "Welkom terug, {{name}}.",
   "home.welcome_back_score": "Uw Noble Score staat op {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "Nog {{remaining}} punten tot {{next_level}}.",
   "home.welcome_back_dismiss": "Sluiten"
 }

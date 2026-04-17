@@ -579,5 +579,6 @@
   "situations.lock.teaser": "Situations guides you through the unspoken expectations of every social setting — dinners, ceremonies, and formal occasions.",
   "home.welcome_back": "Welcome back, {{name}}.",
   "home.welcome_back_score": "Your Noble Score stands at {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} points to {{next_level}}.",
   "home.welcome_back_dismiss": "Dismiss"
 }

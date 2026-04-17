@@ -573,5 +573,6 @@
   "situations.lock.teaser": "シチュエーションは、ディナー、式典、フォーマルな機会など、あらゆる社会的場面の暗黙の期待を案内します。",
   "home.welcome_back": "おかえりなさい、{{name}}様。",
   "home.welcome_back_score": "あなたのノーブルスコアは{{score}}（{{level}}）です。",
+  "home.welcome_back_next_rank": "{{next_level}}まであと{{remaining}}ポイント。",
   "home.welcome_back_dismiss": "閉じる"
 }

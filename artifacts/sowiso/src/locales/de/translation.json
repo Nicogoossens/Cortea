@@ -573,5 +573,6 @@
   "situations.lock.teaser": "Situationen führt Sie durch die unausgesprochenen Erwartungen jedes sozialen Umfelds — Abendessen, Zeremonien und formelle Anlässe.",
   "home.welcome_back": "Willkommen zurück, {{name}}.",
   "home.welcome_back_score": "Ihr Noble Score beträgt {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} Punkte bis {{next_level}}.",
   "home.welcome_back_dismiss": "Schließen"
 }

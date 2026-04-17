@@ -573,5 +573,6 @@
   "situations.lock.teaser": "المواقف ترشدك عبر التوقعات غير المعلنة لكل بيئة اجتماعية — العشاء والاحتفالات والمناسبات الرسمية.",
   "home.welcome_back": "مرحباً بعودتك، {{name}}.",
   "home.welcome_back_score": "رصيدك النبيل {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} نقطة حتى {{next_level}}.",
   "home.welcome_back_dismiss": "إغلاق"
 }

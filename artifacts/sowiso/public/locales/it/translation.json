@@ -573,5 +573,6 @@
   "situations.lock.teaser": "Situazioni vi guida attraverso le aspettative non dette di ogni contesto sociale — cene, cerimonie e occasioni formali.",
   "home.welcome_back": "Bentornato, {{name}}.",
   "home.welcome_back_score": "Il suo Noble Score è {{score}} — {{level}}.",
+  "home.welcome_back_next_rank": "{{remaining}} punti per {{next_level}}.",
   "home.welcome_back_dismiss": "Chiudi"
 }

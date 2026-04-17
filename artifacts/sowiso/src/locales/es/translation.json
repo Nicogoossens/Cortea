@@ -570,5 +570,8 @@
   "welcome.quiz_q3_opt_c": "Accept graciously and immediately reciprocate with your own card.",
   "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately.",
   "counsel.lock.teaser": "El Consejo es su guía discreta a través de los dominios de la etiqueta — desde la mesa formal hasta la correspondencia digital.",
-  "situations.lock.teaser": "Situaciones le guía a través de las expectativas tácitas de cada entorno social — cenas, ceremonias y ocasiones formales."
+  "situations.lock.teaser": "Situaciones le guía a través de las expectativas tácitas de cada entorno social — cenas, ceremonias y ocasiones formales.",
+  "home.welcome_back": "Bienvenido de nuevo, {{name}}.",
+  "home.welcome_back_score": "Su Noble Score es {{score}} — {{level}}.",
+  "home.welcome_back_dismiss": "Cerrar"
 }

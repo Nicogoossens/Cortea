@@ -576,5 +576,8 @@
   "welcome.quiz_q3_opt_c": "Dankbaar aanvaarden en onmiddellijk uw eigen kaartje overhandigen.",
   "welcome.quiz_q3_explanation": "In de Japanse zakenwereld is de meishi een verlengstuk van de persoon. Het moet met beide handen worden ontvangen, met oprechte aandacht worden bekeken en zorgvuldig op tafel worden geplaatst — nooit beschreven of onmiddellijk weggestopt.",
   "counsel.lock.teaser": "De Raadgeving is uw discrete gids door etiquettedomeinen — van de formele tafel tot digitale correspondentie.",
-  "situations.lock.teaser": "Situaties begeleidt u door de onuitgesproken verwachtingen van elke sociale gelegenheid — diners, ceremonies en formele aangelegenheden."
+  "situations.lock.teaser": "Situaties begeleidt u door de onuitgesproken verwachtingen van elke sociale gelegenheid — diners, ceremonies en formele aangelegenheden.",
+  "home.welcome_back": "Welkom terug, {{name}}.",
+  "home.welcome_back_score": "Uw Noble Score staat op {{score}} — {{level}}.",
+  "home.welcome_back_dismiss": "Sluiten"
 }

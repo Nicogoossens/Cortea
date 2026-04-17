@@ -570,5 +570,8 @@
   "welcome.quiz_q3_opt_c": "Accept graciously and immediately reciprocate with your own card.",
   "welcome.quiz_q3_explanation": "In Japanese business culture, the meishi is an extension of the person. It must be received with both hands, examined with genuine attention, and placed carefully on the table — never written upon or pocketed immediately.",
   "counsel.lock.teaser": "المشورة هي دليلك السري عبر مجالات الآداب — من الطاولة الرسمية إلى المراسلات الرقمية.",
-  "situations.lock.teaser": "المواقف ترشدك عبر التوقعات غير المعلنة لكل بيئة اجتماعية — العشاء والاحتفالات والمناسبات الرسمية."
+  "situations.lock.teaser": "المواقف ترشدك عبر التوقعات غير المعلنة لكل بيئة اجتماعية — العشاء والاحتفالات والمناسبات الرسمية.",
+  "home.welcome_back": "مرحباً بعودتك، {{name}}.",
+  "home.welcome_back_score": "رصيدك النبيل {{score}} — {{level}}.",
+  "home.welcome_back_dismiss": "إغلاق"
 }

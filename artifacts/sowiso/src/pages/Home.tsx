@@ -2,12 +2,14 @@ import { Link } from "wouter";
 import { useGetProfile, useGetNobleScore, useGetPillarProgress, useCreateProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown } from "lucide-react";
-import { useEffect } from "react";
+import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { LockOverlay } from "@/components/LockOverlay";
+
+const WELCOME_DURATION_MS = 7000;
 
 export default function Home() {
   const { t } = useLanguage();
@@ -17,6 +19,10 @@ export default function Home() {
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
 
   const createProfile = useCreateProfile();
+
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (profileError && "status" in profileError && profileError.status === 404 && userId) {
@@ -29,10 +35,37 @@ export default function Home() {
     }
   }, [profileError, userId, createProfile]);
 
+  useEffect(() => {
+    if (!userId || !profile || !nobleScore) return;
+    const sessionKey = `welcome_shown_${userId}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, "1");
+
+    setShowWelcome(true);
+    const fadeIn = setTimeout(() => setWelcomeVisible(true), 30);
+    const fadeOut = setTimeout(() => handleDismiss(), WELCOME_DURATION_MS);
+    dismissTimerRef.current = fadeOut;
+
+    return () => {
+      clearTimeout(fadeIn);
+      clearTimeout(fadeOut);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, profile?.full_name, nobleScore?.total_score]);
+
+  const handleDismiss = () => {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    setWelcomeVisible(false);
+    setTimeout(() => setShowWelcome(false), 400);
+  };
+
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;
 
   const isAmbassador = profile?.subscription_tier === "ambassador";
   const mirrorHref = !userId ? "/signin" : isAmbassador ? "/mirror" : "/membership";
+
+  const firstName = profile?.full_name?.split(" ")[0] ?? "";
+  const levelLabel = t(levelKey(nobleScore?.level_name));
 
   if (isLoading) {
     return (
@@ -54,6 +87,38 @@ export default function Home() {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {showWelcome && firstName && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label={t("home.welcome_back", { name: firstName })}
+          className={[
+            "relative flex items-start gap-4 rounded-sm border border-primary/20 bg-primary/5 px-5 py-4",
+            "transition-all duration-400",
+            welcomeVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none",
+          ].join(" ")}
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-serif text-xl text-foreground leading-snug">
+              {t("home.welcome_back", { name: firstName })}
+            </p>
+            {nobleScore?.total_score !== undefined && (
+              <p className="mt-0.5 text-sm text-muted-foreground font-light">
+                {t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={handleDismiss}
+            aria-label={t("home.welcome_back_dismiss")}
+            className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       <div className="space-y-2">
         <h1 className="text-4xl md:text-5xl font-serif text-foreground">
           {t("home.greeting")}

@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from "express"
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import path from "path";
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
 import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap } from "@workspace/db";
@@ -464,80 +465,49 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
 
 // ── CC Screening Worker ────────────────────────────────────────────────────────
 
-const CC_SYSTEM_PROMPT = `Je bent de CC-Screening-Worker voor het project Context & Courtesy.
+// Load the authoritative CC handbook as the system prompt context
+function loadCCHandbook(): string {
+  const handbookPath = path.resolve(process.cwd(), "../../docs/CC_Screening_Worker.md");
+  try {
+    const handbookContent = readFileSync(handbookPath, "utf-8");
+    return `Je bent de CC-Screening-Worker voor het project Context & Courtesy.
+Je gedragsregels, classificatieschema en outputformaat staan volledig beschreven in je kennisbank hieronder.
+Volg altijd de 10-stappen workflow. Reageer uitsluitend in het gevraagde JSON-formaat, tenzij je om verduidelijking moet vragen.
+Schrijf nooit letterlijke boektekst over.
 
-## Absolute gedragsregels
-- NOOIT letterlijke tekst overnemen uit het bronwerk — enkel parafraseren
-- ALTIJD in C&C-stem schrijven: discrete, hoogopgeleide mentor; correcties als suggestie, nooit als veroordeling
-- ALTIJD het 5-Zuilen-schema volgen (Z1–Z5)
-- NOOIT interpretaties toevoegen — enkel wat de bron stelt
-- ALTIJD broncode meegeven (source_book + source_page)
-
-## Het 5-Zuilen-schema
-- Z1 · Cultuur & Traditie: religious_impact, holidays, gift_giving, taboos, color_symbolism, alternative_behavior
-- Z2 · Interactie & Taal: forms_of_address, greeting_ritual, communication_context, safe_smalltalk, topics_to_avoid, nonverbal_style
-- Z3 · Tafelmanieren: cutlery_use, seating_order, payment_ritual, consumption_sounds, table_posture, wine_and_drinks
-- Z4 · Relaties & Status: gender_nuances, seniority_business, hierarchy_social, networking, relationship_gifts, conflict_face_saving
-- Z5 · Verschijning: dress_code_business, dress_code_social, modest_dress, eye_contact_personal_space, touch_etiquette, accessories_symbols
-
-## Persona-matrix
-- P1: 18–30 jaar · Sociale navigatie & zelfverzekerdheid · Modern-beleefd
-- P2: 30–55 jaar · Leiderschap & professionele excellentie · Elegant-strak
-- P3: 55+ jaar · Protocol & culturele nuances · Klassiek-formeel
-
-## Module-mapping
-- GYM: Interactieve oefening / scenario
-- AID: Directe 30-seconden hulp ter plaatse (First Aid)
-- CMP: Cultureel advies & vergelijking (Cultural Compass)
-
-## Bronnenregister
-- DH: Debrett's Handbook (UK)
-- AV: Amy Vanderbilt Complete Book of Etiquette (Universeel West)
-- ME: Modern Etiquette for a Better Life (Universeel West)
-- MG: Guide to the Modern Gentleman (UK)
-- DN: Debrett's New Guide to Etiquette & Modern Manners (UK)
-- CB: Chinese Business Etiquette (China)
-- CA: Culture Smart! Australia (Australia)
-- CM: The Culture Map (Cross-cultureel)
-
-## C&C Stemvoorbeelden
-- Z1: ❌ "Never give clocks in China" → ✅ "Een attente gast in China kiest bij een cadeau zorgvuldig — uurwerken dragen een symbolische connotatie die het beter vermijdt."
-- Z2: ❌ "Don't interrupt in Japan" → ✅ "In een Japans gesprek onderstreept een moment van stilte de ernst van uw overweging — haast u niet om de stilte te vullen."
-- Z3: ❌ "Always wait for the host" → ✅ "Een verfijnde gast wacht geduldig tot de gastheer het eerste gebaar maakt alvorens met de maaltijd aan te vangen."
-- Z4: ❌ "Never correct in public in China" → ✅ "Een diplomatiek leider reserveert constructieve feedback voor een discrete, één-op-één setting."
-
-## 10-stappen workflow
-Stap 1: Identificeer boek en pagina (source_book, source_page)
-Stap 2: Bepaal regio (UK / CN / CA / AU / UNIVERSAL)
-Stap 3: Classificeer onder Zuil (Z1–Z5)
-Stap 4: Bepaal subcategorie
-Stap 5: Parafraseer ruwe feit (rule_raw) — GEEN citaat
-Stap 6: Schrijf C&C mentor-formulering (rule_cc)
-Stap 7: Wijs persona's toe (P1/P2/P3)
-Stap 8: Wijs modules toe (GYM/AID/CMP)
-Stap 9: Stel urgentie in (1=nice-to-know, 2=belangrijk, 3=kritisch/taboe)
-Stap 10: Output JSON
-
-## Foutmeldingen
-- Fragment onduidelijk → antwoord met: {"error": "UNCLEAR", "message": "Fragment is te vaag. Verduidelijk de context."}
-- Geen etiquetteregel → antwoord met: {"error": "NO_RULE", "message": "Geen extraheerbare etiquetteregel gevonden in dit fragment."}
-- Letterlijk citaat detectie → antwoord met: {"error": "COPYRIGHT", "message": "Auteursrechtveiligheid: parafraseer eerst het fragment zelf."}
-- Ambigu zuil → voeg toe: "_note": "ook relevant voor Zx"
-
-## Output JSON formaat (antwoord UITSLUITEND met geldig JSON, geen andere tekst)
+## Uitvoer JSON formaat (antwoord UITSLUITEND met geldig JSON, geen andere tekst)
 {
   "source_book": "<code>",
   "source_page": "<pagina>",
   "region": "<UK|CN|CA|AU|UNIVERSAL>",
-  "pillar_code": "<Z1|Z2|Z3|Z4|Z5>",
+  "pillar": "<Z1|Z2|Z3|Z4|Z5>",
   "subcategory": "<subcategorie>",
   "rule_raw": "<korte parafrase van de ruwe feit — intern gebruik>",
   "rule_cc": "<C&C mentor-formulering — app-tekst>",
   "personas": ["P1", "P2"],
-  "modules_cc": ["GYM", "AID"],
+  "modules": ["GYM", "AID"],
   "urgency": 2,
   "verified": false
-}`;
+}
+
+## Foutmeldingen (gebruik deze exacte JSON structuur)
+- Fragment onduidelijk → {"error": "UNCLEAR", "message": "Fragment is te vaag. Verduidelijk de context."}
+- Geen etiquetteregel → {"error": "NO_RULE", "message": "Geen extraheerbare etiquetteregel gevonden in dit fragment."}
+- Letterlijk citaat → {"error": "COPYRIGHT", "message": "Auteursrechtveiligheid: parafraseer eerst het fragment zelf."}
+
+## Kennisbank (volledig handbook)
+${handbookContent}`;
+  } catch {
+    // Fallback minimal prompt if file cannot be read
+    return `Je bent de CC-Screening-Worker voor het project Context & Courtesy.
+Extraheer etiquetteregels uit boekteksten naar het 5-Zuilen-schema (Z1-Z5).
+Antwoord UITSLUITEND met geldig JSON conform het outputformaat:
+{"source_book":"<code>","source_page":"<pagina>","region":"<UK|CN|CA|AU|UNIVERSAL>","pillar":"<Z1|Z2|Z3|Z4|Z5>","subcategory":"<sub>","rule_raw":"<parafrase>","rule_cc":"<C&C stem>","personas":["P1","P2","P3"],"modules":["GYM","AID","CMP"],"urgency":2,"verified":false}`;
+  }
+}
+
+// Initialise once at startup
+const CC_SYSTEM_PROMPT = loadCCHandbook();
 
 const CCScreenRequestSchema = z.object({
   fragment: z.string().min(10).max(5000),
@@ -545,18 +515,22 @@ const CCScreenRequestSchema = z.object({
   source_page: z.string().min(1).max(20),
 });
 
+const CC_VALID_PILLARS = ["Z1", "Z2", "Z3", "Z4", "Z5"] as const;
+const CC_VALID_REGIONS = ["UK", "CN", "CA", "AU", "UNIVERSAL", "US", "FR", "DE", "JP", "AE"] as const;
+const CC_VALID_PERSONAS = ["P1", "P2", "P3"] as const;
+const CC_VALID_MODULES = ["GYM", "AID", "CMP"] as const;
+
 const CCSaveRequestSchema = z.object({
-  source_book: z.string(),
-  source_page: z.string(),
-  region: z.string(),
-  pillar_code: z.string(),
-  subcategory: z.string(),
-  rule_raw: z.string(),
-  rule_cc: z.string(),
-  personas: z.array(z.string()),
-  modules_cc: z.array(z.string()),
+  source_book: z.enum(["DH", "AV", "ME", "MG", "DN", "CB", "CA", "CM"]),
+  source_page: z.string().min(1).max(20),
+  region: z.string().min(2).max(20),
+  pillar: z.enum(CC_VALID_PILLARS),
+  subcategory: z.string().min(1).max(100),
+  rule_raw: z.string().min(5).max(2000),
+  rule_cc: z.string().min(10).max(2000),
+  personas: z.array(z.enum(CC_VALID_PERSONAS)).min(1),
+  modules: z.array(z.enum(CC_VALID_MODULES)).min(1),
   urgency: z.number().int().min(1).max(3),
-  verified: z.boolean().default(false),
   _note: z.string().optional(),
 });
 
@@ -661,20 +635,32 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
     if (!Number.isInteger(urgency) || urgency < 1 || urgency > 3) {
       return res.status(422).json({ error: "INVALID_OUTPUT", message: "urgency must be 1, 2, or 3." });
     }
+    if (urgency === 3) {
+      warnings.push("Urgency 3 (kritisch) — per spec mag max 20% van de regels in een batch urgency=3 hebben. Controleer dit voor bulk-opslag.");
+    }
 
     // 5. verified must always be false
     parsed2.verified = false;
 
-    // 6. Pillar validation
-    const validPillars = ["Z1", "Z2", "Z3", "Z4", "Z5"];
-    if (!validPillars.includes(parsed2.pillar_code as string)) {
-      return res.status(422).json({ error: "INVALID_OUTPUT", message: `pillar_code must be one of ${validPillars.join(", ")}.` });
+    // 6. Pillar validation — AI returns "pillar" field
+    const pillarVal = (parsed2.pillar ?? parsed2.pillar_code) as string;
+    if (!CC_VALID_PILLARS.includes(pillarVal as typeof CC_VALID_PILLARS[number])) {
+      return res.status(422).json({ error: "INVALID_OUTPUT", message: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
     }
+    // Normalise to "pillar" field name for downstream use
+    parsed2.pillar = pillarVal;
+    delete parsed2.pillar_code;
 
     // 7. Region must be specific (not continent-level)
-    const validRegions = ["UK", "CN", "CA", "AU", "UNIVERSAL", "US", "FR", "DE", "JP", "AE"];
-    if (!validRegions.includes((parsed2.region as string)?.toUpperCase())) {
+    const regionUpper = (parsed2.region as string)?.toUpperCase();
+    if (!CC_VALID_REGIONS.includes(regionUpper as typeof CC_VALID_REGIONS[number])) {
       warnings.push(`region '${parsed2.region}' is not a recognised code — use UNIVERSAL or verify.`);
+    }
+
+    // 8. Modules normalisation — AI may return "modules" or "modules_cc"
+    if (!parsed2.modules && parsed2.modules_cc) {
+      parsed2.modules = parsed2.modules_cc;
+      delete parsed2.modules_cc;
     }
 
     return res.json({ ok: true, record: parsed2, warnings });
@@ -694,28 +680,43 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
 
     const data = parsed.data;
 
-    // Map pillar_code (Z1–Z5) to integer for legacy pillar column
-    const pillarCodeToInt: Record<string, number> = { Z1: 1, Z2: 2, Z3: 3, Z4: 4, Z5: 5 };
-    const pillarInt = pillarCodeToInt[data.pillar_code] ?? 0;
+    // Pre-save validation gate — enforce same rules as cc-screen before persisting
+    if (!CC_VALID_PILLARS.includes(data.pillar)) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
+    }
+    const regionUp = data.region.toUpperCase();
+    if (!CC_VALID_REGIONS.includes(regionUp as typeof CC_VALID_REGIONS[number])) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: `region '${data.region}' is not a recognised code. Use UNIVERSAL or a valid country code.` });
+    }
+    if (data.personas.length === 0) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one persona must be assigned." });
+    }
+    if (data.modules.length === 0) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one module must be assigned." });
+    }
 
-    // Build a unique rule_type from subcategory + first words of rule_raw
+    // Map pillar string (Z1–Z5) → integer for legacy pillar column
+    const pillarToInt: Record<string, number> = { Z1: 1, Z2: 2, Z3: 3, Z4: 4, Z5: 5 };
+    const pillarInt = pillarToInt[data.pillar] ?? 0;
+
+    // Build unique rule_type slug (subcategory + timestamp satisfies unique constraint)
     const ruleTypeSlug = `${data.subcategory}_${Date.now()}`;
 
     const [inserted] = await db.insert(cultureProtocolsTable).values({
-      region_code: data.region,
+      region_code: regionUp,
       pillar: pillarInt,
       rule_type: ruleTypeSlug,
       rule_description: data.rule_cc,
       source_reference: `${data.source_book}:${data.source_page}`,
-      // CC fields
+      // CC Screening Worker fields
       source_book: data.source_book,
       source_page: data.source_page,
-      pillar_code: data.pillar_code,
+      pillar_code: data.pillar,
       subcategory: data.subcategory,
       rule_raw: data.rule_raw,
       rule_cc: data.rule_cc,
       personas: data.personas,
-      modules_cc: data.modules_cc,
+      modules: data.modules,
       urgency: data.urgency,
       verified: false,
     }).returning();

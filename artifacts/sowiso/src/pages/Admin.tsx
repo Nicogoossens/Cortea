@@ -690,12 +690,12 @@ interface CCRecord {
   source_book: string;
   source_page: string;
   region: string;
-  pillar_code: string;
+  pillar: string;
   subcategory: string;
   rule_raw: string;
   rule_cc: string;
   personas: string[];
-  modules_cc: string[];
+  modules: string[];
   urgency: number;
   verified: boolean;
   _note?: string;
@@ -883,7 +883,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
           <CardHeader>
             <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Geëxtraheerd record — {PILLAR_LABELS[record.pillar_code] ?? record.pillar_code}
+              Geëxtraheerd record — {PILLAR_LABELS[record.pillar] ?? record.pillar}
               <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
                 verified: false
               </span>
@@ -902,7 +902,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
               </div>
               <div className="space-y-1">
                 <span className="text-muted-foreground">Zuil:</span>
-                <span className="ml-2 text-foreground">{record.pillar_code} · {record.subcategory}</span>
+                <span className="ml-2 text-foreground">{record.pillar} · {record.subcategory}</span>
               </div>
               <div className="space-y-1">
                 <span className="text-muted-foreground">Urgentie:</span>
@@ -916,7 +916,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
               </div>
               <div className="space-y-1">
                 <span className="text-muted-foreground">Modules:</span>
-                <span className="ml-2 text-foreground">{record.modules_cc.join(", ")}</span>
+                <span className="ml-2 text-foreground">{record.modules.join(", ")}</span>
               </div>
             </div>
 

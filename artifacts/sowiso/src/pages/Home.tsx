@@ -23,6 +23,7 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (profileError && "status" in profileError && profileError.status === 404 && userId) {
@@ -53,10 +54,15 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, profile?.full_name, nobleScore?.total_score]);
 
+  useEffect(() => () => {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    if (dismissFadeRef.current) clearTimeout(dismissFadeRef.current);
+  }, []);
+
   const handleDismiss = () => {
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     setWelcomeVisible(false);
-    setTimeout(() => setShowWelcome(false), 400);
+    dismissFadeRef.current = setTimeout(() => setShowWelcome(false), 400);
   };
 
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;

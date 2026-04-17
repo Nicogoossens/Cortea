@@ -61,6 +61,8 @@ export interface UserProfile {
   payment_customer_id?: string | null;
   trial_ends_at?: string | null;
   created_at: string;
+  /** Private per-user situational spheres (never exposed in admin endpoints). */
+  situational_interests?: SituationalInterestKey[];
 }
 
 export type CreateProfileBodyAmbitionLevel =
@@ -103,6 +105,10 @@ export const UpdateProfileBodySubscriptionTier = {
   ambassador: "ambassador",
 } as const;
 
+export type SituationalInterestKey =
+  | "business" | "gastronomy" | "arts_culture"
+  | "music_entertainment" | "formal_events" | "lifestyle_wellness" | "travel_hospitality";
+
 export interface UpdateProfileBody {
   birth_year?: number | null;
   gender_identity?: string | null;
@@ -111,6 +117,17 @@ export interface UpdateProfileBody {
   language_code?: string;
   active_region?: string;
   subscription_tier?: UpdateProfileBodySubscriptionTier;
+  country_of_origin?: string | null;
+  objectives?: string[];
+  interests_sports?: string[];
+  interests_cuisine?: string[];
+  interests_dress_code?: string[];
+  onboarding_completed?: boolean;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  /** Private per-user situational spheres for silent content steering. */
+  situational_interests?: SituationalInterestKey[];
 }
 
 export interface UpdateRegionBody {
@@ -176,6 +193,8 @@ export interface CultureCompassDetail {
   dos: string[];
   donts: string[];
   mehrabian_weight?: CultureCompassDetailMehrabianWeight;
+  /** Fields whose content is most relevant to the user's selected spheres. */
+  sphere_highlights?: string[];
 }
 
 export interface ScenarioOption {
@@ -284,6 +303,11 @@ export type GetCultureCompassRegionParams = {
    * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
    */
   locale?: string;
+  /**
+   * Comma-separated list of situational sphere keys. When provided, sphere-relevant
+   * protocol sections are returned in sphere_highlights for subtle UI emphasis.
+   */
+  situational_interests?: string;
 };
 
 export type GetScenariosParams = {
@@ -306,6 +330,13 @@ export type GetScenariosParams = {
   difficulty_max?: number;
   age_group?: GetScenariosAgeGroup;
   limit?: number;
+  /**
+   * Comma-separated list of situational sphere keys. Matching-context scenarios
+   * are ordered first in the response.
+   */
+  situational_interests?: string;
+  /** ISO 639-1 language code for response localisation (e.g. "en", "nl"). */
+  lang?: string;
 };
 
 export type GetScenariosAgeGroup =

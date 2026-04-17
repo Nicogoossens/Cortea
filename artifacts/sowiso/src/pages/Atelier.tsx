@@ -48,7 +48,7 @@ export default function Atelier() {
 
   const lang = locale.split("-")[0];
 
-  const spheres = (profile?.situational_interests as string[] | null | undefined) ?? [];
+  const spheres = profile?.situational_interests ?? [];
   const spheresParam = spheres.length > 0 ? spheres.join(",") : undefined;
 
   const queryParams = {
@@ -64,7 +64,7 @@ export default function Atelier() {
     ...(spheresParam ? { situational_interests: spheresParam } : {}),
   };
 
-  const { data: allScenarios, isLoading } = useGetScenarios(queryParams as Parameters<typeof useGetScenarios>[0], {
+  const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
     query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang, spheresParam] }
   });
 

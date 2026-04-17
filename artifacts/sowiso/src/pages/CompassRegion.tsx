@@ -20,14 +20,14 @@ export default function CompassRegion() {
   const { data: profile } = useGetProfile();
   const regionCode = code || "";
 
-  const spheres = (profile?.situational_interests as string[] | null | undefined) ?? [];
+  const spheres = profile?.situational_interests ?? [];
   const spheresParam = spheres.length > 0 ? spheres.join(",") : undefined;
 
   const compassParams = { locale, ...(spheresParam ? { situational_interests: spheresParam } : {}) };
 
   const { data: detail, isLoading } = useGetCultureCompassRegion(
     regionCode,
-    compassParams as Parameters<typeof useGetCultureCompassRegion>[1],
+    compassParams,
     {
       query: {
         enabled: !!regionCode,
@@ -36,7 +36,7 @@ export default function CompassRegion() {
     }
   );
 
-  const sphereHighlights = new Set<string>((detail as unknown as { sphere_highlights?: string[] } | undefined)?.sphere_highlights ?? []);
+  const sphereHighlights = new Set<string>(detail?.sphere_highlights ?? []);
 
   if (isLoading) {
     return (

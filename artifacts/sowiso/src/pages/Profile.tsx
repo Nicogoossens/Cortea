@@ -335,7 +335,7 @@ export default function Profile() {
     if (setConflictError) setConflictError(null);
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(body),
       });
@@ -372,7 +372,7 @@ export default function Profile() {
     const langCode = newLocale.split("-")[0];
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ language_code: langCode }),
       });

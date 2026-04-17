@@ -165,7 +165,7 @@ const UpdateProfileBodySchema = z.object({
   ])).optional(),
 });
 
-router.put("/users/profile", requireAuthUser, async (req, res) => {
+async function handleUpdateProfile(req: Request, res: Response): Promise<Response | void> {
   try {
     const userId = getResolvedUserId(req);
 
@@ -222,7 +222,10 @@ router.put("/users/profile", requireAuthUser, async (req, res) => {
     req.log.error({ err }, "Failed to update user profile");
     return res.status(500).json({ message: "A difficulty arose while updating your profile." });
   }
-});
+}
+
+router.put("/users/profile", requireAuthUser, handleUpdateProfile);
+router.patch("/users/profile", requireAuthUser, handleUpdateProfile);
 
 const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),

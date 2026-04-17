@@ -167,7 +167,7 @@ router.patch("/admin/users/:id", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, situational_interests: _si2, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to patch user");
@@ -188,7 +188,7 @@ router.patch("/admin/users/:id/suspend", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, situational_interests: _si3, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to suspend user");
@@ -209,7 +209,7 @@ router.patch("/admin/users/:id/unsuspend", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, situational_interests: _si4, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to unsuspend user");

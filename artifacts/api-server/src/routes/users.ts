@@ -159,6 +159,10 @@ const UpdateProfileBodySchema = z.object({
   username: z.string().max(50).optional().nullable(),
   full_name: z.string().max(150).optional().nullable(),
   avatar_url: z.string().max(2000000).optional().nullable(),
+  situational_interests: z.array(z.enum([
+    "business", "gastronomy", "arts_culture",
+    "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality",
+  ])).optional(),
 });
 
 router.put("/users/profile", requireAuthUser, async (req, res) => {
@@ -207,6 +211,7 @@ router.put("/users/profile", requireAuthUser, async (req, res) => {
         ...(data.interests_cuisine !== undefined && { interests_cuisine: data.interests_cuisine }),
         ...(data.interests_dress_code !== undefined && { interests_dress_code: data.interests_dress_code }),
         ...(data.onboarding_completed !== undefined && { onboarding_completed: data.onboarding_completed }),
+        ...(data.situational_interests !== undefined && { situational_interests: data.situational_interests }),
       })
       .where(eq(usersTable.id, userId))
       .returning();

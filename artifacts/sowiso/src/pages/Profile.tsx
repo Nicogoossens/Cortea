@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
+  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane, Layers,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
@@ -20,7 +21,7 @@ import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
+import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -69,6 +70,7 @@ interface UserProfileData {
   interests_cuisine?: string[] | null;
   interests_dress_code?: string[] | null;
   onboarding_completed?: boolean | null;
+  situational_interests?: string[] | null;
 }
 
 interface EnrichedLogEntry {
@@ -127,6 +129,16 @@ const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = 
     "Cocktail Attire", "Country Casual", "Resort Formal",
   ],
 };
+
+const SPHERE_OPTIONS: { key: string; icon: React.ElementType; labelKey: string }[] = [
+  { key: "business",           icon: Briefcase,        labelKey: "profile.sphere.business" },
+  { key: "gastronomy",         icon: UtensilsCrossed,  labelKey: "profile.sphere.gastronomy" },
+  { key: "arts_culture",       icon: Palette,          labelKey: "profile.sphere.arts_culture" },
+  { key: "music_entertainment",icon: Music2,            labelKey: "profile.sphere.music_entertainment" },
+  { key: "formal_events",      icon: Star,             labelKey: "profile.sphere.formal_events" },
+  { key: "lifestyle_wellness", icon: Leaf,             labelKey: "profile.sphere.lifestyle_wellness" },
+  { key: "travel_hospitality", icon: Plane,            labelKey: "profile.sphere.travel_hospitality" },
+];
 
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "SO";
@@ -286,6 +298,7 @@ export default function Profile() {
   const [sportsSave, setSportsSave] = useState<SaveState>("idle");
   const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
   const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
+  const [spheresSave, setSpheresSave] = useState<SaveState>("idle");
 
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
@@ -488,6 +501,15 @@ export default function Profile() {
     const setSave = field === "sports" ? setSportsSave : field === "cuisine" ? setCuisineSave : setDressCodeSave;
     const current = (profileData?.[key] as string[] | null | undefined) ?? [];
     await patchProfile({ [key]: current.filter((v) => v !== value) }, setSave);
+  }
+
+  async function handleSphereToggle(sphere: string) {
+    if (spheresSave === "saving") return;
+    const current = profileData?.situational_interests ?? [];
+    const next = current.includes(sphere)
+      ? current.filter((s) => s !== sphere)
+      : [...current, sphere];
+    await patchProfile({ situational_interests: next }, setSpheresSave);
   }
 
   async function handleDeleteAccount() {
@@ -997,6 +1019,44 @@ export default function Profile() {
             t={t}
           />
 
+        </CardContent>
+      </Card>
+
+      {/* ── Jouw Sferen ── */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />
+            {t("profile.spheres_title")}
+          </CardTitle>
+          <CardDescription className="font-light">
+            {t("profile.spheres_subtitle")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
+              const isActive = (profileData?.situational_interests ?? []).includes(key);
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleSphereToggle(key)}
+                  disabled={spheresSave === "saving"}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all ${
+                    isActive
+                      ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {t(labelKey)}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex items-center gap-2 h-4">
+            <SaveIndicator state={spheresSave} t={t} />
+          </div>
         </CardContent>
       </Card>
 

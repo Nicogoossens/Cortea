@@ -48,6 +48,9 @@ export default function Atelier() {
 
   const lang = locale.split("-")[0];
 
+  const spheres = (profile?.situational_interests as string[] | null | undefined) ?? [];
+  const spheresParam = spheres.length > 0 ? spheres.join(",") : undefined;
+
   const queryParams = {
     region_code: activeRegion,
     ...(isVisitor
@@ -58,10 +61,11 @@ export default function Atelier() {
     difficulty_max: 5,
     limit: 50,
     lang,
+    ...(spheresParam ? { situational_interests: spheresParam } : {}),
   };
 
-  const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang] }
+  const { data: allScenarios, isLoading } = useGetScenarios(queryParams as Parameters<typeof useGetScenarios>[0], {
+    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang, spheresParam] }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {

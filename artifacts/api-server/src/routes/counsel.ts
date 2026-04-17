@@ -50,12 +50,23 @@ const MEHRABIAN_GUIDANCE: Record<string, string> = {
   ZA: "Ubuntu is felt through warmth, openness, and an unhurried manner. Be present, engage genuinely, and listen with your whole bearing.",
 };
 
+const SPHERE_DESCRIPTIONS: Record<string, string> = {
+  business: "business and professional settings — boardrooms, client dinners, networking events, and formal negotiations",
+  gastronomy: "gastronomic and fine dining environments — restaurant etiquette, wine service, tasting menus, and culinary occasions",
+  arts_culture: "arts, culture, and heritage settings — gallery openings, museum visits, cultural institutions, and intellectual gatherings",
+  music_entertainment: "music and entertainment occasions — concerts, performances, private screenings, and cultural events",
+  formal_events: "formal occasions and ceremonies — galas, awards evenings, state functions, and black-tie affairs",
+  lifestyle_wellness: "lifestyle and wellness environments — spas, private clubs, health retreats, and social leisure",
+  travel_hospitality: "travel and hospitality settings — luxury hotels, private transfers, international travel, and concierge interactions",
+};
+
 router.post("/counsel", async (req, res) => {
-  const { query, domain, region_code, situation } = req.body as {
+  const { query, domain, region_code, situation, situational_interests } = req.body as {
     query?: string;
     domain?: string;
     region_code?: string;
     situation?: string;
+    situational_interests?: string[];
   };
 
   if (!query && !domain) {
@@ -67,10 +78,17 @@ router.post("/counsel", async (req, res) => {
   const regionContext = REGION_CONTEXT[region] ?? REGION_CONTEXT["GB"];
   const mehrabian = MEHRABIAN_GUIDANCE[region] ?? "";
 
+  const sphereDescs = (situational_interests ?? [])
+    .map((s) => SPHERE_DESCRIPTIONS[s])
+    .filter(Boolean);
+  const sphereContext = sphereDescs.length > 0
+    ? `\nSocial environments: This person moves primarily in ${sphereDescs.join("; and ")}. Draw on examples and nuances appropriate to these settings without naming them explicitly.`
+    : "";
+
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
-${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}
 Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
 First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 

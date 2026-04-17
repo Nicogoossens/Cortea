@@ -36,11 +36,23 @@ const MEHRABIAN_WEIGHTS: Record<string, MehrabianWeight> = {
   NL: { nonverbal: 32, tone: 35, words: 33, note: "Direct verbal communication is primary. Words are chosen precisely; meaning lives in the words." },
 };
 
+const VALID_SPHERES_CULTURE = ["business", "gastronomy", "arts_culture", "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality"] as const;
+const SPHERE_CONTEXTS_CULTURE: Record<string, string[]> = {
+  business: ["business", "professional"],
+  gastronomy: ["dining", "gastronomy"],
+  arts_culture: ["arts", "culture", "formal"],
+  music_entertainment: ["entertainment", "social"],
+  formal_events: ["formal", "ceremonial"],
+  lifestyle_wellness: ["lifestyle", "social"],
+  travel_hospitality: ["travel", "hospitality", "social"],
+};
+
 const ProtocolsQuerySchema = z.object({
   region_code: z.string().min(1),
   pillar: z.coerce.number().int().min(1).max(5).optional(),
   context: z.string().optional(),
   locale: z.string().optional(),
+  situational_interests: z.string().optional(),
 });
 
 const RegionCodeParamSchema = z.object({
@@ -58,7 +70,7 @@ router.get("/culture/protocols", async (req, res) => {
       return res.status(400).json({ message: "A region must be specified to retrieve cultural protocols." });
     }
 
-    const { region_code, pillar, context, locale } = parsed.data;
+    const { region_code, pillar, context, locale, situational_interests } = parsed.data;
     const conditions = [eq(cultureProtocolsTable.region_code, region_code)];
 
     if (pillar !== undefined) {
@@ -67,6 +79,16 @@ router.get("/culture/protocols", async (req, res) => {
 
     if (context !== undefined) {
       conditions.push(eq(cultureProtocolsTable.context, context));
+    }
+
+    const spheres = (situational_interests ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => (VALID_SPHERES_CULTURE as readonly string[]).includes(s));
+
+    const matchingContexts = new Set<string>();
+    for (const sphere of spheres) {
+      for (const ctx of SPHERE_CONTEXTS_CULTURE[sphere] ?? []) matchingContexts.add(ctx);
     }
 
     const protocols = await db.select()
@@ -86,6 +108,14 @@ router.get("/culture/protocols", async (req, res) => {
 
       return { ...p, display_rule };
     });
+
+    if (matchingContexts.size > 0) {
+      enriched.sort((a, b) => {
+        const aMatch = matchingContexts.has(a.context ?? "") ? 0 : 1;
+        const bMatch = matchingContexts.has(b.context ?? "") ? 0 : 1;
+        return aMatch - bMatch;
+      });
+    }
 
     return res.json(enriched);
   } catch (err) {

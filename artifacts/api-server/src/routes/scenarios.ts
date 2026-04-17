@@ -6,6 +6,27 @@ import { z } from "zod";
 
 const router = Router();
 
+const VALID_SPHERES = ["business", "gastronomy", "arts_culture", "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality"] as const;
+type Sphere = typeof VALID_SPHERES[number];
+
+const SPHERE_TO_CONTEXTS: Record<Sphere, string[]> = {
+  business: ["business", "professional"],
+  gastronomy: ["dining"],
+  arts_culture: ["formal", "social"],
+  music_entertainment: ["social"],
+  formal_events: ["formal"],
+  lifestyle_wellness: ["social"],
+  travel_hospitality: ["social", "business"],
+};
+
+function getContextsForSpheres(spheres: Sphere[]): string[] {
+  const set = new Set<string>();
+  for (const sphere of spheres) {
+    for (const ctx of SPHERE_TO_CONTEXTS[sphere] ?? []) set.add(ctx);
+  }
+  return [...set];
+}
+
 const ScenariosQuerySchema = z.object({
   region_code: z.string().optional(),
   pillar: z.coerce.number().int().min(1).max(5).optional(),
@@ -14,6 +35,7 @@ const ScenariosQuerySchema = z.object({
   age_group: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(10),
   lang: z.string().min(2).max(10).optional(),
+  situational_interests: z.string().optional(),
 });
 
 const ScenarioIdParamSchema = z.object({
@@ -46,7 +68,7 @@ router.get("/scenarios", async (req, res) => {
       return res.status(400).json({ message: "The query parameters provided are not valid. Please review and resubmit." });
     }
 
-    const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang } = parsed.data;
+    const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang, situational_interests } = parsed.data;
     const conditions = [];
 
     if (region_code !== undefined) {
@@ -65,10 +87,26 @@ router.get("/scenarios", async (req, res) => {
       conditions.push(eq(scenariosTable.age_group, age_group));
     }
 
-    const scenarios = await db.select()
+    const spheres = (situational_interests ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s): s is Sphere => (VALID_SPHERES as readonly string[]).includes(s));
+
+    const matchingContexts = spheres.length > 0 ? getContextsForSpheres(spheres) : [];
+
+    let query = db.select()
       .from(scenariosTable)
-      .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`)
-      .limit(limit);
+      .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`);
+
+    if (matchingContexts.length > 0) {
+      const contextList = matchingContexts.map((c) => `'${c}'`).join(", ");
+      query = (query as typeof query).orderBy(
+        sql`CASE WHEN ${scenariosTable.context} IN (${sql.raw(contextList)}) THEN 0 ELSE 1 END`,
+        scenariosTable.difficulty_level,
+      ) as typeof query;
+    }
+
+    const scenarios = await (query as typeof query).limit(limit);
 
     return res.json(resolveScenarioLocales(scenarios, lang));
   } catch (err) {

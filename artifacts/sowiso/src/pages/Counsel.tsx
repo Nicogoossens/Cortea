@@ -110,6 +110,7 @@ export default function Counsel() {
           domain: domainLabel,
           region_code: effectiveRegion,
           situation: situationContext.trim() || undefined,
+          situational_interests: (profile?.situational_interests as string[] | null | undefined) ?? [],
         }),
       });
 

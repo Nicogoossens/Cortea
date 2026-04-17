@@ -69,6 +69,8 @@ export const usersTable = pgTable("users", {
   trial_ends_at: timestamp("trial_ends_at"),
   // Behavioral psychology layer (Bolton + Goleman + Mehrabian)
   behavior_profile: jsonb("behavior_profile").$type<BehaviorProfile>(),
+  // Discrete situational context layer — private, per-account, never shared
+  situational_interests: json("situational_interests").$type<string[]>().notNull().default([]),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
+  BookOpen, Cpu, Save,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -50,7 +51,7 @@ interface ContentStatus {
 }
 
 type ActionState = "idle" | "loading" | "done" | "error";
-type AdminTab = "users" | "content";
+type AdminTab = "users" | "content" | "cc_screening";
 
 // ── Small components ──────────────────────────────────────────────────────────
 
@@ -664,6 +665,346 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   );
 }
 
+// ── CC Screening Worker Tab ───────────────────────────────────────────────────
+
+const CC_BOOKS = [
+  { code: "DH", label: "DH — Debrett's Handbook (UK)" },
+  { code: "AV", label: "AV — Amy Vanderbilt (Universeel West)" },
+  { code: "ME", label: "ME — Modern Etiquette for a Better Life" },
+  { code: "MG", label: "MG — Guide to the Modern Gentleman (UK)" },
+  { code: "DN", label: "DN — Debrett's New Guide (UK)" },
+  { code: "CB", label: "CB — Chinese Business Etiquette (China)" },
+  { code: "CA", label: "CA — Culture Smart! Australia" },
+  { code: "CM", label: "CM — The Culture Map (Cross-cultureel)" },
+] as const;
+
+const PILLAR_LABELS: Record<string, string> = {
+  Z1: "Z1 · Cultuur & Traditie",
+  Z2: "Z2 · Interactie & Taal",
+  Z3: "Z3 · Tafelmanieren",
+  Z4: "Z4 · Relaties & Status",
+  Z5: "Z5 · Verschijning",
+};
+
+interface CCRecord {
+  source_book: string;
+  source_page: string;
+  region: string;
+  pillar_code: string;
+  subcategory: string;
+  rule_raw: string;
+  rule_cc: string;
+  personas: string[];
+  modules_cc: string[];
+  urgency: number;
+  verified: boolean;
+  _note?: string;
+}
+
+function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const [fragment, setFragment] = useState("");
+  const [sourceBook, setSourceBook] = useState("DH");
+  const [sourcePage, setSourcePage] = useState("");
+  const [screenState, setScreenState] = useState<ActionState>("idle");
+  const [screenError, setScreenError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [record, setRecord] = useState<CCRecord | null>(null);
+  const [editedRecord, setEditedRecord] = useState<string>("");
+  const [saveState, setSaveState] = useState<ActionState>("idle");
+  const [savedId, setSavedId] = useState<number | null>(null);
+
+  async function handleScreen() {
+    if (!fragment.trim() || !sourcePage.trim()) return;
+    setScreenState("loading");
+    setScreenError(null);
+    setWarnings([]);
+    setRecord(null);
+    setSavedId(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-screen`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ fragment: fragment.trim(), source_book: sourceBook, source_page: sourcePage.trim() }),
+      });
+      const data = await res.json() as { ok?: boolean; record?: CCRecord; warnings?: string[]; error?: string; message?: string };
+      if (!res.ok || !data.ok) {
+        setScreenError(data.message ?? data.error ?? "Verwerking mislukt.");
+        setScreenState("error");
+      } else {
+        setRecord(data.record!);
+        setEditedRecord(JSON.stringify(data.record, null, 2));
+        setWarnings(data.warnings ?? []);
+        setScreenState("done");
+      }
+    } catch {
+      setScreenError("Verbinding met de server mislukt.");
+      setScreenState("error");
+    }
+  }
+
+  async function handleSave() {
+    if (!editedRecord) return;
+    setSaveState("loading");
+    let parsed: CCRecord;
+    try {
+      parsed = JSON.parse(editedRecord) as CCRecord;
+    } catch {
+      setSaveState("error");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(parsed),
+      });
+      const data = await res.json() as { ok?: boolean; id?: number; error?: string };
+      if (res.ok && data.ok) {
+        setSavedId(data.id ?? null);
+        setSaveState("done");
+      } else {
+        setSaveState("error");
+      }
+    } catch {
+      setSaveState("error");
+    }
+  }
+
+  function reset() {
+    setFragment("");
+    setSourcePage("");
+    setScreenState("idle");
+    setScreenError(null);
+    setWarnings([]);
+    setRecord(null);
+    setEditedRecord("");
+    setSaveState("idle");
+    setSavedId(null);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Input card */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <Cpu className="w-4 h-4" />
+            CC Screening Worker — Kennisextractie
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground font-light">
+            Plak een tekstfragment uit een etiquetteboek. De worker extraheert de etiquetteregel,
+            classificeert deze onder het 5-Zuilen-schema en genereert een auteursrechtveilig JSON-record
+            voor de <span className="font-mono text-xs">culture_protocols</span> tabel.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Bronboek</label>
+              <select
+                value={sourceBook}
+                onChange={(e) => setSourceBook(e.target.value)}
+                className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
+              >
+                {CC_BOOKS.map(b => (
+                  <option key={b.code} value={b.code}>{b.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Paginanummer</label>
+              <Input
+                placeholder="bijv. 142"
+                value={sourcePage}
+                onChange={(e) => setSourcePage(e.target.value)}
+                className="font-mono rounded-sm"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Tekstfragment</label>
+            <textarea
+              value={fragment}
+              onChange={(e) => setFragment(e.target.value)}
+              placeholder="Plak hier het tekstfragment uit het bronboek (parafraseer zelf eerst indien nodig)..."
+              rows={6}
+              className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm font-light leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+            <p className="text-[11px] text-muted-foreground font-mono">
+              {fragment.length} tekens · Plak geen letterlijke boektekst — parafraseer het fragment eerst zelf.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleScreen}
+              disabled={screenState === "loading" || !fragment.trim() || !sourcePage.trim()}
+              className="font-serif rounded-sm"
+            >
+              {screenState === "loading"
+                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Verwerken…</>
+                : <><Cpu className="w-4 h-4 mr-2" />Verwerk fragment</>
+              }
+            </Button>
+            {(record || screenError) && (
+              <Button variant="outline" onClick={reset} className="font-mono text-xs rounded-sm">
+                Nieuw fragment
+              </Button>
+            )}
+          </div>
+
+          {/* Error state */}
+          {screenState === "error" && screenError && (
+            <div className="flex items-start gap-2 text-sm p-3 rounded-sm border bg-red-50 border-red-200 text-red-800">
+              <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{screenError}</span>
+            </div>
+          )}
+
+          {/* Warnings */}
+          {warnings.length > 0 && (
+            <div className="space-y-1">
+              {warnings.map((w, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs p-2.5 rounded-sm border bg-amber-50 border-amber-200 text-amber-800">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span>{w}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Result card */}
+      {record && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Geëxtraheerd record — {PILLAR_LABELS[record.pillar_code] ?? record.pillar_code}
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
+                verified: false
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Summary view */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Bron:</span>
+                <span className="ml-2 text-foreground">{record.source_book} · p. {record.source_page}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Regio:</span>
+                <span className="ml-2 text-foreground">{record.region}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Zuil:</span>
+                <span className="ml-2 text-foreground">{record.pillar_code} · {record.subcategory}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Urgentie:</span>
+                <span className={`ml-2 font-bold ${record.urgency === 3 ? "text-red-600" : record.urgency === 2 ? "text-amber-600" : "text-green-600"}`}>
+                  {record.urgency} {record.urgency === 3 ? "— Kritisch" : record.urgency === 2 ? "— Belangrijk" : "— Nice-to-know"}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Persona's:</span>
+                <span className="ml-2 text-foreground">{record.personas.join(", ")}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-muted-foreground">Modules:</span>
+                <span className="ml-2 text-foreground">{record.modules_cc.join(", ")}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern)</p>
+              <p className="text-sm font-light text-muted-foreground italic bg-muted/30 rounded-sm px-3 py-2">{record.rule_raw}</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
+              <p className="text-sm font-light leading-relaxed bg-muted/30 rounded-sm px-3 py-2">{record.rule_cc}</p>
+            </div>
+
+            {record._note && (
+              <p className="text-xs text-muted-foreground font-mono italic">Noot: {record._note}</p>
+            )}
+
+            {/* Editable JSON */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">JSON — bewerk voor opslaan indien nodig</p>
+              <textarea
+                value={editedRecord}
+                onChange={(e) => setEditedRecord(e.target.value)}
+                rows={18}
+                className="w-full rounded-sm border border-border bg-muted/20 px-3 py-2 text-xs font-mono resize-y focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+            </div>
+
+            {/* Save button */}
+            {saveState !== "done" ? (
+              <div className="flex gap-2 items-center">
+                <Button
+                  onClick={handleSave}
+                  disabled={saveState === "loading"}
+                  variant="outline"
+                  className="font-serif rounded-sm border-green-400/60 text-green-700 hover:bg-green-50"
+                >
+                  {saveState === "loading"
+                    ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Opslaan…</>
+                    : <><Save className="w-4 h-4 mr-2" />Opslaan naar database</>
+                  }
+                </Button>
+                {saveState === "error" && (
+                  <span className="text-xs text-red-600 font-mono">Opslaan mislukt — controleer de JSON.</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm p-3 rounded-sm border bg-green-50 border-green-200 text-green-800">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Record opgeslagen · ID: <span className="font-mono">{savedId}</span> · verified: false — klaar voor redactionele review.</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quality checklist card */}
+      <Card className="bg-card border-border/50">
+        <CardHeader>
+          <CardTitle className="text-xs font-mono uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5" />
+            Kwaliteitschecklist (automatisch gevalideerd)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="text-xs text-muted-foreground font-light space-y-1.5">
+            {[
+              "Geen letterlijk geciteerde zin uit het bronwerk",
+              "C&C-stem consistent (mentor, niet rechter)",
+              "Zuil + subcategorie correct en specifiek",
+              "Regio correct (UK / CN / CA / AU / UNIVERSAL)",
+              "Urgentie realistisch (max 20% van regels = urgency 3)",
+              "Personas logisch (niet alle drie tenzij echt universeel)",
+              "JSON valide (geen trailing comma's, geen ontbrekende quotes)",
+              "verified altijd false bij extractie",
+            ].map((item, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <CheckCircle2 className="w-3 h-3 mt-0.5 text-green-500 shrink-0" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ── Main Admin page ───────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -763,10 +1104,11 @@ export default function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border/50">
+      <div className="flex gap-1 border-b border-border/50 overflow-x-auto">
         {([
           { key: "users" as const, label: "Users", icon: Users },
           { key: "content" as const, label: "Content", icon: Database },
+          { key: "cc_screening" as const, label: "CC Screening", icon: Cpu },
         ]).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -871,6 +1213,11 @@ export default function Admin() {
       {/* Content tab */}
       {activeTab === "content" && (
         <ContentTab authHeaders={authHeaders} />
+      )}
+
+      {/* CC Screening tab */}
+      {activeTab === "cc_screening" && (
+        <CCScreeningPanel authHeaders={authHeaders} />
       )}
     </div>
   );

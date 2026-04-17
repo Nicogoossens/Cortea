@@ -462,4 +462,269 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
   }
 });
 
+// ── CC Screening Worker ────────────────────────────────────────────────────────
+
+const CC_SYSTEM_PROMPT = `Je bent de CC-Screening-Worker voor het project Context & Courtesy.
+
+## Absolute gedragsregels
+- NOOIT letterlijke tekst overnemen uit het bronwerk — enkel parafraseren
+- ALTIJD in C&C-stem schrijven: discrete, hoogopgeleide mentor; correcties als suggestie, nooit als veroordeling
+- ALTIJD het 5-Zuilen-schema volgen (Z1–Z5)
+- NOOIT interpretaties toevoegen — enkel wat de bron stelt
+- ALTIJD broncode meegeven (source_book + source_page)
+
+## Het 5-Zuilen-schema
+- Z1 · Cultuur & Traditie: religious_impact, holidays, gift_giving, taboos, color_symbolism, alternative_behavior
+- Z2 · Interactie & Taal: forms_of_address, greeting_ritual, communication_context, safe_smalltalk, topics_to_avoid, nonverbal_style
+- Z3 · Tafelmanieren: cutlery_use, seating_order, payment_ritual, consumption_sounds, table_posture, wine_and_drinks
+- Z4 · Relaties & Status: gender_nuances, seniority_business, hierarchy_social, networking, relationship_gifts, conflict_face_saving
+- Z5 · Verschijning: dress_code_business, dress_code_social, modest_dress, eye_contact_personal_space, touch_etiquette, accessories_symbols
+
+## Persona-matrix
+- P1: 18–30 jaar · Sociale navigatie & zelfverzekerdheid · Modern-beleefd
+- P2: 30–55 jaar · Leiderschap & professionele excellentie · Elegant-strak
+- P3: 55+ jaar · Protocol & culturele nuances · Klassiek-formeel
+
+## Module-mapping
+- GYM: Interactieve oefening / scenario
+- AID: Directe 30-seconden hulp ter plaatse (First Aid)
+- CMP: Cultureel advies & vergelijking (Cultural Compass)
+
+## Bronnenregister
+- DH: Debrett's Handbook (UK)
+- AV: Amy Vanderbilt Complete Book of Etiquette (Universeel West)
+- ME: Modern Etiquette for a Better Life (Universeel West)
+- MG: Guide to the Modern Gentleman (UK)
+- DN: Debrett's New Guide to Etiquette & Modern Manners (UK)
+- CB: Chinese Business Etiquette (China)
+- CA: Culture Smart! Australia (Australia)
+- CM: The Culture Map (Cross-cultureel)
+
+## C&C Stemvoorbeelden
+- Z1: ❌ "Never give clocks in China" → ✅ "Een attente gast in China kiest bij een cadeau zorgvuldig — uurwerken dragen een symbolische connotatie die het beter vermijdt."
+- Z2: ❌ "Don't interrupt in Japan" → ✅ "In een Japans gesprek onderstreept een moment van stilte de ernst van uw overweging — haast u niet om de stilte te vullen."
+- Z3: ❌ "Always wait for the host" → ✅ "Een verfijnde gast wacht geduldig tot de gastheer het eerste gebaar maakt alvorens met de maaltijd aan te vangen."
+- Z4: ❌ "Never correct in public in China" → ✅ "Een diplomatiek leider reserveert constructieve feedback voor een discrete, één-op-één setting."
+
+## 10-stappen workflow
+Stap 1: Identificeer boek en pagina (source_book, source_page)
+Stap 2: Bepaal regio (UK / CN / CA / AU / UNIVERSAL)
+Stap 3: Classificeer onder Zuil (Z1–Z5)
+Stap 4: Bepaal subcategorie
+Stap 5: Parafraseer ruwe feit (rule_raw) — GEEN citaat
+Stap 6: Schrijf C&C mentor-formulering (rule_cc)
+Stap 7: Wijs persona's toe (P1/P2/P3)
+Stap 8: Wijs modules toe (GYM/AID/CMP)
+Stap 9: Stel urgentie in (1=nice-to-know, 2=belangrijk, 3=kritisch/taboe)
+Stap 10: Output JSON
+
+## Foutmeldingen
+- Fragment onduidelijk → antwoord met: {"error": "UNCLEAR", "message": "Fragment is te vaag. Verduidelijk de context."}
+- Geen etiquetteregel → antwoord met: {"error": "NO_RULE", "message": "Geen extraheerbare etiquetteregel gevonden in dit fragment."}
+- Letterlijk citaat detectie → antwoord met: {"error": "COPYRIGHT", "message": "Auteursrechtveiligheid: parafraseer eerst het fragment zelf."}
+- Ambigu zuil → voeg toe: "_note": "ook relevant voor Zx"
+
+## Output JSON formaat (antwoord UITSLUITEND met geldig JSON, geen andere tekst)
+{
+  "source_book": "<code>",
+  "source_page": "<pagina>",
+  "region": "<UK|CN|CA|AU|UNIVERSAL>",
+  "pillar_code": "<Z1|Z2|Z3|Z4|Z5>",
+  "subcategory": "<subcategorie>",
+  "rule_raw": "<korte parafrase van de ruwe feit — intern gebruik>",
+  "rule_cc": "<C&C mentor-formulering — app-tekst>",
+  "personas": ["P1", "P2"],
+  "modules_cc": ["GYM", "AID"],
+  "urgency": 2,
+  "verified": false
+}`;
+
+const CCScreenRequestSchema = z.object({
+  fragment: z.string().min(10).max(5000),
+  source_book: z.enum(["DH", "AV", "ME", "MG", "DN", "CB", "CA", "CM"]),
+  source_page: z.string().min(1).max(20),
+});
+
+const CCSaveRequestSchema = z.object({
+  source_book: z.string(),
+  source_page: z.string(),
+  region: z.string(),
+  pillar_code: z.string(),
+  subcategory: z.string(),
+  rule_raw: z.string(),
+  rule_cc: z.string(),
+  personas: z.array(z.string()),
+  modules_cc: z.array(z.string()),
+  urgency: z.number().int().min(1).max(3),
+  verified: z.boolean().default(false),
+  _note: z.string().optional(),
+});
+
+/** POST /admin/cc-screen — run CC Screening Worker on a text fragment */
+router.post("/admin/cc-screen", requireAdmin, async (req, res) => {
+  try {
+    const parsed = CCScreenRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request.", details: parsed.error.flatten().fieldErrors });
+    }
+
+    const { fragment, source_book, source_page } = parsed.data;
+    const anthropicBase = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+    const anthropicKey  = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+    if (!anthropicBase || !anthropicKey) {
+      return res.status(503).json({ error: "AI integration not configured." });
+    }
+
+    const userMessage = `Verwerk het volgende tekstfragment uit bronboek ${source_book}, pagina ${source_page}:
+
+---
+${fragment}
+---
+
+Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
+
+    const aiResponse = await fetch(`${anthropicBase}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 2000,
+        temperature: 0.2,
+        system: CC_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userMessage }],
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      req.log?.error({ status: aiResponse.status, errText }, "CC Screening: AI call failed");
+      return res.status(502).json({ error: "AI service error." });
+    }
+
+    const aiData = await aiResponse.json() as { content: Array<{ text: string }> };
+    const rawText = aiData.content?.[0]?.text?.trim() ?? "";
+
+    // Extract JSON from response (handle markdown fences)
+    let jsonText = rawText;
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) jsonText = jsonMatch[0];
+    else jsonText = rawText.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+    let parsed2: Record<string, unknown>;
+    try {
+      parsed2 = JSON.parse(jsonText);
+    } catch {
+      return res.status(422).json({ error: "AI returned invalid JSON.", raw: rawText.substring(0, 500) });
+    }
+
+    // Handle AI-reported errors
+    if (typeof parsed2.error === "string") {
+      return res.status(422).json({ error: parsed2.error, message: parsed2.message });
+    }
+
+    // ── Quality validation ─────────────────────────────────────────────────────
+    const warnings: string[] = [];
+
+    // 1. rule_cc must not be empty
+    if (!parsed2.rule_cc || typeof parsed2.rule_cc !== "string" || (parsed2.rule_cc as string).length < 10) {
+      return res.status(422).json({ error: "INVALID_OUTPUT", message: "rule_cc is missing or too short." });
+    }
+
+    // 2. rule_raw must not be empty
+    if (!parsed2.rule_raw || typeof parsed2.rule_raw !== "string" || (parsed2.rule_raw as string).length < 5) {
+      return res.status(422).json({ error: "INVALID_OUTPUT", message: "rule_raw is missing or too short." });
+    }
+
+    // 3. Copyright heuristic — check if rule_cc contains long quoted sequences from fragment
+    const fragmentWords = fragment.toLowerCase().split(/\s+/);
+    const ruleCcWords = (parsed2.rule_cc as string).toLowerCase().split(/\s+/);
+    let consecutiveMatches = 0;
+    let maxConsecutive = 0;
+    for (const word of ruleCcWords) {
+      if (fragmentWords.includes(word) && word.length > 4) {
+        consecutiveMatches++;
+        maxConsecutive = Math.max(maxConsecutive, consecutiveMatches);
+      } else {
+        consecutiveMatches = 0;
+      }
+    }
+    if (maxConsecutive >= 8) {
+      warnings.push("rule_cc may contain near-literal text from the source. Review before saving.");
+    }
+
+    // 4. Urgency validation
+    const urgency = Number(parsed2.urgency);
+    if (!Number.isInteger(urgency) || urgency < 1 || urgency > 3) {
+      return res.status(422).json({ error: "INVALID_OUTPUT", message: "urgency must be 1, 2, or 3." });
+    }
+
+    // 5. verified must always be false
+    parsed2.verified = false;
+
+    // 6. Pillar validation
+    const validPillars = ["Z1", "Z2", "Z3", "Z4", "Z5"];
+    if (!validPillars.includes(parsed2.pillar_code as string)) {
+      return res.status(422).json({ error: "INVALID_OUTPUT", message: `pillar_code must be one of ${validPillars.join(", ")}.` });
+    }
+
+    // 7. Region must be specific (not continent-level)
+    const validRegions = ["UK", "CN", "CA", "AU", "UNIVERSAL", "US", "FR", "DE", "JP", "AE"];
+    if (!validRegions.includes((parsed2.region as string)?.toUpperCase())) {
+      warnings.push(`region '${parsed2.region}' is not a recognised code — use UNIVERSAL or verify.`);
+    }
+
+    return res.json({ ok: true, record: parsed2, warnings });
+  } catch (err) {
+    req.log?.error({ err }, "CC Screening: unexpected error");
+    return res.status(500).json({ error: "A difficulty arose processing the fragment." });
+  }
+});
+
+/** POST /admin/cc-save — persist an approved CC record to culture_protocols */
+router.post("/admin/cc-save", requireAdmin, async (req, res) => {
+  try {
+    const parsed = CCSaveRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid record.", details: parsed.error.flatten().fieldErrors });
+    }
+
+    const data = parsed.data;
+
+    // Map pillar_code (Z1–Z5) to integer for legacy pillar column
+    const pillarCodeToInt: Record<string, number> = { Z1: 1, Z2: 2, Z3: 3, Z4: 4, Z5: 5 };
+    const pillarInt = pillarCodeToInt[data.pillar_code] ?? 0;
+
+    // Build a unique rule_type from subcategory + first words of rule_raw
+    const ruleTypeSlug = `${data.subcategory}_${Date.now()}`;
+
+    const [inserted] = await db.insert(cultureProtocolsTable).values({
+      region_code: data.region,
+      pillar: pillarInt,
+      rule_type: ruleTypeSlug,
+      rule_description: data.rule_cc,
+      source_reference: `${data.source_book}:${data.source_page}`,
+      // CC fields
+      source_book: data.source_book,
+      source_page: data.source_page,
+      pillar_code: data.pillar_code,
+      subcategory: data.subcategory,
+      rule_raw: data.rule_raw,
+      rule_cc: data.rule_cc,
+      personas: data.personas,
+      modules_cc: data.modules_cc,
+      urgency: data.urgency,
+      verified: false,
+    }).returning();
+
+    return res.json({ ok: true, id: inserted.id });
+  } catch (err) {
+    req.log?.error({ err }, "CC Save: failed to persist record");
+    return res.status(500).json({ error: "A difficulty arose saving the record." });
+  }
+});
+
 export default router;

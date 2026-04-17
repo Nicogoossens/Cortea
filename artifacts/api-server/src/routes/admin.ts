@@ -119,7 +119,7 @@ router.get("/admin/users/:id", requireAdmin, async (req, res) => {
     const id = String(req.params.id);
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
     if (!user) return res.status(404).json({ error: "User not found." });
-    const { session_token: _st, verification_token: _vt, ...safeUser } = user;
+    const { session_token: _st, verification_token: _vt, situational_interests: _si, ...safeUser } = user;
     return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to get user");

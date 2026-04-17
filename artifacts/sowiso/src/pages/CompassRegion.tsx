@@ -1,6 +1,7 @@
 import {
   useGetCultureCompassRegion,
   getGetCultureCompassRegionQueryKey,
+  useGetProfile,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,18 +17,26 @@ export default function CompassRegion() {
   const { code } = useParams<{ code: string }>();
   const { t, locale } = useLocale();
   const { isAuthenticated } = useAuth();
+  const { data: profile } = useGetProfile();
   const regionCode = code || "";
+
+  const spheres = (profile?.situational_interests as string[] | null | undefined) ?? [];
+  const spheresParam = spheres.length > 0 ? spheres.join(",") : undefined;
+
+  const compassParams = { locale, ...(spheresParam ? { situational_interests: spheresParam } : {}) };
 
   const { data: detail, isLoading } = useGetCultureCompassRegion(
     regionCode,
-    { locale },
+    compassParams as Parameters<typeof useGetCultureCompassRegion>[1],
     {
       query: {
         enabled: !!regionCode,
-        queryKey: [...getGetCultureCompassRegionQueryKey(regionCode), locale],
+        queryKey: [...getGetCultureCompassRegionQueryKey(regionCode), locale, spheresParam],
       },
     }
   );
+
+  const sphereHighlights = new Set<string>((detail as unknown as { sphere_highlights?: string[] } | undefined)?.sphere_highlights ?? []);
 
   if (isLoading) {
     return (
@@ -188,7 +197,7 @@ export default function CompassRegion() {
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("compass.protocols")}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="border-border shadow-sm">
+          <Card className={`shadow-sm ${sphereHighlights.has("dining_etiquette") ? "border-primary/40" : "border-border"}`}>
             <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
               <CardTitle className="text-lg font-serif flex items-center gap-3">
                 <Utensils className="w-5 h-5 text-muted-foreground" aria-hidden="true" /> {t("compass.dining_etiquette")}
@@ -199,7 +208,7 @@ export default function CompassRegion() {
             </CardContent>
           </Card>
 
-          <Card className="border-border shadow-sm">
+          <Card className={`shadow-sm ${sphereHighlights.has("language_notes") ? "border-primary/40" : "border-border"}`}>
             <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
               <CardTitle className="text-lg font-serif flex items-center gap-3">
                 <MessageSquare className="w-5 h-5 text-muted-foreground" aria-hidden="true" /> {t("compass.language_notes")}
@@ -221,7 +230,7 @@ export default function CompassRegion() {
             </CardContent>
           </Card>
 
-          <Card className="border-border shadow-sm">
+          <Card className={`shadow-sm ${sphereHighlights.has("dress_code") ? "border-primary/40" : "border-border"}`}>
             <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
               <CardTitle className="text-lg font-serif flex items-center gap-3">
                 <Shirt className="w-5 h-5 text-muted-foreground" aria-hidden="true" /> {t("compass.dress_code")}

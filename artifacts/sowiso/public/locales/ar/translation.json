@@ -201,7 +201,7 @@
   "scenario.not_found": "السيناريو غير موجود",
   "common.loading": "جاري التحميل…",
   "common.error": "حدث خطأ ما.",
-  "common.not_found": "Not found",
+  "common.not_found": "غير موجود",
   "common.return_home": "العودة إلى الصفحة الرئيسية",
   "locale.select": "اللغة",
   "locale.choose_region": "اختر لغتك",

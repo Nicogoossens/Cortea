@@ -61,6 +61,7 @@ const RegionCodeParamSchema = z.object({
 
 const CompassQuerySchema = z.object({
   locale: z.string().default(DEFAULT_LOCALE),
+  situational_interests: z.string().optional(),
 });
 
 router.get("/culture/protocols", async (req, res) => {
@@ -151,6 +152,16 @@ router.get("/culture/compass", async (req, res) => {
   }
 });
 
+const SPHERE_TO_COMPASS_FIELDS: Record<string, string[]> = {
+  gastronomy: ["dining_etiquette"],
+  business: ["language_notes"],
+  formal_events: ["dress_code"],
+  lifestyle_wellness: ["dos", "donts"],
+  arts_culture: ["dos", "donts"],
+  travel_hospitality: ["dos", "donts"],
+  music_entertainment: ["dos", "donts"],
+};
+
 router.get("/culture/compass/:regionCode", async (req, res) => {
   try {
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
@@ -160,6 +171,8 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
 
     const queryParsed = CompassQuerySchema.safeParse(req.query);
     const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
+    const rawSpheres = queryParsed.success ? (queryParsed.data.situational_interests ?? "") : "";
+    const spheres = rawSpheres.split(",").map((s) => s.trim()).filter(Boolean);
 
     const regionCode = paramParsed.data.regionCode.toUpperCase();
 
@@ -179,6 +192,11 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
 
     const mehrabian = MEHRABIAN_WEIGHTS[regionCode] ?? null;
 
+    const highlightedFields = new Set<string>();
+    for (const sphere of spheres) {
+      for (const field of SPHERE_TO_COMPASS_FIELDS[sphere] ?? []) highlightedFields.add(field);
+    }
+
     return res.json({
       region_code: row.region_code,
       flag_emoji: row.flag_emoji,
@@ -192,6 +210,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
       dos: localeContent.dos ?? [],
       donts: localeContent.donts ?? [],
       mehrabian_weight: mehrabian,
+      sphere_highlights: Array.from(highlightedFields),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass region");

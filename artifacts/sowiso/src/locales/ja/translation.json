@@ -201,7 +201,7 @@
   "scenario.not_found": "シナリオが見つかりません",
   "common.loading": "読み込み中…",
   "common.error": "何か不具合が生じました。",
-  "common.not_found": "Not found",
+  "common.not_found": "見つかりません",
   "common.return_home": "ホームへ戻る",
   "locale.select": "言語",
   "locale.choose_region": "言語をお選びください",

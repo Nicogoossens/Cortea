@@ -1,5 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -390,6 +390,8 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
     let inserted = 0;
     const errors: string[] = [];
 
+    const newScenarioIds: number[] = [];
+
     if (type === "scenarios") {
       for (let i = 0; i < items.length; i++) {
         const result = ScenarioImportSchema.safeParse(items[i]);
@@ -397,11 +399,28 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
           errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
           continue;
         }
-        await db
+        const rows = await db
           .insert(scenariosTable)
           .values(result.data)
-          .onConflictDoNothing({ target: [scenariosTable.region_code, scenariosTable.pillar, scenariosTable.title] });
-        inserted++;
+          .onConflictDoNothing({ target: [scenariosTable.region_code, scenariosTable.pillar, scenariosTable.title] })
+          .returning({ id: scenariosTable.id });
+        if (rows.length > 0) {
+          newScenarioIds.push(rows[0].id);
+          inserted++;
+        }
+      }
+
+      // Spawn translation worker in the background for newly inserted scenarios only
+      if (newScenarioIds.length > 0) {
+        const minId = Math.min(...newScenarioIds);
+        const maxId = Math.max(...newScenarioIds);
+        const child = spawn(
+          "node",
+          ["scripts/scenario-translate.mjs", "--from", String(minId), "--to", String(maxId)],
+          { cwd: WORKSPACE_ROOT, env: { ...process.env }, detached: true, stdio: "ignore" },
+        );
+        child.unref();
+        req.log?.info({ newScenarioIds, minId, maxId }, "Admin: scenario translate worker spawned in background");
       }
     } else if (type === "compass_regions") {
       for (let i = 0; i < items.length; i++) {
@@ -431,6 +450,11 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
       inserted,
       errors_count: errors.length,
       errors: errors.slice(0, 20),
+      ...(newScenarioIds.length > 0 && {
+        translation_queued: true,
+        translation_scenario_ids: newScenarioIds,
+        translation_note: "Translations into 8 languages are being generated in the background. This may take a few minutes.",
+      }),
     });
   } catch (err) {
     req.log?.error({ err }, "Admin: import failed");

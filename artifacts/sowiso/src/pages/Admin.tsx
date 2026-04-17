@@ -403,7 +403,7 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [seedState, setSeedState] = useState<ActionState>("idle");
   const [seedOutput, setSeedOutput] = useState<string[]>([]);
   const [importState, setImportState] = useState<ActionState>("idle");
-  const [importResult, setImportResult] = useState<{ inserted: number; errors_count: number; errors: string[] } | null>(null);
+  const [importResult, setImportResult] = useState<{ inserted: number; errors_count: number; errors: string[]; translation_queued?: boolean; translation_scenario_ids?: number[]; translation_note?: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchStatus = useCallback(async () => {
@@ -604,7 +604,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground font-light">
             Upload a JSON array of scenario or compass region objects. Scenarios are inserted as new rows;
-            compass regions are upserted by region_code.
+            compass regions are upserted by region_code. New scenarios are automatically translated into
+            8 languages (nl, fr, de, es, pt, it, ar, ja) in the background after import.
           </p>
 
           <div className="flex flex-wrap gap-3 items-start">
@@ -639,12 +640,21 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
           </div>
 
           {importResult && (
-            <div className={`text-xs font-mono p-3 rounded-sm border ${importState === "done" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
-              <p>{importResult.inserted} item(s) imported. {importResult.errors_count} error(s).</p>
-              {importResult.errors.length > 0 && (
-                <ul className="mt-2 space-y-1 list-disc list-inside">
-                  {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-                </ul>
+            <div className="space-y-2">
+              <div className={`text-xs font-mono p-3 rounded-sm border ${importState === "done" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+                <p>{importResult.inserted} item(s) imported. {importResult.errors_count} error(s).</p>
+                {importResult.errors.length > 0 && (
+                  <ul className="mt-2 space-y-1 list-disc list-inside">
+                    {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                )}
+              </div>
+              {importResult.translation_queued && (
+                <div className="text-xs font-mono p-3 rounded-sm border bg-blue-50 border-blue-200 text-blue-800">
+                  <p className="font-medium">🌐 Translation worker started</p>
+                  <p className="mt-1 text-blue-700 font-light">{importResult.translation_note}</p>
+                  <p className="mt-1 text-blue-600">Scenario IDs: {importResult.translation_scenario_ids?.join(", ")}</p>
+                </div>
               )}
             </div>
           )}

@@ -574,6 +574,7 @@
   "home.welcome_back": "Willkommen zurück, {{name}}.",
   "home.welcome_back_score": "Ihr Noble Score beträgt {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} Punkte bis {{next_level}}.",
+  "welcome.disclaimer": "Dieses Werkzeug wird auf der Grundlage mehrerer angesehener Werke entwickelt, darunter psychologische Studien über soziale Interaktion und die Lehre des Benehmens in verschiedenen gesellschaftlichen Schichten.",
   "home.welcome_back_anonymous": "Willkommen zurück.",
   "home.welcome_back_prompt": "Fügen Sie Ihren Namen hinzu, um diese Begrüßung zu personalisieren.",
   "home.welcome_back_dismiss": "Schließen"

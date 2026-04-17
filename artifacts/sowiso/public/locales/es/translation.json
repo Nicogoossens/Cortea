@@ -574,6 +574,7 @@
   "home.welcome_back": "Bienvenido de nuevo, {{name}}.",
   "home.welcome_back_score": "Su Noble Score es {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} puntos para {{next_level}}.",
+  "welcome.disclaimer": "Esta herramienta se desarrolla a partir de múltiples obras reconocidas, incluidos estudios psicológicos sobre la interacción social y el estudio de los modales en los distintos estratos de la sociedad.",
   "home.welcome_back_anonymous": "Bienvenido de nuevo.",
   "home.welcome_back_prompt": "Añada su nombre para personalizar este saludo.",
   "home.welcome_back_dismiss": "Cerrar"

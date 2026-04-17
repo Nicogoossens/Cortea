@@ -574,6 +574,7 @@
   "home.welcome_back": "おかえりなさい、{{name}}様。",
   "home.welcome_back_score": "あなたのノーブルスコアは{{score}}（{{level}}）です。",
   "home.welcome_back_next_rank": "{{next_level}}まであと{{remaining}}ポイント。",
+  "welcome.disclaimer": "このツールは、社会的な相互作用に関する心理学的研究や、社会の様々な階層におけるマナーの研究を含む、多くの高名な著作に基づいて開発されています。",
   "home.welcome_back_anonymous": "おかえりなさい。",
   "home.welcome_back_prompt": "名前を追加して、このご挨拶をパーソナライズしてください。",
   "home.welcome_back_dismiss": "閉じる"

@@ -198,9 +198,8 @@ export default function Welcome() {
             ))}
           </div>
 
-          <p className="text-[11px] text-muted-foreground/40 font-light leading-relaxed max-w-2xl text-center border-t border-border/10 pt-6 animate-in fade-in duration-700" style={{ animationDelay: "600ms" }}>
-            Deze tool wordt ontwikkeld op basis van meerdere gerenommeerde werken, waaronder psychologische
-            studies over sociale omgang en de leer van omgangsvormen binnen verschillende lagen van de samenleving.
+          <p className="text-xs text-muted-foreground/60 font-light leading-relaxed max-w-2xl text-center border-t border-border/10 pt-6 animate-in fade-in duration-700" style={{ animationDelay: "600ms" }}>
+            {t("welcome.disclaimer")}
           </p>
         </div>
       </LandingLayout>

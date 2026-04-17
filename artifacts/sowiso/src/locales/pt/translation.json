@@ -574,6 +574,7 @@
   "home.welcome_back": "Bem-vindo de volta, {{name}}.",
   "home.welcome_back_score": "A sua pontuação Noble é {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} pontos para {{next_level}}.",
+  "welcome.disclaimer": "Esta ferramenta é desenvolvida com base em múltiplas obras aclamadas, incluindo estudos psicológicos sobre interação social e o estudo das boas maneiras nos diferentes estratos da sociedade.",
   "home.welcome_back_anonymous": "Bem-vindo de volta.",
   "home.welcome_back_prompt": "Adicione o seu nome para personalizar esta saudação.",
   "home.welcome_back_dismiss": "Fechar"

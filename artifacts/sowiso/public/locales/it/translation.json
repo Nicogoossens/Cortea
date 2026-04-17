@@ -574,6 +574,7 @@
   "home.welcome_back": "Bentornato, {{name}}.",
   "home.welcome_back_score": "Il suo Noble Score è {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} punti per {{next_level}}.",
+  "welcome.disclaimer": "Questo strumento è sviluppato sulla base di molteplici opere acclamate, inclusi studi psicologici sull'interazione sociale e lo studio delle buone maniere nelle diverse classi sociali.",
   "home.welcome_back_anonymous": "Bentornato.",
   "home.welcome_back_prompt": "Aggiunga il suo nome per personalizzare questo messaggio.",
   "home.welcome_back_dismiss": "Chiudi"

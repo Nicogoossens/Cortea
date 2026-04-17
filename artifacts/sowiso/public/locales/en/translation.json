@@ -580,6 +580,7 @@
   "home.welcome_back": "Welcome back, {{name}}.",
   "home.welcome_back_score": "Your Noble Score stands at {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} points to {{next_level}}.",
+  "welcome.disclaimer": "This tool is developed on the basis of multiple acclaimed works, including psychological studies on social interaction and the study of manners across the different strata of society.",
   "home.welcome_back_anonymous": "Welcome back.",
   "home.welcome_back_prompt": "Add your name to personalise this greeting.",
   "home.welcome_back_dismiss": "Dismiss"

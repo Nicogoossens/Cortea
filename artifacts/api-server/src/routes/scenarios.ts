@@ -93,20 +93,20 @@ router.get("/scenarios", async (req, res) => {
       .filter((s): s is Sphere => (VALID_SPHERES as readonly string[]).includes(s));
 
     const matchingContexts = spheres.length > 0 ? getContextsForSpheres(spheres) : [];
+    const matchingCtxSet = new Set(matchingContexts);
 
-    let query = db.select()
+    const scenarios = await db.select()
       .from(scenariosTable)
-      .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`);
+      .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`)
+      .limit(limit);
 
-    if (matchingContexts.length > 0) {
-      const contextList = matchingContexts.map((c) => `'${c}'`).join(", ");
-      query = (query as typeof query).orderBy(
-        sql`CASE WHEN ${scenariosTable.context} IN (${sql.raw(contextList)}) THEN 0 ELSE 1 END`,
-        scenariosTable.difficulty_level,
-      ) as typeof query;
+    if (matchingCtxSet.size > 0) {
+      scenarios.sort((a, b) => {
+        const aMatch = matchingCtxSet.has(a.context ?? "") ? 0 : 1;
+        const bMatch = matchingCtxSet.has(b.context ?? "") ? 0 : 1;
+        return aMatch - bMatch || (a.difficulty_level ?? 0) - (b.difficulty_level ?? 0);
+      });
     }
-
-    const scenarios = await (query as typeof query).limit(limit);
 
     return res.json(resolveScenarioLocales(scenarios, lang));
   } catch (err) {

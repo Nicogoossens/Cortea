@@ -94,11 +94,11 @@ export default function Home() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-      {showWelcome && firstName && (
+      {showWelcome && (
         <div
           role="status"
           aria-live="polite"
-          aria-label={t("home.welcome_back", { name: firstName })}
+          aria-label={firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
           className={[
             "relative flex items-start gap-4 rounded-sm border border-primary/20 bg-primary/5 px-5 py-4",
             "transition-all duration-400",
@@ -107,7 +107,7 @@ export default function Home() {
         >
           <div className="flex-1 min-w-0">
             <p className="font-serif text-xl text-foreground leading-snug">
-              {t("home.welcome_back", { name: firstName })}
+              {firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
             </p>
             {nobleScore?.total_score !== undefined && (
               <p className="mt-0.5 text-sm text-muted-foreground font-light">
@@ -121,6 +121,15 @@ export default function Home() {
                   next_level: t(levelKey(nobleScore.next_level_name)),
                 })}
               </p>
+            )}
+            {!firstName && (
+              <Link
+                href="/profile"
+                onClick={handleDismiss}
+                className="mt-1.5 inline-block text-sm text-primary/80 hover:text-primary underline-offset-2 hover:underline transition-colors font-light"
+              >
+                {t("home.welcome_back_prompt")}
+              </Link>
             )}
           </div>
           <button

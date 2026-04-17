@@ -574,5 +574,7 @@
   "home.welcome_back": "おかえりなさい、{{name}}様。",
   "home.welcome_back_score": "あなたのノーブルスコアは{{score}}（{{level}}）です。",
   "home.welcome_back_next_rank": "{{next_level}}まであと{{remaining}}ポイント。",
+  "home.welcome_back_anonymous": "おかえりなさい。",
+  "home.welcome_back_prompt": "名前を追加して、このご挨拶をパーソナライズしてください。",
   "home.welcome_back_dismiss": "閉じる"
 }

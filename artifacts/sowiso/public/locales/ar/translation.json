@@ -574,5 +574,7 @@
   "home.welcome_back": "مرحباً بعودتك، {{name}}.",
   "home.welcome_back_score": "رصيدك النبيل {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "{{remaining}} نقطة حتى {{next_level}}.",
+  "home.welcome_back_anonymous": "مرحباً بعودتك.",
+  "home.welcome_back_prompt": "أضف اسمك لتخصيص هذه التحية.",
   "home.welcome_back_dismiss": "إغلاق"
 }

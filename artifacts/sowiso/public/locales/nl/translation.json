@@ -580,5 +580,7 @@
   "home.welcome_back": "Welkom terug, {{name}}.",
   "home.welcome_back_score": "Uw Noble Score staat op {{score}} — {{level}}.",
   "home.welcome_back_next_rank": "Nog {{remaining}} punten tot {{next_level}}.",
+  "home.welcome_back_anonymous": "Welkom terug.",
+  "home.welcome_back_prompt": "Voeg uw naam toe om deze begroeting te personaliseren.",
   "home.welcome_back_dismiss": "Sluiten"
 }

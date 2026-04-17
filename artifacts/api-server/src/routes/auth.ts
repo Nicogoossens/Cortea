@@ -170,7 +170,7 @@ router.get("/auth/verify", async (req, res) => {
       .where(eq(usersTable.id, user.id));
 
     return res.json({
-      message: "Your address has been verified. Welcome to SOWISO.",
+      message: "Your address has been verified. Welcome to Cortéa.",
       user_id: user.id,
       full_name: user.full_name,
       session_token: sessionToken,

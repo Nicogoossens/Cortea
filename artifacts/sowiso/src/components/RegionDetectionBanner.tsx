@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveRegion, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { useLanguage } from "@/lib/i18n";
 
-const SESSION_DISMISSED_KEY = "sowiso_region_detect_dismissed";
+const SESSION_DISMISSED_KEY = "cortea_region_detect_dismissed";
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface BBox {

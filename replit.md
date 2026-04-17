@@ -26,9 +26,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/db run seed-compass` — seed/update compass region data (all 13 locales)
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
-## SOWISO App Architecture
+## Cortéa App Architecture
 
-**SOWISO** is an etiquette intelligence app with 3 modules:
+**Cortéa** is an etiquette intelligence app with 3 modules:
 - **The Atelier** — Scenario-based training filtered by `activeRegion` and pillar (1–5)
 - **The Counsel** — AI etiquette advisor powered by Claude claude-sonnet-4-5 via `/api/counsel` POST
 - **The Cultural Compass** — Country-by-country etiquette guides with Quick Brief panel
@@ -43,7 +43,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **i18n (Task #6 — complete)**: react-i18next with `i18next-http-backend`. 9 locales: en, nl, fr, de, es, pt, it, ar (RTL), ja. 386 keys each. Bundled JSON in `src/locales/{lang}/translation.json`; DB-backed via `GET /api/translations?language_code={lng}` (upsert with `ON CONFLICT`). RTL direction applied to `<html dir="rtl">` for Arabic. Accessibility panel with high-contrast + text-size controls. All 60 scenarios translated into ar + ja.
 - **Content labels**: `pillarDomainKey()`, `levelKey()`, `triggerLabel()` in `artifacts/sowiso/src/lib/content-labels.ts`
 - **Noble Score**: 5 levels (Aware 0–19, Composed 20–39, Refined 40–59, Distinguished 60–79, Sovereign 80–100)
-- **Auth model (deliberate design decision)**: SOWISO uses magic-link email authentication — no passwords, no OAuth, no SMS. `POST /api/auth/signin` emails a one-time link; `GET /api/auth/verify` exchanges the token for a session. Session token is stored server-side in the DB and sent as a Bearer token. All protected routes resolve user identity from this token only (no query-param identity). This is intentional for the current scope.
+- **Auth model (deliberate design decision)**: Cortéa uses magic-link email authentication — no passwords, no OAuth, no SMS. `POST /api/auth/signin` emails a one-time link; `GET /api/auth/verify` exchanges the token for a session. Session token is stored server-side in the DB and sent as a Bearer token. All protected routes resolve user identity from this token only (no query-param identity). This is intentional for the current scope.
 - **Email service**: `artifacts/api-server/src/lib/email.ts` — builds branded HTML activation email; sends via SMTP if `SMTP_HOST/SMTP_USER/SMTP_PASS` env vars are set, otherwise logs token + link to console for development
 - **Auth routes**: `artifacts/api-server/src/routes/auth.ts` — `POST /api/auth/register`, `GET /api/auth/verify`, `POST /api/auth/resend`, `POST /api/auth/signin`
 - **Registration pages**: `/register` (Register.tsx) and `/verify-email` (EmailVerify.tsx) — full locale-aware UI

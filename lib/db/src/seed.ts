@@ -1169,7 +1169,7 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
 const FLAG_FORCE = process.argv.includes("--force");
 
 async function seed() {
-  console.log("Seeding SOWISO database (Atelier content)…");
+  console.log("Seeding Cortéa database (Atelier content)…");
 
   if (FLAG_FORCE) {
     // --force: clear and reseed (only safe in dev/staging with explicit intent)

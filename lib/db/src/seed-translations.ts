@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 type TranslationRow = Omit<typeof translationsTable.$inferInsert, "id">;
 
 const UI_KEYS: Record<string, { en: string; nl: string; fr: string }> = {
-  "app.name":                    { en: "SOWISO",                              nl: "SOWISO",                               fr: "SOWISO" },
+  "app.name":                    { en: "Cortéa",                              nl: "Cortéa",                               fr: "Cortéa" },
   "app.tagline":                 { en: "The art of conduct",                  nl: "De kunst van gedrag",                  fr: "L'art de la conduite" },
   "app.established":             { en: "Est. 2024",                           nl: "Opgericht 2024",                       fr: "Fondé en 2024" },
 

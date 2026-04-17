@@ -23,16 +23,16 @@ function createTransport() {
 const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/$/, "");
 const APP_URL = process.env.APP_URL ?? `https://sowiso-01.replit.app${BASE_PATH}`;
 const FROM_ADDRESS = process.env.SMTP_FROM ?? "noreply@sowiso.app";
-const FROM_NAME = "SOWISO";
+const FROM_NAME = "Cortéa";
 
 function buildActivationEmailHtml(verificationUrl: string, locale: string = "en"): string {
   const content = {
     subject: {
-      en: "Activate your SOWISO account",
-      nl: "Activeer uw SOWISO-account",
-      fr: "Activez votre compte SOWISO",
-      de: "Aktivieren Sie Ihr SOWISO-Konto",
-      es: "Active su cuenta SOWISO",
+      en: "Activate your Cortéa account",
+      nl: "Activeer uw Cortéa-account",
+      fr: "Activez votre compte Cortéa",
+      de: "Aktivieren Sie Ihr Cortéa-Konto",
+      es: "Active su cuenta Cortéa",
     },
     greeting: {
       en: "Distinguished guest,",
@@ -56,11 +56,11 @@ function buildActivationEmailHtml(verificationUrl: string, locale: string = "en"
       es: "Verificar Mi Dirección",
     },
     expiry: {
-      en: "This invitation expires in 24 hours. If you did not request admission to SOWISO, kindly disregard this correspondence.",
-      nl: "Deze uitnodiging vervalt over 24 uur. Als u geen toegang tot SOWISO heeft aangevraagd, kunt u dit bericht negeren.",
-      fr: "Cette invitation expire dans 24 heures. Si vous n'avez pas demandé l'accès à SOWISO, veuillez ignorer cette correspondance.",
-      de: "Diese Einladung läuft in 24 Stunden ab. Falls Sie keinen Zugang zu SOWISO beantragt haben, ignorieren Sie bitte diese Korrespondenz.",
-      es: "Esta invitación caduca en 24 horas. Si no solicitó acceso a SOWISO, por favor ignore esta correspondencia.",
+      en: "This invitation expires in 24 hours. If you did not request admission to Cortéa, kindly disregard this correspondence.",
+      nl: "Deze uitnodiging vervalt over 24 uur. Als u geen toegang tot Cortéa heeft aangevraagd, kunt u dit bericht negeren.",
+      fr: "Cette invitation expire dans 24 heures. Si vous n'avez pas demandé l'accès à Cortéa, veuillez ignorer cette correspondance.",
+      de: "Diese Einladung läuft in 24 Stunden ab. Falls Sie keinen Zugang zu Cortéa beantragt haben, ignorieren Sie bitte diese Korrespondenz.",
+      es: "Esta invitación caduca en 24 horas. Si no solicitó acceso a Cortéa, por favor ignore esta correspondencia.",
     },
     footer: {
       en: "The art of conduct, since 2024.",
@@ -101,7 +101,7 @@ function buildActivationEmailHtml(verificationUrl: string, locale: string = "en"
 <body>
   <div class="wrapper">
     <div class="header">
-      <div class="header-title">SOWISO</div>
+      <div class="header-title">Cortéa</div>
       <div class="header-tagline">${content.footer[lang]}</div>
     </div>
 
@@ -120,7 +120,7 @@ function buildActivationEmailHtml(verificationUrl: string, locale: string = "en"
     </div>
 
     <div class="footer">
-      <p class="footer-text">SOWISO &mdash; ${content.footer[lang]}</p>
+      <p class="footer-text">Cortéa &mdash; ${content.footer[lang]}</p>
     </div>
   </div>
 </body>
@@ -148,11 +148,11 @@ export async function sendActivationEmail({
 
   const lang = (["en", "nl", "fr", "de", "es"].includes(locale) ? locale : "en") as "en" | "nl" | "fr" | "de" | "es";
   const subjects: Record<"en" | "nl" | "fr" | "de" | "es", string> = {
-    en: "Activate your SOWISO account",
-    nl: "Activeer uw SOWISO-account",
-    fr: "Activez votre compte SOWISO",
-    de: "Aktivieren Sie Ihr SOWISO-Konto",
-    es: "Active su cuenta SOWISO",
+    en: "Activate your Cortéa account",
+    nl: "Activeer uw Cortéa-account",
+    fr: "Activez votre compte Cortéa",
+    de: "Aktivieren Sie Ihr Cortéa-Konto",
+    es: "Active su cuenta Cortéa",
   };
 
   const mailOptions = {
@@ -179,7 +179,7 @@ export async function sendActivationEmail({
       "SMTP not configured — activation email could not be delivered. Returning verification URL in response."
     );
     console.log("\n" + "=".repeat(70));
-    console.log("  SOWISO ACTIVATION EMAIL (SMTP not configured)");
+    console.log("  CORTÉA ACTIVATION EMAIL (SMTP not configured)");
     console.log("=".repeat(70));
     console.log(`  To:      ${to}`);
     console.log(`  Subject: ${mailOptions.subject}`);

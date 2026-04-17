@@ -150,6 +150,8 @@ router.get("/auth/verify", async (req, res) => {
         full_name: user.full_name,
         session_token: refreshedToken,
         is_admin: user.is_admin,
+        language_code: user.language_code,
+        active_region: user.active_region,
       });
     }
 
@@ -175,6 +177,8 @@ router.get("/auth/verify", async (req, res) => {
       full_name: user.full_name,
       session_token: sessionToken,
       is_admin: user.is_admin,
+      language_code: user.language_code,
+      active_region: user.active_region,
     });
   } catch (err) {
     req.log.error({ err }, "Verification failed");

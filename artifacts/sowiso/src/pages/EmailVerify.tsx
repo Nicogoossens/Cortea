@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, ALL_LOCALES, type SupportedLocale } from "@/lib/i18n";
+import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
 import { useAuth } from "@/lib/auth";
 import { CheckCircle2, XCircle, Loader2, ArrowRight, BookOpen, Compass, Shield, Scan } from "lucide-react";
 
@@ -45,12 +46,22 @@ function WelcomeBackChoices({ t }: { t: (key: string) => string }) {
   );
 }
 
+function resolveLocale(langCode: string | undefined, regionCode: string | undefined): SupportedLocale | undefined {
+  if (!langCode) return undefined;
+  const exact = ALL_LOCALES.find((l) => l === `${langCode}-${regionCode}`);
+  if (exact) return exact;
+  return ALL_LOCALES.find((l) => l.startsWith(langCode + "-")) as SupportedLocale | undefined;
+}
+
 export default function EmailVerify() {
-  const { t } = useLanguage();
+  const { t, setLocale } = useLanguage();
+  const { setActiveRegion } = useActiveRegion();
   const { login } = useAuth();
   const [, navigate] = useLocation();
   const [status, setStatus] = useState<Status>("loading");
   const [isNewUser, setIsNewUser] = useState(false);
+  const [profileLang, setProfileLang] = useState<string | null>(null);
+  const [profileRegion, setProfileRegion] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -71,10 +82,24 @@ export default function EmailVerify() {
           full_name?: string;
           session_token?: string;
           is_admin?: boolean;
+          language_code?: string;
+          active_region?: string;
         };
         if (res.ok) {
           if (body.user_id) {
             login(body.user_id, { name: body.full_name, sessionToken: body.session_token, isAdmin: body.is_admin ?? false });
+          }
+          if (body.language_code) {
+            const resolved = resolveLocale(body.language_code, body.active_region);
+            if (resolved) setLocale(resolved);
+            setProfileLang(body.language_code);
+          }
+          if (body.active_region) {
+            const validCodes = COMPASS_REGIONS.map((r) => r.code);
+            if (validCodes.includes(body.active_region as RegionCode)) {
+              setActiveRegion(body.active_region as RegionCode);
+            }
+            setProfileRegion(body.active_region);
           }
           const newUser = !body.already_verified;
           setIsNewUser(newUser);
@@ -91,7 +116,15 @@ export default function EmailVerify() {
   }, []);
 
   function handleEnter() {
-    navigate(isNewUser ? "/onboarding" : "/");
+    if (isNewUser) {
+      const qs = new URLSearchParams();
+      if (profileLang) qs.set("lang", profileLang);
+      if (profileRegion) qs.set("region", profileRegion);
+      const query = qs.toString();
+      navigate(query ? `/onboarding?${query}` : "/onboarding");
+    } else {
+      navigate("/");
+    }
   }
 
   const views: Record<Status, { icon: React.ReactNode; heading: string; body: string; cta?: React.ReactNode }> = {

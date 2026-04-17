@@ -5,7 +5,7 @@ import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap } from "@workspace/db";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
@@ -680,19 +680,57 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
 
     const data = parsed.data;
 
-    // Pre-save validation gate — enforce same rules as cc-screen before persisting
+    // ── Full pre-save validation gate (mirrors §9 Quality Checklist) ──────────
+
+    // 1. Pillar must be a valid Zuil code
     if (!CC_VALID_PILLARS.includes(data.pillar)) {
       return res.status(400).json({ error: "VALIDATION_FAILED", message: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
     }
+
+    // 2. Region must be a known country code (not continent-level)
     const regionUp = data.region.toUpperCase();
     if (!CC_VALID_REGIONS.includes(regionUp as typeof CC_VALID_REGIONS[number])) {
       return res.status(400).json({ error: "VALIDATION_FAILED", message: `region '${data.region}' is not a recognised code. Use UNIVERSAL or a valid country code.` });
     }
+
+    // 3. Subcategory must belong to the assigned Zuil
+    const validSubcategories = CC_SUBCATEGORIES[data.pillar as keyof typeof CC_SUBCATEGORIES] ?? [];
+    if (!validSubcategories.includes(data.subcategory)) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: `subcategory '${data.subcategory}' is not valid for pillar ${data.pillar}. Valid: ${validSubcategories.join(", ")}.` });
+    }
+
+    // 4. At least one persona must be assigned
     if (data.personas.length === 0) {
       return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one persona must be assigned." });
     }
+
+    // 5. At least one module must be assigned
     if (data.modules.length === 0) {
       return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one module must be assigned." });
+    }
+
+    // 6. rule_cc must not be suspiciously similar to rule_raw (basic paraphrase check)
+    if (data.rule_cc.trim().toLowerCase() === data.rule_raw.trim().toLowerCase()) {
+      return res.status(400).json({ error: "VALIDATION_FAILED", message: "rule_cc and rule_raw are identical — rule_cc must be rephrased in C&C mentor style." });
+    }
+
+    // 7. verified must always be false — hard enforce (cannot be set by caller)
+    // (verified is omitted from CCSaveRequestSchema; always inserted as false)
+
+    // 8. urgency=3 cap — max 20% of CC records may be urgency=3
+    if (data.urgency === 3) {
+      const totalRows = await db.select({ n: count() }).from(cultureProtocolsTable)
+        .where(sql`source_book IS NOT NULL`);
+      const urgency3Rows = await db.select({ n: count() }).from(cultureProtocolsTable)
+        .where(sql`source_book IS NOT NULL AND urgency = 3`);
+      const total = totalRows[0]?.n ?? 0;
+      const urgent3 = urgency3Rows[0]?.n ?? 0;
+      if (total >= 5 && urgent3 / total >= 0.20) {
+        return res.status(400).json({
+          error: "URGENCY_CAP_EXCEEDED",
+          message: `Max 20% of CC records may be urgency=3. Current: ${urgent3}/${total} (${Math.round(urgent3 / total * 100)}%). Review urgency rating.`,
+        });
+      }
     }
 
     // Map pillar string (Z1–Z5) → integer for legacy pillar column

@@ -1,4 +1,5 @@
-import { pgTable, serial, text, integer, timestamp, unique, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, unique, jsonb, boolean, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -24,8 +25,11 @@ export const cultureProtocolsTable = pgTable("culture_protocols", {
   modules: jsonb("modules").$type<string[]>(),
   urgency: integer("urgency").default(2),
   verified: boolean("verified").default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   unique("culture_protocols_region_pillar_rule_key").on(t.region_code, t.pillar, t.rule_type),
+  check("culture_protocols_urgency_check", sql`${t.urgency} IS NULL OR (${t.urgency} >= 1 AND ${t.urgency} <= 3)`),
+  check("culture_protocols_pillar_code_check", sql`${t.pillar_code} IS NULL OR ${t.pillar_code} IN ('Z1','Z2','Z3','Z4','Z5')`),
 ]);
 
 export const insertCultureProtocolSchema = createInsertSchema(cultureProtocolsTable).omit({ id: true });

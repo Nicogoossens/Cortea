@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -358,6 +359,7 @@ function UseCaseCard({ useCase, onSelect, isAuthenticated }: {
 }
 
 export default function UseCases() {
+  usePageTitle("Use Cases");
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const [selected, setSelected] = useState<UseCase | null>(null);

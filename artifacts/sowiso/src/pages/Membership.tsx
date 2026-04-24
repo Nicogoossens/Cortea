@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,6 +75,7 @@ function formatPrice(amount: number | null, currency: string): string {
 type BillingInterval = "monthly" | "yearly";
 
 export default function Membership() {
+  usePageTitle("Membership");
   const { t } = useLanguage();
   const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [plans, setPlans] = useState<Plan[]>([]);

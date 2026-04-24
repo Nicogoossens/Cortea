@@ -8,7 +8,8 @@
     "./schema": "./src/schema/index.ts",
     "./seed": "./src/seed.ts",
     "./seed-compass": "./src/seed-compass.ts",
-    "./seed-use-cases": "./src/seed-use-cases.ts"
+    "./seed-use-cases": "./src/seed-use-cases.ts",
+    "./seed-world-stubs": "./src/seed-world-stubs.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
@@ -16,7 +17,8 @@
     "seed": "tsx src/seed.ts",
     "seed-translations": "tsx src/seed-translations.ts",
     "seed-compass": "tsx src/seed-compass.ts",
-    "seed-use-cases": "tsx src/seed-use-cases.ts"
+    "seed-use-cases": "tsx src/seed-use-cases.ts",
+    "seed-world-stubs": "tsx src/seed-world-stubs.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

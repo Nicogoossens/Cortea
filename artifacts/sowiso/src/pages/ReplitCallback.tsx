@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/lib/auth";
 import { useLanguage, ALL_LOCALES, type SupportedLocale } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
@@ -7,6 +8,7 @@ import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export default function ReplitCallback() {
+  usePageTitle("Signing In");
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const { t, setLocale } = useLanguage();

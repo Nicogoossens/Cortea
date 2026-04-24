@@ -13,10 +13,12 @@ import { CULTURE_CLUSTERS, getClusterBrief } from "@/lib/clusters";
 import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 export default function Compass() {
+  usePageTitle("The Cultural Compass");
   const { t, locale } = useLocale();
   const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();

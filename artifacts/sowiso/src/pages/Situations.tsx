@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocale } from "@/lib/i18n";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
@@ -222,6 +223,7 @@ const SITUATIONS: Situation[] = [
 ];
 
 export default function Situations() {
+  usePageTitle("Situations");
   const { t, locale } = useLocale();
   const { activeRegion } = useActiveRegion();
   const { data: profile } = useGetProfile();

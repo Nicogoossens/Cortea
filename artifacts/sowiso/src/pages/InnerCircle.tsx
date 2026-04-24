@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useCallback } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,7 @@ function ProximityMap({ highlighted }: { highlighted?: string }) {
 }
 
 export default function InnerCircle() {
+  usePageTitle("Inner Circle");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();

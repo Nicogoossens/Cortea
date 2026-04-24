@@ -1,7 +1,9 @@
 import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 export default function NotFound() {
+  usePageTitle("Page Not Found");
   const { t } = useLanguage();
 
   return (

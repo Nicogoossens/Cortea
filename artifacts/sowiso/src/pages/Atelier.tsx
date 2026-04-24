@@ -1,3 +1,4 @@
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useGetScenarios,
   getGetScenariosQueryKey,
@@ -30,6 +31,7 @@ function scoreToDifficultyMax(score: number): number {
 }
 
 export default function Atelier() {
+  usePageTitle("The Atelier");
   const { t, locale } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { activeRegion, getRegionName } = useActiveRegion();

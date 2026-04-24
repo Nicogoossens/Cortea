@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useGetProfile, useGetNobleScore, useGetPillarProgress, useCreateProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,6 +43,7 @@ interface MiniUseCase {
 }
 
 export default function Home() {
+  usePageTitle("Home");
   const { t } = useLanguage();
   const { userId, isAuthenticated } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ const GENDER_OPTION_KEYS = [
 const currentYear = new Date().getFullYear();
 
 export default function Register() {
+  usePageTitle("Create Account");
   const { t, locale, setLocale } = useLanguage();
   const { activeRegion, setActiveRegion } = useActiveRegion();
   const { login } = useAuth();

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { useLanguage, ALL_LOCALES, type SupportedLocale } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
@@ -54,6 +55,7 @@ function resolveLocale(langCode: string | undefined, regionCode: string | undefi
 }
 
 export default function EmailVerify() {
+  usePageTitle("Verify Email");
   const { t, setLocale } = useLanguage();
   const { setActiveRegion } = useActiveRegion();
   const { login } = useAuth();

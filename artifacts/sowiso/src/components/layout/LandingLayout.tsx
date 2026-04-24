@@ -7,7 +7,7 @@ function FlagEmoji({ countryCode }: { countryCode: string }) {
   const codePoints = countryCode
     .toUpperCase()
     .split("")
-    .map((c) => 0x1f1e0 + c.charCodeAt(0) - 65);
+    .map((c) => 0x1f1e6 + c.charCodeAt(0) - 65);
   return <span aria-hidden="true">{String.fromCodePoint(...codePoints)}</span>;
 }
 
@@ -94,6 +94,13 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-sm focus:font-medium"
+      >
+        {t("nav.skip_to_content")}
+      </a>
+
       <header className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-border/30">
         <Link href="/">
           <span className="font-serif text-2xl md:text-3xl tracking-widest text-foreground uppercase cursor-pointer">
@@ -125,7 +132,7 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col">
+      <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
         {children}
       </main>
 

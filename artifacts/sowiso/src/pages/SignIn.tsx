@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { LogIn, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical, Eye, EyeOf
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function SignIn() {
+  usePageTitle("Sign In");
   const { t } = useLanguage();
   const { login } = useAuth();
   const [, navigate] = useLocation();
@@ -315,6 +317,7 @@ export default function SignIn() {
                 <Input
                   type="email"
                   autoComplete="email"
+                  aria-label={t("register.email_label")}
                   placeholder={t("register.email_placeholder")}
                   value={magicEmail}
                   onChange={(e) => { setMagicEmail(e.target.value); setMagicError(null); }}

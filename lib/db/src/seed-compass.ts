@@ -1226,6 +1226,426 @@ const COMPASS_SEED = [
         ]
       }
     }
+  },
+  {
+    region_code: "US",
+    flag_emoji: "🇺🇸",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "United States",
+        core_value: "Directness, Optimism & Individual Achievement",
+        biggest_taboo: "Pessimism, excessive modesty, or wasting someone's time",
+        dining_etiquette: "Americans typically eat with the fork in the right hand after cutting with the knife. Tipping fifteen to twenty-five percent is not optional — it is the standard and directly affects service staff income. Eating while walking or at one's desk is unremarkable. Portions are large; leaving food is perfectly acceptable.",
+        language_notes: "First names are used from the first meeting without invitation. Small talk — the weather, sport, weekend plans — precedes all business. Communication is direct, enthusiastic, and explicitly positive. Criticism is typically softened with affirmation.",
+        gift_protocol: "Gifts are welcome but not expected in business contexts. In social settings, wine, flowers, or a box of chocolates suits most occasions. Gifts are usually opened immediately and with visible delight.",
+        dress_code: "Business casual is the predominant standard; smart casual for social settings. Formal attire is reserved for stated occasions. Sportswear and casual clothing are widely acceptable outside professional contexts.",
+        dos: [
+          "Introduce yourself confidently with a firm handshake",
+          "Use first names immediately — formality reads as coldness",
+          "Maintain steady eye contact to signal engagement and honesty",
+          "Express opinions directly and with conviction",
+          "Arrive on time; punctuality signals respect for others"
+        ],
+        donts: [
+          "Express persistent negativity or fatalism about outcomes",
+          "Ask about age, salary, or political affiliation without invitation",
+          "Underestimate the cultural significance of tipping",
+          "Assume uniform culture — regional differences are pronounced",
+          "Underplay your achievements; confidence is expected"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "JP",
+    flag_emoji: "🇯🇵",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Japan",
+        core_value: "Harmony, Hierarchy & Restraint",
+        biggest_taboo: "Causing loss of face, public confrontation, or overt self-promotion",
+        dining_etiquette: "Say 'itadakimasu' before eating and 'gochisousama deshita' after. Never stick chopsticks upright in rice — this is a funeral ritual. Pass food with chopsticks only to a plate, not directly. Slurping noodles is acceptable and indicates enjoyment. Pouring your own drink before others is impolite; attend to your neighbour's glass first.",
+        language_notes: "Silence is valued and should not be filled reflexively. The word 'yes' (hai) frequently signals only that one is listening, not that one agrees. A definitive 'no' is seldom offered; indirect refusals must be read carefully. Business cards (meishi) are exchanged with both hands, a slight bow, and genuine attention.",
+        gift_protocol: "Gifts are wrapped with great care; the presentation carries equal weight to the contents. Gifts of four or nine items are avoided — these numbers are associated with death. Gifts are generally not opened in the presence of the giver. Luxury brand items are highly regarded.",
+        dress_code: "Conservative, well-pressed business attire is the standard. Avoid conspicuous patterns or overly casual dress in professional settings. Shoes that are easily removed are practical — indoor spaces often require removal of footwear.",
+        dos: [
+          "Bow when greeting — depth reflects the respect shown",
+          "Exchange business cards with both hands and a slight bow",
+          "Remove shoes when indicated at a private home",
+          "Express group orientation rather than individual ambition",
+          "Be punctual — lateness without notice is a serious discourtesy"
+        ],
+        donts: [
+          "Refuse food or drink offered by a host without a gracious explanation",
+          "Raise your voice or display anger in any social context",
+          "Write a name in red ink — it carries funereal associations",
+          "Initiate physical contact such as hugging or backslapping",
+          "Speak of yourself in ways that elevate you above the group"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "DE",
+    flag_emoji: "🇩🇪",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Germany",
+        core_value: "Precision, Reliability & Direct Communication",
+        biggest_taboo: "Tardiness, vagueness, and hollow pleasantries",
+        dining_etiquette: "Table manners follow the continental style: fork left, knife right throughout the meal. Wait until the host says 'Guten Appetit' before eating. Hands should rest on the table, not in the lap. Tipping five to ten percent is customary in restaurants. Never pour wine before others at the table have been served.",
+        language_notes: "Germans distinguish carefully between formal address (Sie) and informal (du). Use the formal unless invited otherwise. Communication is direct, factual, and unambiguous — this is not rudeness but a sign of respect. Substantive preparation before a meeting is expected and noticed.",
+        gift_protocol: "Bring a modest gift — quality wine or flowers (avoiding red roses, which carry romantic meaning, and chrysanthemums, associated with mourning) — when invited to a home. In business contexts, gifts are generally inappropriate during initial meetings. Keep wrapping tasteful and understated.",
+        dress_code: "Business formal is the standard in professional contexts. Germans dress conservatively and expect others to do the same. Casual dress is acceptable in social and leisure settings, but neatness is always noticed.",
+        dos: [
+          "Arrive punctually — or a few minutes early",
+          "State your position clearly and without unnecessary preamble",
+          "Address people by their title and surname until invited to use first names",
+          "Prepare thoroughly before any professional engagement",
+          "Respect queues, rules, and agreed procedures without exception"
+        ],
+        donts: [
+          "Arrive late without prior notice and apology",
+          "Engage in small talk as a substitute for substantive discussion",
+          "Use first names without an explicit invitation to do so",
+          "Make light of German history or express stereotypes",
+          "Overpromise without the means or intention to deliver"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "IT",
+    flag_emoji: "🇮🇹",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Italy",
+        core_value: "Relationship, Elegance & the Art of Living",
+        biggest_taboo: "Rushing a meal, dressing poorly, or dismissing regional identity",
+        dining_etiquette: "Italians regard the table as a social institution. Meals proceed at a deliberate pace — do not rush any course. Cappuccino is a morning drink; ordering it after a meal marks one as a visitor. Bread is for mopping sauce, not for eating with butter before the meal. Splitting a bill evenly is common among friends; the host often insists on paying.",
+        language_notes: "Italian conversation is expressive, animated, and physically demonstrative. Relationships underpin all business dealings — invest time in building genuine rapport before raising commercial matters. Titles are used with care: 'Dottore' for any university graduate, 'Ingegnere' for engineers.",
+        gift_protocol: "Quality matters above all — a modest gift from a well-regarded brand is far preferable to something expensive but impersonal. Sweets, pastries, or well-chosen wine are ideal for a home visit. Avoid chrysanthemums, associated with funerals, and any gift in odd numbers other than thirteen.",
+        dress_code: "La bella figura — the art of presenting oneself well — governs Italian dress. Invest in quality, fit, and coordination. Business attire is formal and carefully considered. Even casual dress reflects deliberate aesthetic choices.",
+        dos: [
+          "Greet with a firm handshake and direct eye contact",
+          "Compliment the food and its preparation with sincerity",
+          "Dress with evident care — appearance signals self-respect",
+          "Invest time in personal conversation before any business discussion",
+          "Learn even a few phrases in Italian — it is warmly appreciated"
+        ],
+        donts: [
+          "Order cappuccino after lunch or dinner",
+          "Rush through a meal or appear impatient with its pace",
+          "Wear sportswear in a restaurant or urban setting",
+          "Cut pasta with a knife — it should be wound onto a fork",
+          "Assume all Italians share a single cultural identity — regional pride is strong"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "FR",
+    flag_emoji: "🇫🇷",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "France",
+        core_value: "Intellectual Rigour, Culture & the Art of Conversation",
+        biggest_taboo: "Poor table manners, intellectual superficiality, or neglecting to greet",
+        dining_etiquette: "French dining is a serious cultural ritual. The meal is structured and unhurried. Bread is set directly on the table, not on a plate. Wine is poured conservatively and refilled only when welcome. One does not begin eating until the host says 'Bon appétit'. Cheese follows the main course, before dessert. Hands rest on the table, not in the lap.",
+        language_notes: "Greet everyone individually upon arrival and departure — failing to do so is a notable discourtesy. Use 'vous' until the other person offers 'tu'. The French value well-constructed argument and are comfortable with intellectual disagreement. Learning a few phrases in French signals respect.",
+        gift_protocol: "High-quality wine, champagne, or chocolates are appropriate for a dinner invitation. Avoid bringing red roses (romantic) or chrysanthemums (funereal). Gifts are opened in private. Business gifts should be tasteful rather than conspicuous.",
+        dress_code: "French style is understated, well-fitted, and deliberate. Business dress is formal; casualness is seldom a virtue in professional contexts. Even leisure dress tends to reflect aesthetic consideration.",
+        dos: [
+          "Greet everyone individually by name or with a handshake on arrival",
+          "Engage with ideas seriously — lively debate is a sign of interest",
+          "Demonstrate some knowledge of French culture, cuisine, or history",
+          "Eat what is served — refusing a course without good reason is discourteous",
+          "Say 'bonjour' and 'merci' in any interaction, however brief"
+        ],
+        donts: [
+          "Arrive at a dinner party precisely on time — fifteen minutes late is the norm",
+          "Discuss money, salary, or business matters during a meal",
+          "Mistake friendliness for closeness — French reserve is not coldness",
+          "Expect negotiations to conclude in a single meeting",
+          "Presume to speak for France from a position of cultural ignorance"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "BE",
+    flag_emoji: "🇧🇪",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Belgium",
+        core_value: "Pragmatism, Discretion & Quiet Civility",
+        biggest_taboo: "Confusing Belgian and French culture, or raising the linguistic divide carelessly",
+        dining_etiquette: "Belgian cuisine is taken seriously — compliment both the food and the effort. Beer culture is sophisticated; offering or accepting a fine Belgian beer is a mark of cultural awareness. Forks go to the left, knives to the right. Begin eating only when the host invites you to do so. A generous tip of ten percent is appreciated in restaurants.",
+        language_notes: "Belgium has three official linguistic communities: Dutch-speaking Flemish, French-speaking Walloon, and a small German-speaking region. Awareness of this distinction is essential. In Brussels, French is the most common professional language, though English is widely used. Do not assume one language is universally preferred.",
+        gift_protocol: "Good Belgian chocolates or a bottle of fine wine are ideal for a home visit. Keep gifts modest and well-chosen. Business gifts are not expected at initial meetings. Wrapping should be neat and tasteful.",
+        dress_code: "Business attire is conservative and formal, particularly in Flanders. Smart casual is appropriate for most social occasions. Belgians are observant of dress as a signal of professionalism.",
+        dos: [
+          "Research whether your host is Flemish or Walloon — it matters",
+          "Show appreciation for Belgian food, beer, and chocolate",
+          "Greet each person individually, with a handshake or a single kiss on the cheek",
+          "Be punctual — tardiness without notice is considered disrespectful",
+          "Maintain a calm and measured tone in all discussions"
+        ],
+        donts: [
+          "Assume Belgians identify primarily as 'European' rather than regional",
+          "Make jokes about Belgian identity or the linguistic divide",
+          "Raise politics unless the other party initiates it",
+          "Confuse Belgian and French cultural customs",
+          "Appear ostentatious — discretion and modesty are highly regarded"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "CH",
+    flag_emoji: "🇨🇭",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Switzerland",
+        core_value: "Precision, Neutrality & Measured Excellence",
+        biggest_taboo: "Noise, waste, tardiness, or presuming Swiss culture is simply German, French, or Italian",
+        dining_etiquette: "Swiss meals are orderly and unhurried. Wine is poured conservatively. Fondue and raclette, when served, carry social significance — communal and convivial. Tipping five to ten percent is customary but not obligatory, as service charges are often included. Waste food — and make no show of it.",
+        language_notes: "Switzerland has four national languages: German (the most widely spoken), French, Italian, and Romansh. Which language is most appropriate depends on the region: Zürich is German-speaking, Geneva is French-speaking, Lugano is Italian-speaking. Business communication tends to be formal and precise. Punctuality is a serious cultural virtue.",
+        gift_protocol: "Swiss chocolate or a quality bottle of wine are ideal gifts for a home visit. Gifts should be well-wrapped and appropriately modest. Business gifts are not customary in initial meetings. Avoid anything ostentatious.",
+        dress_code: "Conservative, well-maintained business dress is expected. The Swiss are understated in their dress, but quality is always evident. Casualness in professional settings is rarely appropriate.",
+        dos: [
+          "Arrive on time — lateness is treated as a serious breach of respect",
+          "Speak quietly in public spaces and shared environments",
+          "Respect clear boundaries around professional and personal life",
+          "Acknowledge the linguistic region you are in and adjust accordingly",
+          "Show care with environmental and communal resources"
+        ],
+        donts: [
+          "Conflate Swiss culture with German, French, or Italian culture",
+          "Make noise in residential areas, particularly on Sundays",
+          "Presume that neutrality implies indifference — Swiss opinions are well-formed",
+          "Discuss personal finances or ask about salary",
+          "Waste food or resources — restraint is a cultural virtue"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "SG",
+    flag_emoji: "🇸🇬",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Singapore",
+        core_value: "Harmony, Pragmatism & Multicultural Respect",
+        biggest_taboo: "Disrespecting racial or religious harmony, or flouting the rules",
+        dining_etiquette: "Singapore's hawker culture is a national institution — embracing it signals cultural fluency. Many hawker stalls are halal or cater to specific dietary requirements; be attentive. At a formal Chinese table, serving others before yourself is expected. Do not eat or drink until the host has invited you to begin. At Malay gatherings, use your right hand only.",
+        language_notes: "Singapore's official languages are English, Mandarin, Malay, and Tamil. English is the working language of business, law, and government. Singlish — the informal creole — is widely spoken socially but should not be adopted by visitors in professional contexts. Business communication is direct, formal, and efficient.",
+        gift_protocol: "Cultural awareness governs gifting: avoid alcohol when gifting to Muslim contacts, do not give clocks to Chinese contacts (associated with death), and avoid items in sets of four (unlucky in Chinese culture). Gifts are often not opened immediately. A gesture of presentation — offered and received with both hands — is appreciated.",
+        dress_code: "Smart business casual is the norm in most professional settings. The climate is tropical and heat is a practical consideration, but dress standards remain high. Conservative attire is essential for religious sites.",
+        dos: [
+          "Follow the law — Singapore's regulations are strictly enforced",
+          "Show awareness of which cultural customs apply in a given context",
+          "Remove shoes when entering a home unless told otherwise",
+          "Use titles and surnames until invited to use first names",
+          "Acknowledge the country's diverse cultural heritage with genuine interest"
+        ],
+        donts: [
+          "Chew gum in public — it is regulated by law",
+          "Assume one set of customs applies to all Singaporeans",
+          "Speak dismissively of Singapore's regulations",
+          "Arrive significantly late without prior notice",
+          "Raise sensitive topics of race, religion, or politics casually"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "IN",
+    flag_emoji: "🇮🇳",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "India",
+        core_value: "Relationships, Hierarchy & Hospitality",
+        biggest_taboo: "Disrespecting religious customs, the cow, or a host's hospitality",
+        dining_etiquette: "Always use the right hand to eat and to offer or receive food or objects — the left hand carries impurity in many traditions. In many homes, the guest eats first and is served by the host. Vegetarianism is widespread and deeply held; never assume a guest eats meat. Accept food and drink when offered — refusal can cause offence.",
+        language_notes: "India has twenty-two official languages and hundreds of dialects; English is the language of business and higher education. Seniority commands explicit respect — always address elders and those of higher status formally first. Relationship-building precedes business; invest time in personal connection before raising commercial matters.",
+        gift_protocol: "Sweets (mithai) are universally appropriate gifts. Avoid leather items when gifting to Hindus, and any alcohol when gifting to those who do not drink. Cash is an entirely acceptable and respectful gift at festivals and celebrations. Gifts are not usually opened in the presence of the giver.",
+        dress_code: "Modesty in dress is the standard — covered shoulders and legs are expected in temples and religious spaces. Business attire in metropolitan India is smart and relatively formal. Be guided by local dress norms in different regions.",
+        dos: [
+          "Greet with 'Namaste' — a small bow with palms pressed together — to signal cultural awareness",
+          "Address elders and senior figures first, and with evident respect",
+          "Accept all food and drink offered with gratitude",
+          "Remove shoes before entering a place of worship or a traditional home",
+          "Invest time in relationship-building before moving to business"
+        ],
+        donts: [
+          "Use the left hand to eat, pass food, or handle objects",
+          "Joke about religion, caste, or cultural practices",
+          "Presume that all Indians share one language, religion, or culture",
+          "Refuse hospitality without a credible and gracious reason",
+          "Raise the cow as a topic outside of academic contexts"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "MX",
+    flag_emoji: "🇲🇽",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Mexico",
+        core_value: "Warmth, Family & the Cultivation of Trust",
+        biggest_taboo: "Rushing a relationship, or conflating Mexican culture with other Latin American cultures",
+        dining_etiquette: "Meals are leisurely and social — the table is a place of connection. Tipping ten to fifteen percent is customary. Tortillas are bread and are handled by hand. Accept food and drink generously offered; a refusal without clear cause may give offence. Mezcal and tequila carry regional pride; appreciating them is appreciated in return.",
+        language_notes: "Spanish is the official language; business is conducted in Spanish except at multinational firms where English is used. Warm, personal greetings — including a handshake prolonged into a pat on the arm — are the norm. Relationship (confianza) must be built before substantive business can proceed.",
+        gift_protocol: "Gifts are welcomed with visible appreciation. Flowers, sweets, or a quality spirit are appropriate for a home visit. In business settings, avoid overly lavish gifts that might be perceived as attempted influence. Marigolds are associated with Day of the Dead and should be avoided outside that context.",
+        dress_code: "Business attire in Mexico City is smart and relatively formal. In coastal or resort settings, smart casual is appropriate. Appearances matter — dress with care signals respect for your host.",
+        dos: [
+          "Invest time in personal conversation before raising business matters",
+          "Greet warmly and with physical expressiveness — handshakes are prolonged and sincere",
+          "Learn a few words or phrases in Spanish — it is deeply appreciated",
+          "Accept and enjoy food and hospitality that is offered",
+          "Show genuine interest in Mexican history, food, and culture"
+        ],
+        donts: [
+          "Reduce Mexico to stereotypes or comparisons with the United States",
+          "Rush to business before the relationship has been established",
+          "Assume punctuality is as rigid as in northern European contexts",
+          "Discuss cartel violence or border politics unless the host raises it",
+          "Confuse Mexican identity with that of other Latin American nations"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "BR",
+    flag_emoji: "🇧🇷",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Brazil",
+        core_value: "Warmth, Flexibility & the Joy of Human Connection",
+        biggest_taboo: "Excessive formality, coolness, or dismissing Brazilian cultural pride",
+        dining_etiquette: "Churrasco — the Brazilian barbecue — is a social institution of great importance. Meals are generous, convivial, and extended. Do not eat with your hands unless explicitly offered finger food; use a fork even for pizza in many settings. Tipping ten percent is standard. Cachaça — the national spirit — and caipirinha cocktails are a cultural offering.",
+        language_notes: "Portuguese (Brazilian) is the official language and is distinct from European Portuguese in vocabulary and pronunciation. English is spoken in business in larger cities, but a few words of Portuguese are received with warmth. Communication style is expressive, physically demonstrative, and emotionally direct. Close physical proximity is entirely normal.",
+        gift_protocol: "Thoughtful gifts are appreciated. Avoid purple or black wrapping, associated with mourning. Gifts of high-quality imported goods, wine, or chocolates are well-received. Business gifts are acceptable but should be modest and personal.",
+        dress_code: "Brazil's climate influences dress norms considerably. Business attire in São Paulo is formal; in coastal cities, standards are more relaxed. Appearance and presentation matter — invest care in how you present yourself.",
+        dos: [
+          "Greet with warmth — a handshake, a hug, or cheek-to-cheek kisses depending on context",
+          "Show genuine enthusiasm and expressiveness in conversation",
+          "Accept and appreciate offers of food and caipirinha",
+          "Demonstrate interest in Brazilian culture, music, food, and sport",
+          "Adapt your pace — Brazilian time may differ from your expectations"
+        ],
+        donts: [
+          "Speak Spanish to a Brazilian — Portuguese is the language and the source of national pride",
+          "Appear cold, aloof, or excessively formal in social settings",
+          "Make reference to Argentina's football rivalry without care",
+          "Raise the Amazon or deforestation as a casual conversation opener",
+          "Mistake Brazilian culture for a single, uniform identity — it is vast and varied"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "ES",
+    flag_emoji: "🇪🇸",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Spain",
+        core_value: "Passion, Regional Identity & the Pleasure of Shared Time",
+        biggest_taboo: "Ignoring regional identity, rushing the pace of life, or dismissing siesta culture",
+        dining_etiquette: "Spanish mealtimes are later than most visitors expect: lunch from two o'clock, dinner rarely before nine. The meal is unhurried and social. Tapas are ordered and shared — do not claim a tapa for yourself alone. Tipping five to ten percent is appreciated but not obligatory. Meals are rarely a place for business discussion.",
+        language_notes: "Castilian Spanish is the official language, but Catalan, Galician, and Basque are co-official in their respective regions — and points of deep cultural identity. In Catalonia, Galicia, and the Basque Country, using the regional language even briefly is received with warmth. In business, Spanish formality has softened in recent decades.",
+        gift_protocol: "Wine, quality spirits, or gourmet food items make appropriate gifts. In Catalonia, be attentive to regional products — a Catalan wine is preferable to a Rioja. Gifts are usually opened upon receipt. Wrapping should be elegant rather than ostentatious.",
+        dress_code: "Spaniards dress stylishly and with evident attention. Business attire in Madrid is formal; in Barcelona, smart creative is more common. Even casual wear reflects care and aesthetic consideration.",
+        dos: [
+          "Greet with warmth — two kisses on the cheeks is standard between friends",
+          "Show interest in regional culture, not just national identity",
+          "Embrace the pace — the siesta is a cultural institution, not a inconvenience",
+          "Share food and drink generously when offered",
+          "Join the conversation with energy — silence can seem indifferent"
+        ],
+        donts: [
+          "Discuss the Civil War, Franco, or Catalonian independence without careful invitation",
+          "Arrive at a dinner party earlier than thirty minutes after the stated time",
+          "Assume Spanish customs are identical across all seventeen autonomous communities",
+          "Decline an invitation to share food without a compelling reason",
+          "Speak in a way that conflates Spain with Latin America"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "CO",
+    flag_emoji: "🇨🇴",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Colombia",
+        core_value: "Warmth, Family Pride & the Cultivation of Trust",
+        biggest_taboo: "Reducing Colombia to its past troubles, or betraying the trust of a friend",
+        dining_etiquette: "Meals are social and generous. The guest of honour is typically served first. Declining food repeatedly may cause offence — accept the first offer graciously. Coffee (tinto) is offered constantly and its acceptance is appreciated. Bandeja paisa and sancocho are national dishes offered with pride.",
+        language_notes: "Spanish is the official language. Regional accents vary considerably across the country. Colombians value warmth and personal connection above all — build the relationship before the business. Business communication is increasingly direct in metropolitan contexts, but personal rapport underpins all professional dealings.",
+        gift_protocol: "Flowers, chocolates, or a quality spirit are appropriate gifts for a home visit. Avoid giving lilies or marigolds, associated with funerals. Business gifts are modest and personally selected. Gifts are received with visible pleasure.",
+        dress_code: "Business attire in Bogotá is formal; coastal cities have a considerably more relaxed standard. Colombians take considerable pride in their appearance — dress with care regardless of the setting.",
+        dos: [
+          "Greet with warmth — a handshake and a smile, or a cheek kiss with women",
+          "Show genuine interest in Colombia's culture, music, and food",
+          "Invest in personal relationship before raising business matters",
+          "Accept coffee, aguardiente, or food when offered by a host",
+          "Express admiration for the country's landscapes and cultural richness"
+        ],
+        donts: [
+          "Raise drug trafficking, Pablo Escobar, or narco-history as conversation topics",
+          "Confuse Colombian culture with that of other South American nations",
+          "Rush the establishment of trust — it cannot be accelerated",
+          "Dismiss the significance of family loyalty and communal ties",
+          "Arrive to a gathering expecting immediate business discussion"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "AE",
+    flag_emoji: "🇦🇪",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "United Arab Emirates",
+        core_value: "Hospitality, Honour & Hierarchical Respect",
+        biggest_taboo: "Disrespecting Islam, the ruling family, or the local customs and laws",
+        dining_etiquette: "Generous hospitality is a deeply held value. Accept all food and drink offered — to decline without cause gives offence. Always eat and offer items with the right hand. In many settings, the host will not eat until the guest has begun. During Ramadan, eating, drinking, or smoking in public during daylight hours is prohibited by law.",
+        language_notes: "Arabic is the official language; English is widely used in business and is universally understood in Dubai and Abu Dhabi. Titles carry great significance — address contacts as 'Sheikh', 'HH', or by professional title until specifically invited to use a first name. Business relationships are built on personal trust and proceed at a pace determined by the senior party.",
+        gift_protocol: "Gifts should reflect quality and consideration. Avoid alcohol and items made from pork, and do not gift a female contact without first checking that it is appropriate. Branded luxury items are well-received. Gifts are often presented and received with the right hand or both hands. During Ramadan, sweets and dates are an excellent choice.",
+        dress_code: "Dress conservatively and modestly at all times — this is both a social and legal requirement. Women should cover shoulders and knees as a minimum; in more traditional settings, broader coverage is appropriate. Men should avoid shorts in business contexts. At formal events, a traditional kandura or business suit for men is expected.",
+        dos: [
+          "Greet with warmth and, between men, a handshake may extend to several seconds",
+          "Accept coffee (gahwa) or dates when offered — refusing is a discourtesy",
+          "Show deference to seniority and hierarchical position at all times",
+          "Dress modestly in all public and professional settings",
+          "Learn the greeting 'As-salamu alaykum' and respond appropriately"
+        ],
+        donts: [
+          "Discuss religion, politics, or the ruling family in any critical manner",
+          "Display affection publicly — it is contrary to local law and custom",
+          "Use the left hand to eat, greet, or offer objects",
+          "Photograph people, government buildings, or military sites without permission",
+          "Presume that business will proceed at a Western pace or on a Western timeline"
+        ]
+      }
+    }
   }
 ];
 

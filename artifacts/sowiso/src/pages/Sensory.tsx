@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ function DecibelBar({ db, maxDb, thresholdLabel }: { db: number; maxDb: number; 
 }
 
 export default function Sensory() {
+  usePageTitle("Sensory");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { canUseMicrophone } = usePrivacy();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -174,6 +175,7 @@ function getRegion(code: string): CompassRegion | undefined {
 }
 
 export default function Navigator() {
+  usePageTitle("Navigator");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearch } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,6 +61,7 @@ function incrementStoredCount(userId: string | null): void {
 }
 
 export default function Counsel() {
+  usePageTitle("The Counsel");
   const { t, locale } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);

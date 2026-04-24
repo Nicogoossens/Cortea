@@ -1,4 +1,5 @@
 import { useParams, Link } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import {
   useGetCultureCompass,
   getGetCultureCompassQueryKey,
@@ -15,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 export default function CompassCluster() {
+  usePageTitle("The Cultural Compass");
   const { id } = useParams<{ id: string }>();
   const { t, locale } = useLocale();
   const cluster = getCluster(id ?? "");

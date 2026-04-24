@@ -13,6 +13,7 @@ import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
 import { FlagEmoji } from "@/lib/active-region";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -38,6 +39,8 @@ export default function CompassRegion() {
       },
     }
   );
+
+  usePageTitle(detail?.region_name ?? "The Cultural Compass");
 
   const protocolsParams = {
     region_code: regionCode,

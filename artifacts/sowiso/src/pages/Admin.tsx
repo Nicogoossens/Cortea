@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1387,6 +1388,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
 // ── Main Admin page ───────────────────────────────────────────────────────────
 
 export default function Admin() {
+  usePageTitle("Admin");
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>("users");

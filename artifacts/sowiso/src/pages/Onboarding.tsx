@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import {
@@ -74,6 +75,7 @@ const SPHERE_OPTIONS = [
 type Step = 1 | 2 | 3 | 4;
 
 export default function Onboarding() {
+  usePageTitle("Welcome");
   const { t } = useLanguage();
   const [, navigate] = useLocation();
 

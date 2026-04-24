@@ -1,5 +1,6 @@
 import { useGetScenario, useSubmitScenarioAnswer, getGetScenarioQueryKey } from "@workspace/api-client-react";
 import { useParams, useLocation } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ function scoreDeltaKey(delta: number): string {
 }
 
 export default function Scenario() {
+  usePageTitle("Practice Scenario");
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { t, locale } = useLanguage();

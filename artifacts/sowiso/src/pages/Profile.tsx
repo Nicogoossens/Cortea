@@ -25,6 +25,7 @@ import { useAuth } from "@/lib/auth";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -294,6 +295,7 @@ function PentagonChart({ values, labels, color = "var(--primary)" }: PentagonCha
 }
 
 export default function Profile() {
+  usePageTitle("My Profile");
   const { t, locale, setLocale } = useLanguage();
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
@@ -1675,8 +1677,9 @@ function PasswordSection() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-w-sm" noValidate>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Huidig wachtwoord <span className="text-xs text-muted-foreground/60">(leeg laten als nog niet ingesteld)</span></label>
+            <label htmlFor="pw-current" className="text-sm font-medium text-foreground">Huidig wachtwoord <span className="text-xs text-muted-foreground/60">(leeg laten als nog niet ingesteld)</span></label>
             <Input
+              id="pw-current"
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
@@ -1687,9 +1690,10 @@ function PasswordSection() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Nieuw wachtwoord <span className="text-destructive">*</span></label>
+            <label htmlFor="pw-new" className="text-sm font-medium text-foreground">Nieuw wachtwoord <span className="text-destructive" aria-hidden="true">*</span></label>
             <div className="relative">
               <Input
+                id="pw-new"
                 type={showNew ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="min. 8 tekens"
@@ -1705,9 +1709,10 @@ function PasswordSection() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Bevestig wachtwoord <span className="text-destructive">*</span></label>
+            <label htmlFor="pw-confirm" className="text-sm font-medium text-foreground">Bevestig wachtwoord <span className="text-destructive" aria-hidden="true">*</span></label>
             <div className="relative">
               <Input
+                id="pw-confirm"
                 type={showConfirm ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="herhaal wachtwoord"

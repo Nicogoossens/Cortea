@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft, Briefcase, Globe, Star, User } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
@@ -83,6 +84,7 @@ function RegionPicker() {
 
 
 export default function Welcome() {
+  usePageTitle("The Art of Conduct");
   const [, navigate] = useLocation();
   const { t, locale } = useLanguage();
   const { activeRegion } = useActiveRegion();

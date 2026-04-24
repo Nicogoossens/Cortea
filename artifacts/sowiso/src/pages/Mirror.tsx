@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -149,6 +150,7 @@ function classifyPredictions(
 type CameraState = "idle" | "loading_model" | "requesting" | "active" | "denied";
 
 export default function Mirror() {
+  usePageTitle("Mirror");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { canUseCamera } = usePrivacy();

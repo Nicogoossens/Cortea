@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent, getPillarName } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { extractToken } from "../lib/auth-middleware";
 
 const router = Router();
 
@@ -24,14 +25,12 @@ function getPillarNamesForClass(socialClass: "universal" | "elite" | "middle_cla
 }
 
 /**
- * Resolves the authenticated user ID from a Bearer token header.
+ * Resolves the authenticated user ID from the session cookie (or Bearer fallback).
  * Returns null if no token is present or if the token is not recognised.
  * Used by endpoints that should work for both guests and authenticated users.
  */
 async function optionalUserFromToken(req: Request): Promise<string | null> {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.slice(7).trim();
+  const token = extractToken(req);
   if (!token) return null;
   const [user] = await db
     .select({ id: usersTable.id })

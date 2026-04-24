@@ -8,7 +8,46 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
- * Resolves the caller from `Authorization: Bearer <session_token>`.
+ * Extracts the session token from the request.
+ * Reads the HttpOnly cookie first (cortea_session), then falls back to
+ * the Authorization: Bearer header for backwards compatibility.
+ */
+export function extractToken(req: Request): string | null {
+  const cookieToken = (req.cookies as Record<string, string | undefined>)?.cortea_session;
+  if (cookieToken) return cookieToken;
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7).trim();
+    return token || null;
+  }
+  return null;
+}
+
+/**
+ * Sets the session cookie on the response.
+ * HttpOnly prevents JavaScript access; Secure ensures HTTPS-only in production.
+ */
+export function setSessionCookie(res: Response, token: string): void {
+  res.cookie("cortea_session", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  });
+}
+
+/**
+ * Clears the session cookie.
+ */
+export function clearSessionCookie(res: Response): void {
+  res.clearCookie("cortea_session", { path: "/" });
+}
+
+/**
+ * Resolves the caller from either:
+ *   1. HttpOnly cookie cortea_session (preferred, XSS-safe)
+ *   2. Authorization: Bearer <session_token> header (fallback)
  * No fallback identity — always requires a valid token.
  */
 export async function requireAuthUser(
@@ -17,12 +56,7 @@ export async function requireAuthUser(
   next: NextFunction
 ): Promise<void> {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).json({ error: "Authentication is required." });
-      return;
-    }
-    const token = authHeader.slice(7).trim();
+    const token = extractToken(req);
     if (!token) {
       res.status(401).json({ error: "Authentication is required." });
       return;

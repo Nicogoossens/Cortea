@@ -6,6 +6,7 @@ import { z } from "zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { sendActivationEmail } from "../lib/email";
+import { extractToken, setSessionCookie, clearSessionCookie } from "../lib/auth-middleware";
 
 const router = Router();
 
@@ -80,6 +81,7 @@ router.post("/auth/register", async (req, res) => {
           })
           .where(eq(usersTable.id, existing[0].id));
 
+        setSessionCookie(res, sessionToken);
         return res.json({
           message: "Your account has been activated.",
           user_id: existing[0].id,
@@ -114,6 +116,7 @@ router.post("/auth/register", async (req, res) => {
         })
         .returning();
 
+      setSessionCookie(res, sessionToken);
       return res.status(201).json({
         message: "Your account has been established. Welcome to Cortéa.",
         user_id: newUser.id,
@@ -212,6 +215,7 @@ router.get("/auth/verify", async (req, res) => {
     if (user.email_verified) {
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable).set({ session_token: refreshedToken }).where(eq(usersTable.id, user.id));
+      setSessionCookie(res, refreshedToken);
       return res.json({
         message: "Your address has already been verified.",
         already_verified: true,
@@ -240,6 +244,7 @@ router.get("/auth/verify", async (req, res) => {
       })
       .where(eq(usersTable.id, user.id));
 
+    setSessionCookie(res, sessionToken);
     return res.json({
       message: "Your address has been verified. Welcome to Cortéa.",
       user_id: user.id,
@@ -413,6 +418,7 @@ router.post("/auth/signin-password", async (req, res) => {
       })
       .where(eq(usersTable.id, user.id));
 
+    setSessionCookie(res, sessionToken);
     return res.json({
       message: "Welcome back.",
       user_id: user.id,
@@ -434,13 +440,17 @@ const SetPasswordSchema = z.object({
   current_password: z.string().optional(),
 });
 
+router.post("/auth/logout", (req, res) => {
+  clearSessionCookie(res);
+  return res.json({ message: "Signed out." });
+});
+
 router.post("/auth/set-password", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractToken(req);
+    if (!token) {
       return res.status(401).json({ error: "Authentication required." });
     }
-    const token = authHeader.slice(7);
 
     const [user] = await db
       .select()
@@ -488,11 +498,10 @@ router.post("/auth/set-password", async (req, res) => {
 // ── First-admin bootstrap ──────────────────────────────────────────────────────
 router.post("/auth/claim-first-admin", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractToken(req);
+    if (!token) {
       return res.status(401).json({ error: "Authentication required." });
     }
-    const token = authHeader.slice(7);
     const [user] = await db
       .select()
       .from(usersTable)

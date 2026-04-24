@@ -3,8 +3,8 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLanguage, type SupportedLocale, ALL_LOCALES } from "@/lib/i18n";
-import { useActiveRegion, type RegionCode, COMPASS_REGIONS } from "@/lib/active-region";
+import { useLanguage, type SupportedLocale, ALL_LOCALES, LOCALE_GROUPS } from "@/lib/i18n";
+import { useActiveRegion, type RegionCode, COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 import { useAuth } from "@/lib/auth";
 import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical } from "lucide-react";
 
@@ -204,6 +204,69 @@ export default function Register() {
       <Card className="border-border bg-card shadow-sm">
         <CardContent className="p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+
+            {/* Language picker */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground tracking-wide block">
+                {t("locale.select")}
+              </label>
+              <div className="flex flex-wrap gap-1.5" role="listbox" aria-label={t("locale.select")}>
+                {LOCALE_GROUPS.flatMap((g) => g.locales).map((def) => {
+                  const isSelected = locale === def.locale;
+                  return (
+                    <button
+                      key={def.locale}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => setLocale(def.locale)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-mono transition-all duration-150 ${
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border/50 bg-background text-foreground/60 hover:border-primary/40 hover:text-foreground"
+                      }`}
+                    >
+                      <FlagEmoji code={def.flag} className="text-sm" />
+                      <span>{def.languageLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Region picker */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground tracking-wide block">
+                {t("landing.your_region")}
+              </label>
+              <div className="flex flex-wrap gap-1.5" role="listbox" aria-label={t("landing.your_region")}>
+                {COMPASS_REGIONS.map((region) => {
+                  const isSelected = activeRegion === region.code;
+                  const localeLang = locale.split("-")[0] as keyof typeof region.names;
+                  const label = region.names[localeLang] ?? region.names.en;
+                  return (
+                    <button
+                      key={region.code}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => setActiveRegion(region.code)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-mono transition-all duration-150 ${
+                        isSelected
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
+                          : "border-border/50 bg-background text-foreground/60 hover:border-primary/40 hover:text-foreground"
+                      }`}
+                    >
+                      <FlagEmoji code={region.code} className="text-sm" />
+                      <span className="hidden sm:inline">{label}</span>
+                      <span className="sm:hidden">{region.code}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-border/30" aria-hidden="true" />
 
             <div className="space-y-2">
               <label htmlFor="full_name" className="text-sm font-medium text-foreground tracking-wide block">

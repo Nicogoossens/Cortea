@@ -5,6 +5,7 @@ import { usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { redeemCodes, pruneExpiredCodes, issueRedeemCode } from "../lib/redeem-codes";
+import { setSessionCookie } from "../lib/auth-middleware";
 
 const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
 const OIDC_COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -241,6 +242,9 @@ router.get("/auth/redeem", (req: Request, res: Response) => {
   }
 
   redeemCodes.delete(code);
+
+  const { setSessionCookie } = await import("../lib/auth-middleware");
+  setSessionCookie(res, entry.token);
 
   res.json({
     token: entry.token,

@@ -435,7 +435,15 @@ const SetPasswordSchema = z.object({
   current_password: z.string().optional(),
 });
 
-router.post("/auth/logout", (req, res) => {
+router.post("/auth/logout", async (req, res) => {
+  const token = extractToken(req);
+  if (token) {
+    await db
+      .update(usersTable)
+      .set({ session_token: null })
+      .where(eq(usersTable.session_token, token))
+      .catch(() => {});
+  }
   clearSessionCookie(res);
   return res.json({ message: "Signed out." });
 });

@@ -38,6 +38,7 @@ interface PrivacyContextValue {
   settings: PrivacySettings;
   updateSetting: <K extends keyof PrivacySettings>(key: K, value: PrivacySettings[K]) => void;
   setIncognito: (enabled: boolean) => void;
+  refreshFromServer: () => Promise<void>;
   canUseCamera: boolean;
   canUseMicrophone: boolean;
   canUseLocation: boolean;
@@ -118,12 +119,24 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
     });
   }, [isAuthenticated, userId, getAuthHeaders]);
 
+  const refreshFromServer = useCallback(async (): Promise<boolean> => {
+    if (!isAuthenticated || !userId) return false;
+    const profile = await fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null) as { privacy_settings?: PrivacySettings | null } | null;
+    if (!profile?.privacy_settings) return false;
+    const serverSettings = { ...DEFAULT_SETTINGS, ...profile.privacy_settings };
+    localStorage.setItem(privacyKey(userId), JSON.stringify(serverSettings));
+    setSettings(serverSettings);
+    return true;
+  }, [isAuthenticated, userId, getAuthHeaders]);
+
   const canUseCamera = !settings.incognito && settings.cameraEnabled;
   const canUseMicrophone = !settings.incognito && settings.microphoneEnabled;
   const canUseLocation = !settings.incognito && settings.locationEnabled;
 
   return (
-    <PrivacyContext.Provider value={{ settings, updateSetting, setIncognito, canUseCamera, canUseMicrophone, canUseLocation }}>
+    <PrivacyContext.Provider value={{ settings, updateSetting, setIncognito, refreshFromServer, canUseCamera, canUseMicrophone, canUseLocation }}>
       {children}
     </PrivacyContext.Provider>
   );

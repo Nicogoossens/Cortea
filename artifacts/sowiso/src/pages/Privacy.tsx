@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePrivacy, cleanupScenarioAnswers } from "@/lib/privacy";
 import { useLanguage } from "@/lib/i18n";
-import { Shield, Camera, Mic, MapPin, EyeOff, Eye, Trash2, CheckCircle2, Info } from "lucide-react";
+import { Shield, Camera, Mic, MapPin, EyeOff, Eye, Trash2, CheckCircle2, Info, RefreshCw } from "lucide-react";
 
 function ToggleRow({
   label,
@@ -50,10 +50,27 @@ function ToggleRow({
 }
 
 export default function Privacy() {
-  const { settings, updateSetting, setIncognito } = usePrivacy();
+  const { settings, updateSetting, setIncognito, refreshFromServer } = usePrivacy();
   const { t } = useLanguage();
   const [cleanedUp, setCleanedUp] = useState(false);
   const [cleanedCount, setCleanedCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [synced, setSynced] = useState(false);
+
+  useEffect(() => {
+    refreshFromServer();
+  }, [refreshFromServer]);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSynced(false);
+    const success = await refreshFromServer();
+    setSyncing(false);
+    if (success) {
+      setSynced(true);
+      setTimeout(() => setSynced(false), 3000);
+    }
+  };
 
   const handleCleanup = () => {
     const keysToRemove = Object.keys(localStorage).filter(
@@ -69,12 +86,32 @@ export default function Privacy() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-4xl font-serif text-foreground">{t("privacy.title")}</h1>
-          <Badge variant="outline" className="font-mono text-xs tracking-widest uppercase border-border/60 text-muted-foreground">
-            <Shield className="h-3 w-3 mr-1" />
-            {t("privacy.badge")}
-          </Badge>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-serif text-foreground">{t("privacy.title")}</h1>
+            <Badge variant="outline" className="font-mono text-xs tracking-widest uppercase border-border/60 text-muted-foreground">
+              <Shield className="h-3 w-3 mr-1" />
+              {t("privacy.badge")}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            {synced && (
+              <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium animate-in fade-in duration-300">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {t("privacy.synced")}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center gap-2 text-muted-foreground"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? t("privacy.syncing") : t("privacy.sync_now")}
+            </Button>
+          </div>
         </div>
         <p className="text-muted-foreground text-lg font-light max-w-2xl">
           {t("privacy.subtitle")}

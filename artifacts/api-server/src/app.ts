@@ -25,7 +25,7 @@ function isAllowedOrigin(origin: string | undefined): boolean {
     return false;
   }
   if (hostname.endsWith(".replit.app") || hostname === "replit.app") return true;
-  if (REPLIT_DEV_DOMAIN && hostname === REPLIT_DEV_DOMAIN) return true;
+  if (REPLIT_DEV_DOMAIN && (hostname === REPLIT_DEV_DOMAIN || hostname.endsWith(`.${REPLIT_DEV_DOMAIN}`))) return true;
   return false;
 }
 

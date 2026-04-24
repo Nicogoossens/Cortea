@@ -32,7 +32,7 @@ const QUESTION_KEYS = [
   },
 ];
 
-const FEATURED_REGIONS: RegionCode[] = ["GB", "US", "FR", "DE", "JP", "AE", "CN", "AU", "NL", "SG"];
+const FEATURED_REGIONS: RegionCode[] = ["GB", "US", "AU", "CN", "JP", "FR", "DE", "IT", "BE", "CH", "SG", "IN", "MX", "BR", "ES", "CO", "AE"];
 
 function RegionPicker() {
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();

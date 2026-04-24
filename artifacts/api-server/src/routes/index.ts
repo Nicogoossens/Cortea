@@ -14,11 +14,13 @@ import subscriptionRouter from "./subscription";
 import registerQualityRouter from "./register-quality";
 import useCasesRouter from "./use_cases";
 import mirrorLogRouter from "./mirror-log";
+import googleOAuthRouter from "./google-oauth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(googleOAuthRouter);
 router.use(oidcRouter);
 router.use(usersRouter);
 router.use(cultureRouter);

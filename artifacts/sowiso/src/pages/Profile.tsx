@@ -14,6 +14,7 @@ import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
   Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane, Layers, MapPin, ArrowRight,
+  Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
@@ -1432,6 +1433,9 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* ── Password ── */}
+      <PasswordSection authHeaders={getAuthHeaders()} />
+
       {/* ── Danger Zone ── */}
       <Card className="border-destructive/20 bg-card shadow-sm">
         <CardHeader className="pb-3">
@@ -1615,4 +1619,128 @@ function DetailRow({ label, value, locked }: { label: string; value: string; loc
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function PasswordSection({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newPw || newPw.length < 8) { setMessage("Wachtwoord moet minimaal 8 tekens hebben."); setState("error"); return; }
+    if (newPw !== confirmPw) { setMessage("De wachtwoorden komen niet overeen."); setState("error"); return; }
+    setState("loading");
+    setMessage(null);
+    try {
+      const body: Record<string, string> = { password: newPw };
+      if (currentPw) body.current_password = currentPw;
+      const res = await fetch(`${API_BASE}/api/auth/set-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json() as { message?: string; error?: string };
+      if (!res.ok) {
+        setMessage(data.error ?? "Instellen mislukt.");
+        setState("error");
+      } else {
+        setMessage(data.message ?? "Wachtwoord bijgewerkt.");
+        setState("done");
+        setCurrentPw(""); setNewPw(""); setConfirmPw("");
+        setTimeout(() => setState("idle"), 4000);
+      }
+    } catch {
+      setMessage("Er is een fout opgetreden. Probeer opnieuw.");
+      setState("error");
+    }
+  }
+
+  return (
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-xl flex items-center gap-2">
+          <KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
+          Wachtwoord instellen
+        </CardTitle>
+        <CardDescription>Stel een wachtwoord in om direct in te loggen zonder link.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-sm" noValidate>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Huidig wachtwoord <span className="text-xs text-muted-foreground/60">(leeg laten als nog niet ingesteld)</span></label>
+            <Input
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={currentPw}
+              onChange={(e) => { setCurrentPw(e.target.value); setState("idle"); setMessage(null); }}
+              className="rounded-sm"
+              disabled={state === "loading"}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Nieuw wachtwoord <span className="text-destructive">*</span></label>
+            <div className="relative">
+              <Input
+                type={showNew ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="min. 8 tekens"
+                value={newPw}
+                onChange={(e) => { setNewPw(e.target.value); setState("idle"); setMessage(null); }}
+                className="rounded-sm pr-10"
+                disabled={state === "loading"}
+                required
+              />
+              <button type="button" onClick={() => setShowNew((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground" tabIndex={-1}>
+                {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Bevestig wachtwoord <span className="text-destructive">*</span></label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="herhaal wachtwoord"
+                value={confirmPw}
+                onChange={(e) => { setConfirmPw(e.target.value); setState("idle"); setMessage(null); }}
+                className="rounded-sm pr-10"
+                disabled={state === "loading"}
+                required
+              />
+              <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground" tabIndex={-1}>
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {message && (
+            <p className={`text-sm px-3 py-2 rounded-sm border ${state === "done" ? "text-green-700 bg-green-50 border-green-200" : "text-destructive bg-destructive/5 border-destructive/30"}`} role="alert">
+              {message}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            className="font-serif rounded-sm"
+            disabled={!newPw || !confirmPw || state === "loading"}
+          >
+            {state === "loading" ? (
+              <><PasswordLoader2 className="w-4 h-4 mr-2 animate-spin" />Opslaan…</>
+            ) : state === "done" ? (
+              <><CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />Opgeslagen</>
+            ) : (
+              "Wachtwoord opslaan"
+            )}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
 }

@@ -4,12 +4,15 @@ import { usersTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 import { sendActivationEmail } from "../lib/email";
 
 const router = Router();
 
 const BASE_PATH = (process.env.BASE_PATH ?? "").replace(/\/$/, "");
 const APP_URL = process.env.APP_URL ?? `https://sowiso-01.replit.app${BASE_PATH}`;
+
+const BCRYPT_ROUNDS = 12;
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");
@@ -30,6 +33,7 @@ const RegisterBodySchema = z.object({
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional().default("casual"),
   language_code: z.string().optional().default("en"),
   active_region: z.string().optional().default("GB"),
+  password: z.string().min(8).max(128).optional(),
 });
 
 router.post("/auth/register", async (req, res) => {
@@ -42,7 +46,7 @@ router.post("/auth/register", async (req, res) => {
       });
     }
 
-    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region } = parsed.data;
+    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region, password } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     const existing = await db
@@ -57,6 +61,71 @@ router.post("/auth/register", async (req, res) => {
       });
     }
 
+    if (password) {
+      const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      const sessionToken = generateToken();
+
+      if (existing.length > 0) {
+        await db
+          .update(usersTable)
+          .set({
+            full_name,
+            birth_year,
+            gender_identity: gender_identity ?? null,
+            password_hash: passwordHash,
+            email_verified: true,
+            session_token: sessionToken,
+            verification_token: null,
+            token_expires_at: null,
+          })
+          .where(eq(usersTable.id, existing[0].id));
+
+        return res.json({
+          message: "Your account has been activated.",
+          user_id: existing[0].id,
+          full_name,
+          session_token: sessionToken,
+          is_admin: existing[0].is_admin,
+          language_code: existing[0].language_code,
+          active_region: existing[0].active_region,
+        });
+      }
+
+      const userId = `user_${randomBytes(8).toString("hex")}`;
+      const [newUser] = await db
+        .insert(usersTable)
+        .values({
+          id: userId,
+          full_name,
+          email: normalizedEmail,
+          email_verified: true,
+          password_hash: passwordHash,
+          session_token: sessionToken,
+          verification_token: null,
+          token_expires_at: null,
+          birth_year,
+          gender_identity: gender_identity ?? null,
+          ambition_level,
+          language_code,
+          active_region,
+          noble_score: 0,
+          subscription_tier: "guest",
+          region_history: [],
+        })
+        .returning();
+
+      return res.status(201).json({
+        message: "Your account has been established. Welcome to Cortéa.",
+        user_id: newUser.id,
+        full_name: newUser.full_name,
+        session_token: sessionToken,
+        is_admin: newUser.is_admin,
+        language_code: newUser.language_code,
+        active_region: newUser.active_region,
+      });
+    }
+
+    // No password supplied → magic-link flow
     const token = generateToken();
     const expiresAt = tokenExpiresAt();
 
@@ -235,6 +304,7 @@ router.post("/auth/resend", async (req, res) => {
   }
 });
 
+// ── Magic-link sign-in (fallback when no password is set) ──────────────────────
 const SignInBodySchema = z.object({
   email: z.string().email(),
 });
@@ -289,9 +359,133 @@ router.post("/auth/signin", async (req, res) => {
   }
 });
 
+// ── Password-based sign-in ─────────────────────────────────────────────────────
+const SignInPasswordSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+router.post("/auth/signin-password", async (req, res) => {
+  try {
+    const parsed = SignInPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Email address and password are required." });
+    }
+
+    const { email, password } = parsed.data;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, normalizedEmail))
+      .limit(1);
+
+    // Use a timing-safe response for both "not found" and "wrong password"
+    if (!user) {
+      // Still run bcrypt to prevent timing attacks
+      await bcrypt.compare(password, "$2a$12$notarealhashjustpaddingtopreventimagetimingattack000000");
+      return res.status(401).json({ error: "The email address or password is incorrect." });
+    }
+
+    if (user.suspended_at) {
+      return res.status(403).json({ error: "This account has been suspended. Please contact support." });
+    }
+
+    if (!user.password_hash) {
+      return res.status(400).json({
+        error: "No password is set for this account. Please use the sign-in link option below.",
+        no_password: true,
+      });
+    }
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: "The email address or password is incorrect." });
+    }
+
+    const sessionToken = generateToken();
+    await db
+      .update(usersTable)
+      .set({
+        session_token: sessionToken,
+        email_verified: true,
+      })
+      .where(eq(usersTable.id, user.id));
+
+    return res.json({
+      message: "Welcome back.",
+      user_id: user.id,
+      full_name: user.full_name,
+      session_token: sessionToken,
+      is_admin: user.is_admin,
+      language_code: user.language_code,
+      active_region: user.active_region,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Password sign-in failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+// ── Set / change password (requires active session) ────────────────────────────
+const SetPasswordSchema = z.object({
+  password: z.string().min(8).max(128),
+  current_password: z.string().optional(),
+});
+
+router.post("/auth/set-password", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+    const token = authHeader.slice(7);
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.session_token, token))
+      .limit(1);
+
+    if (!user) return res.status(401).json({ error: "Invalid or expired session." });
+
+    const parsed = SetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: "Password must be at least 8 characters.",
+        details: parsed.error.flatten().fieldErrors,
+      });
+    }
+
+    const { password, current_password } = parsed.data;
+
+    // If account already has a password, require the current one
+    if (user.password_hash) {
+      if (!current_password) {
+        return res.status(400).json({ error: "Current password is required to set a new one." });
+      }
+      const valid = await bcrypt.compare(current_password, user.password_hash);
+      if (!valid) {
+        return res.status(401).json({ error: "The current password is incorrect." });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    await db
+      .update(usersTable)
+      .set({ password_hash: passwordHash })
+      .where(eq(usersTable.id, user.id));
+
+    return res.json({ message: "Your password has been updated successfully." });
+  } catch (err) {
+    req.log.error({ err }, "Set password failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
 // ── First-admin bootstrap ──────────────────────────────────────────────────────
-// Promotes the authenticated user to admin if no admins currently exist.
-// Automatically becomes a no-op once any admin account is present.
 router.post("/auth/claim-first-admin", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;

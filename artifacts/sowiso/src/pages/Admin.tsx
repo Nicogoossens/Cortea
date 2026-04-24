@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
-  BookOpen, Cpu, Save, ClipboardList, ThumbsUp,
+  BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -51,7 +51,7 @@ interface ContentStatus {
 }
 
 type ActionState = "idle" | "loading" | "done" | "error";
-type AdminTab = "users" | "content" | "cc_screening";
+type AdminTab = "users" | "content" | "cc_screening" | "integrations";
 
 // ── Small components ──────────────────────────────────────────────────────────
 
@@ -1484,6 +1484,7 @@ export default function Admin() {
           { key: "users" as const, label: "Users", icon: Users },
           { key: "content" as const, label: "Content", icon: Database },
           { key: "cc_screening" as const, label: "CC Screening", icon: Cpu },
+          { key: "integrations" as const, label: "Integrations", icon: KeyRound },
         ]).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -1594,6 +1595,182 @@ export default function Admin() {
       {activeTab === "cc_screening" && (
         <CCScreeningPanel authHeaders={authHeaders} />
       )}
+
+      {/* Integrations tab */}
+      {activeTab === "integrations" && (
+        <IntegrationsPanel />
+      )}
+    </div>
+  );
+}
+
+// ── Integrations panel ────────────────────────────────────────────────────────
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {});
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="ml-2 inline-flex items-center gap-1 text-xs font-mono text-muted-foreground/60 hover:text-primary transition-colors"
+      title="Copy to clipboard"
+    >
+      {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+function IntegrationsPanel() {
+  const [googleStatus, setGoogleStatus] = useState<"checking" | "configured" | "not_configured">("checking");
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/auth/google/status`)
+      .then((r) => r.json())
+      .then((d: { configured: boolean }) => setGoogleStatus(d.configured ? "configured" : "not_configured"))
+      .catch(() => setGoogleStatus("not_configured"));
+  }, []);
+
+  const redirectUri = "https://sowiso-01.replit.app/api/auth/google/callback";
+  const devRedirectUri = typeof window !== "undefined"
+    ? `${window.location.origin}/api/auth/google/callback`
+    : redirectUri;
+
+  return (
+    <div className="space-y-6">
+      {/* Google OAuth */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true" className="shrink-0">
+              <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+              <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            Google OAuth
+            <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-mono ${
+              googleStatus === "configured"
+                ? "border border-green-300 bg-green-50 text-green-700"
+                : googleStatus === "checking"
+                ? "border border-border bg-muted/30 text-muted-foreground"
+                : "border border-amber-300 bg-amber-50 text-amber-700"
+            }`}>
+              {googleStatus === "configured" ? "Geconfigureerd" : googleStatus === "checking" ? "Controleren…" : "Niet geconfigureerd"}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {googleStatus === "configured" ? (
+            <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
+              <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-green-800">Google OAuth is actief</p>
+                <p className="text-xs text-green-700/80 mt-1 font-light">
+                  GOOGLE_CLIENT_ID en GOOGLE_CLIENT_SECRET zijn ingesteld. Gebruikers kunnen inloggen met hun Google-account.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Configuratie vereist</p>
+                <p className="text-xs text-amber-700/80 mt-1 font-light">
+                  Stel GOOGLE_CLIENT_ID en GOOGLE_CLIENT_SECRET in als omgevingsvariabelen om Google-login te activeren.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+            <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
+                <span>
+                  Ga naar{" "}
+                  <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+                    Google Cloud Console → Credentials
+                  </a>{" "}
+                  en maak een nieuw OAuth 2.0 Client ID aan.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
+                <span>Kies als applicatietype <strong className="text-foreground">Web application</strong>.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
+                <div className="space-y-2 flex-1">
+                  <span>Voeg deze <strong className="text-foreground">Authorized Redirect URIs</strong> toe:</span>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-2">
+                      <code className="text-xs font-mono text-foreground/80 break-all flex-1">{redirectUri}</code>
+                      <CopyButton text={redirectUri} />
+                    </div>
+                    {devRedirectUri !== redirectUri && (
+                      <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-2">
+                        <code className="text-xs font-mono text-foreground/80 break-all flex-1">{devRedirectUri}</code>
+                        <CopyButton text={devRedirectUri} />
+                        <span className="text-[10px] font-mono text-amber-600 border border-amber-300/60 rounded px-1">dev</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
+                <div className="space-y-1 flex-1">
+                  <span>Kopieer de Client ID en Client Secret en stel deze in als omgevingsvariabelen:</span>
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
+                      <code className="text-xs font-mono text-foreground/80 flex-1">GOOGLE_CLIENT_ID</code>
+                      <span className="text-[10px] text-muted-foreground/60">= jouw Client ID</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
+                      <code className="text-xs font-mono text-foreground/80 flex-1">GOOGLE_CLIENT_SECRET</code>
+                      <span className="text-[10px] text-muted-foreground/60">= jouw Client Secret</span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">5</span>
+                <span>Herstart de API-server nadat de omgevingsvariabelen zijn ingesteld.</span>
+              </li>
+            </ol>
+          </div>
+
+          <div className="border-t border-border/40 pt-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Issuer</span>
+                <code className="font-mono text-[11px]">https://accounts.google.com</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Scope</span>
+                <code className="font-mono text-[11px]">openid email profile</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">PKCE</span>
+                <code className="font-mono text-[11px]">S256 (verplicht)</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Callback endpoint</span>
+                <code className="font-mono text-[11px]">/api/auth/google/callback</code>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage, type SupportedLocale, ALL_LOCALES } from "@/lib/i18n";
 import { useActiveRegion, type RegionCode, COMPASS_REGIONS } from "@/lib/active-region";
-import { UserPlus, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -22,6 +23,8 @@ const currentYear = new Date().getFullYear();
 export default function Register() {
   const { t, locale, setLocale } = useLanguage();
   const { activeRegion, setActiveRegion } = useActiveRegion();
+  const { login } = useAuth();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -52,11 +55,13 @@ export default function Register() {
     full_name: "",
     birth_year: "",
     gender_identity: "",
+    password: "",
+    password_confirm: "",
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null);
 
   function update(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -76,6 +81,12 @@ export default function Register() {
     const yr = parseInt(form.birth_year, 10);
     if (isNaN(yr) || yr < 1900 || yr > currentYear - 13) {
       return t("register.error_birth_year_invalid");
+    }
+    if (!form.password || form.password.length < 8) {
+      return t("register.error_password");
+    }
+    if (form.password !== form.password_confirm) {
+      return t("register.error_password_mismatch");
     }
     return null;
   }
@@ -100,18 +111,37 @@ export default function Register() {
           locale: baseLang,
           language_code: baseLang,
           active_region: activeRegion,
+          password: form.password,
         }),
       });
 
-      const body = await res.json() as { message?: string; error?: string; dev_verification_url?: string };
+      const body = await res.json() as {
+        message?: string;
+        error?: string;
+        user_id?: string;
+        full_name?: string | null;
+        session_token?: string;
+        is_admin?: boolean;
+      };
 
       if (!res.ok) {
         setError(body.error ?? t("common.error"));
         return;
       }
 
-      if (body.dev_verification_url) setDevVerifyUrl(body.dev_verification_url);
-      setSubmitted(true);
+      // If we got a session_token back, the account is immediately activated
+      if (body.session_token && body.user_id) {
+        login(body.user_id, {
+          name: body.full_name ?? undefined,
+          sessionToken: body.session_token,
+          isAdmin: body.is_admin,
+        });
+        navigate("/onboarding");
+        return;
+      }
+
+      // Fallback: navigate to sign-in
+      navigate("/signin");
     } catch {
       setError(t("common.error"));
     } finally {
@@ -119,56 +149,7 @@ export default function Register() {
     }
   }
 
-  if (submitted) {
-    return (
-      <div className="max-w-md mx-auto space-y-8 animate-in fade-in duration-500 py-12">
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8 text-primary" aria-hidden="true" />
-          </div>
-          <h1 className="text-3xl font-serif text-foreground">{t("register.check_email")}</h1>
-          <p className="text-muted-foreground leading-relaxed font-light">
-            {t("register.sent_to")} <span className="font-medium text-foreground">{form.email}</span>
-          </p>
-          {!devVerifyUrl && (
-            <p className="text-sm text-muted-foreground/70">
-              {t("register.check_spam")}
-            </p>
-          )}
-        </div>
-
-        {devVerifyUrl && (
-          <div className="border border-amber-300/60 bg-amber-50/60 rounded-sm p-5 space-y-3">
-            <div className="flex items-center gap-2 text-amber-700">
-              <FlaskConical className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span className="text-xs font-mono uppercase tracking-widest font-semibold">{t("auth.dev_mode")}</span>
-            </div>
-            <p className="text-xs text-amber-700/80 font-light leading-relaxed">
-              {t("auth.dev_no_smtp_register")}
-            </p>
-            <Link href={devVerifyUrl.replace(/^https?:\/\/[^/]+/, "")}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full font-mono text-xs border-amber-400/60 text-amber-800 hover:bg-amber-100/60"
-              >
-                {t("auth.dev_complete_verification")}
-              </Button>
-            </Link>
-          </div>
-        )}
-
-        <div className="text-center">
-          <Link href="/">
-            <Button variant="outline" className="font-serif gap-2">
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-              {t("common.return_home")}
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const formComplete = form.email.trim() && form.full_name.trim() && form.birth_year && form.password && form.password_confirm;
 
   return (
     <div className="max-w-md mx-auto space-y-10 animate-in fade-in duration-500 py-8">
@@ -180,64 +161,6 @@ export default function Register() {
         <p className="text-muted-foreground text-lg font-light leading-relaxed">
           {t("register.subtitle")}
         </p>
-      </div>
-
-      {/* SSO */}
-      <div className="space-y-3">
-        <div className="relative flex items-center gap-3">
-          <div className="flex-1 h-px bg-border/50" />
-          <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">{t("auth.or_register_with")}</span>
-          <div className="flex-1 h-px bg-border/50" />
-        </div>
-
-        {/* Replit Auth — functional SSO */}
-        <button
-          type="button"
-          onClick={() => {
-            const base = import.meta.env.BASE_URL as string;
-            const returnTo = encodeURIComponent(`${base}replit-callback`.replace("//", "/"));
-            window.location.href = `${API_BASE}/api/login?returnTo=${returnTo}`;
-          }}
-          className="w-full flex items-center justify-center gap-2.5 h-11 rounded-sm border border-primary/40 bg-primary/5 hover:bg-primary/10 text-foreground text-sm font-medium transition-colors"
-        >
-          <svg width="16" height="16" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-            <rect width="100" height="100" rx="16" fill="currentColor" fillOpacity="0.1"/>
-            <path d="M30 25h40v15H45v10h25v15H45v10h25v15H30V25z" fill="currentColor"/>
-          </svg>
-          {t("auth.sso_signin")}
-        </button>
-
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { name: "Google", logo: "G" },
-            { name: "Apple", logo: "" },
-            { name: "LinkedIn", logo: "in" },
-          ].map(({ name, logo }) => (
-            <div key={name} className="relative">
-              <button
-                type="button"
-                disabled
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-sm border border-border/40 bg-muted/30 text-muted-foreground/40 text-sm font-medium cursor-not-allowed select-none"
-                aria-label={`${name} — ${t("auth.coming_soon")}`}
-              >
-                <span className="font-bold text-xs">{logo}</span>
-                <span className="text-xs">{name}</span>
-              </button>
-              <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px] font-mono uppercase tracking-widest bg-muted text-muted-foreground/60 px-1.5 py-0.5 rounded-[2px] whitespace-nowrap border border-border/30">
-                {t("auth.coming_soon")}
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="text-center text-[10px] text-muted-foreground/40 font-mono">
-          {t("auth.social_coming_soon_register")}
-        </p>
-      </div>
-
-      <div className="relative flex items-center gap-3">
-        <div className="flex-1 h-px bg-border/50" />
-        <span className="text-xs font-mono text-muted-foreground/60 uppercase tracking-widest">{t("auth.or_via_email")}</span>
-        <div className="flex-1 h-px bg-border/50" />
       </div>
 
       <Card className="border-border bg-card shadow-sm">
@@ -316,6 +239,60 @@ export default function Register() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-foreground tracking-wide block">
+                {t("register.password_label")} <span className="text-destructive" aria-hidden="true">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="min. 8 tekens"
+                  value={form.password}
+                  onChange={(e) => update("password", e.target.value)}
+                  className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="password_confirm" className="text-sm font-medium text-foreground tracking-wide block">
+                {t("register.password_confirm_label")} <span className="text-destructive" aria-hidden="true">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  id="password_confirm"
+                  type={showConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="herhaal wachtwoord"
+                  value={form.password_confirm}
+                  onChange={(e) => update("password_confirm", e.target.value)}
+                  className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
+                  tabIndex={-1}
+                >
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
             {error && (
               <p className="text-sm text-destructive border border-destructive/30 rounded-sm px-4 py-2 bg-destructive/5" role="alert">
                 {error}
@@ -326,7 +303,7 @@ export default function Register() {
               type="submit"
               size="lg"
               className="w-full font-serif bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={!form.email.trim() || !form.full_name.trim() || !form.birth_year || loading}
+              disabled={!formComplete || loading}
               aria-busy={loading}
             >
               {loading ? (
@@ -335,10 +312,7 @@ export default function Register() {
                   {t("register.sending")}
                 </>
               ) : (
-                <>
-                  {t("register.submit")}
-                  <Send className="w-4 h-4 ml-2" aria-hidden="true" />
-                </>
+                t("register.submit")
               )}
             </Button>
 

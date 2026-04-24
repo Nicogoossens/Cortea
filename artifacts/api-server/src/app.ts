@@ -14,11 +14,7 @@ import { getUncachableStripeClient } from "./stripeClient";
 
 const app: Express = express();
 
-// ── CORS origin allowlist ──────────────────────────────────────────────────────
-// Allows only the Replit dev proxy, deployed *.replit.app origins, and localhost.
-// Uses exact hostname matching — never substring includes — to prevent spoofing.
 const REPLIT_DEV_DOMAIN = (process.env.REPLIT_DEV_DOMAIN ?? "").toLowerCase().trim();
-const APP_URL = (process.env.APP_URL ?? "").replace(/\/$/, "");
 
 function isAllowedOrigin(origin: string | undefined): boolean {
   if (!origin) return false;
@@ -28,31 +24,11 @@ function isAllowedOrigin(origin: string | undefined): boolean {
   } catch {
     return false;
   }
-  // Allow localhost and 127.0.0.1 for local development
-  if (hostname === "localhost" || hostname === "127.0.0.1") return true;
-  // Allow exact APP_URL match
-  if (APP_URL && origin === APP_URL) return true;
-  // Allow any subdomain of replit.app (e.g. sowiso-01.replit.app)
-  if (hostname === "replit.app" || hostname.endsWith(".replit.app")) return true;
-  // Allow the Replit dev domain (exact hostname match, not substring)
+  if (hostname.endsWith(".replit.app") || hostname === "replit.app") return true;
   if (REPLIT_DEV_DOMAIN && hostname === REPLIT_DEV_DOMAIN) return true;
   return false;
 }
 
-const corsOptions: cors.CorsOptions = {
-  credentials: true,
-  origin: (origin, callback) => {
-    if (isAllowedOrigin(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, false);
-    }
-  },
-};
-
-// ── Rate limiters ──────────────────────────────────────────────────────────────
-// Strict limiter for authentication endpoints only — prevents brute force and
-// mail-server abuse on /api/auth/* (register, signin, resend, verify).
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 15,
@@ -61,8 +37,6 @@ const authLimiter = rateLimit({
   message: { error: "Too many requests from this address. Please wait a moment and try again." },
 });
 
-// General limiter for all non-auth API routes — prevents runaway scraping / DoS.
-// Applied only to routes outside /api/auth to avoid double-counting.
 const generalLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 200,
@@ -72,33 +46,8 @@ const generalLimiter = rateLimit({
   skip: (req) => req.path.startsWith("/auth"),
 });
 
-// ── Logging ────────────────────────────────────────────────────────────────────
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
-      },
-      res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
-      },
-    },
-  }),
-);
-
-// ── Security headers (Helmet) — global, before all routes ─────────────────────
-// Applied first so every response (including the Stripe webhook) carries these headers.
-// CSP sources are passed as individual array entries (not space-joined strings).
-const cspSources: string[] = ["'self'"];
+const cspSources: string[] = ["'self'", "https://*.replit.app"];
 if (REPLIT_DEV_DOMAIN) cspSources.push(`https://${REPLIT_DEV_DOMAIN}`);
-cspSources.push("https://*.replit.app");
 
 app.use(
   helmet({
@@ -118,7 +67,20 @@ app.use(
   })
 );
 
-// ── Stripe webhook — raw body required; registered after Helmet ────────────────
+app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      req(req) {
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
+      },
+      res(res) {
+        return { statusCode: res.statusCode };
+      },
+    },
+  }),
+);
+
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
@@ -173,19 +135,14 @@ app.post(
   }
 );
 
-// ── CORS ───────────────────────────────────────────────────────────────────────
-app.use(cors(corsOptions));
+app.use(cors({ credentials: true, origin: (origin, callback) => callback(null, isAllowedOrigin(origin)) }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Rate limiting ──────────────────────────────────────────────────────────────
-// Auth routes: strict limiter only.
-// All other /api routes: general limiter (skip function excludes /auth paths).
 app.use("/api/auth", authLimiter);
 app.use("/api", generalLimiter);
 
-// ── Routes ─────────────────────────────────────────────────────────────────────
 app.use("/api", router);
 
 export default app;

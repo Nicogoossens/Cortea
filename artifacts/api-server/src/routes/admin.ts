@@ -882,4 +882,137 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
   }
 });
 
+// ── CC Protocol Review (Pending Verification) ─────────────────────────────────
+
+/** GET /admin/cc-protocols — list unverified CC-extracted records for editorial review */
+router.get("/admin/cc-protocols", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(cultureProtocolsTable)
+      .where(sql`verified = false AND source_book IS NOT NULL`);
+
+    const rows = await db
+      .select({
+        id: cultureProtocolsTable.id,
+        region_code: cultureProtocolsTable.region_code,
+        pillar_code: cultureProtocolsTable.pillar_code,
+        subcategory: cultureProtocolsTable.subcategory,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        rule_raw: cultureProtocolsTable.rule_raw,
+        urgency: cultureProtocolsTable.urgency,
+        source_book: cultureProtocolsTable.source_book,
+        source_page: cultureProtocolsTable.source_page,
+        source_reference: cultureProtocolsTable.source_reference,
+        verified: cultureProtocolsTable.verified,
+        created_at: cultureProtocolsTable.created_at,
+      })
+      .from(cultureProtocolsTable)
+      .where(sql`verified = false AND source_book IS NOT NULL`)
+      .orderBy(desc(cultureProtocolsTable.urgency), desc(cultureProtocolsTable.created_at))
+      .limit(limit)
+      .offset(offset);
+
+    return res.json({
+      records: rows,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit)),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to list pending CC protocols");
+    return res.status(500).json({ error: "A difficulty arose retrieving pending records." });
+  }
+});
+
+/** PATCH /admin/cc-protocols/:id — approve a pending CC-extracted record (sets verified = true) */
+router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
+
+    // Only operate on pending extracted rows (source_book IS NOT NULL AND verified = false)
+    const [existing] = await db
+      .select({ id: cultureProtocolsTable.id, verified: cultureProtocolsTable.verified, source_book: cultureProtocolsTable.source_book })
+      .from(cultureProtocolsTable)
+      .where(eq(cultureProtocolsTable.id, id))
+      .limit(1);
+
+    if (!existing) return res.status(404).json({ error: "Record not found." });
+    if (!existing.source_book) {
+      return res.status(409).json({ error: "This record is not a CC-extracted record and cannot be managed through this endpoint." });
+    }
+    if (existing.verified) {
+      return res.status(409).json({ error: "Record is already verified." });
+    }
+
+    // Atomic update: conditions in WHERE prevent race-condition mutations
+    const [updated] = await db
+      .update(cultureProtocolsTable)
+      .set({ verified: true })
+      .where(and(
+        eq(cultureProtocolsTable.id, id),
+        sql`source_book IS NOT NULL`,
+        eq(cultureProtocolsTable.verified, false),
+      ))
+      .returning({ id: cultureProtocolsTable.id, verified: cultureProtocolsTable.verified });
+
+    if (!updated) {
+      return res.status(409).json({ error: "Record not found or is no longer in pending state." });
+    }
+
+    return res.json({ ok: true, id: updated.id, verified: updated.verified });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to approve CC protocol");
+    return res.status(500).json({ error: "A difficulty arose approving the record." });
+  }
+});
+
+/** DELETE /admin/cc-protocols/:id — permanently remove a pending CC-extracted record */
+router.delete("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
+
+    // Only operate on pending extracted rows (source_book IS NOT NULL AND verified = false)
+    const [existing] = await db
+      .select({ id: cultureProtocolsTable.id, verified: cultureProtocolsTable.verified, source_book: cultureProtocolsTable.source_book })
+      .from(cultureProtocolsTable)
+      .where(eq(cultureProtocolsTable.id, id))
+      .limit(1);
+
+    if (!existing) return res.status(404).json({ error: "Record not found." });
+    if (!existing.source_book) {
+      return res.status(409).json({ error: "This record is not a CC-extracted record and cannot be managed through this endpoint." });
+    }
+    if (existing.verified) {
+      return res.status(409).json({ error: "Only pending (unverified) records may be deleted through this endpoint." });
+    }
+
+    // Atomic delete: conditions in WHERE prevent race-condition mutations
+    const deleted = await db
+      .delete(cultureProtocolsTable)
+      .where(and(
+        eq(cultureProtocolsTable.id, id),
+        sql`source_book IS NOT NULL`,
+        eq(cultureProtocolsTable.verified, false),
+      ))
+      .returning({ id: cultureProtocolsTable.id });
+
+    if (deleted.length === 0) {
+      return res.status(409).json({ error: "Record not found or is no longer in pending state." });
+    }
+
+    return res.json({ ok: true, message: "Record permanently removed." });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to delete CC protocol");
+    return res.status(500).json({ error: "A difficulty arose deleting the record." });
+  }
+});
+
 export default router;

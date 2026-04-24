@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { cultureProtocolsTable, compassRegionsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -92,9 +92,16 @@ router.get("/culture/protocols", async (req, res) => {
       for (const ctx of SPHERE_CONTEXTS_CULTURE[sphere] ?? []) matchingContexts.add(ctx);
     }
 
+    // CC-derived records (source_book IS NOT NULL) are only visible once verified=true.
+    // Legacy curated records (source_book IS NULL) are always visible.
+    const verificationGate = or(
+      isNull(cultureProtocolsTable.source_book),
+      eq(cultureProtocolsTable.verified, true),
+    );
+
     const protocols = await db.select()
       .from(cultureProtocolsTable)
-      .where(and(...conditions));
+      .where(and(...conditions, verificationGate));
 
     // Resolve locale-aware display text
     // lang is the base language code (e.g. "nl" from "nl-NL", "fr" from "fr-FR")

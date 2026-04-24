@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
-  BookOpen, Cpu, Save,
+  BookOpen, Cpu, Save, ClipboardList, ThumbsUp,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -701,6 +701,353 @@ interface CCRecord {
   _note?: string;
 }
 
+interface PendingCCRecord {
+  id: number;
+  region_code: string;
+  pillar_code: string | null;
+  subcategory: string | null;
+  rule_cc: string | null;
+  rule_raw: string | null;
+  urgency: number | null;
+  source_book: string | null;
+  source_page: string | null;
+  source_reference: string | null;
+  verified: boolean;
+  created_at: string;
+}
+
+function UrgencyBadge({ urgency }: { urgency: number | null }) {
+  if (urgency === 3) {
+    return (
+      <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-red-100 text-red-700 border border-red-200">
+        U3 · Kritisch
+      </span>
+    );
+  }
+  if (urgency === 2) {
+    return (
+      <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200">
+        U2 · Belangrijk
+      </span>
+    );
+  }
+  return (
+    <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-green-50 text-green-700 border border-green-200">
+      U1 · Nice-to-know
+    </span>
+  );
+}
+
+function PendingRecordRow({
+  record,
+  authHeaders,
+  onApproved,
+  onDeleted,
+}: {
+  record: PendingCCRecord;
+  authHeaders: Record<string, string>;
+  onApproved: (id: number) => void;
+  onDeleted: (id: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [approveState, setApproveState] = useState<ActionState>("idle");
+  const [deleteState, setDeleteState] = useState<ActionState>("idle");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isUrgent = record.urgency === 3;
+
+  async function handleApprove() {
+    setApproveState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+        method: "PATCH",
+        headers: authHeaders,
+      });
+      if (res.ok) {
+        setApproveState("done");
+        setTimeout(() => onApproved(record.id), 800);
+      } else {
+        setApproveState("error");
+        setTimeout(() => setApproveState("idle"), 2000);
+      }
+    } catch {
+      setApproveState("error");
+      setTimeout(() => setApproveState("idle"), 2000);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleteState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+        method: "DELETE",
+        headers: authHeaders,
+      });
+      if (res.ok) {
+        setDeleteState("done");
+        setTimeout(() => onDeleted(record.id), 500);
+      } else {
+        setDeleteState("error");
+        setTimeout(() => setDeleteState("idle"), 2000);
+      }
+    } catch {
+      setDeleteState("error");
+      setTimeout(() => setDeleteState("idle"), 2000);
+    }
+  }
+
+  return (
+    <div className={`border rounded-sm overflow-hidden ${isUrgent ? "border-red-300 bg-red-50/30" : "border-border/60 bg-card"}`}>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-start gap-3 p-3 text-left hover:bg-muted/20 transition-colors"
+      >
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono font-medium text-foreground">
+              {record.pillar_code ?? "—"} · {record.subcategory ?? "—"}
+            </span>
+            <UrgencyBadge urgency={record.urgency} />
+            <span className="text-[10px] font-mono text-muted-foreground border border-border/50 px-1.5 py-0.5 rounded-sm">
+              {record.region_code}
+            </span>
+            <span className="text-[10px] font-mono text-muted-foreground">
+              {record.source_book} · p.{record.source_page}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground font-light truncate">
+            {record.rule_cc ? record.rule_cc.slice(0, 120) + (record.rule_cc.length > 120 ? "…" : "") : "—"}
+          </p>
+        </div>
+        <div className="shrink-0 pt-0.5">
+          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-border/30 space-y-3 animate-in fade-in duration-150">
+          {record.rule_raw && (
+            <div className="space-y-1">
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern)</p>
+              <p className="text-xs font-light text-muted-foreground italic bg-muted/30 rounded-sm px-2 py-1.5">{record.rule_raw}</p>
+            </div>
+          )}
+          {record.rule_cc && (
+            <div className="space-y-1">
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
+              <p className="text-xs font-light leading-relaxed bg-muted/30 rounded-sm px-2 py-1.5">{record.rule_cc}</p>
+            </div>
+          )}
+          <div className="text-[10px] font-mono text-muted-foreground space-x-4">
+            <span>ID: {record.id}</span>
+            <span>Bron: {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
+            <span>Toegevoegd: {new Date(record.created_at).toLocaleDateString()}</span>
+          </div>
+
+          {approveState === "done" ? (
+            <div className="flex items-center gap-2 text-xs text-green-700 font-mono p-2 bg-green-50 rounded-sm border border-green-200">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Goedgekeurd — record is nu verified: true.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-green-400/60 text-green-700 hover:bg-green-50"
+                disabled={approveState === "loading" || deleteState === "loading"}
+                onClick={handleApprove}
+              >
+                {approveState === "loading"
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <ThumbsUp className="w-3.5 h-3.5" />
+                }
+                Goedkeuren
+              </Button>
+
+              {!showDeleteConfirm ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs gap-1.5 border-red-300/60 text-red-600/70 hover:bg-red-50 hover:text-red-700"
+                  disabled={approveState === "loading" || deleteState === "loading"}
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Verwijderen
+                </Button>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs gap-1.5 border-red-500 bg-red-600 text-white hover:bg-red-700"
+                    disabled={deleteState === "loading"}
+                    onClick={handleDelete}
+                  >
+                    {deleteState === "loading"
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Trash2 className="w-3.5 h-3.5" />
+                    }
+                    Bevestig verwijdering
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Annuleren
+                  </Button>
+                </div>
+              )}
+
+              {approveState === "error" && <span className="text-xs text-red-600 font-mono">Goedkeuren mislukt.</span>}
+              {deleteState === "error" && <span className="text-xs text-red-600 font-mono">Verwijderen mislukt.</span>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<string, string>; refreshKey: number }) {
+  const [records, setRecords] = useState<PendingCCRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchPending = useCallback(async (p = 1) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols?page=${p}&limit=20`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json() as { records: PendingCCRecord[]; total: number; pages: number; page: number };
+        setRecords(data.records);
+        setTotal(data.total);
+        setTotalPages(data.pages ?? 1);
+        setPage(data.page ?? 1);
+      }
+    } catch { } finally {
+      setLoading(false);
+    }
+  }, [authHeaders]);
+
+  useEffect(() => { fetchPending(1); }, [fetchPending, refreshKey]);
+
+  function handleApproved(id: number) {
+    const newRecords = records.filter((r) => r.id !== id);
+    const newTotal = Math.max(0, total - 1);
+    setRecords(newRecords);
+    setTotal(newTotal);
+    if (newRecords.length === 0 && newTotal > 0) {
+      const targetPage = page > 1 ? page - 1 : 1;
+      fetchPending(targetPage);
+    }
+  }
+
+  function handleDeleted(id: number) {
+    const newRecords = records.filter((r) => r.id !== id);
+    const newTotal = Math.max(0, total - 1);
+    setRecords(newRecords);
+    setTotal(newTotal);
+    if (newRecords.length === 0 && newTotal > 0) {
+      const targetPage = page > 1 ? page - 1 : 1;
+      fetchPending(targetPage);
+    }
+  }
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+          <ClipboardList className="w-4 h-4" />
+          Wachtrij voor review
+          {total > 0 && (
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700 font-mono">
+              {total} in wachtrij
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground font-light">
+          Records die door de CC Screening Worker zijn opgeslagen staan hier klaar voor menselijke review.
+          Keur goed om ze zichtbaar te maken in de app, of verwijder ze bij twijfel.
+          Records met urgentie&nbsp;3 zijn rood gemarkeerd voor prioritaire beoordeling.
+        </p>
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-mono text-muted-foreground">
+            {loading ? "Laden…" : `${total} record${total !== 1 ? "s" : ""} in behandeling`}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs gap-1.5"
+            onClick={() => fetchPending(page)}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Vernieuwen
+          </Button>
+        </div>
+
+        {loading && records.length === 0 ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-sm" />)}
+          </div>
+        ) : records.length === 0 ? (
+          <div className="py-8 text-center">
+            <CheckCircle2 className="w-8 h-8 mx-auto text-green-400 mb-2" />
+            <p className="text-sm text-muted-foreground font-light">Geen records in behandeling. Alles is beoordeeld.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {records.map((r) => (
+              <PendingRecordRow
+                key={r.id}
+                record={r}
+                authHeaders={authHeaders}
+                onApproved={handleApproved}
+                onDeleted={handleDeleted}
+              />
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs"
+              disabled={page <= 1 || loading}
+              onClick={() => fetchPending(page - 1)}
+            >
+              ← Vorige
+            </Button>
+            <span className="text-xs font-mono text-muted-foreground px-2">
+              {page} / {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs"
+              disabled={page >= totalPages || loading}
+              onClick={() => fetchPending(page + 1)}
+            >
+              Volgende →
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [fragment, setFragment] = useState("");
   const [sourceBook, setSourceBook] = useState("DH");
@@ -713,6 +1060,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
   const [saveState, setSaveState] = useState<ActionState>("idle");
   const [savedId, setSavedId] = useState<number | null>(null);
   const [savedTranslations, setSavedTranslations] = useState<Record<string, string>>({});
+  const [pendingRefreshKey, setPendingRefreshKey] = useState(0);
 
   async function handleScreen() {
     if (!fragment.trim() || !sourcePage.trim()) return;
@@ -764,6 +1112,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
         setSavedId(data.id ?? null);
         setSavedTranslations(data.translations ?? {});
         setSaveState("done");
+        setPendingRefreshKey((k) => k + 1);
       } else {
         setSaveState("error");
       }
@@ -787,6 +1136,9 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
 
   return (
     <div className="space-y-6">
+      {/* Pending review queue */}
+      <PendingReviewPanel authHeaders={authHeaders} refreshKey={pendingRefreshKey} />
+
       {/* Input card */}
       <Card className="bg-card border-border">
         <CardHeader>

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
@@ -10,6 +10,16 @@ import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileMenuOpen]);
+
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
   const { activeRegion } = useActiveRegion();
@@ -72,7 +82,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {isMobileMenuOpen && (
         <div
           id="mobile-nav"
-          className="md:hidden fixed inset-0 top-[65px] bg-sidebar z-50 p-4 overflow-y-auto animate-in fade-in slide-in-from-top-4"
+          className="md:hidden fixed inset-0 top-[65px] bg-sidebar z-50 p-4 overflow-y-auto overscroll-contain animate-in fade-in slide-in-from-top-4"
         >
           <nav aria-label={t("nav.aria_label")} className="space-y-2">
             {navigation.map((item) => {

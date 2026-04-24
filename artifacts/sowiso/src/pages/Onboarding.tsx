@@ -3,7 +3,10 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { ArrowRight, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  ArrowRight, ArrowLeft, CheckCircle2, Loader2,
+  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane,
+} from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -59,7 +62,17 @@ const DRESS_OPTIONS = [
   { id: "country",      label_key: "onboarding.dress_country" },
 ];
 
-type Step = 1 | 2 | 3;
+const SPHERE_OPTIONS = [
+  { key: "business",             Icon: Briefcase,        label_key: "profile.sphere.business" },
+  { key: "gastronomy",           Icon: UtensilsCrossed,  label_key: "profile.sphere.gastronomy" },
+  { key: "arts_culture",         Icon: Palette,          label_key: "profile.sphere.arts_culture" },
+  { key: "music_entertainment",  Icon: Music2,           label_key: "profile.sphere.music_entertainment" },
+  { key: "formal_events",        Icon: Star,             label_key: "profile.sphere.formal_events" },
+  { key: "lifestyle_wellness",   Icon: Leaf,             label_key: "profile.sphere.lifestyle_wellness" },
+  { key: "travel_hospitality",   Icon: Plane,            label_key: "profile.sphere.travel_hospitality" },
+];
+
+type Step = 1 | 2 | 3 | 4;
 
 export default function Onboarding() {
   const { t } = useLanguage();
@@ -72,6 +85,7 @@ export default function Onboarding() {
   const [sports, setSports] = useState<string[]>([]);
   const [cuisine, setCuisine] = useState<string[]>([]);
   const [dressCode, setDressCode] = useState<string[]>([]);
+  const [spheres, setSpheres] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   function toggleArr(arr: string[], val: string, set: (v: string[]) => void) {
@@ -90,6 +104,7 @@ export default function Onboarding() {
           interests_sports: sports,
           interests_cuisine: cuisine,
           interests_dress_code: dressCode,
+          situational_interests: spheres,
           onboarding_completed: true,
         }),
       });
@@ -103,6 +118,7 @@ export default function Onboarding() {
     1: t("onboarding.step1_label"),
     2: t("onboarding.step2_label"),
     3: t("onboarding.step3_label"),
+    4: t("onboarding.step4_label"),
   };
 
   return (
@@ -110,7 +126,7 @@ export default function Onboarding() {
 
       {/* Progress dots */}
       <div className="flex justify-center gap-3">
-        {([1, 2, 3] as Step[]).map((s) => (
+        {([1, 2, 3, 4] as Step[]).map((s) => (
           <div
             key={s}
             className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -122,7 +138,7 @@ export default function Onboarding() {
 
       <div className="text-center space-y-1">
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          {t("onboarding.step_of", { current: step, total: 3 })} — {stepLabels[step]}
+          {t("onboarding.step_of", { current: step, total: 4 })} — {stepLabels[step]}
         </p>
       </div>
 
@@ -310,6 +326,57 @@ export default function Onboarding() {
 
           <div className="flex justify-between gap-3">
             <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(2)}>
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              {t("onboarding.back")}
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(4)}>
+                {t("onboarding.skip")}
+              </Button>
+              <Button
+                className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => setStep(4)}
+              >
+                {t("onboarding.next")}
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Social Spheres */}
+      {step === 4 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step4_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step4_subtitle")}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {SPHERE_OPTIONS.map(({ key, Icon, label_key }) => {
+              const selected = spheres.includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleArr(spheres, key, setSpheres)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all duration-200 ${
+                    selected
+                      ? "bg-primary/10 text-primary border-primary/35 font-medium ring-1 ring-primary/20"
+                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{t(label_key)}</span>
+                  {selected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0 ml-0.5" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(3)}>
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               {t("onboarding.back")}
             </Button>

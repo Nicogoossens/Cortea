@@ -37,6 +37,33 @@ const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
   "ja-JP": ja,
 };
 
+const COUNTRIES = [
+  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",
+  "Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
+  "Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei",
+  "Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada",
+  "Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica",
+  "Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic",
+  "Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia",
+  "Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada",
+  "Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India",
+  "Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan",
+  "Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya",
+  "Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali",
+  "Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco",
+  "Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands",
+  "New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman",
+  "Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines",
+  "Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia",
+  "Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia",
+  "Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia",
+  "Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka",
+  "Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand",
+  "Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu",
+  "Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan",
+  "Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe",
+];
+
 interface BehaviorProfile {
   listening_score: number;
   assertiveness_style: "assertive" | "passive" | "aggressive" | "passive_aggressive";
@@ -306,6 +333,7 @@ export default function Profile() {
   const [editingCountry, setEditingCountry] = useState(false);
   const [countryInput, setCountryInput] = useState("");
   const [countrySave, setCountrySave] = useState<SaveState>("idle");
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [objectivesSave, setObjectivesSave] = useState<SaveState>("idle");
   const [tagInputSports, setTagInputSports] = useState("");
   const [tagInputCuisine, setTagInputCuisine] = useState("");
@@ -933,21 +961,53 @@ export default function Profile() {
             </div>
             {editingCountry ? (
               <div className="flex items-center gap-2">
-                <Input
-                  value={countryInput}
-                  onChange={(e) => setCountryInput(e.target.value)}
-                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === "Enter") handleCountrySubmit();
-                    if (e.key === "Escape") { setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }
-                  }}
-                  placeholder="e.g. Belgium"
-                  className="flex-1 h-8 text-sm border-primary/40 focus:border-primary"
-                  autoFocus
-                />
-                <button onClick={handleCountrySubmit} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
+                <div className="relative flex-1">
+                  <Input
+                    value={countryInput}
+                    onChange={(e) => {
+                      setCountryInput(e.target.value);
+                      setCountryDropdownOpen(true);
+                    }}
+                    onFocus={() => setCountryDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 120)}
+                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") { setCountryDropdownOpen(false); handleCountrySubmit(); }
+                      if (e.key === "Escape") { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }
+                    }}
+                    placeholder="e.g. Belgium"
+                    className="h-8 text-sm border-primary/40 focus:border-primary w-full"
+                    autoFocus
+                  />
+                  {countryDropdownOpen && (() => {
+                    const q = countryInput.trim().toLowerCase();
+                    const filtered = q
+                      ? COUNTRIES.filter(c => c.toLowerCase().includes(q))
+                      : COUNTRIES;
+                    return filtered.length > 0 ? (
+                      <ul className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-sm border border-border bg-background shadow-md">
+                        {filtered.slice(0, 30).map(country => (
+                          <li key={country}>
+                            <button
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setCountryInput(country);
+                                setCountryDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+                            >
+                              {country}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null;
+                  })()}
+                </div>
+                <button onClick={() => { setCountryDropdownOpen(false); handleCountrySubmit(); }} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
                   <Check className="w-4 h-4" aria-hidden="true" />
                 </button>
-                <button onClick={() => { setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                <button onClick={() => { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>

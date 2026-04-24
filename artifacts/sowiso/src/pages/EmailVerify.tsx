@@ -72,7 +72,7 @@ export default function EmailVerify() {
       return;
     }
 
-    fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`)
+    fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`, { credentials: "include" })
       .then(async (res) => {
         const body = await res.json() as {
           message?: string;
@@ -80,7 +80,6 @@ export default function EmailVerify() {
           error?: string;
           user_id?: string;
           full_name?: string;
-          session_token?: string;
           is_admin?: boolean;
           language_code?: string;
           active_region?: string;

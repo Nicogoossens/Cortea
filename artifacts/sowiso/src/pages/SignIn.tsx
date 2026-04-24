@@ -49,6 +49,7 @@ export default function SignIn() {
     try {
       const res = await fetch(`${API_BASE}/api/auth/signin-password`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password }),
       });
@@ -59,7 +60,6 @@ export default function SignIn() {
         no_password?: boolean;
         user_id?: string;
         full_name?: string | null;
-        session_token?: string;
         is_admin?: boolean;
       };
 

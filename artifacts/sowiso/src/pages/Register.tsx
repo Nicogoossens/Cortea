@@ -114,6 +114,7 @@ export default function Register() {
 
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -123,7 +124,6 @@ export default function Register() {
         error?: string;
         user_id?: string;
         full_name?: string | null;
-        session_token?: string;
         is_admin?: boolean;
         dev_verification_url?: string;
       };
@@ -133,8 +133,8 @@ export default function Register() {
         return;
       }
 
-      // Password provided → immediately logged in
-      if (data.session_token && data.user_id) {
+      // Password provided → session cookie already set by server; login immediately
+      if (data.user_id) {
         login(data.user_id, {
           name: data.full_name ?? undefined,
           isAdmin: data.is_admin,

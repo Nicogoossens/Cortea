@@ -64,8 +64,8 @@ const CreateProfileBodySchema = z.object({
   gender_identity: z.string().optional().nullable(),
   gender_expression: z.string().optional().nullable(),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional(),
-  language_code: z.string().optional(),
-  active_region: z.string().optional(),
+  language_code: z.string().regex(/^[a-z]{2,3}$/).optional(),
+  active_region: z.string().regex(/^[A-Z]{2,3}$/).optional(),
 });
 
 /**
@@ -112,8 +112,8 @@ const UpdateProfileBodySchema = z.object({
   gender_identity: z.string().optional().nullable(),
   gender_expression: z.string().optional().nullable(),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional(),
-  language_code: z.string().optional(),
-  active_region: z.string().optional(),
+  language_code: z.string().regex(/^[a-z]{2,3}$/).optional(),
+  active_region: z.string().regex(/^[A-Z]{2,3}$/).optional(),
   subscription_tier: z.enum(["guest", "traveller", "ambassador"]).optional(),
   country_of_origin: z.string().max(100).optional().nullable(),
   objectives: z.array(z.enum(["business", "elite", "romantic", "world_traveller"])).optional(),

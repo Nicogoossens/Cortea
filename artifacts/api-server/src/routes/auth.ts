@@ -32,8 +32,8 @@ const RegisterBodySchema = z.object({
   gender_identity: z.string().max(50).optional(),
   locale: z.string().optional().default("en"),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional().default("casual"),
-  language_code: z.string().optional().default("en"),
-  active_region: z.string().optional().default("GB"),
+  language_code: z.string().regex(/^[a-z]{2,3}$/).optional().default("en"),
+  active_region: z.string().regex(/^[A-Z]{2,3}$/).optional().default("GB"),
   password: z.string().min(8).max(128).optional(),
 });
 

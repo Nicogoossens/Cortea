@@ -45,6 +45,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    try {
+      const privacyRaw = localStorage.getItem("sowiso_privacy_settings");
+      if (privacyRaw) {
+        const privacySettings = JSON.parse(privacyRaw) as { autoCleanup?: boolean };
+        if (privacySettings.autoCleanup) {
+          for (const key of Object.keys(localStorage)) {
+            if (key.startsWith("scenario_answer_") || key.startsWith("counsel_q_")) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      }
+    } catch {
+      // Privacy settings may not exist or be malformed — safe to ignore
+    }
     localStorage.removeItem(USER_ID_KEY);
     localStorage.removeItem(USER_NAME_KEY);
     localStorage.removeItem(SESSION_TOKEN_KEY);

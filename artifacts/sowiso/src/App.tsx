@@ -32,6 +32,10 @@ import Admin from "@/pages/Admin";
 import Membership from "@/pages/Membership";
 import ReplitCallback from "@/pages/ReplitCallback";
 import Mirror from "@/pages/Mirror";
+import Sensory from "@/pages/Sensory";
+import Navigator from "@/pages/Navigator";
+import InnerCircle from "@/pages/InnerCircle";
+import Privacy from "@/pages/Privacy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -176,6 +180,10 @@ function AppRouter() {
                   <Route path="/counsel" component={Counsel} />
                   <Route path="/situations" component={Situations} />
                   <Route path="/mirror" component={Mirror} />
+                  <Route path="/sensory" component={Sensory} />
+                  <Route path="/navigator" component={Navigator} />
+                  <Route path="/inner-circle" component={InnerCircle} />
+                  <Route path="/privacy" component={Privacy} />
                   <Route path="/membership" component={Membership} />
                   <Route component={NotFound} />
                 </Switch>
@@ -197,6 +205,10 @@ function AppRouter() {
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />
               <Route path="/mirror" component={Mirror} />
+              <Route path="/sensory" component={Sensory} />
+              <Route path="/navigator" component={Navigator} />
+              <Route path="/inner-circle" component={InnerCircle} />
+              <Route path="/privacy" component={Privacy} />
               <Route component={NotFound} />
             </Switch>
           </Shell>

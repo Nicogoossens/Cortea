@@ -53,7 +53,7 @@ async function main() {
          WHERE email = $2`,
         [passwordHash, ADMIN_EMAIL]
       );
-      console.log(`  Admin account ${ADMIN_EMAIL} updated (id=${user.id}): is_admin=true, email_verified=true, password=Start123.`);
+      console.log(`  Admin account ${ADMIN_EMAIL} updated (id=${user.id}): is_admin=true, email_verified=true, password=[set].`);
     } else {
       // Create full account — admin can log in immediately with password
       const placeholderId = "user_" + Array.from(
@@ -66,7 +66,7 @@ async function main() {
          VALUES ($1, $2, $3, true, 'ambassador', true, $4, 'nl', false)`,
         [placeholderId, ADMIN_EMAIL, ADMIN_FULL_NAME, passwordHash]
       );
-      console.log(`  Admin account created for ${ADMIN_EMAIL} (id=${placeholderId}) with password=Start123.`);
+      console.log(`  Admin account created for ${ADMIN_EMAIL} (id=${placeholderId}) with password=[set].`);
     }
   } finally {
     client.release();

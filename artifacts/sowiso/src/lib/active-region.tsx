@@ -183,17 +183,17 @@ export function useActiveRegion(): ActiveRegionContextValue {
 }
 
 /**
- * Renders a real Unicode emoji flag for the given ISO 3166-1 alpha-2 code.
- * Regional Indicator Symbol Letters are formed by offsetting from 'A' (U+1F1E6).
+ * Renders a country flag using the bundled flag-icons CSS library.
+ * No external CDN — SVGs are bundled locally with the app.
+ * className controls size via font-size (e.g. "text-xl", "text-4xl").
  */
 export function FlagEmoji({ code, className }: { code: string; className?: string }) {
-  const upper = code.toUpperCase().slice(0, 2);
-  const flag = [...upper]
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join("");
+  const lower = code.toLowerCase().slice(0, 2);
   return (
-    <span aria-hidden="true" className={className ?? "text-xl leading-none"}>
-      {flag}
-    </span>
+    <span
+      className={`fi fi-${lower} ${className ?? "text-xl"}`}
+      role="img"
+      aria-label={code.toUpperCase()}
+    />
   );
 }

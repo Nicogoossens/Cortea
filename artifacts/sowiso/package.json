@@ -78,6 +78,7 @@
   "dependencies": {
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
+    "flag-icons": "^7.5.0",
     "html-to-image": "^1.11.13",
     "i18next": "^26.0.4",
     "i18next-chained-backend": "^5.0.3",

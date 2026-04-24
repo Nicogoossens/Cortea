@@ -394,6 +394,126 @@ const PRIORITY_SEED = [
     }
   },
   {
+    region_code: "NL",
+    flag_emoji: "🇳🇱",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Netherlands",
+        core_value: "Directness, egalitarianism, and a deep respect for individual autonomy",
+        biggest_taboo: "Pretension, status-seeking, or any behaviour that sets oneself above others — the Dutch value of 'doe maar gewoon' (just act normal) is real and enforced socially",
+        dining_etiquette: "Dutch meals are practical and unpretentious. Going Dutch on the bill is entirely common and not impolite. Arrive at the agreed time. Compliment the food sincerely but without excess.",
+        language_notes: "Dutch directness is not rudeness — it is honesty expressed efficiently. English is spoken to a very high standard across the country. Plain language is valued over ornate phrasing.",
+        gift_protocol: "Flowers, quality chocolates, or a good bottle of wine. Bring something when invited to a home. Gifts are opened when received with genuine, measured appreciation.",
+        dress_code: "Neat, practical, and unpretentious. Business settings call for smart-casual. Excessive formality can read as performative. Cycle-friendly clothing is universally understood.",
+        dos: [
+          "Be punctual — time is organised and respected by all",
+          "Express your opinion directly and honestly — circumspection can be read as evasion",
+          "Accept that the Dutch will be equally direct with you — take it as a compliment",
+          "Appreciate cycling culture — it is a source of identity, not merely transport",
+          "Split the bill without self-consciousness — it is simply practical and fair"
+        ],
+        donts: [
+          "Do not try to appear more important than you are — status-projection is poorly received",
+          "Avoid small talk that lacks substance — the Dutch prefer genuine conversation",
+          "Do not be late without prior notice — it is considered disrespectful of others' time",
+          "Avoid confusing the Netherlands with Holland — Holland is only two provinces",
+          "Do not mistake directness for hostility — it is simply honest and efficient communication"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "CA",
+    flag_emoji: "🇨🇦",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Canada",
+        core_value: "Inclusive civility, multicultural respect, and quietly confident pragmatism",
+        biggest_taboo: "Conflating Canada with the United States — Canadians have a distinct national identity and are rightly proud of the difference",
+        dining_etiquette: "Meals are relaxed and inclusive. Tipping 15–20% is standard. Regional food identity is strong — poutine, maple, and seafood by province. Being a gracious guest matters more than elaborate protocol.",
+        language_notes: "English and French are both official languages. In Québec, French is not optional — it is essential and deeply valued. Across Canada, polite and inclusive language is the baseline expectation.",
+        gift_protocol: "Local produce, quality wine or spirits, or artisanal items. Bring something when invited to someone's home. Gifts are opened warmly and immediately.",
+        dress_code: "Practical and context-appropriate. Business dress is professional but not stiff. Outdoor and climate-appropriate clothing is universally accepted. Showing you understand the environment signals cultural awareness.",
+        dos: [
+          "Acknowledge both official languages — French in Québec especially is non-negotiable",
+          "Be genuinely inclusive in conversation — Canada's diversity is a point of national pride",
+          "Queue correctly and patiently — it is a social expectation, not just politeness",
+          "Appreciate the distinct regional cultures: Québec, the Maritimes, the West Coast, and the Prairies are all meaningfully different",
+          "Say sorry when you mean it — and understand that Canadians often apologise reflexively without admitting fault"
+        ],
+        donts: [
+          "Never assume Canada is simply a quieter version of the United States",
+          "Avoid making generalisations about Canadian culture — it is genuinely and meaningfully diverse",
+          "Do not ignore French in Québec — speaking only English there is considered dismissive",
+          "Avoid discussing hockey as if it is the only cultural touchstone — it is important, but Canada contains multitudes",
+          "Do not mistake Canadian politeness for agreement — disagreement is simply expressed more carefully"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "PT",
+    flag_emoji: "🇵🇹",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "Portugal",
+        core_value: "Warm hospitality, saudade (a bittersweet longing), and understated pride in a rich maritime heritage",
+        biggest_taboo: "Confusing Portugal with Spain, or assuming Portuguese culture is derivative of its neighbour — the Portuguese have a fiercely distinct national identity",
+        dining_etiquette: "Meals are generous, unhurried, and deeply social. Bread and olives arrive first but are charged separately. Tipping 10% is appreciated. Never rush the table — lingering over wine and conversation is the norm.",
+        language_notes: "Portuguese is its own language with its own rhythms — not a dialect of Spanish. Brazilians speak Portuguese too, but the varieties differ. A few words of Portuguese are always warmly received.",
+        gift_protocol: "Quality wine (Douro, Alentejo), local pastries, or artisanal goods. Bring something when invited to a home. Gifts are received graciously and opened with warmth.",
+        dress_code: "Smart and understated. Business settings are professional without being stiff. Coastal areas are more relaxed. Looking presentable signals respect for the occasion.",
+        dos: [
+          "Acknowledge Portugal's distinct identity — its language, history, and culture are its own",
+          "Learn a few phrases in Portuguese — it will be noticed and appreciated",
+          "Embrace the slower pace of meals and social interaction — saudade applies to time too",
+          "Show genuine curiosity about fado music, the Age of Discovery, and Portugal's global cultural reach",
+          "Accept hospitality generously — the Portuguese take great pride in making guests feel at home"
+        ],
+        donts: [
+          "Never refer to Portuguese as 'Spanish with an accent' or suggest the two cultures are interchangeable",
+          "Avoid rushing in any social or professional setting — patience is a virtue here",
+          "Do not underestimate Portugal's global historical significance — it was the first major maritime empire",
+          "Avoid comparing Portugal unfavourably to Spain in any social context",
+          "Do not decline food or drink generously offered without a clear and respectful explanation"
+        ]
+      }
+    }
+  },
+  {
+    region_code: "ZA",
+    flag_emoji: "🇿🇦",
+    is_published: true,
+    content: {
+      "en-GB": {
+        region_name: "South Africa",
+        core_value: "Ubuntu — 'I am because we are' — a profound sense of shared humanity, resilience, and community",
+        biggest_taboo: "Ignoring or making light of South Africa's complex history — race, inequality, and transformation are ever-present realities that must be navigated with genuine care and awareness",
+        dining_etiquette: "The braai (barbecue) is a sacred social institution — accept every invitation. Meals are generous and communal. Diverse cuisines coexist — Zulu, Cape Malay, Afrikaner, Indian. Show curiosity and appreciation for all of them.",
+        language_notes: "South Africa has 11 official languages. English is the language of business but Zulu, Xhosa, Afrikaans, and Sotho are widely spoken. Learning a greeting in Zulu or Xhosa ('Sawubona', 'Molo') lands extremely well.",
+        gift_protocol: "Local wine (the Cape Winelands are world-class), craft spirits, or quality regional produce. Gifts are received warmly. Bring something for the host when invited to a home.",
+        dress_code: "Smart casual in most professional settings. Formal in corporate and legal environments. Outdoor and climate-appropriate dress is entirely normal given South Africa's varied geography and sunshine.",
+        dos: [
+          "Embrace the concept of Ubuntu — collaborative, community-minded behaviour is genuinely valued",
+          "Learn a greeting in at least one African language — the effort is always remembered",
+          "Accept a braai invitation without hesitation — it is one of the most important social gestures",
+          "Show genuine interest in South Africa's complex and extraordinary history",
+          "Appreciate the remarkable diversity of culture, cuisine, landscape, and language"
+        ],
+        donts: [
+          "Do not reduce South Africa to safari and wildlife — it is a dynamic, complex, modern nation",
+          "Avoid making careless remarks about race, politics, or the legacy of apartheid",
+          "Do not assume all South Africans are alike — the country contains enormous cultural, linguistic, and regional diversity",
+          "Avoid expressing surprise at South Africa's sophistication — it is a well-developed country with world-class cities",
+          "Do not ignore the braai — declining without good reason is genuinely considered antisocial"
+        ]
+      }
+    }
+  },
+  {
     region_code: "AE",
     flag_emoji: "🇦🇪",
     is_published: true,

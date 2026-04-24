@@ -46,6 +46,7 @@ export const COMPASS_REGIONS: CompassRegion[] = [
 export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set([
   "GB", "AU", "CN", "US", "JP", "DE", "IT", "FR", "BE", "CH",
   "BR", "ES", "SG", "IN", "MX", "AE", "CO",
+  "NL", "CA", "PT", "ZA",
 ]);
 
 export function isRegionActive(code: RegionCode): boolean {

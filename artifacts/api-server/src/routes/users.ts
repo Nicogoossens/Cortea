@@ -288,6 +288,26 @@ const PrivacySettingsSchema = z.object({
   autoCleanup: z.boolean(),
 });
 
+router.delete("/users/profile/privacy", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    await db.update(usersTable)
+      .set({ privacy_settings: null })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ privacy_settings: null });
+  } catch (err) {
+    req.log.error({ err }, "Failed to reset privacy settings");
+    return res.status(500).json({ message: "A difficulty arose while resetting your privacy settings." });
+  }
+});
+
 router.patch("/users/profile/privacy", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);

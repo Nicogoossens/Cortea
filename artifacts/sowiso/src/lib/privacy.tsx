@@ -54,6 +54,13 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
 
   const hydratedRef = useRef<string | null>(null);
 
+  // Reset in-memory settings to defaults whenever the user signs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSettings({ ...DEFAULT_SETTINGS });
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (!isAuthenticated || !userId) {
       hydratedRef.current = null;

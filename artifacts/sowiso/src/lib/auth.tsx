@@ -45,8 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    const currentUserId = localStorage.getItem(USER_ID_KEY);
+    const currentToken = localStorage.getItem(SESSION_TOKEN_KEY);
+
+    // Honour autoCleanup before wiping the privacy key
     try {
-      const privacyRaw = localStorage.getItem("sowiso_privacy_settings");
+      const privacyKey = currentUserId
+        ? `sowiso_privacy_settings_${currentUserId}`
+        : "sowiso_privacy_settings";
+      const privacyRaw = localStorage.getItem(privacyKey);
       if (privacyRaw) {
         const privacySettings = JSON.parse(privacyRaw) as { autoCleanup?: boolean };
         if (privacySettings.autoCleanup) {
@@ -60,6 +67,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Privacy settings may not exist or be malformed — safe to ignore
     }
+
+    // Clear privacy settings from localStorage so the next sign-in re-fetches from the server
+    if (currentUserId) {
+      localStorage.removeItem(`sowiso_privacy_settings_${currentUserId}`);
+    }
+    localStorage.removeItem("sowiso_privacy_settings");
+
+    // Fire-and-forget: reset privacy_settings to null on the server
+    if (currentToken) {
+      const apiBase = (import.meta as { env: Record<string, string> }).env.VITE_API_BASE_URL ?? "";
+      fetch(`${apiBase}/api/users/profile/privacy`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${currentToken}` },
+      }).catch(() => {});
+    }
+
     localStorage.removeItem(USER_ID_KEY);
     localStorage.removeItem(USER_NAME_KEY);
     localStorage.removeItem(SESSION_TOKEN_KEY);

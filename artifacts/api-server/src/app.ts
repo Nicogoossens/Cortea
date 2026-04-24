@@ -16,17 +16,24 @@ const app: Express = express();
 
 const REPLIT_DEV_DOMAIN = (process.env.REPLIT_DEV_DOMAIN ?? "").toLowerCase().trim();
 
+function buildAllowedOrigins(): Set<string> {
+  const origins = new Set<string>();
+  if (REPLIT_DEV_DOMAIN) {
+    origins.add(`https://${REPLIT_DEV_DOMAIN}`);
+  }
+  const extra = (process.env.CORS_ALLOWED_ORIGIN ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  for (const o of extra) origins.add(o);
+  return origins;
+}
+
+const ALLOWED_ORIGINS = buildAllowedOrigins();
+
 function isAllowedOrigin(origin: string | undefined): boolean {
   if (!origin) return false;
-  let hostname: string;
-  try {
-    hostname = new URL(origin).hostname.toLowerCase();
-  } catch {
-    return false;
-  }
-  if (hostname.endsWith(".replit.app") || hostname === "replit.app") return true;
-  if (REPLIT_DEV_DOMAIN && (hostname === REPLIT_DEV_DOMAIN || hostname.endsWith(`.${REPLIT_DEV_DOMAIN}`))) return true;
-  return false;
+  return ALLOWED_ORIGINS.has(origin.toLowerCase());
 }
 
 const authLimiter = rateLimit({

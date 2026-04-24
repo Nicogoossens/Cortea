@@ -246,7 +246,6 @@ router.get("/auth/redeem", (req: Request, res: Response) => {
   setSessionCookie(res, entry.token);
 
   res.json({
-    token: entry.token,
     userId: entry.userId,
     fullName: entry.fullName,
     isAdmin: entry.isAdmin,

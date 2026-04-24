@@ -22,14 +22,14 @@ export default function ReplitCallback() {
       return;
     }
 
-    // Exchange the one-time code for a session token server-side.
-    // The session token is never placed in a URL parameter.
-    fetch(`${API_BASE}/api/auth/redeem?code=${encodeURIComponent(code)}`)
+    // Exchange the one-time code for a session cookie server-side.
+    // The code is single-use; the session is stored in an HttpOnly cookie.
+    fetch(`${API_BASE}/api/auth/redeem?code=${encodeURIComponent(code)}`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then(async (data: { token: string; userId: string; fullName: string | null; isAdmin: boolean }) => {
-        // Check onboarding status using the fresh token before storing it in context
+      .then(async (data: { userId: string; fullName: string | null; isAdmin: boolean }) => {
+        // Check onboarding status using the session cookie that was just set
         const profileRes = await fetch(`${API_BASE}/api/users/profile`, {
-          headers: { Authorization: `Bearer ${data.token}` },
+          credentials: "include",
         });
         const profile = profileRes.ok ? await profileRes.json() as {
           onboarding_completed?: boolean;

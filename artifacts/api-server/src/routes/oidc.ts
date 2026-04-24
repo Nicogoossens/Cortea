@@ -4,37 +4,14 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { redeemCodes, pruneExpiredCodes, issueRedeemCode } from "../lib/redeem-codes";
 
 const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
 const OIDC_COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
-const REDEEM_CODE_TTL = 60 * 1000; // 60 seconds
 
 const router: IRouter = Router();
 
 let oidcConfigCache: oidc.Configuration | null = null;
-
-/**
- * Short-lived one-time redemption codes issued after a successful OIDC callback.
- * The session token is NEVER placed in a URL query parameter. Instead the
- * frontend exchanges this opaque code for the token via POST /api/auth/redeem,
- * which deletes the code immediately after use.
- */
-interface RedeemEntry {
-  token: string;
-  userId: string;
-  fullName: string | null;
-  isAdmin: boolean;
-  expiresAt: number;
-}
-const redeemCodes = new Map<string, RedeemEntry>();
-
-// Prune expired codes lazily to avoid memory leaks
-function pruneExpiredCodes() {
-  const now = Date.now();
-  for (const [code, entry] of redeemCodes) {
-    if (entry.expiresAt <= now) redeemCodes.delete(code);
-  }
-}
 
 async function getOidcConfig(): Promise<oidc.Configuration> {
   if (!oidcConfigCache) {
@@ -228,14 +205,11 @@ router.get("/callback", async (req: Request, res: Response) => {
     const user = await upsertSowisoUser(claims as unknown as Record<string, unknown>);
 
     // Issue a short-lived one-time redemption code — session token stays server-side.
-    pruneExpiredCodes();
-    const redeemCode = randomBytes(16).toString("hex");
-    redeemCodes.set(redeemCode, {
+    const redeemCode = issueRedeemCode({
       token: user.session_token!,
       userId: user.id,
       fullName: user.full_name ?? null,
       isAdmin: user.is_admin ?? false,
-      expiresAt: Date.now() + REDEEM_CODE_TTL,
     });
 
     res.redirect(`${origin}${returnTo}?code=${redeemCode}`);

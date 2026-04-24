@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage, type SupportedLocale, ALL_LOCALES } from "@/lib/i18n";
 import { useActiveRegion, type RegionCode, COMPASS_REGIONS } from "@/lib/active-region";
 import { useAuth } from "@/lib/auth";
-import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -62,6 +62,8 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null);
 
   function update(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -82,11 +84,10 @@ export default function Register() {
     if (isNaN(yr) || yr < 1900 || yr > currentYear - 13) {
       return t("register.error_birth_year_invalid");
     }
-    if (!form.password || form.password.length < 8) {
-      return t("register.error_password");
-    }
-    if (form.password !== form.password_confirm) {
-      return t("register.error_password_mismatch");
+    // Password is optional — but if entered, validate it
+    if (form.password) {
+      if (form.password.length < 8) return t("register.error_password");
+      if (form.password !== form.password_confirm) return t("register.error_password_mismatch");
     }
     return null;
   }
@@ -100,48 +101,52 @@ export default function Register() {
 
     try {
       const baseLang = locale.split("-")[0];
+      const body: Record<string, unknown> = {
+        email: form.email.trim(),
+        full_name: form.full_name.trim(),
+        birth_year: parseInt(form.birth_year, 10),
+        gender_identity: form.gender_identity || undefined,
+        locale: baseLang,
+        language_code: baseLang,
+        active_region: activeRegion,
+      };
+      if (form.password) body.password = form.password;
+
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email.trim(),
-          full_name: form.full_name.trim(),
-          birth_year: parseInt(form.birth_year, 10),
-          gender_identity: form.gender_identity || undefined,
-          locale: baseLang,
-          language_code: baseLang,
-          active_region: activeRegion,
-          password: form.password,
-        }),
+        body: JSON.stringify(body),
       });
 
-      const body = await res.json() as {
+      const data = await res.json() as {
         message?: string;
         error?: string;
         user_id?: string;
         full_name?: string | null;
         session_token?: string;
         is_admin?: boolean;
+        dev_verification_url?: string;
       };
 
       if (!res.ok) {
-        setError(body.error ?? t("common.error"));
+        setError(data.error ?? t("common.error"));
         return;
       }
 
-      // If we got a session_token back, the account is immediately activated
-      if (body.session_token && body.user_id) {
-        login(body.user_id, {
-          name: body.full_name ?? undefined,
-          sessionToken: body.session_token,
-          isAdmin: body.is_admin,
+      // Password provided → immediately logged in
+      if (data.session_token && data.user_id) {
+        login(data.user_id, {
+          name: data.full_name ?? undefined,
+          sessionToken: data.session_token,
+          isAdmin: data.is_admin,
         });
         navigate("/onboarding");
         return;
       }
 
-      // Fallback: navigate to sign-in
-      navigate("/signin");
+      // No password → magic-link dispatched, show confirmation
+      if (data.dev_verification_url) setDevVerifyUrl(data.dev_verification_url);
+      setSent(true);
     } catch {
       setError(t("common.error"));
     } finally {
@@ -149,7 +154,40 @@ export default function Register() {
     }
   }
 
-  const formComplete = form.email.trim() && form.full_name.trim() && form.birth_year && form.password && form.password_confirm;
+  const formComplete = form.email.trim() && form.full_name.trim() && form.birth_year;
+
+  if (sent) {
+    return (
+      <div className="max-w-md mx-auto space-y-10 animate-in fade-in duration-500 py-8">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-primary/5 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-8 h-8 text-primary" aria-hidden="true" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("register.check_email")}</h1>
+          <p className="text-muted-foreground text-lg font-light leading-relaxed">
+            {t("register.sent_to")} <span className="font-medium text-foreground">{form.email}</span>. {t("register.check_spam")}
+          </p>
+        </div>
+        {devVerifyUrl && (
+          <div className="border border-amber-300/60 bg-amber-50/60 rounded-sm p-5 space-y-3">
+            <div className="flex items-center gap-2 text-amber-700">
+              <FlaskConical className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span className="text-xs font-mono uppercase tracking-widest font-semibold">{t("auth.dev_mode")}</span>
+            </div>
+            <p className="text-xs text-amber-700/80 font-light">{t("auth.dev_no_smtp_register")}</p>
+            <Link href={devVerifyUrl.replace(/^https?:\/\/[^/]+/, "")}>
+              <Button variant="outline" size="sm" className="w-full font-mono text-xs border-amber-400/60 text-amber-800 hover:bg-amber-100/60">
+                {t("auth.dev_complete_verification")}
+              </Button>
+            </Link>
+          </div>
+        )}
+        <p className="text-center text-sm text-muted-foreground">
+          <Link href="/" className="text-primary hover:underline underline-offset-2">{t("register.return_home")}</Link>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto space-y-10 animate-in fade-in duration-500 py-8">
@@ -241,7 +279,8 @@ export default function Register() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-foreground tracking-wide block">
-                {t("register.password_label")} <span className="text-destructive" aria-hidden="true">*</span>
+                {t("register.password_label")}
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground/60">(optioneel)</span>
               </label>
               <div className="relative">
                 <Input
@@ -253,7 +292,6 @@ export default function Register() {
                   onChange={(e) => update("password", e.target.value)}
                   className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
                   disabled={loading}
-                  required
                 />
                 <button
                   type="button"
@@ -264,34 +302,38 @@ export default function Register() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground/60 font-light">
+                Stel nu een wachtwoord in om direct in te loggen, of gebruik een verificatielink per e-mail.
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password_confirm" className="text-sm font-medium text-foreground tracking-wide block">
-                {t("register.password_confirm_label")} <span className="text-destructive" aria-hidden="true">*</span>
-              </label>
-              <div className="relative">
-                <Input
-                  id="password_confirm"
-                  type={showConfirm ? "text" : "password"}
-                  autoComplete="new-password"
-                  placeholder="herhaal wachtwoord"
-                  value={form.password_confirm}
-                  onChange={(e) => update("password_confirm", e.target.value)}
-                  className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
-                  disabled={loading}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {form.password && (
+              <div className="space-y-2">
+                <label htmlFor="password_confirm" className="text-sm font-medium text-foreground tracking-wide block">
+                  {t("register.password_confirm_label")} <span className="text-destructive" aria-hidden="true">*</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password_confirm"
+                    type={showConfirm ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="herhaal wachtwoord"
+                    value={form.password_confirm}
+                    onChange={(e) => update("password_confirm", e.target.value)}
+                    className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
+                    tabIndex={-1}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <p className="text-sm text-destructive border border-destructive/30 rounded-sm px-4 py-2 bg-destructive/5" role="alert">
@@ -311,8 +353,10 @@ export default function Register() {
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
                   {t("register.sending")}
                 </>
-              ) : (
+              ) : form.password ? (
                 t("register.submit")
+              ) : (
+                <><Send className="w-4 h-4 mr-2" aria-hidden="true" />{t("register.submit")}</>
               )}
             </Button>
 

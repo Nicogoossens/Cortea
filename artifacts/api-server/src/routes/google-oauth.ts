@@ -15,31 +15,12 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { issueRedeemCode } from "../lib/redeem-codes";
 
 const GOOGLE_ISSUER = "https://accounts.google.com";
 const COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
-const REDEEM_CODE_TTL = 60 * 1000; // 60 seconds
 
 const router: IRouter = Router();
-
-let googleConfigCache: oidc.Configuration | null = null;
-
-interface RedeemEntry {
-  token: string;
-  userId: string;
-  fullName: string | null;
-  isAdmin: boolean;
-  expiresAt: number;
-}
-
-const redeemCodes = new Map<string, RedeemEntry>();
-
-function pruneExpiredCodes() {
-  const now = Date.now();
-  for (const [code, entry] of redeemCodes) {
-    if (entry.expiresAt <= now) redeemCodes.delete(code);
-  }
-}
 
 function isGoogleConfigured(): boolean {
   return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
@@ -235,14 +216,11 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
 
     const user = await upsertGoogleUser(claims as unknown as Record<string, unknown>);
 
-    pruneExpiredCodes();
-    const redeemCode = randomBytes(16).toString("hex");
-    redeemCodes.set(redeemCode, {
+    const redeemCode = issueRedeemCode({
       token: user.session_token!,
       userId: user.id,
       fullName: user.full_name ?? null,
       isAdmin: user.is_admin ?? false,
-      expiresAt: Date.now() + REDEEM_CODE_TTL,
     });
 
     return res.redirect(`${origin}${returnTo}?code=${redeemCode}`);

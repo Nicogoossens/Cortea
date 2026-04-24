@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft, Briefcase, Globe, Star, User } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { LandingLayout } from "@/components/layout/LandingLayout";
@@ -201,14 +201,19 @@ export default function Welcome() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body" },
-                { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body"      },
-                { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body"      },
-                { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body"     },
-              ].map(({ headingKey, bodyKey }) => (
-                <div key={headingKey} className="space-y-1.5 px-5 py-4 rounded-sm border border-border/20 bg-card/40">
-                  <h3 className="font-serif text-sm text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
-                  <p className="text-xs text-muted-foreground font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
+                { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, accent: "text-amber-600/70 bg-amber-500/10" },
+                { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,      accent: "text-sky-600/70   bg-sky-500/10"   },
+                { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,       accent: "text-violet-600/70 bg-violet-500/10" },
+                { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,       accent: "text-emerald-600/70 bg-emerald-500/10" },
+              ].map(({ headingKey, bodyKey, Icon, accent }) => (
+                <div key={headingKey} className="flex gap-3.5 items-start px-5 py-4 rounded-sm border border-border/20 bg-card/40">
+                  <span className={`mt-0.5 shrink-0 flex items-center justify-center w-7 h-7 rounded-full ${accent}`} aria-hidden="true">
+                    <Icon className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="font-serif text-sm text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
+                    <p className="text-xs text-muted-foreground font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
+                  </div>
                 </div>
               ))}
             </div>

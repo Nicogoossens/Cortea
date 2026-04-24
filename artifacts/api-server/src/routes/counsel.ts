@@ -1,5 +1,8 @@
 import { Router } from "express";
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
+import { db, counselQualityLogTable, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
@@ -134,6 +137,45 @@ If a domain is specified, focus your guidance there. If the situation is ambiguo
     }
     console.error("Counsel AI error:", err);
     res.status(500).json({ error: "The mentor is unavailable. Please try again shortly." });
+  }
+});
+
+const LogQualitySchema = z.object({
+  domain: z.string().min(1).max(60),
+  score: z.number().min(1).max(10),
+});
+
+router.post("/counsel/log-quality", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Authentication required." });
+  }
+  const token = authHeader.slice(7).trim();
+  const [user] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.session_token, token))
+    .limit(1);
+  if (!user) {
+    return res.status(401).json({ message: "Invalid session." });
+  }
+
+  const parsed = LogQualitySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: "domain and score (1-10) are required." });
+  }
+
+  const { domain, score } = parsed.data;
+  try {
+    await db.insert(counselQualityLogTable).values({
+      user_id: user.id,
+      domain,
+      score,
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Failed to log counsel quality:", err);
+    return res.status(500).json({ message: "Could not log counsel interaction." });
   }
 });
 

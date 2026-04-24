@@ -24,6 +24,16 @@ const DOMAIN_KEYS = [
 
 type DomainKey = typeof DOMAIN_KEYS[number];
 
+const DOMAIN_KEY_TO_LOG_DOMAIN: Record<DomainKey, string> = {
+  "counsel.domains.dining":           "gastronomy",
+  "counsel.domains.introductions":    "eloquence",
+  "counsel.domains.dress_code":       "dress_code",
+  "counsel.domains.gifting":          "business",
+  "counsel.domains.digital_protocol": "business",
+  "counsel.domains.hosting":          "formal_events",
+  "counsel.domains.apologies":        "eloquence",
+};
+
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
 const BASIC_FREE_DOMAINS: DomainKey[] = ["counsel.domains.dining"];
@@ -52,7 +62,9 @@ function incrementStoredCount(userId: string | null): void {
 export default function Counsel() {
   const { t, locale } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const { result: qualityResult, checking: qualityChecking, check: checkQuality, reset: resetQuality } = useRegisterQuality(locale);
+  const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
+  const logDomain = selectedDomain ? DOMAIN_KEY_TO_LOG_DOMAIN[selectedDomain] : undefined;
+  const { result: qualityResult, checking: qualityChecking, check: checkQuality, reset: resetQuality } = useRegisterQuality(locale, logDomain);
   const { data: profile } = useGetProfile();
   const { userId, isAuthenticated } = useAuth();
   const search = useSearch();
@@ -73,7 +85,6 @@ export default function Counsel() {
   const basicLimitReached = hasBasicAccess && questionsRemaining === 0;
 
   const [query, setQuery] = useState("");
-  const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +137,21 @@ export default function Counsel() {
       if (hasBasicAccess) {
         incrementStoredCount(userId ?? null);
         setQuestionCount((c) => c + 1);
+      }
+
+      // Log counsel quality for use-case readiness computation (fire-and-forget)
+      if (qualityResult && logDomain) {
+        const token = localStorage.getItem("sowiso_session_token");
+        if (token) {
+          fetch(`${API_BASE}/api/counsel/log-quality`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({ domain: logDomain, score: qualityResult.score }),
+          }).catch(() => {});
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));

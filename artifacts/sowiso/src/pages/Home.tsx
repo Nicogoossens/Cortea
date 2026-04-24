@@ -2,8 +2,9 @@ import { Link } from "wouter";
 import { useGetProfile, useGetNobleScore, useGetPillarProgress, useCreateProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X, MapPin } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
@@ -11,14 +12,41 @@ import { LockOverlay } from "@/components/LockOverlay";
 
 const WELCOME_DURATION_MS = 7000;
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
+interface MiniUseCase {
+  id: number;
+  slug: string;
+  title: string;
+  flag_emoji: string;
+  formality_level: string;
+  readiness_score: number | null;
+}
+
 export default function Home() {
   const { t } = useLanguage();
-  const { userId, isAuthenticated } = useAuth();
+  const { userId, isAuthenticated, getAuthHeaders } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
 
   const createProfile = useCreateProfile();
+
+  const { data: useCasesShortlist } = useQuery<MiniUseCase[]>({
+    queryKey: ["use-cases-home", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/api/use-cases`, {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) return [];
+      const all: MiniUseCase[] = await res.json();
+      return all
+        .filter(uc => uc.readiness_score !== null)
+        .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0))
+        .slice(0, 3);
+    },
+  });
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
@@ -299,6 +327,48 @@ export default function Home() {
 
         </div>
       </div>
+
+      {/* ── Your situations shortcut row ── */}
+      {useCasesShortlist && useCasesShortlist.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h2 className="font-serif text-2xl flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary/70" aria-hidden="true" />
+              Your situations
+            </h2>
+            <Link href="/use-cases" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {useCasesShortlist.map((uc) => {
+              const score = uc.readiness_score ?? 0;
+              const getColor = (s: number) => s >= 75 ? "#16a34a" : s >= 50 ? "#ca8a04" : s >= 25 ? "#ea580c" : "#dc2626";
+              return (
+                <Link key={uc.id} href="/use-cases">
+                  <Card className="group border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl flex-shrink-0">{uc.flag_emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium leading-snug group-hover:text-primary transition-colors truncate">{uc.title}</div>
+                          <div className="text-xs text-muted-foreground capitalize mt-0.5">{uc.formality_level.replace(/_/g, " ")}</div>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <span className="text-sm font-semibold" style={{ color: getColor(score) }}>{score}%</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-full transition-all duration-700 rounded-full" style={{ width: `${score}%`, backgroundColor: getColor(score) }} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

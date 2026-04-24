@@ -12,6 +12,8 @@ import oidcRouter from "./oidc";
 import adminRouter from "./admin";
 import subscriptionRouter from "./subscription";
 import registerQualityRouter from "./register-quality";
+import useCasesRouter from "./use_cases";
+import mirrorLogRouter from "./mirror-log";
 
 const router: IRouter = Router();
 
@@ -28,5 +30,7 @@ router.use(detectRegionRouter);
 router.use(adminRouter);
 router.use(subscriptionRouter);
 router.use(registerQualityRouter);
+router.use(useCasesRouter);
+router.use(mirrorLogRouter);
 
 export default router;

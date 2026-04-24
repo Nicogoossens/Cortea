@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
-  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane, Layers,
+  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane, Layers, MapPin, ArrowRight,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
@@ -23,6 +23,7 @@ import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels"
 import { useAuth } from "@/lib/auth";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -87,6 +88,23 @@ interface EnrichedLogEntry {
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+interface UseCaseWithRating {
+  id: number;
+  slug: string;
+  title: string;
+  flag_emoji: string;
+  formality_level: string;
+  domain_tags: string[];
+  primary_tool: string;
+  readiness_score: number | null;
+  component_scores: {
+    atelier: number | null;
+    counsel: number | null;
+    mirror: number | null;
+    compass: number | null;
+  } | null;
+}
 
 const AMBITION_LEVELS: { key: string; labelKey: string; descKey: string }[] = [
   { key: "casual",       labelKey: "ambition.casual.label",       descKey: "ambition.casual.desc" },
@@ -321,6 +339,18 @@ export default function Profile() {
   const { data: nobleScore, isLoading: scoreLoading } = useGetNobleScore({ query: { queryKey: getGetNobleScoreQueryKey() } });
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
+
+  const { data: useCasesData } = useQuery<UseCaseWithRating[]>({
+    queryKey: ["use-cases-profile", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/api/use-cases`, {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
   const logs = rawLogs as EnrichedLogEntry[] | undefined;
 
   async function patchProfile(
@@ -1133,6 +1163,101 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Use Case Readiness ── */}
+      {useCasesData && useCasesData.length > 0 && (() => {
+        const sorted = [...useCasesData]
+          .filter(uc => uc.readiness_score !== null)
+          .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0));
+        const top3 = sorted.slice(0, 3);
+        const focus = sorted[sorted.length - 1];
+
+        if (top3.length === 0) return null;
+
+        const getColor = (s: number) => {
+          if (s >= 75) return "#16a34a";
+          if (s >= 50) return "#ca8a04";
+          if (s >= 25) return "#ea580c";
+          return "#dc2626";
+        };
+
+        const SmallCircle = ({ score }: { score: number }) => {
+          const size = 44;
+          const radius = (size - 6) / 2;
+          const circumference = 2 * Math.PI * radius;
+          return (
+            <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+              <svg width={size} height={size} className="-rotate-90">
+                <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="currentColor" strokeWidth={3} className="text-muted/30" />
+                <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={getColor(score)} strokeWidth={3}
+                  strokeDasharray={circumference} strokeDashoffset={circumference - (score / 100) * circumference}
+                  strokeLinecap="round" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold" style={{ color: getColor(score) }}>
+                {score}%
+              </span>
+            </div>
+          );
+        };
+
+        return (
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="font-serif text-xl flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary/70" />
+                Your Situation Readiness
+              </CardTitle>
+              <CardDescription>Readiness scores across curated real-world situations, derived from all your tools.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Top situations</h4>
+                <div className="space-y-2">
+                  {top3.map((uc) => (
+                    <Link key={uc.id} href="/use-cases">
+                      <div className="flex items-center gap-3 p-3 rounded-sm border border-border/40 hover:border-primary/30 hover:bg-muted/20 transition-all cursor-pointer group">
+                        <span className="text-lg flex-shrink-0">{uc.flag_emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium leading-snug group-hover:text-primary transition-colors truncate">{uc.title}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 capitalize">{uc.formality_level.replace(/_/g, " ")}</div>
+                        </div>
+                        <SmallCircle score={uc.readiness_score!} />
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors group-hover:translate-x-0.5 flex-shrink-0" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {focus && focus.id !== top3[0]?.id && (
+                <div className="space-y-3 pt-4 border-t border-border/30">
+                  <h4 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Focus area</h4>
+                  <Link href="/use-cases">
+                    <div className="flex items-center gap-3 p-3 rounded-sm border border-destructive/20 bg-destructive/5 hover:border-destructive/30 transition-all cursor-pointer group">
+                      <span className="text-lg flex-shrink-0">{focus.flag_emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium leading-snug group-hover:text-destructive transition-colors truncate">{focus.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">Lowest readiness — most room to grow</div>
+                      </div>
+                      <SmallCircle score={focus.readiness_score!} />
+                    </div>
+                  </Link>
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <Link href="/use-cases">
+                  <Button variant="outline" size="sm" className="gap-2 text-xs">
+                    <MapPin className="h-3.5 w-3.5" />
+                    View all use cases
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* ── Refinement Compass ── */}
       {behaviorProfile && (() => {

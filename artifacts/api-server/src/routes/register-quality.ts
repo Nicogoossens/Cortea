@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuthUser } from "../lib/auth-middleware";
+import type { AuthenticatedRequest } from "../lib/auth-middleware";
 
 const router = Router();
 
@@ -59,12 +60,16 @@ function resolvePrompt(locale: string): string {
   return LOCALE_SYSTEM_PROMPTS[full] ?? LOCALE_SYSTEM_PROMPTS[lang] ?? LOCALE_SYSTEM_PROMPTS["en"];
 }
 
+const VALID_DOMAINS = ["gastronomy", "business", "eloquence", "formal_events", "dress_code", "cultural_knowledge"] as const;
+
 const RequestSchema = z.object({
   text: z.string().min(1).max(2000),
   locale: z.string().min(2).max(10),
+  domain: z.enum(VALID_DOMAINS).optional(),
 });
 
 router.post("/register-quality/check", requireAuthUser, async (req, res) => {
+  const authReq = req as unknown as AuthenticatedRequest;
   const parsed = RequestSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ message: "text and locale are required." });
@@ -78,7 +83,7 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
     return res.status(503).json({ message: "Quality check is not currently available." });
   }
 
-  const { text, locale } = parsed.data;
+  const { text, locale, domain } = parsed.data;
   const systemPrompt = resolvePrompt(locale);
 
   try {
@@ -115,9 +120,11 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
       result = { pass: true, score: 7, hint: null };
     }
 
+    const finalScore = result.score ?? 7;
+
     return res.json({
       pass:  result.pass  ?? true,
-      score: result.score ?? 7,
+      score: finalScore,
       hint:  result.hint  ?? null,
     });
   } catch (err) {

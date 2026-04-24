@@ -150,7 +150,7 @@ type CameraState = "idle" | "loading_model" | "requesting" | "active" | "denied"
 
 export default function Mirror() {
   const { data: profile } = useGetProfile();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, getAuthHeaders } = useAuth();
   const { canUseCamera } = usePrivacy();
 
   const tier = profile?.subscription_tier ?? "guest";
@@ -164,6 +164,21 @@ export default function Mirror() {
 
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [result, setResult] = useState<DressCodeResult | null>(null);
+
+  const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+  const loggedResultRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!result || !isAuthenticated) return;
+    const key = `${result.code}:${result.confidence}`;
+    if (loggedResultRef.current === key) return;
+    loggedResultRef.current = key;
+    fetch(`${apiBase}/api/mirror/log-scan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({ detected_category: result.code, confidence: result.confidence }),
+    }).catch(() => null);
+  }, [result, isAuthenticated, getAuthHeaders, apiBase]);
 
   const stopCamera = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);

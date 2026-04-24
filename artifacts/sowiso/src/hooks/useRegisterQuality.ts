@@ -10,7 +10,7 @@ const DEBOUNCE_MS = 900;
 const MIN_LENGTH  = 30;
 const SESSION_TOKEN_KEY = "sowiso_session_token";
 
-export function useRegisterQuality(locale: string) {
+export function useRegisterQuality(locale: string, domain?: string) {
   const [result, setResult]     = useState<QualityResult | null>(null);
   const [checking, setChecking] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -36,13 +36,16 @@ export function useRegisterQuality(locale: string) {
 
       setChecking(true);
       try {
+        const body: Record<string, string> = { text: text.trim(), locale };
+        if (domain) body.domain = domain;
+
         const res = await fetch("/api/register-quality/check", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
-          body: JSON.stringify({ text: text.trim(), locale }),
+          body: JSON.stringify(body),
           signal: abortRef.current.signal,
         });
         if (res.ok) {
@@ -55,7 +58,7 @@ export function useRegisterQuality(locale: string) {
         setChecking(false);
       }
     }, DEBOUNCE_MS);
-  }, [locale]);
+  }, [locale, domain]);
 
   const reset = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);

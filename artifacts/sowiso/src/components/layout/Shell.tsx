@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Layers, Ear, Navigation2, Users, ShieldCheck } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Layers, Ear, Navigation2, Users, ShieldCheck, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -18,12 +18,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.counsel",     href: "/counsel",     icon: Shield   },
     { key: "nav.compass",     href: "/compass",     icon: Compass  },
     { key: "nav.situations",  href: "/situations",  icon: Layers   },
-    { key: "nav.mirror",       href: "/mirror",       icon: Scan,        ambassadorOnly: true },
-    { key: "nav.sensory",      href: "/sensory",      icon: Ear,         ambassadorOnly: true },
-    { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true },
-    { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true },
-    { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true       },
-    { key: "nav.profile",      href: "/profile",      icon: User,        authOnly: true       },
+    { key: "nav.use_cases",    href: "/use-cases",   icon: MapPin                              },
+    { key: "nav.mirror",       href: "/mirror",       icon: Scan,        ambassadorOnly: true  },
+    { key: "nav.sensory",      href: "/sensory",      icon: Ear,         ambassadorOnly: true  },
+    { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
+    { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
+    { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true        },
+    { key: "nav.profile",      href: "/profile",      icon: User,        authOnly: true        },
     { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];
 

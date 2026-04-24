@@ -36,6 +36,7 @@ import Sensory from "@/pages/Sensory";
 import Navigator from "@/pages/Navigator";
 import InnerCircle from "@/pages/InnerCircle";
 import Privacy from "@/pages/Privacy";
+import UseCases from "@/pages/UseCases";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -179,6 +180,7 @@ function AppRouter() {
                   <Route path="/compass/:code" component={CompassRegion} />
                   <Route path="/counsel" component={Counsel} />
                   <Route path="/situations" component={Situations} />
+                  <Route path="/use-cases" component={UseCases} />
                   <Route path="/mirror" component={Mirror} />
                   <Route path="/sensory" component={Sensory} />
                   <Route path="/navigator" component={Navigator} />
@@ -201,6 +203,7 @@ function AppRouter() {
               <Route path="/compass/cluster/:id" component={CompassCluster} />
               <Route path="/compass/:code" component={CompassRegion} />
               <Route path="/situations" component={Situations} />
+              <Route path="/use-cases" component={UseCases} />
               <Route path="/profile" component={Profile} />
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />

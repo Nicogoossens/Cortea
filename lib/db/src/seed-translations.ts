@@ -1,3 +1,27 @@
+/**
+ * SEED: DB-backed legacy translations (EN / NL / FR only)
+ *
+ * SCOPE: This seed manages a small set of legacy UI keys served via
+ * GET /api/translations. It covers only EN, NL, and FR.
+ *
+ * IMPORTANT — LOCALE MANAGEMENT WORKFLOW AGREEMENT:
+ * The main translation system for the Sowiso front-end is i18next, using
+ * flat JSON files at artifacts/sowiso/src/locales/{lang}/translation.json.
+ * Those files are NOT managed by this seed — they must be maintained manually.
+ *
+ * Rule: Every time new keys are added to the i18next locale files (EN or NL),
+ * ALL 9 locales (en, nl, de, fr, es, it, pt, ar, ja) must be updated at the
+ * same time. English fallback text is never acceptable in non-EN locale files.
+ *
+ * Checklist for new content additions:
+ *   1. Add the key + English value to src/locales/en/translation.json
+ *   2. Add the Dutch translation to src/locales/nl/translation.json
+ *   3. Add translations for all 7 remaining locales (de, fr, es, it, pt, ar, ja)
+ *   4. Sync src/locales/ → public/locales/ (copy files or rebuild)
+ *
+ * If this seed ever begins managing locale keys, it must include translations
+ * for all 9 locales (not just EN/NL/FR) before being merged.
+ */
 import { db } from "./index.js";
 import { translationsTable } from "./schema/index.js";
 import { sql } from "drizzle-orm";

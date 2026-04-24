@@ -17,6 +17,5 @@ export interface NobleScoreData {
   level_name: string;
   level_color: string;
   next_level_threshold: number;
-  next_level_name?: string | null;
   pillars: PillarProgress[];
 }

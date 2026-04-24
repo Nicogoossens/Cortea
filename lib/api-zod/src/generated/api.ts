@@ -238,6 +238,11 @@ export const GetCultureCompassResponseItem = zod.object({
   core_value: zod.string(),
   biggest_taboo: zod.string(),
   flag_emoji: zod.string(),
+  has_content: zod
+    .boolean()
+    .describe(
+      "True when this region has at least one locale of compass content ready.",
+    ),
 });
 export const GetCultureCompassResponse = zod.array(
   GetCultureCompassResponseItem,
@@ -321,6 +326,12 @@ export const GetScenariosResponseItem = zod.object({
   difficulty_level: zod.number(),
   estimated_minutes: zod.number().optional(),
   noble_score_impact: zod.number(),
+  is_regional: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the scenario belongs to the requested region; false when it is a universal fallback.",
+    ),
   content_json: zod.object({
     situation: zod.string(),
     question: zod.string(),
@@ -358,6 +369,12 @@ export const GetScenarioResponse = zod.object({
   difficulty_level: zod.number(),
   estimated_minutes: zod.number().optional(),
   noble_score_impact: zod.number(),
+  is_regional: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the scenario belongs to the requested region; false when it is a universal fallback.",
+    ),
   content_json: zod.object({
     situation: zod.string(),
     question: zod.string(),
@@ -382,7 +399,6 @@ export const GetNobleScoreResponse = zod.object({
   level_name: zod.string(),
   level_color: zod.string(),
   next_level_threshold: zod.number(),
-  next_level_name: zod.string().nullable().optional(),
   pillars: zod.array(
     zod.object({
       pillar: zod.number(),

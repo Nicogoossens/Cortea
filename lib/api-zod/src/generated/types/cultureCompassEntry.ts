@@ -12,4 +12,6 @@ export interface CultureCompassEntry {
   core_value: string;
   biggest_taboo: string;
   flag_emoji: string;
+  /** True when this region has at least one locale of compass content ready. */
+  has_content: boolean;
 }

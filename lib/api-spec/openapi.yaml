@@ -707,6 +707,9 @@ components:
           type: integer
         noble_score_impact:
           type: integer
+        is_regional:
+          type: boolean
+          description: True when the scenario belongs to the requested region; false when it is a universal fallback.
         content_json:
           $ref: "#/components/schemas/ScenarioContent"
       required:

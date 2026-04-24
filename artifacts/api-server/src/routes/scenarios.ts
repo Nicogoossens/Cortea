@@ -123,38 +123,62 @@ router.get("/scenarios", async (req, res) => {
 
     const FALLBACK_REGION = "GB";
     const FALLBACK_THRESHOLD = 3;
+    const FALLBACK_MINIMUM = 8;
 
-    let scenarios = await db.select()
+    let regionalScenarios = await db.select()
       .from(scenariosTable)
       .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`)
       .limit(limit);
 
+    let fallbackScenarios: typeof regionalScenarios = [];
+
     // When a region has fewer than FALLBACK_THRESHOLD scenarios, supplement
     // with universal (GB) scenarios so the Atelier is never empty.
-    if (region_code !== undefined && region_code !== FALLBACK_REGION && scenarios.length < FALLBACK_THRESHOLD) {
-      const fallbackConditions: ReturnType<typeof eq>[] = [eq(scenariosTable.region_code, FALLBACK_REGION)];
-      if (pillar !== undefined) fallbackConditions.push(eq(scenariosTable.pillar, pillar));
-      if (difficulty_max !== undefined) fallbackConditions.push(lte(scenariosTable.difficulty_level, difficulty_max));
+    const needsFallback =
+      region_code !== undefined &&
+      region_code !== FALLBACK_REGION &&
+      regionalScenarios.length < FALLBACK_THRESHOLD;
 
-      const fallbackScenarios = await db.select()
+    if (needsFallback) {
+      // Apply all the same filters to the fallback query for consistency.
+      const fallbackConditions: Parameters<typeof and>[0][] = [
+        eq(scenariosTable.region_code, FALLBACK_REGION),
+      ];
+      if (pillar !== undefined) fallbackConditions.push(eq(scenariosTable.pillar, pillar));
+      if (difficulty_level !== undefined) fallbackConditions.push(eq(scenariosTable.difficulty_level, difficulty_level));
+      if (difficulty_max !== undefined) fallbackConditions.push(lte(scenariosTable.difficulty_level, difficulty_max));
+      if (age_group !== undefined) fallbackConditions.push(eq(scenariosTable.age_group, age_group));
+
+      // Fetch enough fallback items to reach at least FALLBACK_MINIMUM total.
+      const fallbackNeeded = Math.max(FALLBACK_MINIMUM, limit) - regionalScenarios.length;
+      const existingIds = new Set(regionalScenarios.map((s) => s.id));
+
+      const rawFallback = await db.select()
         .from(scenariosTable)
         .where(and(...fallbackConditions))
-        .limit(limit - scenarios.length);
+        .limit(fallbackNeeded);
 
-      const existingIds = new Set(scenarios.map((s) => s.id));
-      const newFallbacks = fallbackScenarios.filter((s) => !existingIds.has(s.id));
-      scenarios = [...scenarios, ...newFallbacks];
+      fallbackScenarios = rawFallback.filter((s) => !existingIds.has(s.id));
     }
 
+    const isRegionalSet = new Set(regionalScenarios.map((s) => s.id));
+    const allScenarios = [...regionalScenarios, ...fallbackScenarios];
+
     if (matchingCtxSet.size > 0) {
-      scenarios.sort((a, b) => {
+      allScenarios.sort((a, b) => {
         const aMatch = matchingCtxSet.has(a.context ?? "") ? 0 : 1;
         const bMatch = matchingCtxSet.has(b.context ?? "") ? 0 : 1;
         return aMatch - bMatch || (a.difficulty_level ?? 0) - (b.difficulty_level ?? 0);
       });
     }
 
-    return res.json(resolveScenarioLocales(scenarios, lang));
+    const resolved = resolveScenarioLocales(allScenarios, lang);
+    const withFlag = resolved.map((s) => ({
+      ...s,
+      is_regional: isRegionalSet.has(s.id),
+    }));
+
+    return res.json(withFlag);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch scenarios");
     return res.status(500).json({ message: "The training scenarios are momentarily unavailable. Please allow a moment." });

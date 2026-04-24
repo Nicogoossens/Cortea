@@ -16,5 +16,7 @@ export interface Scenario {
   difficulty_level: number;
   estimated_minutes?: number;
   noble_score_impact: number;
+  /** True when the scenario belongs to the requested region; false when it is a universal fallback. */
+  is_regional?: boolean;
   content_json: ScenarioContent;
 }

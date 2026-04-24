@@ -86,12 +86,14 @@ export default function Atelier() {
     : allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
   const hasLockedScenarios = (lockedScenarios?.length ?? 0) > 0;
 
-  // Fallback detection: when scenarios are returned but none belong to the
-  // selected region, the API supplemented with universal (GB) content.
+  // Fallback detection: the API sets is_regional=false on any scenario that
+  // was supplied as a universal GB supplement. Show the banner whenever at
+  // least one fallback scenario is present (covers both full-fallback and
+  // mixed-fallback cases, e.g. 1 regional + 15 GB).
   const isUsingFallback =
     !!allScenarios &&
     allScenarios.length > 0 &&
-    !allScenarios.some((s) => s.region_code === activeRegion);
+    allScenarios.some((s) => s.is_regional === false);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

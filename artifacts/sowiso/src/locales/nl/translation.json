@@ -592,6 +592,8 @@
   "home.welcome_back_anonymous": "Welkom terug.",
   "home.welcome_back_prompt": "Voeg uw naam toe om deze begroeting te personaliseren.",
   "home.welcome_back_dismiss": "Sluiten",
+  "home.navigator_alert_heading": "Actieve reismelding",
+  "home.navigator_alert_cta": "Bekijk briefing",
   "sensory.title": "Zintuiglijk Bewustzijn",
   "sensory.subtitle": "Een discrete omgevingsmonitor. Kies uw locatiecontext en ontvang een haptische melding wanneer uw omgeving de gepaste norm overschrijdt.",
   "sensory.gated_subtitle": "Een discrete omgevingsmonitor die u waarschuwt wanneer uw omgeving — of uw stem — de gepaste norm voor uw setting overschrijdt.",

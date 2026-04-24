@@ -592,6 +592,8 @@
   "home.welcome_back_anonymous": "Welcome back.",
   "home.welcome_back_prompt": "Add your name to personalise this greeting.",
   "home.welcome_back_dismiss": "Dismiss",
+  "home.navigator_alert_heading": "Active Journey Alert",
+  "home.navigator_alert_cta": "View Briefing",
   "sensory.title": "Sensory Awareness",
   "sensory.subtitle": "A discreet ambient monitor. Select your venue context and receive a haptic alert when your environment exceeds the appropriate register.",
   "sensory.gated_subtitle": "A discreet ambient monitor that alerts you when your environment — or your voice — exceeds the register appropriate for your setting.",

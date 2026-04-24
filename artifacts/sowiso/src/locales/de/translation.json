@@ -586,6 +586,8 @@
   "home.welcome_back_anonymous": "Willkommen zurück.",
   "home.welcome_back_prompt": "Fügen Sie Ihren Namen hinzu, um diese Begrüßung zu personalisieren.",
   "home.welcome_back_dismiss": "Schließen",
+  "home.navigator_alert_heading": "Aktive Reisebenachrichtigung",
+  "home.navigator_alert_cta": "Briefing anzeigen",
   "sensory.title": "Sensorisches Bewusstsein",
   "sensory.subtitle": "Ein diskreter Umgebungsmonitor. Wählen Sie Ihren Veranstaltungskontext und erhalten Sie eine haptische Benachrichtigung, wenn Ihre Umgebung die angemessene Lautstärke überschreitet.",
   "sensory.gated_subtitle": "Ein diskreter Umgebungsmonitor, der Sie warnt, wenn Ihre Umgebung — oder Ihre Stimme — den angemessenen Lautstärkepegel für Ihren Kontext überschreitet.",

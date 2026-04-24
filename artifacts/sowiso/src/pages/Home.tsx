@@ -1,14 +1,32 @@
 import { Link } from "wouter";
 import { useGetProfile, useGetNobleScore, useGetPillarProgress, useCreateProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X, MapPin } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X, MapPin, Bell } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { LockOverlay } from "@/components/LockOverlay";
+import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
+
+const NAVIGATOR_KEY = "sowiso_navigator_trips";
+
+interface NavigatorTrip {
+  id: string;
+  regionCode: string;
+  departureDate: string;
+}
+
+function daysUntilDate(dateStr: string): number {
+  const target = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+}
 
 const WELCOME_DURATION_MS = 7000;
 
@@ -52,6 +70,28 @@ export default function Home() {
   const [welcomeVisible, setWelcomeVisible] = useState(false);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated || profile?.subscription_tier !== "ambassador") {
+      setAlertTrips([]);
+      return;
+    }
+    try {
+      const stored = localStorage.getItem(NAVIGATOR_KEY);
+      if (stored) {
+        const trips = JSON.parse(stored) as NavigatorTrip[];
+        const active = trips.filter((trip) => {
+          const days = daysUntilDate(trip.departureDate);
+          return days <= 7 && days > -14;
+        });
+        setAlertTrips(active);
+      } else {
+        setAlertTrips([]);
+      }
+    } catch { setAlertTrips([]); }
+  }, [isAuthenticated, profile?.subscription_tier]);
 
   useEffect(() => {
     if (profileError && "status" in profileError && profileError.status === 404 && userId) {
@@ -168,6 +208,37 @@ export default function Home() {
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
+      )}
+
+      {isAuthenticated && isAmbassador && alertTrips.length > 0 && (
+        <Link href="/navigator" className="block group">
+          <div className="rounded-sm border border-amber-400/30 bg-amber-500/5 px-5 py-4 transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-500/8 cursor-pointer">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-amber-700/70 mb-3">
+              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+              {t("home.navigator_alert_heading")}
+            </div>
+            <div className="space-y-2">
+              {alertTrips.map((trip) => {
+                const days = daysUntilDate(trip.departureDate);
+                const region = COMPASS_REGIONS.find((r) => r.code === trip.regionCode);
+                return (
+                  <div key={trip.id} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 font-light text-sm text-foreground">
+                      {region && <FlagEmoji code={region.code} />}
+                      <span>{region?.names.en ?? trip.regionCode}</span>
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs border-amber-400/40 text-amber-600 shrink-0">
+                      {days < 0 ? t("navigator.arrived") : days === 0 ? t("navigator.departure_today") : t("navigator.d_minus", { count: days })}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-amber-700/60 group-hover:text-amber-700/80 transition-colors">
+              {t("home.navigator_alert_cta")} →
+            </p>
+          </div>
+        </Link>
       )}
 
       <div className="space-y-2">

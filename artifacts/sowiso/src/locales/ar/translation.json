@@ -586,6 +586,8 @@
   "home.welcome_back_anonymous": "مرحباً بعودتك.",
   "home.welcome_back_prompt": "أضف اسمك لتخصيص هذه التحية.",
   "home.welcome_back_dismiss": "إغلاق",
+  "home.navigator_alert_heading": "تنبيه رحلة نشطة",
+  "home.navigator_alert_cta": "عرض الإحاطة",
   "sensory.title": "الوعي الحسي",
   "sensory.subtitle": "مراقب محيطي صامت. حدّد سياق مكانك واستقبل تنبيهاً لمسياً عندما يتجاوز محيطك المستوى اللائق.",
   "sensory.gated_subtitle": "مراقب محيطي صامت يُنبّهك حين يتجاوز محيطك — أو صوتك — المستوى الملائم لسياقك.",

@@ -586,6 +586,8 @@
   "home.welcome_back_anonymous": "Bem-vindo de volta.",
   "home.welcome_back_prompt": "Adicione o seu nome para personalizar esta saudação.",
   "home.welcome_back_dismiss": "Fechar",
+  "home.navigator_alert_heading": "Alerta de viagem ativa",
+  "home.navigator_alert_cta": "Ver briefing",
   "sensory.title": "Consciência Sensorial",
   "sensory.subtitle": "Um monitor ambiental discreto. Selecione o contexto do seu local e receba um alerta háptico quando o seu ambiente ultrapassar o registo adequado.",
   "sensory.gated_subtitle": "Um monitor ambiental discreto que o alerta quando o seu ambiente — ou a sua voz — ultrapassa o registo adequado ao seu contexto.",

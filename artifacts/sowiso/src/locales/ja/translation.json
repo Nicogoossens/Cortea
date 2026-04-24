@@ -586,6 +586,8 @@
   "home.welcome_back_anonymous": "おかえりなさい。",
   "home.welcome_back_prompt": "名前を追加して、このご挨拶をパーソナライズしてください。",
   "home.welcome_back_dismiss": "閉じる",
+  "home.navigator_alert_heading": "アクティブな旅行アラート",
+  "home.navigator_alert_cta": "ブリーフィングを見る",
   "sensory.title": "感覚的認識",
   "sensory.subtitle": "控えめな環境モニター。場所のコンテキストを選択し、環境が適切な音量レベルを超えた際にハプティックアラートをお受け取りください。",
   "sensory.gated_subtitle": "お客様の環境または声が場面に適した音量レベルを超えた際にアラートをお伝えする、控えめな環境モニターです。",

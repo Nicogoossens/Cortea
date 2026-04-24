@@ -22,6 +22,8 @@ const COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
 
 const router: IRouter = Router();
 
+let googleConfigCache: oidc.Configuration | null = null;
+
 function isGoogleConfigured(): boolean {
   return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }

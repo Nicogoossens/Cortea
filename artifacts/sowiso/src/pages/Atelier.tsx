@@ -16,6 +16,7 @@ import { TierGate } from "@/components/TierGate";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
+import { ActiveContextChips } from "@/components/ActiveContextChips";
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
 
@@ -104,12 +105,8 @@ export default function Atelier() {
         </p>
       </div>
 
-      {/* Active region indicator */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <FlagEmoji code={activeRegion} />
-        <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
-        <span className="text-muted-foreground/60 text-xs">{t("atelier.region")}</span>
-      </div>
+      {/* Active context chips */}
+      <ActiveContextChips />
 
       {/* Fallback banner — shown when region has no own scenarios yet */}
       {isUsingFallback && (

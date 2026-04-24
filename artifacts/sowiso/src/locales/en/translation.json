@@ -712,5 +712,19 @@
   "privacy.data_scenarios_label": "Scenario Answers",
   "privacy.data_scenarios_detail": "Stored locally in your browser for session continuity. Your score is recorded server-side independently.",
   "privacy.data_calling_card_label": "Calling Card",
-  "privacy.data_calling_card_detail": "Visible only to verified Ambassadors. Your email and personal details are never shared."
+  "privacy.data_calling_card_detail": "Visible only to verified Ambassadors. Your email and personal details are never shared.",
+  "counsel.scenarios": "Scenarios",
+  "counsel.scenarios.select_hint": "Select a scenario to pre-fill session context",
+  "counsel.scenarios.active": "Scenario active",
+  "counsel.context_strip.label": "Session context",
+  "counsel.context_strip.region": "Region",
+  "counsel.context_strip.interest": "Interest",
+  "counsel.context_strip.sphere": "Social Sphere",
+  "counsel.context_strip.not_set": "Not set",
+  "counsel.context_strip.differs": "differs from default",
+  "context.active_language": "Language",
+  "context.active_region": "Region",
+  "mirror.context.region": "Etiquette Region",
+  "mirror.context.dresscode": "Detected Style",
+  "mirror.context.not_analyzed": "Not analyzed yet"
 }

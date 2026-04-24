@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
 import { Utensils, Briefcase, Heart, Star, Anchor, Hand, Gift, Lock, Crown, ArrowRight } from "lucide-react";
 
-interface Situation {
+export interface Situation {
   id: string;
   icon: React.ElementType;
   nameKey: string;
@@ -21,7 +21,7 @@ interface Situation {
   };
 }
 
-const SITUATIONS: Situation[] = [
+export const SITUATIONS: Situation[] = [
   {
     id: "restaurant",
     icon: Utensils,

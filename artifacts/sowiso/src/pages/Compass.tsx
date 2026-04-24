@@ -14,6 +14,7 @@ import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region
 import { LockOverlay } from "@/components/LockOverlay";
 import { useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { ActiveContextChips } from "@/components/ActiveContextChips";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -70,6 +71,9 @@ export default function Compass() {
           </p>
         )}
       </div>
+
+      {/* Active context chips */}
+      <ActiveContextChips />
 
       {/* View Toggle */}
       <div className="flex gap-2 border-b border-border pb-0">

@@ -10,8 +10,11 @@ import { useAuth } from "@/lib/auth";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "wouter";
 import {
-  Camera, CameraOff, RefreshCw, CheckCircle2, Info, ShieldAlert, Lock, Loader2
+  Camera, CameraOff, RefreshCw, CheckCircle2, Info, ShieldAlert, Lock, Loader2, MapPin, Scan
 } from "lucide-react";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
+import { useLanguage } from "@/lib/i18n";
+import { ActiveContextChips } from "@/components/ActiveContextChips";
 import * as tf from "@tensorflow/tfjs";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 
@@ -154,6 +157,8 @@ export default function Mirror() {
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { canUseCamera } = usePrivacy();
+  const { activeRegion, getRegionName } = useActiveRegion();
+  const { t } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
@@ -260,6 +265,8 @@ export default function Mirror() {
           <p className="text-muted-foreground text-lg font-light max-w-2xl">
             Present yourself and receive a discreet, on-device assessment of your dress code. No images are transmitted — all analysis runs locally in your browser.
           </p>
+          {/* Active context chips — language + region */}
+          <ActiveContextChips />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3 space-y-4">
@@ -300,6 +307,20 @@ export default function Mirror() {
         <p className="text-muted-foreground text-lg font-light max-w-2xl">
           Present yourself and receive a discreet, on-device assessment of your dress code. No images are transmitted — all analysis runs locally in your browser.
         </p>
+        {/* Active context chips + dress-code badge */}
+        <div className="space-y-2 pt-1">
+          <ActiveContextChips />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border/60 bg-muted/30 text-xs font-mono text-foreground/70">
+              <Scan className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50 mr-1">{t("mirror.context.dresscode")}</span>
+              {result
+                ? <span className={`font-medium px-1.5 py-0.5 rounded-[2px] text-[10px] ${result.badgeClass}`}>{result.label}</span>
+                : <span className="font-medium text-muted-foreground/40 italic">{t("mirror.context.not_analyzed")}</span>
+              }
+            </div>
+          </div>
+        </div>
       </div>
 
       {!canUseCamera && (

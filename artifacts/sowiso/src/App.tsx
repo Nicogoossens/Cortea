@@ -1,7 +1,7 @@
 import "@/i18n"; // initialise i18next before any component renders
 import { Shell } from "./components/layout/Shell";
 import { LandingLayout } from "./components/layout/LandingLayout";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +21,6 @@ import Counsel from "@/pages/Counsel";
 import Compass from "@/pages/Compass";
 import CompassRegion from "@/pages/CompassRegion";
 import CompassCluster from "@/pages/CompassCluster";
-import Situations from "@/pages/Situations";
 import Profile from "@/pages/Profile";
 import Register from "@/pages/Register";
 import SignIn from "@/pages/SignIn";
@@ -56,6 +55,15 @@ function AppWithRegion({ children }: { children: React.ReactNode }) {
 }
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
+function SituationsRedirect() {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    const params = window.location.search;
+    navigate(`/counsel${params}`);
+  }, [navigate]);
+  return null;
+}
 
 /** Age groups that warrant automatic large-font promotion. */
 const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
@@ -165,7 +173,7 @@ function AppRouter() {
                   <Route path="/compass/cluster/:id" component={CompassCluster} />
                   <Route path="/compass/:code" component={CompassRegion} />
                   <Route path="/counsel" component={Counsel} />
-                  <Route path="/situations" component={Situations} />
+                  <Route path="/situations" component={SituationsRedirect} />
                   <Route path="/use-cases" component={UseCases} />
                   <Route path="/mirror" component={Mirror} />
                   <Route path="/sensory" component={Sensory} />
@@ -188,7 +196,7 @@ function AppRouter() {
               <Route path="/compass" component={Compass} />
               <Route path="/compass/cluster/:id" component={CompassCluster} />
               <Route path="/compass/:code" component={CompassRegion} />
-              <Route path="/situations" component={Situations} />
+              <Route path="/situations" component={SituationsRedirect} />
               <Route path="/use-cases" component={UseCases} />
               <Route path="/profile" component={Profile} />
               <Route path="/admin" component={Admin} />

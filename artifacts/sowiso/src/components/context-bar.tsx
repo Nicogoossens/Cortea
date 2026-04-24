@@ -22,11 +22,11 @@ function PillTrigger({
     <DropdownMenuTrigger asChild>
       <button
         aria-label={ariaLabel}
-        className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 data-[state=open]:bg-muted/60 data-[state=open]:text-foreground"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 min-h-[44px] rounded-sm text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 data-[state=open]:bg-muted/60 data-[state=open]:text-foreground"
       >
         {icon}
-        <span className="hidden sm:flex items-center gap-1.5">{children}</span>
-        <ChevronDown className="w-3 h-3 opacity-40" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 max-w-[120px] truncate">{children}</span>
+        <ChevronDown className="w-3 h-3 opacity-40 flex-shrink-0" aria-hidden="true" />
       </button>
     </DropdownMenuTrigger>
   );
@@ -72,10 +72,24 @@ export function ContextBar() {
 
   return (
     <div
-      className="flex items-center justify-end gap-1 px-4 py-2 border-b border-border/40 bg-background/60 backdrop-blur-sm"
+      className="flex items-center justify-between gap-1 px-4 py-1.5 border-b border-border/40 bg-background/60 backdrop-blur-sm"
       role="toolbar"
       aria-label={t("accessibility.title")}
     >
+      {/* Active context label — always visible */}
+      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 pointer-events-none select-none min-w-0">
+        <FlagEmoji code={currentLocale?.flag ?? "US"} className="text-base flex-shrink-0" />
+        <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block">
+          {currentLocale?.languageLabel ?? "English"}
+        </span>
+        <span className="text-muted-foreground/40 hidden sm:inline">·</span>
+        <FlagEmoji code={activeRegion} className="text-base flex-shrink-0 hidden sm:inline-block" />
+        <span className="font-medium text-foreground/70 truncate hidden sm:block">
+          {getRegionName(activeRegion)}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1">
 
       {/* Language picker */}
       <DropdownMenu>
@@ -224,6 +238,7 @@ export function ContextBar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      </div>
     </div>
   );
 }

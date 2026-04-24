@@ -54,6 +54,13 @@ const MEHRABIAN_GUIDANCE: Record<string, string> = {
   ZA: "Ubuntu is felt through warmth, openness, and an unhurried manner. Be present, engage genuinely, and listen with your whole bearing.",
 };
 
+const OBJECTIVE_CONTEXT: Record<string, string> = {
+  business: "The person's primary objective is professional refinement — business meetings, client relations, boardroom conduct, and corporate social events.",
+  elite: "The person moves in elite social circles and seeks to conduct themselves with the ease and distinction of high society — private clubs, charity galas, aristocratic gatherings.",
+  romantic: "The person's focus is romantic and interpersonal social conduct — courtship, first impressions, social gatherings, and the art of charming conversation.",
+  world_traveller: "The person is an experienced international traveller — their questions arise from navigating diverse cultural customs, luxury hospitality, and international social environments.",
+};
+
 const SPHERE_DESCRIPTIONS: Record<string, string> = {
   business: "business and professional settings — boardrooms, client dinners, networking events, and formal negotiations",
   gastronomy: "gastronomic and fine dining environments — restaurant etiquette, wine service, tasting menus, and culinary occasions",
@@ -65,12 +72,13 @@ const SPHERE_DESCRIPTIONS: Record<string, string> = {
 };
 
 router.post("/counsel", async (req, res) => {
-  const { query, domain, region_code, situation, situational_interests } = req.body as {
+  const { query, domain, region_code, situation, situational_interests, objective } = req.body as {
     query?: string;
     domain?: string;
     region_code?: string;
     situation?: string;
     situational_interests?: string[];
+    objective?: string;
   };
 
   if (!query && !domain) {
@@ -89,10 +97,14 @@ router.post("/counsel", async (req, res) => {
     ? `\nSocial environments: This person moves primarily in ${sphereDescs.join("; and ")}. Draw on examples and nuances appropriate to these settings without naming them explicitly.`
     : "";
 
+  const objectiveContext = objective && OBJECTIVE_CONTEXT[objective]
+    ? `\nPersonal objective: ${OBJECTIVE_CONTEXT[objective]}`
+    : "";
+
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
-${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}
 Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
 First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 

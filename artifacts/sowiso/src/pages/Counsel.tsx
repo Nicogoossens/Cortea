@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck, BookOpen, Info } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/auth";
 import { useRegisterQuality } from "@/hooks/useRegisterQuality";
 import { LockOverlay } from "@/components/LockOverlay";
 import { BehaviorSkillsCarousel } from "@/components/BehaviorSkillsCarousel";
+import { ActiveContextChips } from "@/components/ActiveContextChips";
+import { SITUATIONS } from "@/pages/Situations";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -48,6 +50,23 @@ const SITUATION_CHIPS_KEYS = [
   "counsel.situation_chips.indian_wedding",
   "counsel.situation_chips.yacht",
 ] as const;
+
+const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
+  { key: "business",        labelKey: "objective.business" },
+  { key: "elite",           labelKey: "objective.elite" },
+  { key: "romantic",        labelKey: "objective.romantic" },
+  { key: "world_traveller", labelKey: "objective.world_traveller" },
+];
+
+const SPHERE_OPTIONS: { key: string; labelKey: string }[] = [
+  { key: "business",              labelKey: "profile.sphere.business" },
+  { key: "gastronomy",            labelKey: "profile.sphere.gastronomy" },
+  { key: "arts_culture",          labelKey: "profile.sphere.arts_culture" },
+  { key: "music_entertainment",   labelKey: "profile.sphere.music_entertainment" },
+  { key: "formal_events",         labelKey: "profile.sphere.formal_events" },
+  { key: "lifestyle_wellness",    labelKey: "profile.sphere.lifestyle_wellness" },
+  { key: "travel_hospitality",    labelKey: "profile.sphere.travel_hospitality" },
+];
 
 function getStoredQuestionCount(userId: string | null): number {
   if (!userId) return 0;
@@ -101,6 +120,24 @@ export default function Counsel() {
   const [situationContext, setSituationContext] = useState(prefilledSituation);
   const [showSituationPanel, setShowSituationPanel] = useState(!!prefilledSituation);
 
+  const [showScenariosPanel, setShowScenariosPanel] = useState(false);
+  const [showContextRegionPicker, setShowContextRegionPicker] = useState(false);
+  const [showObjectivePicker, setShowObjectivePicker] = useState(false);
+  const [showSpherePicker, setShowSpherePicker] = useState(false);
+
+  // Session-level overrides: null = use profile default
+  const [sessionObjective, setSessionObjective] = useState<string | null>(null);
+  const [sessionSphere, setSessionSphere] = useState<string | null>(null);
+
+  const profileObjective = (profile?.objectives as string[] | undefined)?.[0] ?? null;
+  const profileSphere = profile?.situational_interests?.[0] ?? null;
+  const effectiveObjective = sessionObjective ?? profileObjective;
+  const effectiveSphere = sessionSphere ?? profileSphere;
+  const isObjectiveOverriding = sessionObjective !== null && sessionObjective !== profileObjective;
+  const isSphereOverriding = sessionSphere !== null && sessionSphere !== profileSphere;
+
+  const [, navigate] = useLocation();
+
   function isDomainAccessible(key: DomainKey): boolean {
     if (hasFullAccess) return true;
     if (hasBasicAccess && !basicLimitReached) return BASIC_FREE_DOMAINS.includes(key);
@@ -124,7 +161,8 @@ export default function Counsel() {
           domain: domainLabel,
           region_code: effectiveRegion,
           situation: situationContext.trim() || undefined,
-          situational_interests: profile?.situational_interests ?? [],
+          situational_interests: effectiveSphere ? [effectiveSphere] : (profile?.situational_interests ?? []),
+          objective: effectiveObjective ?? undefined,
         }),
       });
 
@@ -202,6 +240,244 @@ export default function Counsel() {
           {t("counsel.subtitle")}
         </p>
       </div>
+
+      {/* ── Context chips (language + region) ── */}
+      <div className="flex justify-center">
+        <ActiveContextChips />
+      </div>
+
+      {/* ── Active Context Strip ── */}
+      {!isGuest && (
+        <div className="flex flex-wrap items-stretch gap-0 rounded-sm border border-border/50 bg-muted/20 overflow-hidden text-xs font-mono divide-x divide-border/40">
+          {/* Region */}
+          <button
+            type="button"
+            onClick={() => setShowContextRegionPicker((v) => !v)}
+            className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left group"
+            aria-label={`${t("counsel.context_strip.region")}: ${getRegionName(effectiveRegion)}`}
+          >
+            <MapPin className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" aria-hidden="true" />
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">{t("counsel.context_strip.region")}</span>
+              <div className="flex items-center gap-1">
+                <FlagEmoji code={effectiveRegion} className="text-sm" />
+                <span className="font-medium text-foreground/80 truncate">{getRegionName(effectiveRegion)}</span>
+                {isOverriding && (
+                  <span className="text-[9px] text-primary border border-primary/30 rounded-[2px] px-1 py-0.5 ml-1 flex-shrink-0">{t("counsel.context_strip.differs")}</span>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`w-3 h-3 opacity-30 ml-auto flex-shrink-0 transition-transform ${showContextRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+
+          {/* Interest / Objective */}
+          <button
+            type="button"
+            onClick={() => { setShowObjectivePicker((v) => !v); setShowSpherePicker(false); setShowContextRegionPicker(false); }}
+            className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left group"
+            aria-label={`${t("counsel.context_strip.interest")}: ${effectiveObjective ? t(OBJECTIVE_OPTIONS.find(o => o.key === effectiveObjective)?.labelKey as Parameters<typeof t>[0] ?? "common.unknown" as Parameters<typeof t>[0]) : t("counsel.context_strip.not_set")}`}
+          >
+            <Info className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" aria-hidden="true" />
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">{t("counsel.context_strip.interest")}</span>
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-foreground/80 truncate">
+                  {effectiveObjective
+                    ? t(OBJECTIVE_OPTIONS.find(o => o.key === effectiveObjective)?.labelKey as Parameters<typeof t>[0] ?? "common.unknown" as Parameters<typeof t>[0])
+                    : t("counsel.context_strip.not_set")}
+                </span>
+                {isObjectiveOverriding && (
+                  <span className="text-[9px] text-primary border border-primary/30 rounded-[2px] px-1 py-0.5 ml-1 flex-shrink-0">{t("counsel.context_strip.differs")}</span>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`w-3 h-3 opacity-30 ml-auto flex-shrink-0 transition-transform ${showObjectivePicker ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+
+          {/* Social Sphere */}
+          <button
+            type="button"
+            onClick={() => { setShowSpherePicker((v) => !v); setShowObjectivePicker(false); setShowContextRegionPicker(false); }}
+            className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left group"
+            aria-label={`${t("counsel.context_strip.sphere")}: ${effectiveSphere ? t(SPHERE_OPTIONS.find(s => s.key === effectiveSphere)?.labelKey as Parameters<typeof t>[0] ?? "common.unknown" as Parameters<typeof t>[0]) : t("counsel.context_strip.not_set")}`}
+          >
+            <UserPlus className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" aria-hidden="true" />
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">{t("counsel.context_strip.sphere")}</span>
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-foreground/80 truncate">
+                  {effectiveSphere
+                    ? t(SPHERE_OPTIONS.find(s => s.key === effectiveSphere)?.labelKey as Parameters<typeof t>[0] ?? "common.unknown" as Parameters<typeof t>[0])
+                    : t("counsel.context_strip.not_set")}
+                </span>
+                {isSphereOverriding && (
+                  <span className="text-[9px] text-primary border border-primary/30 rounded-[2px] px-1 py-0.5 ml-1 flex-shrink-0">{t("counsel.context_strip.differs")}</span>
+                )}
+              </div>
+            </div>
+            <ChevronDown className={`w-3 h-3 opacity-30 ml-auto flex-shrink-0 transition-transform ${showSpherePicker ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {/* ── Context strip region picker ── */}
+      {showContextRegionPicker && (
+        <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
+          {COMPASS_REGIONS.map((region) => {
+            const isRegionSelected = region.code === effectiveRegion;
+            return (
+              <button
+                key={region.code}
+                onClick={() => { setSessionRegion(region.code); setShowContextRegionPicker(false); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
+                  isRegionSelected
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                }`}
+              >
+                <FlagEmoji code={region.flag} />
+                {getRegionName(region.code)}
+              </button>
+            );
+          })}
+          {sessionRegion && (
+            <button
+              onClick={() => { setSessionRegion(null); setShowContextRegionPicker(false); }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              {t("counsel.session_override_reset")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Context strip objective picker ── */}
+      {showObjectivePicker && (
+        <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
+          {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
+            const isSelected = key === effectiveObjective;
+            return (
+              <button
+                key={key}
+                onClick={() => { setSessionObjective(key); setShowObjectivePicker(false); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                }`}
+              >
+                {t(labelKey as Parameters<typeof t>[0])}
+              </button>
+            );
+          })}
+          {sessionObjective && (
+            <button
+              onClick={() => { setSessionObjective(null); setShowObjectivePicker(false); }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              {t("counsel.session_override_reset")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Context strip sphere picker ── */}
+      {showSpherePicker && (
+        <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
+          {SPHERE_OPTIONS.map(({ key, labelKey }) => {
+            const isSelected = key === effectiveSphere;
+            return (
+              <button
+                key={key}
+                onClick={() => { setSessionSphere(key); setShowSpherePicker(false); }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                }`}
+              >
+                {t(labelKey as Parameters<typeof t>[0])}
+              </button>
+            );
+          })}
+          {sessionSphere && (
+            <button
+              onClick={() => { setSessionSphere(null); setShowSpherePicker(false); }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-all"
+            >
+              <X className="w-3 h-3" aria-hidden="true" />
+              {t("counsel.session_override_reset")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ── Scenarios (Situations absorbed) ── */}
+      {!isGuest && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowScenariosPanel((v) => !v)}
+            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-sm border text-left transition-all group ${
+              showScenariosPanel
+                ? "border-primary/40 bg-primary/5"
+                : "border-border/50 hover:border-primary/30 hover:bg-muted/20"
+            }`}
+            aria-expanded={showScenariosPanel}
+          >
+            <BookOpen className={`w-4 h-4 flex-shrink-0 ${showScenariosPanel ? "text-primary" : "text-muted-foreground/60"}`} aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-mono uppercase tracking-widest ${showScenariosPanel ? "text-primary" : "text-muted-foreground/70"}`}>
+                {t("counsel.scenarios")}
+              </p>
+              {situationContext && (
+                <p className="text-sm text-foreground/70 mt-0.5 truncate">{t("counsel.scenarios.active")}: {situationContext}</p>
+              )}
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground/50 transition-transform ${showScenariosPanel ? "rotate-180" : ""}`} aria-hidden="true" />
+          </button>
+
+          {showScenariosPanel && (
+            <div className="border border-border/50 rounded-sm bg-muted/10 p-4 space-y-3 animate-in fade-in duration-200">
+              <p className="text-xs text-muted-foreground/60 font-mono">{t("counsel.scenarios.select_hint")}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {SITUATIONS.map((sit) => {
+                  const Icon = sit.icon;
+                  const sitLabel = t(sit.nameKey as Parameters<typeof t>[0]);
+                  const isActive = situationContext === sitLabel;
+                  const isLocked = sit.ambassadorOnly && tier !== "ambassador";
+                  if (isLocked) return null;
+                  return (
+                    <button
+                      key={sit.id}
+                      type="button"
+                      onClick={() => {
+                        const next = isActive ? "" : sitLabel;
+                        setSituationContext(next);
+                        setShowSituationPanel(!isActive);
+                        setShowScenariosPanel(false);
+                        const params = new URLSearchParams(window.location.search);
+                        if (next) { params.set("situation", next); } else { params.delete("situation"); }
+                        navigate(`/counsel?${params.toString()}`);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-sm border text-left text-xs transition-all ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/20"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-primary-foreground" : "text-primary/60"}`} aria-hidden="true" />
+                      <span className="truncate">{sitLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Pre-Session Context Mode ── */}
       <div className="space-y-3">

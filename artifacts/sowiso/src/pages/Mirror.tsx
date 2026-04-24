@@ -150,7 +150,7 @@ type CameraState = "idle" | "loading_model" | "requesting" | "active" | "denied"
 
 export default function Mirror() {
   const { data: profile } = useGetProfile();
-  const { isAuthenticated, getAuthHeaders } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { canUseCamera } = usePrivacy();
 
   const tier = profile?.subscription_tier ?? "guest";
@@ -175,10 +175,11 @@ export default function Mirror() {
     loggedResultRef.current = key;
     fetch(`${apiBase}/api/mirror/log-scan`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ detected_category: result.code, confidence: result.confidence }),
     }).catch(() => null);
-  }, [result, isAuthenticated, getAuthHeaders, apiBase]);
+  }, [result, isAuthenticated, apiBase]);
 
   const stopCamera = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);

@@ -43,7 +43,7 @@ interface MiniUseCase {
 
 export default function Home() {
   const { t } = useLanguage();
-  const { userId, isAuthenticated, getAuthHeaders } = useAuth();
+  const { userId, isAuthenticated } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
@@ -55,7 +55,7 @@ export default function Home() {
     enabled: !!userId,
     queryFn: async () => {
       const res = await fetch(`${API_BASE}/api/use-cases`, {
-        headers: { ...getAuthHeaders() },
+        credentials: "include",
       });
       if (!res.ok) return [];
       const all: MiniUseCase[] = await res.json();

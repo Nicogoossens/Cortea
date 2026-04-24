@@ -137,7 +137,6 @@ export default function Register() {
       if (data.session_token && data.user_id) {
         login(data.user_id, {
           name: data.full_name ?? undefined,
-          sessionToken: data.session_token,
           isAdmin: data.is_admin,
         });
         navigate("/onboarding");

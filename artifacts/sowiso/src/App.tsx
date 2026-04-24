@@ -10,7 +10,6 @@ import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AccessibilityProvider, useAccessibility } from "@/lib/accessibility";
 import { PrivacyProvider } from "@/lib/privacy";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { useEffect, useRef } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import NotFound from "@/pages/not-found";
@@ -56,33 +55,21 @@ function AppWithRegion({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Keeps the api-client-react auth token in sync with the auth context. */
-function AuthTokenSync() {
-  const { sessionToken } = useAuth();
-  useEffect(() => {
-    setAuthTokenGetter(() => sessionToken);
-  }, [sessionToken]);
-  return null;
-}
-
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
+/** Age groups that warrant automatic large-font promotion. */
+const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
 
 /**
  * After the user logs in (or on cold start with a stored session) this
  * component applies two server-side preferences:
  *  1. `language_code` — overrides the localStorage locale so the UI matches
  *     the profile the user last saved (cross-device).
- *  2. `age_group`     — server-side Noble Score age estimation (primary: birth_year;
- *     fallback: Noble Score ≥600 Ambassador tier). If the group is "senior_elder"
- *     or "established_practitioner" and the user has never manually changed their
- *     font-size, it is automatically promoted to "large" for readability.
+ *  2. `age_group`     — server-side Noble Score age estimation.
+ * Auth is via HttpOnly session cookie (credentials: 'include').
  */
-
-/** Age groups that warrant automatic large-font promotion. */
-const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
-
 function UserPreferencesSync() {
-  const { isAuthenticated, getAuthHeaders, login } = useAuth();
+  const { isAuthenticated, userId, login } = useAuth();
   const { locale, setLocale } = useLanguage();
   const { autoApplyAgeFont } = useAccessibility();
   const syncedRef = useRef<string | null>(null);
@@ -93,11 +80,10 @@ function UserPreferencesSync() {
       return;
     }
 
-    const authKey = JSON.stringify(getAuthHeaders());
-    if (syncedRef.current === authKey) return;
-    syncedRef.current = authKey;
+    if (syncedRef.current === userId) return;
+    syncedRef.current = userId;
 
-    fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
+    fetch(`${API_BASE}/api/users/profile`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .catch(() => null)
       .then((profile: { language_code?: string; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
@@ -121,7 +107,7 @@ function UserPreferencesSync() {
           login(profile.id ?? "", { isAdmin: profile.is_admin });
         }
       });
-  }, [isAuthenticated, getAuthHeaders, locale, setLocale, autoApplyAgeFont, login]);
+  }, [isAuthenticated, userId, locale, setLocale, autoApplyAgeFont, login]);
 
   return null;
 }
@@ -229,7 +215,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AuthTokenSync />
         <PrivacyProvider>
         <AccessibilityProvider>
           <LanguageProvider>

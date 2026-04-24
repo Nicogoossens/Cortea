@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { db, counselQualityLogTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { extractToken } from "../lib/auth-middleware";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
@@ -146,11 +147,10 @@ const LogQualitySchema = z.object({
 });
 
 router.post("/counsel/log-quality", async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+  const token = extractToken(req);
+  if (!token) {
     return res.status(401).json({ message: "Authentication required." });
   }
-  const token = authHeader.slice(7).trim();
   const [user] = await db
     .select({ id: usersTable.id })
     .from(usersTable)

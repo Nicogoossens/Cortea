@@ -87,7 +87,7 @@ export default function EmailVerify() {
         };
         if (res.ok) {
           if (body.user_id) {
-            login(body.user_id, { name: body.full_name, sessionToken: body.session_token, isAdmin: body.is_admin ?? false });
+            login(body.user_id, { name: body.full_name, isAdmin: body.is_admin ?? false });
           }
           if (body.language_code) {
             const resolved = resolveLocale(body.language_code, body.active_region);

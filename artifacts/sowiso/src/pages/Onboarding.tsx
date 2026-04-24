@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
-import { useAuth } from "@/lib/auth";
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Loader2,
   Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane,
@@ -76,7 +75,6 @@ type Step = 1 | 2 | 3 | 4;
 
 export default function Onboarding() {
   const { t } = useLanguage();
-  const { getAuthHeaders } = useAuth();
   const [, navigate] = useLocation();
 
   const [step, setStep] = useState<Step>(1);
@@ -97,7 +95,8 @@ export default function Onboarding() {
     try {
       await fetch(`${API_BASE}/api/users/profile`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           country_of_origin: country || null,
           objectives,

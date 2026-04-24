@@ -40,7 +40,6 @@ export default function ReplitCallback() {
 
         login(data.userId, {
           name: data.fullName ?? undefined,
-          sessionToken: data.token,
           isAdmin: data.isAdmin,
         });
 

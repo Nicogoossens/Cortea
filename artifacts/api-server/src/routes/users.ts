@@ -3,45 +3,9 @@ import { db } from "@workspace/db";
 import { usersTable, nobleScoreLogTable, zuil_voortgangTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
+import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
 const router = Router();
-
-/**
- * Middleware: resolves the user from an `Authorization: Bearer <session_token>` header.
- * Always requires a valid token — no fallback to any default identity.
- * Sets `req.resolvedUserId` on success.
- */
-async function requireAuthUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).json({ error: "Authentication is required." });
-      return;
-    }
-    const token = authHeader.slice(7).trim();
-    if (!token) {
-      res.status(401).json({ error: "Authentication is required." });
-      return;
-    }
-    const [user] = await db
-      .select({ id: usersTable.id })
-      .from(usersTable)
-      .where(eq(usersTable.session_token, token))
-      .limit(1);
-    if (!user) {
-      res.status(401).json({ error: "The authorisation token provided is not recognised." });
-      return;
-    }
-    (req as Request & { resolvedUserId: string }).resolvedUserId = user.id;
-    next();
-  } catch (err) {
-    res.status(500).json({ error: "A difficulty arose validating your session." });
-  }
-}
-
-function getResolvedUserId(req: Request): string {
-  return (req as Request & { resolvedUserId?: string }).resolvedUserId!;
-}
 
 /**
  * Compute an age group for etiquette and accessibility calibration.

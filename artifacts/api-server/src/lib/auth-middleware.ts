@@ -31,7 +31,7 @@ export function setSessionCookie(res: Response, token: string): void {
   res.cookie("cortea_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });

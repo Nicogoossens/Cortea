@@ -297,7 +297,7 @@ export default function Profile() {
   const { t, locale, setLocale } = useLanguage();
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
-  const { userId, isAuthenticated, logout, getAuthHeaders } = useAuth();
+  const { userId, isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
@@ -346,10 +346,9 @@ export default function Profile() {
 
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
-    const headers = getAuthHeaders();
     Promise.all([
-      fetch(`${API_BASE}/api/users/profile`, { headers }).then((r) => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/api/users/behavior-profile`, { headers }).then((r) => r.ok ? r.json() : null),
+      fetch(`${API_BASE}/api/users/profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+      fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
     ])
       .then(([data, bp]) => {
         setProfileData(data);
@@ -361,7 +360,7 @@ export default function Profile() {
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
-  }, [userId, getAuthHeaders]);
+  }, [userId]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
@@ -374,7 +373,7 @@ export default function Profile() {
     enabled: !!userId,
     queryFn: async () => {
       const res = await fetch(`${API_BASE}/api/use-cases`, {
-        headers: { ...getAuthHeaders() },
+        credentials: "include",
       });
       if (!res.ok) return [];
       return res.json();
@@ -392,7 +391,8 @@ export default function Profile() {
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (res.ok) {
@@ -429,7 +429,8 @@ export default function Profile() {
     try {
       const res = await fetch(`${API_BASE}/api/users/profile`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language_code: langCode }),
       });
       if (res.ok) {
@@ -452,7 +453,8 @@ export default function Profile() {
     try {
       const res = await fetch(`${API_BASE}/api/users/profile/region`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ region_code: code }),
       });
       if (res.ok) {
@@ -572,7 +574,7 @@ export default function Profile() {
     if (!userId || deleteInput !== "DELETE") return;
     setDeleting(true);
     try {
-      await fetch(`${API_BASE}/api/users/profile`, { method: "DELETE", headers: getAuthHeaders() });
+      await fetch(`${API_BASE}/api/users/profile`, { method: "DELETE", credentials: "include" });
       logout();
       navigate("/");
     } catch {
@@ -1434,7 +1436,7 @@ export default function Profile() {
       </Card>
 
       {/* ── Password ── */}
-      <PasswordSection authHeaders={getAuthHeaders()} />
+      <PasswordSection />
 
       {/* ── Danger Zone ── */}
       <Card className="border-destructive/20 bg-card shadow-sm">
@@ -1621,7 +1623,7 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function PasswordSection({ authHeaders }: { authHeaders: Record<string, string> }) {
+function PasswordSection() {
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -1641,7 +1643,8 @@ function PasswordSection({ authHeaders }: { authHeaders: Record<string, string> 
       if (currentPw) body.current_password = currentPw;
       const res = await fetch(`${API_BASE}/api/auth/set-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json() as { message?: string; error?: string };

@@ -75,7 +75,6 @@ export default function SignIn() {
 
       login(body.user_id!, {
         name: body.full_name ?? undefined,
-        sessionToken: body.session_token,
         isAdmin: body.is_admin,
       });
       navigate("/");

@@ -243,7 +243,6 @@ router.get("/auth/redeem", (req: Request, res: Response) => {
 
   redeemCodes.delete(code);
 
-  const { setSessionCookie } = await import("../lib/auth-middleware");
   setSessionCookie(res, entry.token);
 
   res.json({

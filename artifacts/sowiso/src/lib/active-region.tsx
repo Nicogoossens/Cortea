@@ -107,11 +107,9 @@ export function ActiveRegionProvider({
   // preference is stored yet (localStorage key absent).
   useEffect(() => {
     if (localStorage.getItem(REGION_PREF_KEY)) return;
-    const sessionToken = localStorage.getItem("sowiso_session_token");
-    if (!sessionToken) return;
     const apiBase = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL?.replace(/\/$/, "") ?? "";
     fetch(`${apiBase}/api/users/profile`, {
-      headers: { Authorization: `Bearer ${sessionToken}` },
+      credentials: "include",
     })
       .then((r) => r.ok ? r.json() : null)
       .then((data: { active_region?: string } | null) => {
@@ -134,17 +132,14 @@ export function ActiveRegionProvider({
     // Explicit user choice supersedes any session-scoped detection.
     sessionStorage.removeItem(REGION_SESSION_KEY);
 
-    // Sync to profile API whenever a session token is available.
+    // Sync to profile API using the HttpOnly session cookie.
     // This ensures the active region is persisted globally (not just in localStorage)
     // regardless of which UI control triggered the change (context bar, profile page, etc.).
-    const sessionToken = localStorage.getItem("sowiso_session_token");
     const apiBase = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL?.replace(/\/$/, "") ?? "";
     fetch(`${apiBase}/api/users/profile/region`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
-      },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ region_code: code }),
     }).catch(() => undefined); // Fire-and-forget; localStorage is the source of truth for UI
   }, []);

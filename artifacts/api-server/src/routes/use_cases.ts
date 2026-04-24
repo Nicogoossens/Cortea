@@ -1,4 +1,5 @@
 import { Router, type Request } from "express";
+import { extractToken } from "../lib/auth-middleware";
 import { db } from "@workspace/db";
 import {
   usersTable,
@@ -20,9 +21,7 @@ import { eq, and, avg, count, inArray, desc } from "drizzle-orm";
 const router = Router();
 
 async function optionalUserFromToken(req: Request): Promise<string | null> {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.slice(7).trim();
+  const token = extractToken(req);
   if (!token) return null;
   const [user] = await db
     .select({ id: usersTable.id })

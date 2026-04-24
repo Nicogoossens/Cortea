@@ -47,7 +47,7 @@ interface PrivacyContextValue {
 const PrivacyContext = createContext<PrivacyContextValue | null>(null);
 
 export function PrivacyProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, userId, getAuthHeaders } = useAuth();
+  const { isAuthenticated, userId } = useAuth();
 
   const [settings, setSettings] = useState<PrivacySettings>(
     () => loadSettings(userId) ?? { ...DEFAULT_SETTINGS }
@@ -76,7 +76,7 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
+    fetch(`${API_BASE}/api/users/profile`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((profile: { privacy_settings?: PrivacySettings | null } | null) => {
@@ -88,13 +88,14 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
       .finally(() => {
         hydratedRef.current = userId;
       });
-  }, [isAuthenticated, userId, getAuthHeaders]);
+  }, [isAuthenticated, userId]);
 
   function syncToServer(next: PrivacySettings): void {
     if (!isAuthenticated) return;
     fetch(`${API_BASE}/api/users/profile/privacy`, {
       method: "PATCH",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),
     }).catch(() => {});
   }
@@ -106,7 +107,7 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
       syncToServer(next);
       return next;
     });
-  }, [isAuthenticated, userId, getAuthHeaders]);
+  }, [isAuthenticated, userId]);
 
   const setIncognito = useCallback((enabled: boolean) => {
     setSettings((prev) => {
@@ -117,11 +118,11 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
       syncToServer(next);
       return next;
     });
-  }, [isAuthenticated, userId, getAuthHeaders]);
+  }, [isAuthenticated, userId]);
 
   const refreshFromServer = useCallback(async (): Promise<boolean> => {
     if (!isAuthenticated || !userId) return false;
-    const profile = await fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
+    const profile = await fetch(`${API_BASE}/api/users/profile`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null) as { privacy_settings?: PrivacySettings | null } | null;
     if (!profile?.privacy_settings) return false;
@@ -129,7 +130,7 @@ export function PrivacyProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(privacyKey(userId), JSON.stringify(serverSettings));
     setSettings(serverSettings);
     return true;
-  }, [isAuthenticated, userId, getAuthHeaders]);
+  }, [isAuthenticated, userId]);
 
   const canUseCamera = !settings.incognito && settings.cameraEnabled;
   const canUseMicrophone = !settings.incognito && settings.microphoneEnabled;

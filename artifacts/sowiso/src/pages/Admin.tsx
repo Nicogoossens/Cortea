@@ -92,7 +92,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
     try {
       const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
         method: "DELETE",
-        headers: authHeaders,
+        credentials: "include",
       });
       if (res.ok) {
         onDeleted(user.id);
@@ -111,7 +111,8 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
     try {
       const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...authHeaders },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -224,7 +225,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                   try {
                     const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/unsuspend`, {
                       method: "PATCH",
-                      headers: authHeaders,
+                      credentials: "include",
                     });
                     if (res.ok) {
                       onUpdated(await res.json() as AdminUser);
@@ -298,7 +299,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                     try {
                       const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/suspend`, {
                         method: "PATCH",
-                        headers: authHeaders,
+                        credentials: "include",
                       });
                       if (res.ok) {
                         onUpdated(await res.json() as AdminUser);
@@ -410,12 +411,12 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const fetchStatus = useCallback(async () => {
     setLoadingStatus(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/status`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/admin/content/status`, { credentials: "include" });
       if (res.ok) setStatus(await res.json() as ContentStatus);
     } catch { /* silent */ } finally {
       setLoadingStatus(false);
     }
-  }, [authHeaders]);
+  }, []);
 
   useEffect(() => { fetchStatus(); }, [fetchStatus]);
 
@@ -425,7 +426,7 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     try {
       const res = await fetch(`${API_BASE}/api/admin/content/seed`, {
         method: "POST",
-        headers: authHeaders,
+        credentials: "include",
       });
       const data = await res.json() as { ok: boolean; results: string[] };
       setSeedOutput(data.results ?? []);
@@ -449,7 +450,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
       const items = JSON.parse(text) as unknown[];
       const res = await fetch(`${API_BASE}/api/admin/content/import`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, items }),
       });
       const data = await res.json() as { inserted: number; errors_count: number; errors: string[] };
@@ -761,7 +763,7 @@ function PendingRecordRow({
     try {
       const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "PATCH",
-        headers: authHeaders,
+        credentials: "include",
       });
       if (res.ok) {
         setApproveState("done");
@@ -781,7 +783,7 @@ function PendingRecordRow({
     try {
       const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "DELETE",
-        headers: authHeaders,
+        credentials: "include",
       });
       if (res.ok) {
         setDeleteState("done");
@@ -922,7 +924,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
   const fetchPending = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols?page=${p}&limit=20`, { headers: authHeaders });
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols?page=${p}&limit=20`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json() as { records: PendingCCRecord[]; total: number; pages: number; page: number };
         setRecords(data.records);
@@ -933,7 +935,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
     } catch { } finally {
       setLoading(false);
     }
-  }, [authHeaders]);
+  }, []);
 
   useEffect(() => { fetchPending(1); }, [fetchPending, refreshKey]);
 
@@ -1072,7 +1074,8 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
     try {
       const res = await fetch(`${API_BASE}/api/admin/cc-screen`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fragment: fragment.trim(), source_book: sourceBook, source_page: sourcePage.trim() }),
       });
       const data = await res.json() as { ok?: boolean; record?: CCRecord; warnings?: string[]; error?: string; message?: string };
@@ -1104,7 +1107,8 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
     try {
       const res = await fetch(`${API_BASE}/api/admin/cc-save`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed),
       });
       const data = await res.json() as { ok?: boolean; id?: number; error?: string; translations?: Record<string, string> };
@@ -1384,13 +1388,13 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
 
 export default function Admin() {
   const { t } = useLanguage();
-  const { isAuthenticated, isAdmin, getAuthHeaders } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const authHeaders = getAuthHeaders();
+  const authHeaders: Record<string, string> = {};
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -1400,7 +1404,7 @@ export default function Admin() {
     setLoading(true);
     try {
       const url = `${API_BASE}/api/admin/users?q=${encodeURIComponent(q)}&page=${page}&limit=50`;
-      const res = await fetch(url, { headers: authHeaders });
+      const res = await fetch(url, { credentials: "include" });
       if (res.ok) {
         const data = await res.json() as { users: AdminUser[]; total: number; pages: number; page: number };
         setUsers(data.users);

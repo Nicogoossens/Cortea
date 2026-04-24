@@ -10,6 +10,7 @@ import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
 import { z } from "zod";
+import { extractToken } from "../lib/auth-middleware";
 
 const execAsync = promisify(exec);
 const __currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -22,16 +23,11 @@ const WORKSPACE_ROOT = __currentDir.endsWith("/dist")
 const router = Router();
 
 /**
- * Middleware: verifies Bearer token and confirms the user has is_admin=true.
+ * Middleware: verifies session (cookie or Bearer fallback) and confirms is_admin=true.
  */
 async function requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).json({ error: "Authentication is required." });
-      return;
-    }
-    const token = authHeader.slice(7).trim();
+    const token = extractToken(req);
     if (!token) {
       res.status(401).json({ error: "Authentication is required." });
       return;
@@ -51,7 +47,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction): Pr
     }
     (req as Request & { resolvedUserId: string }).resolvedUserId = user.id;
     next();
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: "A difficulty arose validating your session." });
   }
 }

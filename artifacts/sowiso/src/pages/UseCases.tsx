@@ -358,19 +358,14 @@ function UseCaseCard({ useCase, onSelect, isAuthenticated }: {
 }
 
 export default function UseCases() {
-  const { isAuthenticated, getAuthHeaders } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
   const [selected, setSelected] = useState<UseCase | null>(null);
 
   const { data: useCases, isLoading } = useQuery<UseCase[]>({
     queryKey: ["use-cases"],
     queryFn: async () => {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (isAuthenticated) {
-        const authHeaders = getAuthHeaders();
-        Object.assign(headers, authHeaders);
-      }
-      const res = await fetch(`${API_BASE}/api/use-cases`, { headers });
+      const res = await fetch(`${API_BASE}/api/use-cases`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch use cases");
       return res.json();
     },

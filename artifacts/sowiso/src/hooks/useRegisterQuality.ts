@@ -8,7 +8,6 @@ export interface QualityResult {
 
 const DEBOUNCE_MS = 900;
 const MIN_LENGTH  = 30;
-const SESSION_TOKEN_KEY = "sowiso_session_token";
 
 export function useRegisterQuality(locale: string, domain?: string) {
   const [result, setResult]     = useState<QualityResult | null>(null);
@@ -28,12 +27,6 @@ export function useRegisterQuality(locale: string, domain?: string) {
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
 
-      const token = localStorage.getItem(SESSION_TOKEN_KEY);
-      if (!token) {
-        setResult(null);
-        return;
-      }
-
       setChecking(true);
       try {
         const body: Record<string, string> = { text: text.trim(), locale };
@@ -41,10 +34,8 @@ export function useRegisterQuality(locale: string, domain?: string) {
 
         const res = await fetch("/api/register-quality/check", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
           signal: abortRef.current.signal,
         });

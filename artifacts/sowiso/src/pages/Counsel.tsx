@@ -141,17 +141,12 @@ export default function Counsel() {
 
       // Log counsel quality for use-case readiness computation (fire-and-forget)
       if (qualityResult && logDomain) {
-        const token = localStorage.getItem("sowiso_session_token");
-        if (token) {
-          fetch(`${API_BASE}/api/counsel/log-quality`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-            body: JSON.stringify({ domain: logDomain, score: qualityResult.score }),
-          }).catch(() => {});
-        }
+        fetch(`${API_BASE}/api/counsel/log-quality`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ domain: logDomain, score: qualityResult.score }),
+        }).catch(() => {});
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));

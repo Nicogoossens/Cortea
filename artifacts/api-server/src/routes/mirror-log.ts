@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@workspace/db";
 import { mirrorScanLogTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { extractToken } from "../lib/auth-middleware";
 
 const router = Router();
 
@@ -13,11 +14,10 @@ const MirrorLogSchema = z.object({
 
 router.post("/mirror/log-scan", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractToken(req);
+    if (!token) {
       return res.status(401).json({ error: "Authentication required." });
     }
-    const token = authHeader.slice(7).trim();
     const [user] = await db
       .select({ id: usersTable.id })
       .from(usersTable)

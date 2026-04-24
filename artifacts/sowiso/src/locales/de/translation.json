@@ -79,6 +79,7 @@
   "atelier.empty": "Keine Szenarien verfügbar.",
   "atelier.empty_region_hint": "Für diese Region sind derzeit keine Trainingsszenarien verfügbar:",
   "atelier.change_region": "Ihre aktive Region ändern",
+  "atelier.fallback_banner": "Regionspezifische Inhalte für {{region}} werden vorbereitet. In der Zwischenzeit werden universelle Etikette-Szenarien angezeigt.",
   "atelier.region": "Region",
   "atelier.all_pillars": "Alle Säulen",
   "compass.quick_brief": "Kurzüberblick",

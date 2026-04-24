@@ -80,6 +80,7 @@
   "atelier.empty": "لا توجد سيناريوهات متاحة.",
   "atelier.empty_region_hint": "لا توجد سيناريوهات تدريب متاحة حالياً لـ",
   "atelier.change_region": "غيّر منطقتك النشطة",
+  "atelier.fallback_banner": "يتم إعداد محتوى خاص بمنطقة {{region}}. في غضون ذلك، يتم عرض سيناريوهات آداب سلوك عالمية.",
   "atelier.region": "المنطقة",
   "atelier.all_pillars": "جميع الدعائم",
   "compass.quick_brief": "ملخص سريع",

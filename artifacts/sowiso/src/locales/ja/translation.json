@@ -80,6 +80,7 @@
   "atelier.empty": "利用可能なシナリオはありません。",
   "atelier.empty_region_hint": "現在、以下の地域のトレーニングシナリオはご利用いただけません",
   "atelier.change_region": "アクティブな地域を変更する",
+  "atelier.fallback_banner": "{{region}}の地域固有のコンテンツを準備中です。それまでの間、普遍的なエチケットのシナリオを表示しています。",
   "atelier.region": "地域",
   "atelier.all_pillars": "すべての柱",
   "compass.quick_brief": "クイックブリーフ",

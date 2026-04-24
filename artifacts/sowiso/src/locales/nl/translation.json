@@ -82,6 +82,7 @@
   "atelier.empty": "Geen scenario's beschikbaar.",
   "atelier.empty_region_hint": "Er zijn momenteel geen trainingsscenario's beschikbaar voor",
   "atelier.change_region": "Wijzig uw actieve regio",
+  "atelier.fallback_banner": "Regiospecifieke inhoud voor {{region}} wordt voorbereid. In de tussentijd worden universele etiquettescenario's weergegeven.",
   "atelier.region": "Regio",
   "atelier.all_pillars": "Alle Pijlers",
   "compass.quick_brief": "Snelle Briefing",

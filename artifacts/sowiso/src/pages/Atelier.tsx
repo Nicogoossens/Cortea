@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, BookOpen, Lock } from "lucide-react";
+import { Clock, TrendingUp, BookOpen, Lock, Globe } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { TierGate } from "@/components/TierGate";
@@ -86,6 +86,13 @@ export default function Atelier() {
     : allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
   const hasLockedScenarios = (lockedScenarios?.length ?? 0) > 0;
 
+  // Fallback detection: when scenarios are returned but none belong to the
+  // selected region, the API supplemented with universal (GB) content.
+  const isUsingFallback =
+    !!allScenarios &&
+    allScenarios.length > 0 &&
+    !allScenarios.some((s) => s.region_code === activeRegion);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="space-y-4 max-w-3xl">
@@ -101,6 +108,16 @@ export default function Atelier() {
         <span className="font-medium text-foreground/80">{getRegionName(activeRegion)}</span>
         <span className="text-muted-foreground/60 text-xs">{t("atelier.region")}</span>
       </div>
+
+      {/* Fallback banner — shown when region has no own scenarios yet */}
+      {isUsingFallback && (
+        <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-amber-500/20 bg-amber-50/30 dark:bg-amber-900/10 text-sm">
+          <Globe className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600/70 dark:text-amber-400/70" aria-hidden="true" />
+          <p className="text-foreground/70">
+            {t("atelier.fallback_banner", { region: getRegionName(activeRegion) })}
+          </p>
+        </div>
+      )}
 
       {/* Visitor preview banner — shown only to unauthenticated visitors */}
       {isVisitor && (

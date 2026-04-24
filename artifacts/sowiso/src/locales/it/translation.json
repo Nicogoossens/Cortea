@@ -73,6 +73,7 @@
   "atelier.empty": "Nessuno scenario disponibile.",
   "atelier.empty_region_hint": "Al momento non sono disponibili scenari di formazione per",
   "atelier.change_region": "Cambiare la propria regione attiva",
+  "atelier.fallback_banner": "Il contenuto specifico per la regione {{region}} è in preparazione. Nel frattempo vengono visualizzati scenari di galateo universali.",
   "atelier.region": "Regione",
   "atelier.all_pillars": "Tutti i Pilastri",
   "compass.quick_brief": "Scheda Rapida",

@@ -83,6 +83,7 @@
   "atelier.empty": "No scenarios available.",
   "atelier.empty_region_hint": "No training scenarios are currently available for",
   "atelier.change_region": "Change your active region",
+  "atelier.fallback_banner": "Region-specific content for {{region}} is being prepared. Showing universal etiquette scenarios in the meantime.",
   "atelier.region": "Region",
   "atelier.all_pillars": "All Pillars",
   "compass.quick_brief": "Quick Brief",

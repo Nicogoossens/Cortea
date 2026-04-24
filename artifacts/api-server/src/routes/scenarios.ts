@@ -121,10 +121,30 @@ router.get("/scenarios", async (req, res) => {
     const matchingContexts = spheres.length > 0 ? getContextsForSpheres(spheres) : [];
     const matchingCtxSet = new Set(matchingContexts);
 
-    const scenarios = await db.select()
+    const FALLBACK_REGION = "GB";
+    const FALLBACK_THRESHOLD = 3;
+
+    let scenarios = await db.select()
       .from(scenariosTable)
       .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`)
       .limit(limit);
+
+    // When a region has fewer than FALLBACK_THRESHOLD scenarios, supplement
+    // with universal (GB) scenarios so the Atelier is never empty.
+    if (region_code !== undefined && region_code !== FALLBACK_REGION && scenarios.length < FALLBACK_THRESHOLD) {
+      const fallbackConditions: ReturnType<typeof eq>[] = [eq(scenariosTable.region_code, FALLBACK_REGION)];
+      if (pillar !== undefined) fallbackConditions.push(eq(scenariosTable.pillar, pillar));
+      if (difficulty_max !== undefined) fallbackConditions.push(lte(scenariosTable.difficulty_level, difficulty_max));
+
+      const fallbackScenarios = await db.select()
+        .from(scenariosTable)
+        .where(and(...fallbackConditions))
+        .limit(limit - scenarios.length);
+
+      const existingIds = new Set(scenarios.map((s) => s.id));
+      const newFallbacks = fallbackScenarios.filter((s) => !existingIds.has(s.id));
+      scenarios = [...scenarios, ...newFallbacks];
+    }
 
     if (matchingCtxSet.size > 0) {
       scenarios.sort((a, b) => {

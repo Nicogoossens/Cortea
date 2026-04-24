@@ -73,6 +73,7 @@
   "atelier.empty": "Nenhum cenário disponível.",
   "atelier.empty_region_hint": "Não existem atualmente cenários de treino disponíveis para",
   "atelier.change_region": "Alterar a sua região ativa",
+  "atelier.fallback_banner": "O conteúdo específico para a região {{region}} está a ser preparado. Entretanto, são apresentados cenários de etiqueta universais.",
   "atelier.region": "Região",
   "atelier.all_pillars": "Todos os Pilares",
   "compass.quick_brief": "Resumo Rápido",

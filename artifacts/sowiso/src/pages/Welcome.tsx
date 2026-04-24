@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
@@ -183,24 +183,47 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 w-full border-t border-border/20 pt-8 animate-in fade-in duration-700" style={{ animationDelay: "500ms" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full border-t border-border/20 pt-8 animate-in fade-in duration-700" style={{ animationDelay: "500ms" }}>
             {[
-              { icon: BookOpen,  labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc" },
-              { icon: Shield,    labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc" },
-              { icon: Compass,   labelKey: "nav.compass", descKey: "welcome.module_compass_desc" },
-              { icon: ScanFace,  labelKey: "nav.mirror",  descKey: "welcome.module_mirror_desc"  },
-            ].map(({ icon: Icon, labelKey, descKey }) => (
-              <div key={labelKey} className="text-center space-y-2">
-                <Icon className="w-6 h-6 mx-auto text-primary/60" aria-hidden="true" />
-                <div className="font-serif text-sm text-foreground">{t(labelKey as Parameters<typeof t>[0])}</div>
-                <div className="text-xs text-muted-foreground font-light">{t(descKey as Parameters<typeof t>[0])}</div>
-              </div>
+              { icon: BookOpen,  labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc", href: "/atelier" },
+              { icon: Shield,    labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc", href: "/counsel" },
+              { icon: Compass,   labelKey: "nav.compass", descKey: "welcome.module_compass_desc", href: "/compass" },
+              { icon: ScanFace,  labelKey: "nav.mirror",  descKey: "welcome.module_mirror_desc",  href: "/mirror"  },
+            ].map(({ icon: Icon, labelKey, descKey, href }) => (
+              <Link key={labelKey} href={href}>
+                <div className="flex items-start gap-4 p-5 rounded-sm border border-transparent hover:border-border/40 hover:bg-card/60 transition-all duration-200 group cursor-pointer">
+                  <Icon className="w-5 h-5 mt-0.5 text-primary/60 group-hover:text-primary/80 transition-colors shrink-0" aria-hidden="true" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="font-serif text-sm text-foreground">{t(labelKey as Parameters<typeof t>[0])}</div>
+                    <div className="text-xs text-muted-foreground font-light leading-relaxed">{t(descKey as Parameters<typeof t>[0])}</div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-primary/30 group-hover:text-primary/60 transition-colors shrink-0 mt-0.5" aria-hidden="true" />
+                </div>
+              </Link>
             ))}
           </div>
 
-          <p className="text-xs text-muted-foreground/60 font-light leading-relaxed max-w-2xl text-center border-t border-border/10 pt-6 animate-in fade-in duration-700" style={{ animationDelay: "600ms" }}>
-            {t("welcome.disclaimer")}
-          </p>
+          <div className="w-full border-t border-border/10 pt-8 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "600ms" }}>
+            <h2 className="text-center font-serif text-lg text-foreground/80">
+              {t("welcome.audience_section_title")}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body" },
+                { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body"      },
+                { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body"      },
+                { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body"     },
+              ].map(({ headingKey, bodyKey }) => (
+                <div key={headingKey} className="space-y-1.5 px-5 py-4 rounded-sm border border-border/20 bg-card/40">
+                  <h3 className="font-serif text-sm text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
+                  <p className="text-xs text-muted-foreground font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/50 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
+              {t("welcome.foundation_sentence")}
+            </p>
+          </div>
         </div>
       </LandingLayout>
     );

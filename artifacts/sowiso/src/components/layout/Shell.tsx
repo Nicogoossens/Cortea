@@ -46,9 +46,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar text-sidebar-foreground">
-        <span className="font-serif text-xl tracking-wide text-sidebar-primary" aria-label={t("app.name")}>
-          {t("app.name")}
-        </span>
+        <Link href="/">
+          <span className="font-serif text-xl tracking-wide text-sidebar-primary cursor-pointer" aria-label={t("app.name")}>
+            {t("app.name")}
+          </span>
+        </Link>
         <Button
           variant="ghost"
           size="icon"
@@ -150,9 +152,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
         aria-label="Application sidebar"
       >
         <div className="p-8 flex items-center justify-center border-b border-sidebar-border/50">
-          <span className="font-serif text-3xl tracking-widest text-sidebar-primary uppercase">
-            {t("app.name")}
-          </span>
+          <Link href="/">
+            <span className="font-serif text-3xl tracking-widest text-sidebar-primary uppercase cursor-pointer hover:opacity-80 transition-opacity">
+              {t("app.name")}
+            </span>
+          </Link>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto" aria-label={t("nav.aria_label")}>

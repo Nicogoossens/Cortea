@@ -38,7 +38,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!userId || !profile || !nobleScore) return;
-    const sessionKey = `welcome_shown_${userId}`;
+    const sessionKey = `welcome_shown_${firstName ? "named" : "anon"}_${userId}`;
     if (sessionStorage.getItem(sessionKey)) return;
     sessionStorage.setItem(sessionKey, "1");
 

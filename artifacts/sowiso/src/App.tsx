@@ -1,5 +1,6 @@
 import "@/i18n"; // initialise i18next before any component renders
 import { Shell } from "./components/layout/Shell";
+import { LandingLayout } from "./components/layout/LandingLayout";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -147,6 +148,18 @@ function AppRouter() {
         </Shell>
       </Route>
 
+      {/* Auth routes — always sidebar-free */}
+      <Route path="/register">
+        <LandingLayout>
+          <Register />
+        </LandingLayout>
+      </Route>
+      <Route path="/signin">
+        <LandingLayout>
+          <SignIn />
+        </LandingLayout>
+      </Route>
+
       {/* Auth-conditional routing */}
       <Route>
         {!isAuthenticated ? (
@@ -164,8 +177,6 @@ function AppRouter() {
                   <Route path="/situations" component={Situations} />
                   <Route path="/mirror" component={Mirror} />
                   <Route path="/membership" component={Membership} />
-                  <Route path="/register" component={Register} />
-                  <Route path="/signin" component={SignIn} />
                   <Route component={NotFound} />
                 </Switch>
               </Shell>
@@ -183,8 +194,6 @@ function AppRouter() {
               <Route path="/compass/:code" component={CompassRegion} />
               <Route path="/situations" component={Situations} />
               <Route path="/profile" component={Profile} />
-              <Route path="/register" component={Register} />
-              <Route path="/signin" component={SignIn} />
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />
               <Route path="/mirror" component={Mirror} />

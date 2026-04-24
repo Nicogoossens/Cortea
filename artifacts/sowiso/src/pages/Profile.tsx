@@ -89,12 +89,9 @@ interface EnrichedLogEntry {
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 const AMBITION_LEVELS: { key: string; labelKey: string; descKey: string }[] = [
-  { key: "curious",       labelKey: "ambition.curious.label",       descKey: "ambition.curious.desc" },
-  { key: "casual",        labelKey: "ambition.casual.label",        descKey: "ambition.casual.desc" },
-  { key: "aspirational",  labelKey: "ambition.aspirational.label",  descKey: "ambition.aspirational.desc" },
-  { key: "professional",  labelKey: "ambition.professional.label",  descKey: "ambition.professional.desc" },
-  { key: "distinguished", labelKey: "ambition.distinguished.label", descKey: "ambition.distinguished.desc" },
-  { key: "diplomatic",    labelKey: "ambition.diplomatic.label",    descKey: "ambition.diplomatic.desc" },
+  { key: "casual",       labelKey: "ambition.casual.label",       descKey: "ambition.casual.desc" },
+  { key: "professional", labelKey: "ambition.professional.label", descKey: "ambition.professional.desc" },
+  { key: "diplomatic",   labelKey: "ambition.diplomatic.label",   descKey: "ambition.diplomatic.desc" },
 ];
 
 const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [

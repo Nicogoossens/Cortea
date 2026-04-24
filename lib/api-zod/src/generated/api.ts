@@ -399,6 +399,7 @@ export const GetNobleScoreResponse = zod.object({
   level_name: zod.string(),
   level_color: zod.string(),
   next_level_threshold: zod.number(),
+  next_level_name: zod.string().nullable().optional(),
   pillars: zod.array(
     zod.object({
       pillar: zod.number(),

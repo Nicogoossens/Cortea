@@ -766,6 +766,9 @@ components:
           type: string
         next_level_threshold:
           type: integer
+        next_level_name:
+          type: string
+          nullable: true
         pillars:
           type: array
           items:

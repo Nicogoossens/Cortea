@@ -61,6 +61,8 @@ export interface UserProfile {
   payment_customer_id?: string | null;
   trial_ends_at?: string | null;
   created_at: string;
+  /** Private per-user situational spheres (never exposed in admin endpoints). */
+  situational_interests?: SituationalInterestKey[];
 }
 
 export type CreateProfileBodyAmbitionLevel =
@@ -103,6 +105,10 @@ export const UpdateProfileBodySubscriptionTier = {
   ambassador: "ambassador",
 } as const;
 
+export type SituationalInterestKey =
+  | "business" | "gastronomy" | "arts_culture"
+  | "music_entertainment" | "formal_events" | "lifestyle_wellness" | "travel_hospitality";
+
 export interface UpdateProfileBody {
   birth_year?: number | null;
   gender_identity?: string | null;
@@ -111,6 +117,17 @@ export interface UpdateProfileBody {
   language_code?: string;
   active_region?: string;
   subscription_tier?: UpdateProfileBodySubscriptionTier;
+  country_of_origin?: string | null;
+  objectives?: string[];
+  interests_sports?: string[];
+  interests_cuisine?: string[];
+  interests_dress_code?: string[];
+  onboarding_completed?: boolean;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  /** Private per-user situational spheres for silent content steering. */
+  situational_interests?: SituationalInterestKey[];
 }
 
 export interface UpdateRegionBody {
@@ -144,6 +161,7 @@ export interface CultureProtocol {
   pillar: number;
   rule_type: string;
   rule_description: string;
+  display_rule?: string;
   gender_applicability: CultureProtocolGenderApplicability;
   context: CultureProtocolContext;
 }
@@ -154,7 +172,6 @@ export interface CultureCompassEntry {
   core_value: string;
   biggest_taboo: string;
   flag_emoji: string;
-  /** True when this region has at least one locale of compass content ready. */
   has_content: boolean;
 }
 
@@ -178,6 +195,8 @@ export interface CultureCompassDetail {
   dos: string[];
   donts: string[];
   mehrabian_weight?: CultureCompassDetailMehrabianWeight;
+  /** Fields whose content is most relevant to the user's selected spheres. */
+  sphere_highlights?: string[];
 }
 
 export interface ScenarioOption {
@@ -201,7 +220,6 @@ export interface Scenario {
   difficulty_level: number;
   estimated_minutes?: number;
   noble_score_impact: number;
-  /** True when the scenario belongs to the requested region; false when it is a universal fallback. */
   is_regional?: boolean;
   content_json: ScenarioContent;
 }
@@ -226,6 +244,7 @@ export interface NobleScoreData {
   level_name: string;
   level_color: string;
   next_level_threshold: number;
+  next_level_name?: string | null;
   pillars: PillarProgress[];
 }
 
@@ -265,6 +284,15 @@ export type GetCultureProtocolsParams = {
    */
   pillar?: number;
   context?: GetCultureProtocolsContext;
+  /**
+   * BCP 47 locale code for localised rule text (e.g. en-GB, nl-NL). Defaults to en-GB.
+   */
+  locale?: string;
+  /**
+   * Comma-separated list of situational sphere keys. Matching-context protocols
+   * are ordered first in the response.
+   */
+  situational_interests?: string;
 };
 
 export type GetCultureProtocolsContext =
@@ -288,6 +316,11 @@ export type GetCultureCompassRegionParams = {
    * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
    */
   locale?: string;
+  /**
+   * Comma-separated list of situational sphere keys. When provided, sphere-relevant
+   * protocol sections are returned in sphere_highlights for subtle UI emphasis.
+   */
+  situational_interests?: string;
 };
 
 export type GetScenariosParams = {
@@ -310,6 +343,13 @@ export type GetScenariosParams = {
   difficulty_max?: number;
   age_group?: GetScenariosAgeGroup;
   limit?: number;
+  /**
+   * Comma-separated list of situational sphere keys. Matching-context scenarios
+   * are ordered first in the response.
+   */
+  situational_interests?: string;
+  /** ISO 639-1 language code for response localisation (e.g. "en", "nl"). */
+  lang?: string;
 };
 
 export type GetScenariosAgeGroup =

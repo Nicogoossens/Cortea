@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { scenariosTable, type Scenario } from "@workspace/db";
+import { scenariosTable, type Scenario, type ScenarioContent } from "@workspace/db";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -46,18 +46,44 @@ const ScenarioIdQuerySchema = z.object({
   lang: z.string().min(2).max(10).optional(),
 });
 
+/**
+ * Ensures every ScenarioOption exposes a `correct` boolean alias for legacy consumers.
+ * New content may use only `answer_tier`; this normaliser back-fills `correct` so that
+ * existing consumers reading `option.correct` never receive `undefined`.
+ *   tier 1 → correct: true   (best answer)
+ *   tier 2 → correct: false  (acceptable but not ideal)
+ *   tier 3 → correct: false  (incorrect / penalty)
+ */
+function normalizeContent(raw: ScenarioContent | null | undefined): ScenarioContent | null {
+  if (!raw) return null;
+  if (!Array.isArray(raw.options)) return raw;
+  return {
+    ...raw,
+    options: raw.options.map((opt) => {
+      if (opt.answer_tier !== undefined && opt.correct === undefined) {
+        return { ...opt, correct: opt.answer_tier === 1 };
+      }
+      return opt;
+    }),
+  };
+}
+
 /** Resolve a single scenario's title and content to the requested language.
- *  Falls back to the canonical English fields when no translation is available. */
+ *  Falls back to the canonical English fields when no translation is available.
+ *  Also normalises options so that `correct` is always present (backwards compat). */
 function resolveScenarioLocale(scenario: Scenario, lang?: string): Scenario {
-  if (!lang) return scenario;
-  const baseLang = lang.split("-")[0];
-  const title = scenario.title_i18n?.[lang] ?? scenario.title_i18n?.[baseLang] ?? scenario.title;
-  const content_json = scenario.content_i18n?.[lang] ?? scenario.content_i18n?.[baseLang] ?? scenario.content_json;
+  const baseLang = lang ? lang.split("-")[0] : undefined;
+  const title = baseLang
+    ? (scenario.title_i18n?.[lang!] ?? scenario.title_i18n?.[baseLang] ?? scenario.title)
+    : scenario.title;
+  const rawContent: ScenarioContent | null | undefined = baseLang
+    ? ((scenario.content_i18n?.[lang!] ?? scenario.content_i18n?.[baseLang] ?? scenario.content_json) as ScenarioContent | null | undefined)
+    : scenario.content_json;
+  const content_json = normalizeContent(rawContent);
   return { ...scenario, title, content_json };
 }
 
 function resolveScenarioLocales(scenarios: Scenario[], lang?: string): Scenario[] {
-  if (!lang) return scenarios;
   return scenarios.map((s) => resolveScenarioLocale(s, lang));
 }
 

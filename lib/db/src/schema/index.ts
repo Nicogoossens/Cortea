@@ -6,3 +6,5 @@ export * from "./translations";
 export * from "./noble_score_log";
 export * from "./compass_regions";
 export * from "./use_cases";
+export * from "./content_coverage";
+export * from "./social-class-config";

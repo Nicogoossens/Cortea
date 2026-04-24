@@ -353,16 +353,50 @@ const ScenarioImportSchema = z.object({
   bolton_cluster: z.number().int().min(1).max(3).nullable().optional(),
   behavioral_tags: z.array(z.string()).optional().default([]),
   correction_style: z.string().nullable().optional(),
+  // Social class register fields (all optional, safe defaults)
+  social_class: z.enum(["universal", "elite", "middle_class"]).optional().default("universal"),
+  demographic_bracket: z.enum(["common", "men_19_30", "women_19_30", "men_30_50", "women_30_50", "men_50plus", "women_50plus"]).nullable().optional(),
+  interaction_pair: z.string().nullable().optional(),
+  phase_module: z.enum(["MOD_A", "MOD_B", "MOD_C", "MOD_D", "MOD_E", "MOD_F", "MOD_G"]).nullable().optional(),
+  research_pillar: z.enum(["P1", "P2", "P3", "P4"]).nullable().optional(),
   content_json: z.object({
     situation: z.string().min(1),
     question: z.string().min(1),
     options: z.array(z.object({
       text: z.string().min(1),
-      correct: z.boolean(),
+      /** answer_tier: 1 = Good/Correct, 2 = Slightly Different/Acceptable, 3 = Would not do that/Incorrect */
+      answer_tier: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
+      /** correct is kept for backwards compatibility; answer_tier takes precedence if both supplied */
+      correct: z.boolean().optional(),
       explanation: z.string().min(1),
       behavior_signal: z.string().optional(),
     })).min(2).max(6),
+    historical_context: z.string().optional(),
   }),
+});
+
+const CultureProtocolImportSchema = z.object({
+  region_code: z.string().min(2).max(10),
+  pillar: z.number().int().min(0).max(5).default(0),
+  rule_type: z.string().default(""),
+  rule_description: z.string().default(""),
+  gender_applicability: z.string().default("all"),
+  context: z.string().default("general"),
+  source_reference: z.string().nullable().optional(),
+  // CC Screening Worker fields
+  source_book: z.string().nullable().optional(),
+  source_page: z.string().nullable().optional(),
+  pillar_code: z.enum(["Z1", "Z2", "Z3", "Z4", "Z5"]).nullable().optional(),
+  subcategory: z.string().nullable().optional(),
+  rule_raw: z.string().nullable().optional(),
+  rule_cc: z.string().nullable().optional(),
+  rule_cc_i18n: z.record(z.string(), z.string()).optional(),
+  personas: z.array(z.string()).optional(),
+  modules: z.array(z.string()).optional(),
+  urgency: z.number().int().min(1).max(3).optional(),
+  verified: z.boolean().optional().default(false),
+  // Social class register field (optional, safe default)
+  social_class: z.enum(["universal", "elite", "middle_class"]).optional().default("universal"),
 });
 
 const CompassRegionImportSchema = z.object({
@@ -372,7 +406,7 @@ const CompassRegionImportSchema = z.object({
 });
 
 const BulkImportBodySchema = z.object({
-  type: z.enum(["scenarios", "compass_regions"]),
+  type: z.enum(["scenarios", "compass_regions", "culture_protocols"]),
   items: z.array(z.unknown()).min(1).max(500),
 });
 
@@ -442,6 +476,19 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
               ...(flag_emoji ? { flag_emoji } : {}),
             },
           });
+        inserted++;
+      }
+    } else if (type === "culture_protocols") {
+      for (let i = 0; i < items.length; i++) {
+        const result = CultureProtocolImportSchema.safeParse(items[i]);
+        if (!result.success) {
+          errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
+          continue;
+        }
+        await db
+          .insert(cultureProtocolsTable)
+          .values(result.data)
+          .onConflictDoNothing({ target: [cultureProtocolsTable.region_code, cultureProtocolsTable.pillar, cultureProtocolsTable.rule_type] });
         inserted++;
       }
     }

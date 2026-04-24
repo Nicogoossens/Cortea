@@ -27,10 +27,13 @@ export const cultureProtocolsTable = pgTable("culture_protocols", {
   urgency: integer("urgency").default(2),
   verified: boolean("verified").default(false),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // Social class register
+  social_class: text("social_class").notNull().default("universal"),
 }, (t) => [
   unique("culture_protocols_region_pillar_rule_key").on(t.region_code, t.pillar, t.rule_type),
   check("culture_protocols_urgency_check", sql`${t.urgency} IS NULL OR (${t.urgency} >= 1 AND ${t.urgency} <= 3)`),
   check("culture_protocols_pillar_code_check", sql`${t.pillar_code} IS NULL OR ${t.pillar_code} IN ('Z1','Z2','Z3','Z4','Z5')`),
+  check("culture_protocols_social_class_check", sql`${t.social_class} IN ('universal','elite','middle_class')`),
 ]);
 
 export const insertCultureProtocolSchema = createInsertSchema(cultureProtocolsTable).omit({ id: true });

@@ -2,14 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { Globe, ChevronDown, Check } from "lucide-react";
 import { useLanguage, LOCALE_GROUPS, getLocaleDefinition, type SupportedLocale } from "@/lib/i18n";
-
-function FlagEmoji({ countryCode }: { countryCode: string }) {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((c) => 0x1f1e6 + c.charCodeAt(0) - 65);
-  return <span aria-hidden="true">{String.fromCodePoint(...codePoints)}</span>;
-}
+import { FlagEmoji } from "@/lib/active-region";
 
 function LandingLanguageSwitcher() {
   const { locale, setLocale, t } = useLanguage();
@@ -37,7 +30,7 @@ function LandingLanguageSwitcher() {
         className="flex items-center gap-2 px-3 py-2 rounded-sm text-sm text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <Globe className="w-3.5 h-3.5 opacity-60" aria-hidden="true" />
-        <FlagEmoji countryCode={current.flag} />
+        <FlagEmoji code={current.flag} className="text-base" ariaLabel={current.regionLabel} />
         <span className="font-mono tracking-wide text-xs">{current.languageLabel}</span>
         <ChevronDown
           className={`w-3 h-3 opacity-50 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
@@ -76,7 +69,7 @@ function LandingLanguageSwitcher() {
                       : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
                   }`}
                 >
-                  <FlagEmoji countryCode={representative.flag} />
+                  <FlagEmoji code={representative.flag} className="text-base" ariaLabel={representative.regionLabel} />
                   <span className="flex-1">{group.groupLabel}</span>
                   {isSelected && <Check className="w-3 h-3 flex-shrink-0" aria-hidden="true" />}
                 </button>

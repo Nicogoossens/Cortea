@@ -93,8 +93,8 @@ export default function CompassRegion() {
           <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
           {t("compass.back")}
         </Link>
-        <div className="flex items-center gap-6">
-          <FlagEmoji code={detail.region_code} className="text-6xl drop-shadow-sm" />
+        <div className="flex items-center gap-4 md:gap-6">
+          <FlagEmoji code={detail.region_code} className="text-4xl sm:text-6xl drop-shadow-sm flex-shrink-0" ariaLabel={detail.region_name} />
           <div>
             <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-2">{detail.region_name}</h1>
             <p className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{detail.region_code}</p>
@@ -131,8 +131,8 @@ export default function CompassRegion() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-border/60">
-        <div className="flex items-center gap-6">
-          <FlagEmoji code={detail.region_code} className="text-6xl drop-shadow-sm" />
+        <div className="flex items-center gap-4 md:gap-6">
+          <FlagEmoji code={detail.region_code} className="text-4xl sm:text-6xl drop-shadow-sm flex-shrink-0" ariaLabel={detail.region_name} />
           <div>
             <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-2">{detail.region_name}</h1>
             <p className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{detail.region_code}</p>

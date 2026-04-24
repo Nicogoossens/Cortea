@@ -182,13 +182,13 @@ export function useActiveRegion(): ActiveRegionContextValue {
  * No external CDN — SVGs are bundled locally with the app.
  * className controls size via font-size (e.g. "text-xl", "text-4xl").
  */
-export function FlagEmoji({ code, className }: { code: string; className?: string }) {
+export function FlagEmoji({ code, className, ariaLabel }: { code: string; className?: string; ariaLabel?: string }) {
   const lower = code.toLowerCase().slice(0, 2);
   return (
     <span
       className={`fi fi-${lower} ${className ?? "text-xl"}`}
       role="img"
-      aria-label={code.toUpperCase()}
+      aria-label={ariaLabel ?? code.toUpperCase()}
     />
   );
 }

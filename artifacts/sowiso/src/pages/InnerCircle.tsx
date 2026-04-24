@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TierGate } from "@/components/TierGate";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
-import { Users, Globe } from "lucide-react";
+import { Users, Globe, Link2, Download, Check } from "lucide-react";
+import { toPng } from "html-to-image";
 
 const SIMULATED_PRESENCE: { city: string; region: string; count: number; col: number; row: number }[] = [
   { city: "London",        region: "GB", count: 12, col: 2, row: 1 },
@@ -110,9 +112,39 @@ export default function InnerCircle() {
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
+
+  const handleCopyLink = useCallback(() => {
+    if (copied) return;
+    const url = `${window.location.origin}/inner-circle`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      setCopied(false);
+    });
+  }, [copied]);
+
+  const handleDownload = useCallback(async () => {
+    if (!cardRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, { cacheBust: true, pixelRatio: 2 });
+      const link = document.createElement("a");
+      link.download = "cortea-calling-card.png";
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      // Silent failure — browser may block on strict CSP environments
+    } finally {
+      setDownloading(false);
+    }
+  }, [downloading]);
 
   const totalMembers = SIMULATED_PRESENCE.reduce((sum, p) => sum + p.count, 0);
   const topCity = [...SIMULATED_PRESENCE].sort((a, b) => b.count - a.count)[0];
@@ -210,7 +242,7 @@ export default function InnerCircle() {
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <Card className="border-amber-400/20 bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-900/10">
+          <Card ref={cardRef} className="border-amber-400/20 bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-900/10">
             <CardHeader className="pb-2">
               <CardDescription className="uppercase tracking-widest text-xs font-semibold text-amber-700/70">{t("inner_circle.calling_card")}</CardDescription>
               <CardTitle className="font-serif text-xl text-foreground">{name}</CardTitle>
@@ -253,8 +285,41 @@ export default function InnerCircle() {
               >
                 <span className="font-serif text-3xl tracking-widest text-amber-600/30 select-none">Cortéa</span>
               </div>
+
             </CardContent>
           </Card>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 text-xs border-border/50"
+              onClick={handleCopyLink}
+              disabled={copied}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  {t("inner_circle.link_copied")}
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-3.5 w-3.5" />
+                  {t("inner_circle.copy_link")}
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-1.5 text-xs border-border/50"
+              onClick={handleDownload}
+              disabled={downloading}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t("inner_circle.download_card")}
+            </Button>
+          </div>
 
           <Card className="border-border/30 bg-muted/10">
             <CardContent className="flex items-start gap-3 py-4 text-xs text-muted-foreground">

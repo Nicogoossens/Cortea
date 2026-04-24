@@ -73,6 +73,8 @@ export const usersTable = pgTable("users", {
   situational_interests: json("situational_interests").$type<string[]>().notNull().default([]),
   // Privacy & device permissions — synced across devices
   privacy_settings: jsonb("privacy_settings").$type<PrivacySettings>(),
+  // Password-based authentication
+  password_hash: text("password_hash"),
 });
 
 export interface PrivacySettings {

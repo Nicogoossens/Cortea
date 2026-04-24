@@ -17,5 +17,11 @@
     "jsonrepair": "^3.13.3",
     "stripe": "^22.0.1",
     "stripe-replit-sync": "^1.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "yaml": "^2.8.3",
+      "brace-expansion@^2": "^2.0.3"
+    }
   }
 }

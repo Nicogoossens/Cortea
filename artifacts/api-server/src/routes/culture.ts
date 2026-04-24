@@ -137,10 +137,13 @@ router.get("/culture/compass", async (req, res) => {
     const queryParsed = CompassQuerySchema.safeParse(req.query);
     const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
 
-    const rows = await db.select().from(compassRegionsTable);
+    const rows = await db.select()
+      .from(compassRegionsTable)
+      .where(eq(compassRegionsTable.is_published, true));
 
     const entries = rows.map((row) => {
       const content = (row.content as unknown as Record<string, Record<string, string>>);
+      const has_content = Object.keys(content).length > 0;
       const localeContent = content[locale] ?? content[DEFAULT_LOCALE] ?? {};
 
       return {
@@ -149,8 +152,12 @@ router.get("/culture/compass", async (req, res) => {
         region_name: localeContent.region_name ?? row.region_code,
         core_value: localeContent.core_value ?? "",
         biggest_taboo: localeContent.biggest_taboo ?? "",
+        has_content,
       };
     });
+
+    // Published countries with content first, then coming-soon
+    entries.sort((a, b) => (b.has_content ? 1 : 0) - (a.has_content ? 1 : 0));
 
     return res.json(entries);
   } catch (err) {
@@ -185,7 +192,10 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
 
     const rows = await db.select()
       .from(compassRegionsTable)
-      .where(eq(compassRegionsTable.region_code, regionCode));
+      .where(and(
+        eq(compassRegionsTable.region_code, regionCode),
+        eq(compassRegionsTable.is_published, true),
+      ));
 
     if (rows.length === 0) {
       return res.status(404).json({

@@ -507,6 +507,7 @@
   "compass.unlock_ambassador": "Débloquer avec Ambassadeur",
   "compass.unlock_region": "Débloquer cette région",
   "compass.coming_soon": "Bientôt disponible",
+  "compass.coming_soon_desc": "Le guide culturel de cette région est en cours de préparation. Revenez bientôt.",
   "compass.hs_dining": "Protocole de table formel lors de galas à plusieurs plats et occasions d'État.",
   "compass.hs_dress": "Distinctions vestimentaires : white-tie, black-tie et hiérarchies de la tenue de ville.",
   "compass.hs_address": "Formes d'adresse correctes pour les personnes titrées et diplomatiques.",

@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { LandingLayout } from "@/components/layout/LandingLayout";
 
 type Phase = "hero" | "quiz" | "result";
@@ -31,14 +31,6 @@ const QUESTION_KEYS = [
     explanationKey: "welcome.quiz_q3_explanation" as const,
   },
 ];
-
-function FlagEmoji({ countryCode }: { countryCode: string }) {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((c) => 0x1f1e0 + c.charCodeAt(0) - 65);
-  return <span aria-hidden="true">{String.fromCodePoint(...codePoints)}</span>;
-}
 
 const FEATURED_REGIONS: RegionCode[] = ["GB", "US", "FR", "DE", "JP", "AE", "CN", "AU", "NL", "SG"];
 
@@ -78,7 +70,7 @@ function RegionPicker() {
                   : "border-border/50 bg-card text-foreground/60 hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
               }`}
             >
-              <FlagEmoji countryCode={code} />
+              <FlagEmoji code={code} />
               <span className="hidden sm:inline">{getRegionName(code)}</span>
               <span className="sm:hidden">{code}</span>
             </button>

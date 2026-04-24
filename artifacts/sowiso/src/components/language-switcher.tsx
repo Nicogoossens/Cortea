@@ -1,14 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
 import { useLocale, LOCALE_GROUPS, getLocaleDefinition, type SupportedLocale } from "@/lib/i18n";
-
-function FlagEmoji({ countryCode }: { countryCode: string }) {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((c) => 0x1f1e0 + c.charCodeAt(0) - 65);
-  return <span aria-hidden="true">{String.fromCodePoint(...codePoints)}</span>;
-}
+import { FlagEmoji } from "@/lib/active-region";
 
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useLocale();
@@ -42,7 +35,7 @@ export function LanguageSwitcher() {
       >
         <Globe className="w-3 h-3 flex-shrink-0 opacity-60" aria-hidden="true" />
         <span className="flex items-center gap-1.5 flex-1 min-w-0">
-          <FlagEmoji countryCode={current.flag} />
+          <FlagEmoji code={current.flag} />
           <span className="truncate font-mono tracking-wide leading-none">
             {current.languageLabel}
             {((LOCALE_GROUPS.find((g) => g.locales.some((l) => l.locale === locale))?.locales.length ?? 1) > 1) && (
@@ -83,7 +76,7 @@ export function LanguageSwitcher() {
                           : "text-sidebar-foreground/80 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
                       }`}
                     >
-                      <FlagEmoji countryCode={def.flag} />
+                      <FlagEmoji code={def.flag} />
                       <span className="flex-1 text-left leading-tight">
                         <span className="block font-medium">{def.languageLabel}</span>
                         <span className="block text-[10px] opacity-60">{def.regionLabel}</span>

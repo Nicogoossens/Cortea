@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,6 +20,7 @@ export const compassRegionsTable = pgTable("compass_regions", {
   region_code: text("region_code").primaryKey(),
   flag_emoji: text("flag_emoji").notNull(),
   content: jsonb("content").$type<CompassLocaleMap>().notNull().default({}),
+  is_published: boolean("is_published").notNull().default(false),
 });
 
 export const insertCompassRegionSchema = createInsertSchema(compassRegionsTable);

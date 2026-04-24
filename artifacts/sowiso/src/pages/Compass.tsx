@@ -6,7 +6,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { Compass as CompassIcon, Globe, Lock, LayoutGrid, List } from "lucide-react";
+import { Compass as CompassIcon, Globe, Lock, LayoutGrid, List, Clock } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { CULTURE_CLUSTERS, getClusterBrief } from "@/lib/clusters";
@@ -220,6 +220,29 @@ export default function Compass() {
                         />
                       </Card>
                     </Link>
+                  );
+                }
+
+                if (!region.has_content) {
+                  return (
+                    <Card key={region.region_code} className="h-full border-border/50 border-dashed bg-card/40 overflow-hidden" aria-label={`${region.region_name} — coming soon`}>
+                      <div className="h-2 w-full bg-muted/40" aria-hidden="true" />
+                      <CardHeader>
+                        <div className="flex justify-between items-center mb-2">
+                          <FlagEmoji code={region.region_code} className="text-4xl leading-none opacity-40" />
+                          <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest uppercase text-muted-foreground/50">
+                            <Clock className="h-3 w-3" aria-hidden="true" />
+                            <span>{t("compass.coming_soon")}</span>
+                          </div>
+                        </div>
+                        <CardTitle className="font-serif text-2xl text-muted-foreground/40">{region.region_name}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-xs text-muted-foreground/40 font-light italic">
+                          {t("compass.coming_soon_desc")}
+                        </p>
+                      </CardContent>
+                    </Card>
                   );
                 }
 

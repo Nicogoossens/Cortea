@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
+  const { activeRegion } = useActiveRegion();
 
   const allNavigation = [
     { key: "nav.dashboard",   href: "/",            icon: Landmark, authOnly: true  },
@@ -47,8 +49,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar text-sidebar-foreground">
         <Link href="/">
-          <span className="font-serif text-xl tracking-wide text-sidebar-primary cursor-pointer" aria-label={t("app.name")}>
+          <span className="flex items-center gap-2 font-serif text-xl tracking-wide text-sidebar-primary cursor-pointer" aria-label={t("app.name")}>
             {t("app.name")}
+            <span className="text-base leading-none opacity-70" aria-hidden="true">
+              <FlagEmoji code={activeRegion} />
+            </span>
           </span>
         </Link>
         <Button

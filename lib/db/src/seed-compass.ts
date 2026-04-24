@@ -6,6 +6,7 @@ const COMPASS_SEED = [
   {
     region_code: "GB",
     flag_emoji: "🇬🇧",
+    is_published: true,
     content: {
       "en-GB": {
         region_name: "United Kingdom",
@@ -311,6 +312,7 @@ const COMPASS_SEED = [
   {
     region_code: "CN",
     flag_emoji: "🇨🇳",
+    is_published: true,
     content: {
       "en-GB": {
         region_name: "China",
@@ -922,6 +924,7 @@ const COMPASS_SEED = [
   {
     region_code: "AU",
     flag_emoji: "🇦🇺",
+    is_published: true,
     content: {
       "en-GB": {
         region_name: "Australia",
@@ -1237,6 +1240,7 @@ async function seedCompass() {
         set: {
           flag_emoji: region.flag_emoji,
           content: sql`${JSON.stringify(region.content)}::jsonb`,
+          is_published: (region as { is_published?: boolean }).is_published ?? false,
         },
       });
     console.log(`  Upserted: ${region.region_code}`);

@@ -35,8 +35,8 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### Key Design Decisions
 
-- **Locale vs Region**: `locale` (9 languages) controls UI text; `activeRegion` (18 `RegionCode` values) controls etiquette context
-- **ACTIVE_REGIONS**: Only `["GB", "CN", "CA"]` have seeded Atelier + Compass data
+- **Locale vs Region**: `locale` (9 languages) controls UI text; `activeRegion` (20 `RegionCode` values) controls etiquette context
+- **ACTIVE_REGIONS**: 17 priority countries have full Compass content (GB, AU, CN, US, JP, DE, IT, FR, BE, CH, SG, IN, MX, BR, ES, CO, AE). ~238 total country stubs in DB with `is_published=false`
 - **API routes**: All mounted at `/api` prefix in `app.ts`. Route handlers use paths WITHOUT `/api/` prefix
 - **Counsel AI**: `artifacts/api-server/src/routes/counsel.ts` — POST `/api/counsel` calls Anthropic; uses `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` + `AI_INTEGRATIONS_ANTHROPIC_API_KEY` env vars
 - **Region detection**: GET `/api/detect-region` returns IP-guessed region (session-only, GDPR-safe; no persistence unless user confirms)

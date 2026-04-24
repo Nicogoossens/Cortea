@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocale } from "@/lib/i18n";
-import { useActiveRegion } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -354,7 +354,8 @@ export default function Situations() {
               {t(selectedSituation.descKey as Parameters<typeof t>[0])}
             </p>
             {regionTips.length > 0 && (
-              <p className="text-xs font-mono uppercase tracking-widest text-primary mt-2">
+              <p className="text-xs font-mono uppercase tracking-widest text-primary mt-2 flex items-center gap-1.5">
+                <FlagEmoji code={activeRegion} />
                 {t("situations.region_tips", { region: activeRegion })}
               </p>
             )}

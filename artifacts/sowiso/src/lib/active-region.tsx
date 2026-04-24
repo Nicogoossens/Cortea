@@ -5,7 +5,8 @@ export type RegionCode =
   | "GB" | "US" | "AE" | "CN" | "JP"
   | "FR" | "DE" | "NL" | "AU" | "CA"
   | "IT" | "IN" | "ES" | "PT"
-  | "SG" | "BR" | "ZA" | "MX";
+  | "SG" | "BR" | "ZA" | "MX"
+  | "CO" | "BE" | "CH";
 
 export interface CompassRegion {
   code: RegionCode;
@@ -32,6 +33,9 @@ export const COMPASS_REGIONS: CompassRegion[] = [
   { code: "BR", flag: "BR", names: { en: "Brazil", nl: "Brazilië", fr: "Brésil", de: "Brasilien", es: "Brasil", pt: "Brasil", it: "Brasile", ar: "البرازيل", ja: "ブラジル" } },
   { code: "ZA", flag: "ZA", names: { en: "South Africa", nl: "Zuid-Afrika", fr: "Afrique du Sud", de: "Südafrika", es: "Sudáfrica", pt: "África do Sul", it: "Sudafrica", ar: "جنوب أفريقيا", ja: "南アフリカ" } },
   { code: "MX", flag: "MX", names: { en: "Mexico", nl: "Mexico", fr: "Mexique", de: "Mexiko", es: "México", pt: "México", it: "Messico", ar: "المكسيك", ja: "メキシコ" } },
+  { code: "CO", flag: "CO", names: { en: "Colombia", nl: "Colombia", fr: "Colombie", de: "Kolumbien", es: "Colombia", pt: "Colômbia", it: "Colombia", ar: "كولومبيا", ja: "コロンビア" } },
+  { code: "BE", flag: "BE", names: { en: "Belgium", nl: "België", fr: "Belgique", de: "Belgien", es: "Bélgica", pt: "Bélgica", it: "Belgio", ar: "بلجيكا", ja: "ベルギー" } },
+  { code: "CH", flag: "CH", names: { en: "Switzerland", nl: "Zwitserland", fr: "Suisse", de: "Schweiz", es: "Suiza", pt: "Suíça", it: "Svizzera", ar: "سويسرا", ja: "スイス" } },
 ];
 
 /**
@@ -39,7 +43,10 @@ export const COMPASS_REGIONS: CompassRegion[] = [
  * The Atelier (scenarios), The Cultural Compass, and The Counsel.
  * Update this set when new region data is seeded into the database.
  */
-export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set(["GB", "CN", "CA", "AU"]);
+export const ACTIVE_REGIONS: ReadonlySet<RegionCode> = new Set([
+  "GB", "AU", "CN", "US", "JP", "DE", "IT", "FR", "BE", "CH",
+  "BR", "ES", "SG", "IN", "MX", "AE", "CO",
+]);
 
 export function isRegionActive(code: RegionCode): boolean {
   return ACTIVE_REGIONS.has(code);

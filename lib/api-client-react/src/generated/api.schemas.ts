@@ -172,6 +172,7 @@ export interface CultureCompassEntry {
   core_value: string;
   biggest_taboo: string;
   flag_emoji: string;
+  has_content: boolean;
 }
 
 export type CultureCompassDetailMehrabianWeight = {

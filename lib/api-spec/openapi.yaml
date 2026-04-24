@@ -620,12 +620,16 @@ components:
           type: string
         flag_emoji:
           type: string
+        has_content:
+          type: boolean
+          description: "True when this region has at least one locale of compass content ready."
       required:
         - region_code
         - region_name
         - core_value
         - biggest_taboo
         - flag_emoji
+        - has_content
 
     CultureCompassDetail:
       type: object

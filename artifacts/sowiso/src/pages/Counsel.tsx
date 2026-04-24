@@ -13,7 +13,7 @@ import { useRegisterQuality } from "@/hooks/useRegisterQuality";
 import { LockOverlay } from "@/components/LockOverlay";
 import { BehaviorSkillsCarousel } from "@/components/BehaviorSkillsCarousel";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
-import { SITUATIONS } from "@/pages/Situations";
+import { SITUATIONS } from "@/lib/situations";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",

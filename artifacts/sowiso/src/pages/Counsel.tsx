@@ -10,6 +10,7 @@ import { useGetProfile } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useRegisterQuality } from "@/hooks/useRegisterQuality";
 import { LockOverlay } from "@/components/LockOverlay";
+import { BehaviorSkillsCarousel } from "@/components/BehaviorSkillsCarousel";
 
 const DOMAIN_KEYS = [
   "counsel.domains.dining",
@@ -152,15 +153,29 @@ export default function Counsel() {
     : false;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-3xl mx-auto space-y-8">
 
       {/* ── Header ── */}
-      <div className="text-center space-y-4 mb-8">
-        <div className="w-16 h-16 mx-auto bg-primary/5 rounded-full flex items-center justify-center mb-6">
+      <div
+        className="text-center space-y-4 mb-8 animate-in fade-in slide-in-from-bottom-3 duration-500"
+        style={{ animationFillMode: "both" }}
+      >
+        <div
+          className="w-16 h-16 mx-auto bg-primary/5 rounded-full flex items-center justify-center mb-6 animate-in zoom-in-75 duration-500"
+          style={{ animationDelay: "60ms", animationFillMode: "both" }}
+        >
           <Shield className="w-8 h-8 text-primary" aria-hidden="true" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("counsel.title")}</h1>
-        <p className="text-muted-foreground text-lg font-light leading-relaxed max-w-2xl mx-auto">
+        <h1
+          className="text-4xl md:text-5xl font-serif text-foreground animate-in fade-in slide-in-from-bottom-2 duration-500"
+          style={{ animationDelay: "120ms", animationFillMode: "both" }}
+        >
+          {t("counsel.title")}
+        </h1>
+        <p
+          className="text-muted-foreground text-lg font-light leading-relaxed max-w-2xl mx-auto animate-in fade-in duration-500"
+          style={{ animationDelay: "200ms", animationFillMode: "both" }}
+        >
           {t("counsel.subtitle")}
         </p>
       </div>
@@ -237,12 +252,15 @@ export default function Counsel() {
       </div>
 
       {/* ── Domain Overview — gated for guests ── */}
-      <div className={`space-y-3 ${isGuest ? "relative" : ""}`}>
+      <div
+        className={`space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500 ${isGuest ? "relative" : ""}`}
+        style={{ animationDelay: "280ms", animationFillMode: "both" }}
+      >
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 px-0.5">
           {t("counsel.select_domain")}
         </p>
         <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${isGuest ? "pointer-events-none select-none opacity-30 blur-[2px]" : ""}`}>
-          {DOMAIN_KEYS.map((key) => {
+          {DOMAIN_KEYS.map((key, i) => {
             const label = t(key as Parameters<typeof t>[0]);
             const accessible = isDomainAccessible(key);
             const isSelected = selectedDomain === key;
@@ -259,11 +277,12 @@ export default function Counsel() {
                 }}
                 disabled={!accessible}
                 aria-pressed={isSelected}
-                className={`group relative flex items-center justify-between gap-3 px-5 py-4 rounded-sm border text-left transition-all ${
+                style={{ animationDelay: `${i * 45}ms`, animationFillMode: "both" }}
+                className={`group relative flex items-center justify-between gap-3 px-5 py-4 rounded-sm border text-left animate-in fade-in slide-in-from-bottom-1 duration-300 transition-all ${
                   isSelected
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.01]"
                     : accessible
-                    ? "border-border/60 hover:border-primary/40 hover:bg-muted/30 text-foreground cursor-pointer"
+                    ? "border-border/60 hover:border-primary/40 hover:bg-muted/30 hover:scale-[1.005] text-foreground cursor-pointer"
                     : "border-border/30 bg-muted/10 text-muted-foreground/50 cursor-default"
                 }`}
               >
@@ -491,6 +510,11 @@ export default function Counsel() {
           </div>
         </div>
       )}
+
+      {/* ── Behavior Skills Carousel ── */}
+      <div className="pt-6 border-t border-border/30">
+        <BehaviorSkillsCarousel hasFullAccess={hasFullAccess} />
+      </div>
     </div>
   );
 }

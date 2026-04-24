@@ -71,7 +71,17 @@ export const usersTable = pgTable("users", {
   behavior_profile: jsonb("behavior_profile").$type<BehaviorProfile>(),
   // Discrete situational context layer — private, per-account, never shared
   situational_interests: json("situational_interests").$type<string[]>().notNull().default([]),
+  // Privacy & device permissions — synced across devices
+  privacy_settings: jsonb("privacy_settings").$type<PrivacySettings>(),
 });
+
+export interface PrivacySettings {
+  incognito: boolean;
+  cameraEnabled: boolean;
+  microphoneEnabled: boolean;
+  locationEnabled: boolean;
+  autoCleanup: boolean;
+}
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;

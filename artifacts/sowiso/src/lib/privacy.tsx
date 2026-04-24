@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth";
 
-const PRIVACY_KEY = "sowiso_privacy_settings";
+const PRIVACY_KEY_PREFIX = "sowiso_privacy_settings";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 interface PrivacySettings {
   incognito: boolean;
@@ -18,14 +20,18 @@ const DEFAULT_SETTINGS: PrivacySettings = {
   autoCleanup: false,
 };
 
-function loadSettings(): PrivacySettings {
+function privacyKey(userId: string | null): string {
+  return userId ? `${PRIVACY_KEY_PREFIX}_${userId}` : PRIVACY_KEY_PREFIX;
+}
+
+function loadSettings(userId: string | null): PrivacySettings | null {
   try {
-    const stored = localStorage.getItem(PRIVACY_KEY);
+    const stored = localStorage.getItem(privacyKey(userId));
     if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
   } catch {
     // ignore
   }
-  return { ...DEFAULT_SETTINGS };
+  return null;
 }
 
 interface PrivacyContextValue {
@@ -40,25 +46,70 @@ interface PrivacyContextValue {
 const PrivacyContext = createContext<PrivacyContextValue | null>(null);
 
 export function PrivacyProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<PrivacySettings>(loadSettings);
+  const { isAuthenticated, userId, getAuthHeaders } = useAuth();
+
+  const [settings, setSettings] = useState<PrivacySettings>(
+    () => loadSettings(userId) ?? { ...DEFAULT_SETTINGS }
+  );
+
+  const hydratedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      hydratedRef.current = null;
+      return;
+    }
+
+    if (hydratedRef.current === userId) return;
+
+    const localSettings = localStorage.getItem(privacyKey(userId));
+    if (localSettings) {
+      hydratedRef.current = userId;
+      return;
+    }
+
+    fetch(`${API_BASE}/api/users/profile`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((profile: { privacy_settings?: PrivacySettings | null } | null) => {
+        if (!profile?.privacy_settings) return;
+        const serverSettings = { ...DEFAULT_SETTINGS, ...profile.privacy_settings };
+        localStorage.setItem(privacyKey(userId), JSON.stringify(serverSettings));
+        setSettings(serverSettings);
+      })
+      .finally(() => {
+        hydratedRef.current = userId;
+      });
+  }, [isAuthenticated, userId, getAuthHeaders]);
+
+  function syncToServer(next: PrivacySettings): void {
+    if (!isAuthenticated) return;
+    fetch(`${API_BASE}/api/users/profile/privacy`, {
+      method: "PATCH",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    }).catch(() => {});
+  }
 
   const updateSetting = useCallback(<K extends keyof PrivacySettings>(key: K, value: PrivacySettings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
-      localStorage.setItem(PRIVACY_KEY, JSON.stringify(next));
+      localStorage.setItem(privacyKey(userId), JSON.stringify(next));
+      syncToServer(next);
       return next;
     });
-  }, []);
+  }, [isAuthenticated, userId, getAuthHeaders]);
 
   const setIncognito = useCallback((enabled: boolean) => {
     setSettings((prev) => {
       const next: PrivacySettings = enabled
         ? { ...prev, incognito: true, cameraEnabled: false, microphoneEnabled: false, locationEnabled: false }
         : { ...prev, incognito: false, cameraEnabled: true, microphoneEnabled: true, locationEnabled: true };
-      localStorage.setItem(PRIVACY_KEY, JSON.stringify(next));
+      localStorage.setItem(privacyKey(userId), JSON.stringify(next));
+      syncToServer(next);
       return next;
     });
-  }, []);
+  }, [isAuthenticated, userId, getAuthHeaders]);
 
   const canUseCamera = !settings.incognito && settings.cameraEnabled;
   const canUseMicrophone = !settings.incognito && settings.microphoneEnabled;

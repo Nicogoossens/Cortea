@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile } from "@workspace/db";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
 import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 
@@ -87,6 +87,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
       ...safeUser,
       age_group: computeAgeGroup(user.birth_year, user.noble_score),
       gender: user.gender_identity ?? null,
+      privacy_settings: user.privacy_settings ?? null,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user profile");
@@ -276,6 +277,39 @@ router.get("/users/behavior-profile", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch behavior profile");
     return res.status(500).json({ message: "The behavioral profile is momentarily unavailable." });
+  }
+});
+
+const PrivacySettingsSchema = z.object({
+  incognito: z.boolean(),
+  cameraEnabled: z.boolean(),
+  microphoneEnabled: z.boolean(),
+  locationEnabled: z.boolean(),
+  autoCleanup: z.boolean(),
+});
+
+router.patch("/users/profile/privacy", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const parsed = PrivacySettingsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "The privacy settings provided are not in the expected form." });
+    }
+
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    await db.update(usersTable)
+      .set({ privacy_settings: parsed.data })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ privacy_settings: parsed.data });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update privacy settings");
+    return res.status(500).json({ message: "A difficulty arose while saving your privacy settings." });
   }
 });
 

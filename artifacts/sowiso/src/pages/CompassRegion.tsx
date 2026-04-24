@@ -1,6 +1,8 @@
 import {
   useGetCultureCompassRegion,
   getGetCultureCompassRegionQueryKey,
+  useGetCultureProtocols,
+  getGetCultureProtocolsQueryKey,
   useGetProfile,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
@@ -35,6 +37,19 @@ export default function CompassRegion() {
       },
     }
   );
+
+  const protocolsParams = {
+    region_code: regionCode,
+    locale,
+    ...(spheresParam ? { situational_interests: spheresParam } : {}),
+  };
+
+  const { data: protocols } = useGetCultureProtocols(protocolsParams, {
+    query: {
+      enabled: !!regionCode,
+      queryKey: [...getGetCultureProtocolsQueryKey(protocolsParams), locale, spheresParam],
+    },
+  });
 
   const sphereHighlights = new Set<string>(detail?.sphere_highlights ?? []);
 
@@ -242,6 +257,58 @@ export default function CompassRegion() {
           </Card>
         </div>
       </div>
+
+      {/* Sphere-sorted etiquette rules from the protocols database */}
+      {protocols && protocols.length > 0 && (() => {
+        const doRules = protocols.filter((p) => {
+          const rt = p.rule_type.toLowerCase();
+          return rt === "do" || rt === "dos";
+        });
+        const dontRules = protocols.filter((p) => {
+          const rt = p.rule_type.toLowerCase();
+          return rt === "dont" || rt === "don't" || rt === "donts";
+        });
+        if (doRules.length === 0 && dontRules.length === 0) return null;
+        return (
+          <section aria-labelledby="etiquette-rules-heading" className="space-y-4 pt-2 border-t border-border/40">
+            <h2 id="etiquette-rules-heading" className="font-serif text-2xl border-b border-border pb-2 pt-4">
+              {t("compass.dos")} &amp; {t("compass.donts")}
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {doRules.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-green-700 dark:text-green-400">
+                    {t("compass.dos")}
+                  </h3>
+                  <ul className="space-y-2" aria-label={t("compass.dos")}>
+                    {doRules.map((p) => (
+                      <li key={p.id} className="flex gap-3 items-start text-sm">
+                        <span className="text-green-600 mt-0.5 flex-shrink-0 font-bold" aria-hidden="true">+</span>
+                        <span className="text-foreground/80 leading-snug">{p.display_rule ?? p.rule_description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {dontRules.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-red-700 dark:text-red-400">
+                    {t("compass.donts")}
+                  </h3>
+                  <ul className="space-y-2" aria-label={t("compass.donts")}>
+                    {dontRules.map((p) => (
+                      <li key={p.id} className="flex gap-3 items-start text-sm">
+                        <span className="text-red-600 mt-0.5 flex-shrink-0 font-bold" aria-hidden="true">×</span>
+                        <span className="text-foreground/80 leading-snug">{p.display_rule ?? p.rule_description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Communication Presence — Mehrabian cultural calibration */}
       {detail.mehrabian_weight && (

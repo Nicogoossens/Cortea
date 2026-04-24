@@ -161,6 +161,7 @@ export interface CultureProtocol {
   pillar: number;
   rule_type: string;
   rule_description: string;
+  display_rule?: string;
   gender_applicability: CultureProtocolGenderApplicability;
   context: CultureProtocolContext;
 }
@@ -281,6 +282,15 @@ export type GetCultureProtocolsParams = {
    */
   pillar?: number;
   context?: GetCultureProtocolsContext;
+  /**
+   * BCP 47 locale code for localised rule text (e.g. en-GB, nl-NL). Defaults to en-GB.
+   */
+  locale?: string;
+  /**
+   * Comma-separated list of situational sphere keys. Matching-context protocols
+   * are ordered first in the response.
+   */
+  situational_interests?: string;
 };
 
 export type GetCultureProtocolsContext =

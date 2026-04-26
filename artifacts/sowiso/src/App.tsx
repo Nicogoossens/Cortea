@@ -35,6 +35,7 @@ import Navigator from "@/pages/Navigator";
 import InnerCircle from "@/pages/InnerCircle";
 import Privacy from "@/pages/Privacy";
 import UseCases from "@/pages/UseCases";
+import BehaviorSkillDetail from "@/pages/BehaviorSkillDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -173,6 +174,7 @@ function AppRouter() {
                   <Route path="/compass/cluster/:id" component={CompassCluster} />
                   <Route path="/compass/:code" component={CompassRegion} />
                   <Route path="/counsel" component={Counsel} />
+                  <Route path="/counsel/skills/:id" component={BehaviorSkillDetail} />
                   <Route path="/situations" component={SituationsRedirect} />
                   <Route path="/use-cases" component={UseCases} />
                   <Route path="/mirror" component={Mirror} />
@@ -193,6 +195,7 @@ function AppRouter() {
               <Route path="/atelier" component={Atelier} />
               <Route path="/atelier/:id" component={Scenario} />
               <Route path="/counsel" component={Counsel} />
+              <Route path="/counsel/skills/:id" component={BehaviorSkillDetail} />
               <Route path="/compass" component={Compass} />
               <Route path="/compass/cluster/:id" component={CompassCluster} />
               <Route path="/compass/:code" component={CompassRegion} />

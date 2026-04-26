@@ -141,6 +141,17 @@ const AMBITION_LEVELS: { key: string; labelKey: string; descKey: string }[] = [
   { key: "diplomatic",   labelKey: "ambition.diplomatic.label",   descKey: "ambition.diplomatic.desc" },
 ];
 
+const LEGACY_AMBITION_MAP: Record<string, string> = {
+  curious:      "casual",
+  aspirational: "professional",
+  distinguished: "diplomatic",
+};
+
+function normalizeAmbitionLevel(level: string | null | undefined): string | null | undefined {
+  if (!level) return level;
+  return LEGACY_AMBITION_MAP[level] ?? level;
+}
+
 const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
   { key: "business",        labelKey: "objective.business" },
   { key: "elite",           labelKey: "objective.elite" },
@@ -527,7 +538,7 @@ export default function Profile() {
   }
 
   async function handleAmbitionChange(level: string) {
-    if (profileData?.ambition_level === level || ambitionSave === "saving") return;
+    if (normalizeAmbitionLevel(profileData?.ambition_level) === level || ambitionSave === "saving") return;
     await patchProfile({ ambition_level: level }, setAmbitionSave);
   }
 
@@ -747,7 +758,7 @@ export default function Profile() {
                     disabled={ambitionSave === "saving"}
                     title={t(descKey)}
                     className={`px-2.5 py-0.5 rounded-full text-xs border transition-all ${
-                      profileData?.ambition_level === key
+                      normalizeAmbitionLevel(profileData?.ambition_level) === key
                         ? "bg-primary/10 text-primary border-primary/30 font-medium"
                         : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
                     }`}
@@ -759,7 +770,7 @@ export default function Profile() {
               </div>
               {profileData?.ambition_level && (
                 <p className="text-xs text-muted-foreground/60 font-light pl-6 italic">
-                  {t(AMBITION_LEVELS.find((l) => l.key === profileData.ambition_level)?.descKey ?? "")}
+                  {t(AMBITION_LEVELS.find((l) => l.key === normalizeAmbitionLevel(profileData.ambition_level))?.descKey ?? "")}
                 </p>
               )}
             </div>

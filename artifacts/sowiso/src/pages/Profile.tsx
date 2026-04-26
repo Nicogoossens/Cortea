@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
-  ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
+  ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
   Layers, MapPin, ArrowRight,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
 } from "lucide-react";
@@ -333,9 +333,6 @@ export default function Profile() {
   const [countrySave, setCountrySave] = useState<SaveState>("idle");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [objectivesSave, setObjectivesSave] = useState<SaveState>("idle");
-  const [tagInputSports, setTagInputSports] = useState("");
-  const [tagInputCuisine, setTagInputCuisine] = useState("");
-  const [tagInputDressCode, setTagInputDressCode] = useState("");
   const [sportsSave, setSportsSave] = useState<SaveState>("idle");
   const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
   const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
@@ -940,17 +937,12 @@ export default function Profile() {
         </Card>
       </div>
 
-      {/* ── Interests & Objectives ── always visible, always editable ── */}
-      <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary/60" aria-hidden="true" />
-            {t("profile.interests_title")}
-          </CardTitle>
-          <CardDescription>
-            {t("profile.interests_subtitle")}
-          </CardDescription>
-        </CardHeader>
+      {/* ── Interests & Objectives ── collapsible ── */}
+      <CollapsibleSection
+        title={t("profile.interests_title")}
+        icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.interests_subtitle")}
+      >
         <CardContent className="space-y-6">
 
           {/* Country of origin */}
@@ -1056,14 +1048,11 @@ export default function Profile() {
             presets={INTEREST_PRESETS.sports}
             tags={profileData?.interests_sports ?? []}
             saveState={sportsSave}
-            customInputValue={tagInputSports}
-            onCustomInputChange={setTagInputSports}
             onTogglePreset={(v) => {
               const active = (profileData?.interests_sports ?? []).includes(v);
               if (active) handleTagRemove("sports", v);
               else handleTagAdd("sports", v, () => {});
             }}
-            onAddCustom={() => handleTagAdd("sports", tagInputSports, () => setTagInputSports(""))}
             onRemove={(v) => handleTagRemove("sports", v)}
             t={t}
           />
@@ -1075,14 +1064,11 @@ export default function Profile() {
             presets={INTEREST_PRESETS.cuisine}
             tags={profileData?.interests_cuisine ?? []}
             saveState={cuisineSave}
-            customInputValue={tagInputCuisine}
-            onCustomInputChange={setTagInputCuisine}
             onTogglePreset={(v) => {
               const active = (profileData?.interests_cuisine ?? []).includes(v);
               if (active) handleTagRemove("cuisine", v);
               else handleTagAdd("cuisine", v, () => {});
             }}
-            onAddCustom={() => handleTagAdd("cuisine", tagInputCuisine, () => setTagInputCuisine(""))}
             onRemove={(v) => handleTagRemove("cuisine", v)}
             t={t}
           />
@@ -1094,32 +1080,24 @@ export default function Profile() {
             presets={INTEREST_PRESETS.dress_code}
             tags={profileData?.interests_dress_code ?? []}
             saveState={dressCodeSave}
-            customInputValue={tagInputDressCode}
-            onCustomInputChange={setTagInputDressCode}
             onTogglePreset={(v) => {
               const active = (profileData?.interests_dress_code ?? []).includes(v);
               if (active) handleTagRemove("dress_code", v);
               else handleTagAdd("dress_code", v, () => {});
             }}
-            onAddCustom={() => handleTagAdd("dress_code", tagInputDressCode, () => setTagInputDressCode(""))}
             onRemove={(v) => handleTagRemove("dress_code", v)}
             t={t}
           />
 
         </CardContent>
-      </Card>
+      </CollapsibleSection>
 
-      {/* ── Jouw Sferen ── */}
-      <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2">
-            <Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />
-            {t("profile.spheres_title")}
-          </CardTitle>
-          <CardDescription className="font-light">
-            {t("profile.spheres_subtitle")}
-          </CardDescription>
-        </CardHeader>
+      {/* ── Jouw Sferen ── collapsible ── */}
+      <CollapsibleSection
+        title={t("profile.spheres_title")}
+        icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.spheres_subtitle")}
+      >
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
@@ -1145,7 +1123,7 @@ export default function Profile() {
             <SaveIndicator state={spheresSave} t={t} />
           </div>
         </CardContent>
-      </Card>
+      </CollapsibleSection>
 
       {/* ── Noble Standing + Domain Mastery ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1508,24 +1486,21 @@ export default function Profile() {
   );
 }
 
-/* ── Interest selector sub-component ── preset chips + custom input ── */
+/* ── Interest selector sub-component ── preset chips only ── */
 interface InterestSelectorProps {
   label: string;
   field: string;
   presets: string[];
   tags: string[];
   saveState: SaveState;
-  customInputValue: string;
-  onCustomInputChange: (v: string) => void;
   onTogglePreset: (v: string) => void;
-  onAddCustom: () => void;
   onRemove: (v: string) => void;
   t: (k: string) => string;
 }
 
 function InterestSelector({
   label, presets, tags, saveState,
-  customInputValue, onCustomInputChange, onTogglePreset, onAddCustom, onRemove, t,
+  onTogglePreset, onRemove, t,
 }: InterestSelectorProps) {
   const customTags = tags.filter((tag) => !presets.includes(tag));
 
@@ -1578,29 +1553,50 @@ function InterestSelector({
         </div>
       )}
 
-      {/* Custom input for options not in the preset list */}
-      <div className="flex gap-2">
-        <Input
-          value={customInputValue}
-          onChange={(e) => onCustomInputChange(e.target.value)}
-          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter" && customInputValue.trim()) { e.preventDefault(); onAddCustom(); }
-          }}
-          placeholder={t("profile.add_custom_interest")}
-          className="h-8 text-sm border-border/40 focus:border-primary/40 flex-1 font-light placeholder:italic placeholder:text-muted-foreground/40"
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onAddCustom}
-          disabled={!customInputValue.trim() || saveState === "saving"}
-          className="h-8 px-3 border-border/40 hover:border-primary/40 text-muted-foreground"
-          aria-label={`Add custom ${label}`}
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-        </Button>
-      </div>
     </div>
+  );
+}
+
+/**
+ * Collapsible card section — header is always visible; body toggles on click.
+ * Starts collapsed (isOpen = false) and resets to collapsed on next page load.
+ */
+function CollapsibleSection({
+  title, icon, description, className, children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  description?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <Card className={`bg-card border-border shadow-sm ${className ?? ""}`}>
+      <CardHeader
+        className="pb-3 cursor-pointer select-none"
+        onClick={() => setIsOpen((v) => !v)}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isOpen}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsOpen((v) => !v); } }}
+      >
+        <div className="flex items-center justify-between">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            {icon}
+            {title}
+          </CardTitle>
+          <ChevronDown
+            className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            aria-hidden="true"
+          />
+        </div>
+        {description && (
+          <CardDescription className="font-light">{description}</CardDescription>
+        )}
+      </CardHeader>
+      {isOpen && <>{children}</>}
+    </Card>
   );
 }
 
@@ -1661,14 +1657,11 @@ function PasswordSection() {
   }
 
   return (
-    <Card className="bg-card border-border shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="font-serif text-xl flex items-center gap-2">
-          <KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
-          Wachtwoord instellen
-        </CardTitle>
-        <CardDescription>Stel een wachtwoord in om direct in te loggen zonder link.</CardDescription>
-      </CardHeader>
+    <CollapsibleSection
+      title="Wachtwoord instellen"
+      icon={<KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />}
+      description="Stel een wachtwoord in om direct in te loggen zonder link."
+    >
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-w-sm" noValidate>
           <div className="space-y-1.5">
@@ -1744,6 +1737,6 @@ function PasswordSection() {
           </Button>
         </form>
       </CardContent>
-    </Card>
+    </CollapsibleSection>
   );
 }

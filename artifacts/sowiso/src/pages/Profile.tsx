@@ -1044,7 +1044,6 @@ export default function Profile() {
           {/* Sports & Leisure */}
           <InterestSelector
             label={t("profile.sports_leisure_label")}
-            field="sports"
             presets={INTEREST_PRESETS.sports}
             tags={profileData?.interests_sports ?? []}
             saveState={sportsSave}
@@ -1060,7 +1059,6 @@ export default function Profile() {
           {/* Dress Code Preferences */}
           <InterestSelector
             label={t("profile.dress_code_prefs_label")}
-            field="dress_code"
             presets={INTEREST_PRESETS.dress_code}
             tags={profileData?.interests_dress_code ?? []}
             saveState={dressCodeSave}
@@ -1084,7 +1082,6 @@ export default function Profile() {
         <CardContent>
           <InterestSelector
             label={t("profile.culinary_interests_label")}
-            field="cuisine"
             presets={INTEREST_PRESETS.cuisine}
             tags={profileData?.interests_cuisine ?? []}
             saveState={cuisineSave}
@@ -1496,7 +1493,6 @@ export default function Profile() {
 /* ── Interest selector sub-component ── preset chips only ── */
 interface InterestSelectorProps {
   label: string;
-  field: string;
   presets: string[];
   tags: string[];
   saveState: SaveState;

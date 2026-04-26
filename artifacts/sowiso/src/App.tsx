@@ -154,7 +154,7 @@ function AppRouter() {
         </LandingLayout>
       </Route>
       <Route path="/signin">
-        <LandingLayout>
+        <LandingLayout authLink="register">
           <SignIn />
         </LandingLayout>
       </Route>

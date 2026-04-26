@@ -82,7 +82,15 @@ function LandingLanguageSwitcher() {
   );
 }
 
-export function LandingLayout({ children }: { children: React.ReactNode }) {
+type AuthLink = "signin" | "register" | null;
+
+export function LandingLayout({
+  children,
+  authLink = "signin",
+}: {
+  children: React.ReactNode;
+  authLink?: AuthLink;
+}) {
   const { t } = useLanguage();
 
   return (
@@ -116,12 +124,16 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
 
         <div className="flex items-center gap-4">
           <LandingLanguageSwitcher />
-          <div className="w-px h-4 bg-border/60" aria-hidden="true" />
-          <Link href="/signin">
-            <span className="text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-              {t("landing.signin_link")}
-            </span>
-          </Link>
+          {authLink !== null && (
+            <>
+              <div className="w-px h-4 bg-border/60" aria-hidden="true" />
+              <Link href={authLink === "register" ? "/register" : "/signin"}>
+                <span className="text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  {authLink === "register" ? t("register.title") : t("landing.signin_link")}
+                </span>
+              </Link>
+            </>
+          )}
         </div>
       </header>
 

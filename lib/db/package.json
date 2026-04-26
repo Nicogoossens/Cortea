@@ -18,7 +18,8 @@
     "seed-translations": "tsx src/seed-translations.ts",
     "seed-compass": "tsx src/seed-compass.ts",
     "seed-use-cases": "tsx src/seed-use-cases.ts",
-    "seed-world-stubs": "tsx src/seed-world-stubs.ts"
+    "seed-world-stubs": "tsx src/seed-world-stubs.ts",
+    "migrate-0002": "tsx src/migrate-0002-ambition-backfill.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

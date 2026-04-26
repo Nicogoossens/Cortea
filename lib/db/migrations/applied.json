@@ -1,0 +1,21 @@
+{
+  "migrations": [
+    {
+      "id": "0002_backfill_ambition_levels",
+      "file": "lib/db/migrations/0002_backfill_ambition_levels.sql",
+      "appliedAt": "2026-04-26",
+      "environment": "production",
+      "verificationQuery": "SELECT ambition_level, COUNT(*) FROM users WHERE ambition_level IN ('curious','aspirational','distinguished') GROUP BY ambition_level",
+      "verificationResult": {
+        "rowCount": 0,
+        "rows": [],
+        "note": "Zero legacy rows — all production users have a valid current ambition_level value (casual/professional/diplomatic)"
+      },
+      "distributionAfter": {
+        "casual": 3,
+        "diplomatic": 1
+      },
+      "status": "verified"
+    }
+  ]
+}

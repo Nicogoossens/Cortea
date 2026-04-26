@@ -71,7 +71,7 @@ export const CULTURE_CLUSTERS: CultureCluster[] = [
     id: "western-europe",
     nameKey: "clusters.western_europe.name",
     philosophyKey: "clusters.western_europe.philosophy",
-    members: ["FR", "DE", "NL"],
+    members: ["FR", "DE", "NL", "BE", "CH"],
     hasHighSociety: true,
     dos: [
       "Greet formally with title and surname until invited to use first names.",
@@ -262,7 +262,7 @@ export const CULTURE_CLUSTERS: CultureCluster[] = [
     id: "latin-america",
     nameKey: "clusters.latin_america.name",
     philosophyKey: "clusters.latin_america.philosophy",
-    members: ["MX", "BR"],
+    members: ["MX", "BR", "CO"],
     dos: [
       "Greet warmly with physical closeness — handshakes, embraces, and cheek kisses.",
       "Invest in small talk and personal rapport before any agenda.",

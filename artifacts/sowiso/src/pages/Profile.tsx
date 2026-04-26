@@ -13,12 +13,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, User, Languages, Trash2, X, Lock, Camera, Pencil, Check, Plus,
-  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane, Layers, MapPin, ArrowRight,
+  Layers, MapPin, ArrowRight,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
 import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
+import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
@@ -152,13 +153,6 @@ function normalizeAmbitionLevel(level: string | null | undefined): string | null
   return LEGACY_AMBITION_MAP[level] ?? level;
 }
 
-const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
-  { key: "business",        labelKey: "objective.business" },
-  { key: "elite",           labelKey: "objective.elite" },
-  { key: "romantic",        labelKey: "objective.romantic" },
-  { key: "world_traveller", labelKey: "objective.world_traveller" },
-];
-
 const GENDER_OPTIONS: { value: string; labelKey: string }[] = [
   { value: "male",              labelKey: "profile.gender_male" },
   { value: "female",            labelKey: "profile.gender_female" },
@@ -184,16 +178,6 @@ const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = 
     "Cocktail Attire", "Country Casual", "Resort Formal",
   ],
 };
-
-const SPHERE_OPTIONS: { key: string; icon: React.ElementType; labelKey: string }[] = [
-  { key: "business",           icon: Briefcase,        labelKey: "profile.sphere.business" },
-  { key: "gastronomy",         icon: UtensilsCrossed,  labelKey: "profile.sphere.gastronomy" },
-  { key: "arts_culture",       icon: Palette,          labelKey: "profile.sphere.arts_culture" },
-  { key: "music_entertainment",icon: Music2,            labelKey: "profile.sphere.music_entertainment" },
-  { key: "formal_events",      icon: Star,             labelKey: "profile.sphere.formal_events" },
-  { key: "lifestyle_wellness", icon: Leaf,             labelKey: "profile.sphere.lifestyle_wellness" },
-  { key: "travel_hospitality", icon: Plane,            labelKey: "profile.sphere.travel_hospitality" },
-];
 
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "SO";

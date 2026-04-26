@@ -14,59 +14,12 @@ import { LockOverlay } from "@/components/LockOverlay";
 import { BehaviorSkillsCarousel } from "@/components/BehaviorSkillsCarousel";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { SITUATIONS } from "@/lib/situations";
-
-const DOMAIN_KEYS = [
-  "counsel.domains.dining",
-  "counsel.domains.introductions",
-  "counsel.domains.dress_code",
-  "counsel.domains.gifting",
-  "counsel.domains.digital_protocol",
-  "counsel.domains.hosting",
-  "counsel.domains.apologies",
-] as const;
-
-type DomainKey = typeof DOMAIN_KEYS[number];
-
-const DOMAIN_KEY_TO_LOG_DOMAIN: Record<DomainKey, string> = {
-  "counsel.domains.dining":           "gastronomy",
-  "counsel.domains.introductions":    "eloquence",
-  "counsel.domains.dress_code":       "dress_code",
-  "counsel.domains.gifting":          "business",
-  "counsel.domains.digital_protocol": "business",
-  "counsel.domains.hosting":          "formal_events",
-  "counsel.domains.apologies":        "eloquence",
-};
+import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, SITUATION_CHIPS_KEYS } from "@/lib/counsel";
+import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
 const BASIC_FREE_DOMAINS: DomainKey[] = ["counsel.domains.dining"];
-
-const SITUATION_CHIPS_KEYS = [
-  "counsel.situation_chips.chinese_dinner",
-  "counsel.situation_chips.british_gala",
-  "counsel.situation_chips.arabic_reception",
-  "counsel.situation_chips.japanese_meeting",
-  "counsel.situation_chips.french_dinner",
-  "counsel.situation_chips.indian_wedding",
-  "counsel.situation_chips.yacht",
-] as const;
-
-const OBJECTIVE_OPTIONS: { key: string; labelKey: string }[] = [
-  { key: "business",        labelKey: "objective.business" },
-  { key: "elite",           labelKey: "objective.elite" },
-  { key: "romantic",        labelKey: "objective.romantic" },
-  { key: "world_traveller", labelKey: "objective.world_traveller" },
-];
-
-const SPHERE_OPTIONS: { key: string; labelKey: string }[] = [
-  { key: "business",              labelKey: "profile.sphere.business" },
-  { key: "gastronomy",            labelKey: "profile.sphere.gastronomy" },
-  { key: "arts_culture",          labelKey: "profile.sphere.arts_culture" },
-  { key: "music_entertainment",   labelKey: "profile.sphere.music_entertainment" },
-  { key: "formal_events",         labelKey: "profile.sphere.formal_events" },
-  { key: "lifestyle_wellness",    labelKey: "profile.sphere.lifestyle_wellness" },
-  { key: "travel_hospitality",    labelKey: "profile.sphere.travel_hospitality" },
-];
 
 function getStoredQuestionCount(userId: string | null): number {
   if (!userId) return 0;

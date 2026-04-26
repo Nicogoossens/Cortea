@@ -3,9 +3,9 @@ import { useLocation } from "wouter";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
+import { SPHERE_OPTIONS } from "@/lib/profile-options";
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Loader2,
-  Briefcase, UtensilsCrossed, Palette, Music2, Star, Leaf, Plane,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -60,16 +60,6 @@ const DRESS_OPTIONS = [
   { id: "cocktail",     label_key: "onboarding.dress_cocktail" },
   { id: "casual chic",  label_key: "onboarding.dress_casual_chic" },
   { id: "country",      label_key: "onboarding.dress_country" },
-];
-
-const SPHERE_OPTIONS = [
-  { key: "business",             Icon: Briefcase,        label_key: "profile.sphere.business" },
-  { key: "gastronomy",           Icon: UtensilsCrossed,  label_key: "profile.sphere.gastronomy" },
-  { key: "arts_culture",         Icon: Palette,          label_key: "profile.sphere.arts_culture" },
-  { key: "music_entertainment",  Icon: Music2,           label_key: "profile.sphere.music_entertainment" },
-  { key: "formal_events",        Icon: Star,             label_key: "profile.sphere.formal_events" },
-  { key: "lifestyle_wellness",   Icon: Leaf,             label_key: "profile.sphere.lifestyle_wellness" },
-  { key: "travel_hospitality",   Icon: Plane,            label_key: "profile.sphere.travel_hospitality" },
 ];
 
 type Step = 1 | 2 | 3 | 4;
@@ -355,7 +345,7 @@ export default function Onboarding() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            {SPHERE_OPTIONS.map(({ key, Icon, label_key }) => {
+            {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
               const selected = spheres.includes(key);
               return (
                 <button
@@ -369,7 +359,7 @@ export default function Onboarding() {
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  <span>{t(label_key)}</span>
+                  <span>{t(labelKey)}</span>
                   {selected && <CheckCircle2 className="w-3.5 h-3.5 shrink-0 ml-0.5" aria-hidden="true" />}
                 </button>
               );

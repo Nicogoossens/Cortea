@@ -71,6 +71,35 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
 
+## Coding Standards
+
+### Error handling
+- **Every async Express route must have a top-level `try/catch`**. Do not let unhandled promise rejections crash the server.
+- `detect-region.ts` and any new utility routes are no exception — always wrap in `try/catch`.
+- **Error responses always use `{ error: "..." }`** (never `{ message: "..." }` for failures). Success responses may use `{ message: "..." }` for action confirmations (e.g. `204 No Content` equivalents).
+- Log errors with `req.log.error({ err }, "human-readable context")` before returning the 500/4xx.
+
+### Module structure
+- **No fat route files.** Once a route exceeds ~120 lines of business logic, extract a service layer:
+  - `artifacts/api-server/src/routes/<domain>.ts` — validates request, calls service, returns response.
+  - `artifacts/api-server/src/services/<domain>.ts` — all DB queries and business logic. Pure functions; testable independently.
+- Shared DB helpers go in `lib/db/src/`.
+
+### Documentation
+- **JSDoc on any function that is non-obvious.** This includes: multi-step DB queries, AI prompt builders, scoring algorithms, locale-resolution chains, and any function whose name alone doesn't describe its side-effects.
+- Single-line functions with self-documenting names (e.g. `getRegionName`) do not need JSDoc.
+
+### Frontend
+- **Tailwind only** — no inline `style={}` except for dynamic values (e.g. SVG dimensions, animation delays) that Tailwind cannot express.
+- **No raw Unicode flag codepoints** (`0x1F1E0`). Always use `<FlagEmoji code={...} />` from `@/lib/active-region`.
+- State: local `useState` for UI-only state; React Query (`@tanstack/react-query`) for all server state. No global stores.
+- All user-visible strings go through `t("key")`. No hardcoded English strings in JSX.
+
+### Database
+- **Drizzle ORM only** — no raw `sql` tagged template literals except for upsert `set:` expressions where Drizzle doesn't support it natively.
+- Migrations via `pnpm --filter @workspace/db run push` (drizzle-kit push). Never write manual SQL migration files.
+- **Do not change primary key column types** on existing tables — this generates destructive ALTER TABLE statements.
+
 ## Subscription Tiers (Task #4)
 
 Three tiers are implemented: **The Guest** (free), **The Traveller** (€9.99/mo, €79/yr), **The Ambassador** (€29/mo, €249/yr).

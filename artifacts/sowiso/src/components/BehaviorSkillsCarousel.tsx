@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight, ArrowRight, Crown } from "lucide-react";
 import { Link } from "wouter";
 
@@ -65,56 +65,17 @@ interface BehaviorSkillsCarouselProps {
 }
 
 export function BehaviorSkillsCarousel({ hasFullAccess }: BehaviorSkillsCarouselProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(true);
 
-  const getCardOffset = useCallback((index: number): number => {
-    const card = cardRefs.current[index];
-    if (!card) return 0;
-    return card.offsetLeft - (scrollRef.current?.offsetLeft ?? 0);
-  }, []);
+  const skill = BEHAVIOR_SKILLS[activeIndex];
+  const total = BEHAVIOR_SKILLS.length;
 
-  const updateScrollState = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollPrev(el.scrollLeft > 8);
-    setCanScrollNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-
-    let closestIndex = 0;
-    let closestDist = Infinity;
-    cardRefs.current.forEach((card, i) => {
-      if (!card) return;
-      const dist = Math.abs(card.offsetLeft - el.offsetLeft - el.scrollLeft);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestIndex = i;
-      }
-    });
-    setActiveIndex(closestIndex);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", updateScrollState, { passive: true });
-    updateScrollState();
-    return () => el.removeEventListener("scroll", updateScrollState);
-  }, [updateScrollState]);
-
-  const scrollToIndex = useCallback((index: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ left: getCardOffset(index), behavior: "smooth" });
-  }, [getCardOffset]);
-
-  const scrollPrev = () => scrollToIndex(Math.max(0, activeIndex - 1));
-  const scrollNext = () => scrollToIndex(Math.min(BEHAVIOR_SKILLS.length - 1, activeIndex + 1));
+  const goPrev = () => setActiveIndex((i) => Math.max(0, i - 1));
+  const goNext = () => setActiveIndex((i) => Math.min(total - 1, i + 1));
 
   return (
     <section className="space-y-5" aria-label="Behavior Skills">
+      {/* Header row */}
       <div className="flex items-end justify-between gap-4 px-0.5">
         <div className="space-y-1">
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">
@@ -127,16 +88,19 @@ export function BehaviorSkillsCarousel({ hasFullAccess }: BehaviorSkillsCarousel
 
         <div className="flex items-center gap-1.5 shrink-0">
           <button
-            onClick={scrollPrev}
-            disabled={!canScrollPrev}
+            onClick={goPrev}
+            disabled={activeIndex === 0}
             aria-label="Previous skill"
             className="flex items-center justify-center w-8 h-8 rounded-sm border border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           </button>
+          <span className="text-[10px] font-mono text-muted-foreground/50 tabular-nums min-w-[2.5rem] text-center">
+            {activeIndex + 1} / {total}
+          </span>
           <button
-            onClick={scrollNext}
-            disabled={!canScrollNext}
+            onClick={goNext}
+            disabled={activeIndex === total - 1}
             aria-label="Next skill"
             className="flex items-center justify-center w-8 h-8 rounded-sm border border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
@@ -145,58 +109,51 @@ export function BehaviorSkillsCarousel({ hasFullAccess }: BehaviorSkillsCarousel
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scroll-smooth pb-2 -mx-4 px-4 snap-x snap-mandatory"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        role="list"
-        aria-label="Behavior skills cards"
+      {/* Single card — full width, fade transition via key */}
+      <article
+        key={skill.id}
+        className="w-full border border-border/50 bg-card rounded-sm p-5 flex flex-col gap-3 animate-in fade-in duration-200"
+        aria-label={skill.name}
       >
-        {BEHAVIOR_SKILLS.map((skill, i) => (
-          <article
-            key={skill.id}
-            role="listitem"
-            ref={(el) => { cardRefs.current[i] = el; }}
-            className="flex-none w-[280px] sm:w-[320px] snap-start border border-border/50 bg-card rounded-sm p-5 flex flex-col gap-3 hover:border-primary/30 transition-colors"
-          >
-            <div className="space-y-1.5">
-              <h3 className="font-serif text-base text-foreground leading-snug">
-                {skill.name}
-              </h3>
-              <p className="text-xs font-light italic text-primary/80 leading-relaxed border-l border-primary/20 pl-3">
-                {skill.principle}
-              </p>
+        <div className="space-y-1.5">
+          <h3 className="font-serif text-base text-foreground leading-snug">
+            {skill.name}
+          </h3>
+          <p className="text-xs font-light italic text-primary/80 leading-relaxed border-l border-primary/20 pl-3">
+            {skill.principle}
+          </p>
+        </div>
+
+        <p className="text-sm text-muted-foreground font-light leading-relaxed flex-1">
+          {skill.body}
+        </p>
+
+        <div className="pt-2 border-t border-border/30">
+          {hasFullAccess ? (
+            <Link href={`/counsel/skills/${skill.id}`}>
+              <div className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline underline-offset-2 cursor-pointer group transition-colors">
+                Explore further
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+              </div>
+            </Link>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40 border border-muted-foreground/15 rounded-[2px] px-2 py-1">
+              <Crown className="w-2.5 h-2.5" aria-hidden="true" />
+              Traveller &amp; above
             </div>
+          )}
+        </div>
+      </article>
 
-            <p className="text-sm text-muted-foreground font-light leading-relaxed flex-1">
-              {skill.body}
-            </p>
-
-            <div className="pt-2 border-t border-border/30">
-              {hasFullAccess ? (
-                <Link href={`/counsel/skills/${skill.id}`}>
-                  <div className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline underline-offset-2 cursor-pointer group transition-colors">
-                    Explore further
-                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-                  </div>
-                </Link>
-              ) : (
-                <div className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40 border border-muted-foreground/15 rounded-[2px] px-2 py-1">
-                  <Crown className="w-2.5 h-2.5" aria-hidden="true" />
-                  Traveller &amp; above
-                </div>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-center gap-1.5" aria-label="Carousel position">
-        {BEHAVIOR_SKILLS.map((skill, i) => (
+      {/* Dot navigation */}
+      <div className="flex items-center justify-center gap-1.5" aria-label="Carousel position" role="tablist">
+        {BEHAVIOR_SKILLS.map((s, i) => (
           <button
-            key={skill.id}
-            aria-label={`Go to ${skill.name}`}
-            onClick={() => scrollToIndex(i)}
+            key={s.id}
+            role="tab"
+            aria-selected={i === activeIndex}
+            aria-label={`Go to ${s.name}`}
+            onClick={() => setActiveIndex(i)}
             className={`rounded-full transition-all duration-200 ${
               i === activeIndex
                 ? "w-4 h-1.5 bg-primary"

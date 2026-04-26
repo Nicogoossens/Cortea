@@ -39,6 +39,14 @@ export default function Compass() {
     (c.members as string[]).includes(activeRegion)
   )?.id;
 
+  /** Active cluster always floats to position 0; all others keep their original order. */
+  const sortedClusters = activeClusterId
+    ? [
+        ...CULTURE_CLUSTERS.filter((c) => c.id === activeClusterId),
+        ...CULTURE_CLUSTERS.filter((c) => c.id !== activeClusterId),
+      ]
+    : CULTURE_CLUSTERS;
+
   function getCountryName(code: string): string {
     const region = COMPASS_REGIONS.find((r) => r.code === code);
     return region?.names[locale as keyof typeof region.names] ?? region?.names.en ?? code;
@@ -105,7 +113,7 @@ export default function Compass() {
       {/* ── CLUSTERS VIEW ── */}
       {view === "clusters" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          {CULTURE_CLUSTERS.map((cluster) => {
+          {sortedClusters.map((cluster) => {
             const isActive = cluster.id === activeClusterId;
             const { dos, donts } = getClusterBrief(cluster, locale);
             return (
@@ -117,7 +125,8 @@ export default function Compass() {
                 }`}>
                   {isActive && (
                     <div className="absolute top-3 right-3 z-10">
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md ring-2 ring-primary/20">
+                        <FlagEmoji code={activeRegion} className="text-sm leading-none" />
                         {t("compass.your_region")}
                       </span>
                     </div>
@@ -261,7 +270,8 @@ export default function Compass() {
                           <FlagEmoji code={region.region_code} className="text-3xl sm:text-4xl leading-none" ariaLabel={region.region_name} />
                           <div className="flex items-center gap-2">
                             {isUserRegion && (
-                              <span className="text-[9px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md ring-2 ring-primary/20">
+                                <FlagEmoji code={region.region_code} className="text-sm leading-none" />
                                 {t("compass.your_region")}
                               </span>
                             )}

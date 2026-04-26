@@ -72,7 +72,7 @@ export function ContextBar() {
 
   return (
     <div
-      className="flex items-center justify-between gap-1 px-4 py-1.5 border-b border-border/40 bg-background/60 backdrop-blur-sm"
+      className="flex items-center justify-between gap-1 px-4 py-1.5 border-b border-border/40 bg-background/60 backdrop-blur-sm overflow-x-hidden"
       role="toolbar"
       aria-label={t("accessibility.title")}
     >
@@ -98,7 +98,7 @@ export function ContextBar() {
           ariaLabel={t("locale.choose_region")}
         >
           <FlagEmoji code={currentLocale?.flag ?? "US"} />
-          <span>{currentLocale?.languageLabel ?? "English"}</span>
+          <span className="hidden sm:inline">{currentLocale?.languageLabel ?? "English"}</span>
         </PillTrigger>
 
         <DropdownMenuContent
@@ -141,7 +141,7 @@ export function ContextBar() {
           ariaLabel={t("region.choose")}
         >
           <FlagEmoji code={activeRegion} />
-          <span>{getRegionName(activeRegion)}</span>
+          <span className="hidden sm:inline">{getRegionName(activeRegion)}</span>
         </PillTrigger>
 
         <DropdownMenuContent
@@ -192,7 +192,7 @@ export function ContextBar() {
           }
           ariaLabel={t("accessibility.title")}
         >
-          <span className={highContrast ? "text-primary font-medium" : ""}>
+          <span className={`hidden sm:inline ${highContrast ? "text-primary font-medium" : ""}`}>
             {t("accessibility.title")}
           </span>
         </PillTrigger>

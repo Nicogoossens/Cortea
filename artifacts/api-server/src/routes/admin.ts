@@ -283,26 +283,6 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
   }
 });
 
-/**
- * POST /admin/migrations/run-0002 — backfill legacy ambition_level values (idempotent)
- * @deprecated One-time migration endpoint. Production verified clean (2026-04-26).
- *             Remove this route once rollout is confirmed complete.
- */
-router.post("/admin/migrations/run-0002", requireAdmin, async (req, res) => {
-  try {
-    const { stdout, stderr } = await execAsync(
-      "pnpm --filter @workspace/db run migrate-0002",
-      { cwd: WORKSPACE_ROOT, env: { ...process.env }, timeout: 60_000 }
-    );
-    const output = [stdout.trim(), stderr.trim()].filter(Boolean).join("\n");
-    const passed = output.includes("Verification PASSED") || output.includes("migration already applied");
-    return res.status(200).json({ ok: true, passed, output });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return res.status(500).json({ ok: false, error: msg });
-  }
-});
-
 /** POST /admin/content/seed — trigger idempotent seed scripts */
 router.post("/admin/content/seed", requireAdmin, async (req, res) => {
   try {

@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
-  Layers, MapPin, ArrowRight,
+  Layers, MapPin, ArrowRight, UtensilsCrossed,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
@@ -1057,22 +1057,6 @@ export default function Profile() {
             t={t}
           />
 
-          {/* Culinary Interests */}
-          <InterestSelector
-            label={t("profile.culinary_interests_label")}
-            field="cuisine"
-            presets={INTEREST_PRESETS.cuisine}
-            tags={profileData?.interests_cuisine ?? []}
-            saveState={cuisineSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_cuisine ?? []).includes(v);
-              if (active) handleTagRemove("cuisine", v);
-              else handleTagAdd("cuisine", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("cuisine", v)}
-            t={t}
-          />
-
           {/* Dress Code Preferences */}
           <InterestSelector
             label={t("profile.dress_code_prefs_label")}
@@ -1089,6 +1073,29 @@ export default function Profile() {
             t={t}
           />
 
+        </CardContent>
+      </CollapsibleSection>
+
+      {/* ── Culinaire Interesses ── collapsible ── */}
+      <CollapsibleSection
+        title={t("profile.culinary_interests_label")}
+        icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+      >
+        <CardContent>
+          <InterestSelector
+            label={t("profile.culinary_interests_label")}
+            field="cuisine"
+            presets={INTEREST_PRESETS.cuisine}
+            tags={profileData?.interests_cuisine ?? []}
+            saveState={cuisineSave}
+            onTogglePreset={(v) => {
+              const active = (profileData?.interests_cuisine ?? []).includes(v);
+              if (active) handleTagRemove("cuisine", v);
+              else handleTagAdd("cuisine", v, () => {});
+            }}
+            onRemove={(v) => handleTagRemove("cuisine", v)}
+            t={t}
+          />
         </CardContent>
       </CollapsibleSection>
 

@@ -7,9 +7,10 @@ export type SupportedLocale =
   | "pt-PT" | "pt-BR"
   | "it-IT"
   | "ar-SA"
-  | "ja-JP";
+  | "ja-JP"
+  | "zh-CN";
 
-export type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es" | "pt" | "it" | "ar" | "ja";
+export type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es" | "pt" | "it" | "ar" | "ja" | "zh";
 
 export interface LocaleDefinition {
   locale: SupportedLocale;
@@ -78,6 +79,12 @@ export const LOCALE_GROUPS: { groupLabel: string; locales: LocaleDefinition[] }[
     groupLabel: "日本語",
     locales: [
       { locale: "ja-JP", languageLabel: "日本語", regionLabel: "日本", flag: "JP", baseLang: "ja" },
+    ],
+  },
+  {
+    groupLabel: "中文",
+    locales: [
+      { locale: "zh-CN", languageLabel: "中文（简体）", regionLabel: "中国大陆", flag: "CN", baseLang: "zh" },
     ],
   },
 ];

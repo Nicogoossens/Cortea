@@ -12,6 +12,7 @@ import pt from "./locales/pt/translation.json";
 import it from "./locales/it/translation.json";
 import ar from "./locales/ar/translation.json";
 import ja from "./locales/ja/translation.json";
+import zh from "./locales/zh/translation.json";
 
 // API base for the translations endpoint (Vite-resolved at build time)
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -31,6 +32,7 @@ i18next
       it: { translation: it },
       ar: { translation: ar },
       ja: { translation: ja },
+      zh: { translation: zh },
     },
     // All languages are bundled; backend acts as a live override/update channel
     partialBundledLanguages: true,

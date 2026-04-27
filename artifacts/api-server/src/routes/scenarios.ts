@@ -128,6 +128,7 @@ router.get("/scenarios", async (req, res) => {
     let regionalScenarios = await db.select()
       .from(scenariosTable)
       .where(conditions.length > 0 ? and(...conditions) : sql`TRUE`)
+      .orderBy(scenariosTable.pillar, scenariosTable.difficulty_level)
       .limit(limit);
 
     let fallbackScenarios: typeof regionalScenarios = [];
@@ -156,6 +157,7 @@ router.get("/scenarios", async (req, res) => {
       const rawFallback = await db.select()
         .from(scenariosTable)
         .where(and(...fallbackConditions))
+        .orderBy(scenariosTable.pillar, scenariosTable.difficulty_level)
         .limit(fallbackNeeded);
 
       fallbackScenarios = rawFallback.filter((s) => !existingIds.has(s.id));

@@ -4,8 +4,9 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLanguage, type SupportedLocale, ALL_LOCALES, LOCALE_GROUPS } from "@/lib/i18n";
-import { useActiveRegion, type RegionCode, COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
+import { useLanguage, type SupportedLocale, ALL_LOCALES, LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n";
+import { useActiveRegion } from "@/lib/active-region";
+import { WORLD_COUNTRIES } from "@/lib/world-countries";
 import { useAuth } from "@/lib/auth";
 import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical } from "lucide-react";
 
@@ -24,14 +25,15 @@ const currentYear = new Date().getFullYear();
 export default function Register() {
   usePageTitle("Create Account");
   const { t, locale, setLocale } = useLanguage();
-  const { activeRegion, setActiveRegion } = useActiveRegion();
+  const { activeRegion } = useActiveRegion();
   const { login } = useAuth();
   const [, navigate] = useLocation();
+
+  const [homeCountry, setHomeCountry] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const langParam = params.get("lang");
-    const regionParam = params.get("region");
 
     if (langParam) {
       const matchedLocale = ALL_LOCALES.find(
@@ -39,13 +41,6 @@ export default function Register() {
       ) as SupportedLocale | undefined;
       if (matchedLocale && matchedLocale !== locale) {
         setLocale(matchedLocale);
-      }
-    }
-
-    if (regionParam) {
-      const validCodes = COMPASS_REGIONS.map((r) => r.code);
-      if (validCodes.includes(regionParam as RegionCode) && regionParam !== activeRegion) {
-        setActiveRegion(regionParam as RegionCode);
       }
     }
   // Only run once on mount
@@ -111,6 +106,7 @@ export default function Register() {
         locale: baseLang,
         language_code: baseLang,
         active_region: activeRegion,
+        ...(homeCountry ? { country_of_origin: homeCountry } : {}),
       };
       if (form.password) body.password = form.password;
 
@@ -156,6 +152,7 @@ export default function Register() {
   }
 
   const formComplete = form.email.trim() && form.full_name.trim() && form.birth_year;
+  const currentLocaleDef = getLocaleDefinition(locale);
 
   if (sent) {
     return (
@@ -206,65 +203,59 @@ export default function Register() {
         <CardContent className="p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
-            {/* Language picker */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground tracking-wide block">
+            {/* Language picker — dropdown */}
+            <div className="space-y-1.5">
+              <label htmlFor="locale_select" className="text-sm font-medium text-foreground tracking-wide block">
                 {t("locale.select")}
               </label>
-              <div className="flex flex-wrap gap-1.5" role="listbox" aria-label={t("locale.select")}>
-                {LOCALE_GROUPS.flatMap((g) => g.locales).map((def) => {
-                  const isSelected = locale === def.locale;
-                  return (
-                    <button
-                      key={def.locale}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => setLocale(def.locale)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-mono transition-all duration-150 ${
-                        isSelected
-                          ? "border-primary bg-primary/10 text-primary font-semibold"
-                          : "border-border/50 bg-background text-foreground/60 hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      <FlagEmoji code={def.flag} className="text-sm" />
-                      <span>{def.languageLabel}</span>
-                    </button>
-                  );
-                })}
+              <p className="text-xs text-muted-foreground/70 font-light">
+                {t("register.language_hint")}
+              </p>
+              <div className="relative">
+                <select
+                  id="locale_select"
+                  value={locale}
+                  onChange={(e) => setLocale(e.target.value as SupportedLocale)}
+                  disabled={loading}
+                  className="w-full h-10 pl-9 pr-4 rounded-sm border border-border/60 bg-background text-sm text-foreground focus:outline-none focus:border-primary/50 disabled:opacity-50 appearance-none"
+                >
+                  {LOCALE_GROUPS.map((group) => (
+                    <optgroup key={group.groupLabel} label={group.groupLabel}>
+                      {group.locales.map((def) => (
+                        <option key={def.locale} value={def.locale}>
+                          {def.languageLabel} — {def.regionLabel}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <span
+                  className={`fi fi-${currentLocaleDef.flag.toLowerCase()} pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base`}
+                  aria-hidden="true"
+                />
               </div>
             </div>
 
-            {/* Region picker */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground tracking-wide block">
-                {t("landing.your_region")}
+            {/* Home country picker — dropdown with all world countries */}
+            <div className="space-y-1.5">
+              <label htmlFor="home_country" className="text-sm font-medium text-foreground tracking-wide block">
+                {t("register.home_country_label")}
               </label>
-              <div className="flex flex-wrap gap-1.5" role="listbox" aria-label={t("landing.your_region")}>
-                {COMPASS_REGIONS.map((region) => {
-                  const isSelected = activeRegion === region.code;
-                  const localeLang = locale.split("-")[0] as keyof typeof region.names;
-                  const label = region.names[localeLang] ?? region.names.en;
-                  return (
-                    <button
-                      key={region.code}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => setActiveRegion(region.code)}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-mono transition-all duration-150 ${
-                        isSelected
-                          ? "border-primary bg-primary/10 text-primary font-semibold"
-                          : "border-border/50 bg-background text-foreground/60 hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      <FlagEmoji code={region.code} className="text-sm" />
-                      <span className="hidden sm:inline">{label}</span>
-                      <span className="sm:hidden">{region.code}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-xs text-muted-foreground/70 font-light">
+                {t("register.home_country_hint")}
+              </p>
+              <select
+                id="home_country"
+                value={homeCountry}
+                onChange={(e) => setHomeCountry(e.target.value)}
+                disabled={loading}
+                className="w-full h-10 px-3 rounded-sm border border-border/60 bg-background text-sm text-foreground focus:outline-none focus:border-primary/50 disabled:opacity-50"
+              >
+                <option value="">{t("register.home_country_placeholder")}</option>
+                {WORLD_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="border-t border-border/30" aria-hidden="true" />

@@ -47,7 +47,9 @@ export default function Atelier() {
   const scoreDifficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);
   const difficultyMax = isVisitor
     ? Math.min(scoreDifficultyMax, GUEST_DIFFICULTY_MAX)
-    : scoreDifficultyMax;
+    : hasFullAccess
+      ? 5
+      : scoreDifficultyMax;
 
   const lang = locale.split("-")[0];
 
@@ -79,12 +81,15 @@ export default function Atelier() {
     5: "pillar.5.name",
   };
 
+  const sortByPillar = <T extends { pillar: number; difficulty_level: number | null }>(arr: T[]): T[] =>
+    [...arr].sort((a, b) => (a.pillar - b.pillar) || ((a.difficulty_level ?? 0) - (b.difficulty_level ?? 0)));
+
   const accessibleScenarios = isVisitor
     ? allScenarios?.slice(0, GUEST_FREE_SCENARIO_CAP)
-    : allScenarios?.filter((s) => s.difficulty_level <= difficultyMax);
+    : sortByPillar(allScenarios?.filter((s) => s.difficulty_level <= difficultyMax) ?? []);
   const lockedScenarios = isVisitor
     ? allScenarios?.slice(GUEST_FREE_SCENARIO_CAP)
-    : allScenarios?.filter((s) => s.difficulty_level > difficultyMax);
+    : sortByPillar(allScenarios?.filter((s) => s.difficulty_level > difficultyMax) ?? []);
   const hasLockedScenarios = (lockedScenarios?.length ?? 0) > 0;
 
   // Fallback detection: the API sets is_regional=false on any scenario that

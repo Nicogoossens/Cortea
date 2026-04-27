@@ -4,23 +4,12 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { SPHERE_OPTIONS } from "@/lib/profile-options";
+import { WORLD_COUNTRIES } from "@/lib/world-countries";
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Loader2,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-const COUNTRY_LIST = [
-  "Argentina", "Australia", "Austria", "Belgium", "Brazil", "Canada", "Chile",
-  "China", "Colombia", "Denmark", "Egypt", "Finland", "France", "Germany",
-  "Greece", "Hong Kong", "Hungary", "India", "Indonesia", "Ireland", "Israel",
-  "Italy", "Japan", "Kenya", "Malaysia", "Mexico", "Morocco", "Netherlands",
-  "New Zealand", "Nigeria", "Norway", "Pakistan", "Peru", "Philippines",
-  "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia", "Singapore",
-  "South Africa", "South Korea", "Spain", "Sweden", "Switzerland", "Taiwan",
-  "Thailand", "Turkey", "Ukraine", "United Arab Emirates", "United Kingdom",
-  "United States", "Vietnam",
-];
 
 const OBJECTIVES = [
   { id: "business", icon: "◈", label_key: "onboarding.obj_business", desc_key: "onboarding.obj_business_desc" },
@@ -152,8 +141,8 @@ export default function Onboarding() {
               className="w-full h-12 px-4 rounded-sm border border-border/60 bg-background text-sm text-foreground focus:outline-none focus:border-primary/50"
             >
               <option value="">{t("onboarding.country_placeholder")}</option>
-              {COUNTRY_LIST.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {WORLD_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.name}>{c.name}</option>
               ))}
             </select>
           </div>

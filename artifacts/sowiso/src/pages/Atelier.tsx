@@ -155,7 +155,7 @@ export default function Atelier() {
             }`}
           >
             <LayoutList className="w-3.5 h-3.5" aria-hidden="true" />
-            {t("atelier.tab_scenarios") || "Scenario's"}
+            {t("atelier.tab_scenarios", "Scenario's")}
           </button>
           <button
             role="tab"
@@ -168,7 +168,7 @@ export default function Atelier() {
             }`}
           >
             <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
-            {t("atelier.tab_learning_tracks") || "Leertrajecten"}
+            {t("atelier.tab_learning_tracks", "Leertrajecten")}
           </button>
         </div>
       )}

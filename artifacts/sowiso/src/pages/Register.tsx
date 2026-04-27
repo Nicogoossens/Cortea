@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage, type SupportedLocale, ALL_LOCALES, LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n";
-import { useActiveRegion } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { WORLD_COUNTRIES } from "@/lib/world-countries";
 import { useAuth } from "@/lib/auth";
 import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical } from "lucide-react";
@@ -229,9 +229,10 @@ export default function Register() {
                     </optgroup>
                   ))}
                 </select>
-                <span
-                  className={`fi fi-${currentLocaleDef.flag.toLowerCase()} pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base`}
-                  aria-hidden="true"
+                <FlagEmoji
+                  code={currentLocaleDef.flag}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base"
+                  ariaLabel=""
                 />
               </div>
             </div>

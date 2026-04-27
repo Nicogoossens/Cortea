@@ -32,6 +32,24 @@
         "note": "Both tables exist with all required indexes: ltq_lookup_idx, ltq_hash_idx (unique), ltp_user_with_pillar_idx (partial, pillar IS NOT NULL), ltp_user_no_pillar_idx (partial, pillar IS NULL)"
       },
       "status": "applied"
+    },
+    {
+      "id": "0004_seed_compass_nl_ca_pt_za",
+      "file": "lib/db/migrations/0004_seed_compass_nl_ca_pt_za.sql",
+      "appliedAt": "2026-04-27",
+      "environment": "development",
+      "verificationQuery": "SELECT region_code, is_published FROM compass_regions WHERE region_code IN ('NL','CA','PT','ZA') ORDER BY region_code",
+      "verificationResult": {
+        "rowCount": 4,
+        "rows": [
+          { "region_code": "CA", "is_published": true },
+          { "region_code": "NL", "is_published": true },
+          { "region_code": "PT", "is_published": true },
+          { "region_code": "ZA", "is_published": true }
+        ],
+        "note": "All 21 ACTIVE_REGIONS now have is_published=true and en-GB content. NL was an original priority country that had been missed in the initial seed."
+      },
+      "status": "applied"
     }
   ]
 }

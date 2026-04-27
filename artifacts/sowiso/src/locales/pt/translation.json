@@ -350,7 +350,7 @@
   "profile.phone_coming_soon": "Verificação por SMS — em breve",
   "profile.preferences": "Preferências",
   "profile.pref_language": "Idioma Preferido",
-  "profile.pref_region_label": "Região de Etiqueta",
+  "profile.pref_region_label": "Região de aprendizagem",
   "profile.saved": "Guardado",
   "profile.save_error": "Não foi possível guardar. Por favor, tente novamente.",
   "profile.danger_zone": "Conta",
@@ -717,5 +717,14 @@
   "context.active_region": "Região",
   "mirror.context.region": "Região de etiqueta",
   "mirror.context.dresscode": "Estilo detectado",
-  "mirror.context.not_analyzed": "Ainda não analisado"
+  "mirror.context.not_analyzed": "Ainda não analisado",
+  "profile.course_settings_title": "Configurações do curso",
+  "profile.course_settings_desc": "Estas configurações determinam o seu ponto de partida no Atelier. Altere-as com cuidado.",
+  "profile.course_change_warning": "O seu ponto de início do curso mudou. Inicie uma nova sessão em The Navigator para evitar lacunas na sua aprendizagem.",
+  "profile.course_change_navigator_link": "Ir para The Navigator",
+  "profile.age_group_label": "Faixa etária",
+  "profile.age_group_under30": "Com menos de 30",
+  "profile.age_group_30_50": "30–50",
+  "profile.age_group_over50": "50 e acima",
+  "profile.age_group_unknown": "Não especificado"
 }

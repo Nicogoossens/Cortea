@@ -364,7 +364,7 @@
   "profile.phone_coming_soon": "Verificatie via SMS — binnenkort beschikbaar",
   "profile.preferences": "Voorkeuren",
   "profile.pref_language": "Voorkeurstaal",
-  "profile.pref_region_label": "Etiquetteregion",
+  "profile.pref_region_label": "Leerregio",
   "profile.saved": "Opgeslagen",
   "profile.save_error": "Kon niet opslaan. Gelieve opnieuw te proberen.",
   "profile.danger_zone": "Account",
@@ -731,5 +731,14 @@
   "context.active_region": "Regio",
   "mirror.context.region": "Etiquetteregio",
   "mirror.context.dresscode": "Gedetecteerde stijl",
-  "mirror.context.not_analyzed": "Nog niet geanalyseerd"
+  "mirror.context.not_analyzed": "Nog niet geanalyseerd",
+  "profile.course_settings_title": "Cursinstellingen",
+  "profile.course_settings_desc": "Deze gegevens bepalen uw startpunt in het Atelier. Wijzig ze bewust.",
+  "profile.course_change_warning": "Uw cursusstartpunt is gewijzigd. Start een nieuwe sessie in The Navigator om inhoudelijke missingen te vermijden.",
+  "profile.course_change_navigator_link": "Naar The Navigator",
+  "profile.age_group_label": "Leeftijdsgroep",
+  "profile.age_group_under30": "Jonger dan 30",
+  "profile.age_group_30_50": "30–50",
+  "profile.age_group_over50": "50 en ouder",
+  "profile.age_group_unknown": "Niet opgegeven"
 }

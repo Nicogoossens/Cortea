@@ -303,6 +303,9 @@ export default function Profile() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [behaviorProfile, setBehaviorProfile] = useState<BehaviorProfile | null>(null);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [courseRegionDropdownOpen, setCourseRegionDropdownOpen] = useState(false);
+  const [showCourseChangeWarning, setShowCourseChangeWarning] = useState(false);
   const [langSave, setLangSave] = useState<SaveState>("idle");
   const [regionSave, setRegionSave] = useState<SaveState>("idle");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -458,6 +461,7 @@ export default function Profile() {
       });
       if (res.ok) {
         setRegionSave("saved");
+        setShowCourseChangeWarning(true);
         setTimeout(() => setRegionSave("idle"), 2500);
       } else {
         setRegionSave("error");
@@ -525,7 +529,8 @@ export default function Profile() {
 
   async function handleAmbitionChange(level: string) {
     if (normalizeAmbitionLevel(profileData?.ambition_level) === level || ambitionSave === "saving") return;
-    await patchProfile({ ambition_level: level }, setAmbitionSave);
+    const ok = await patchProfile({ ambition_level: level }, setAmbitionSave);
+    if (ok) setShowCourseChangeWarning(true);
   }
 
   async function handleObjectiveToggle(obj: string) {
@@ -535,7 +540,8 @@ export default function Profile() {
   }
 
   async function handleCountrySubmit() {
-    await patchProfile({ country_of_origin: countryInput.trim() || null }, setCountrySave);
+    const ok = await patchProfile({ country_of_origin: countryInput.trim() || null }, setCountrySave);
+    if (ok) setShowCourseChangeWarning(true);
     setEditingCountry(false);
   }
 
@@ -853,6 +859,69 @@ export default function Profile() {
               )}
             </div>
 
+            {/* Country of origin — editable */}
+            <div className="border-b border-border/40 pb-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
+                <SaveIndicator state={countrySave} t={t} />
+              </div>
+              {editingCountry ? (
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      value={countryInput}
+                      onChange={(e) => {
+                        setCountryInput(e.target.value);
+                        setCountryDropdownOpen(true);
+                      }}
+                      onFocus={() => setCountryDropdownOpen(true)}
+                      onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 120)}
+                      onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                        if (e.key === "Enter") { setCountryDropdownOpen(false); handleCountrySubmit(); }
+                        if (e.key === "Escape") { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }
+                      }}
+                      placeholder="e.g. Belgium"
+                      className="h-8 text-sm border-primary/40 focus:border-primary w-full"
+                      autoFocus
+                    />
+                    {countryDropdownOpen && (() => {
+                      const q = countryInput.trim().toLowerCase();
+                      const filtered = q ? COUNTRIES.filter(c => c.toLowerCase().includes(q)) : COUNTRIES;
+                      return filtered.length > 0 ? (
+                        <ul className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-sm border border-border bg-background shadow-md">
+                          {filtered.slice(0, 30).map(country => (
+                            <li key={country}>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => { e.preventDefault(); setCountryInput(country); setCountryDropdownOpen(false); }}
+                                className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+                              >
+                                {country}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null;
+                    })()}
+                  </div>
+                  <button onClick={() => { setCountryDropdownOpen(false); handleCountrySubmit(); }} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
+                    <Check className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                  <button onClick={() => { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                    <X className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setEditingCountry(true)}
+                  className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
+                  <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+
             <div className="pt-1 border-t border-border/50">
               <div className="flex justify-between items-baseline">
                 <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/60">{t("profile.phone_label")}</span>
@@ -877,26 +946,52 @@ export default function Profile() {
                 <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_language")}</label>
                 <SaveIndicator state={langSave} t={t} />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {LOCALE_GROUPS.map((group) => {
-                  const firstLocale = group.locales[0];
-                  const isSelected = group.locales.some((l) => l.locale === locale);
-                  return (
-                    <button
-                      key={group.groupLabel}
-                      onClick={() => handleLanguageChange(firstLocale.locale)}
-                      disabled={langSave === "saving"}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs border transition-all ${
-                        isSelected
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/40"
-                      }`}
-                    >
-                      <FlagEmoji code={firstLocale.flag} />
-                      {group.groupLabel}
-                    </button>
-                  );
-                })}
+              <div className="relative">
+                <button
+                  onClick={() => setLangDropdownOpen((v) => !v)}
+                  onBlur={() => setTimeout(() => setLangDropdownOpen(false), 150)}
+                  disabled={langSave === "saving"}
+                  aria-haspopup="listbox"
+                  aria-expanded={langDropdownOpen}
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
+                >
+                  {(() => {
+                    const selectedGroup = LOCALE_GROUPS.find((g) => g.locales.some((l) => l.locale === locale));
+                    const firstLocale = selectedGroup?.locales[0];
+                    return firstLocale ? (
+                      <>
+                        <FlagEmoji code={firstLocale.flag} />
+                        <span className="font-medium flex-1">{selectedGroup?.groupLabel}</span>
+                      </>
+                    ) : <span className="flex-1 font-light text-muted-foreground">{locale}</span>;
+                  })()}
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${langDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+                </button>
+                {langDropdownOpen && (
+                  <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
+                    {LOCALE_GROUPS.map((group) => {
+                      const firstLocale = group.locales[0];
+                      const isSelected = group.locales.some((l) => l.locale === locale);
+                      return (
+                        <button
+                          key={group.groupLabel}
+                          role="option"
+                          aria-selected={isSelected}
+                          onMouseDown={() => { handleLanguageChange(firstLocale.locale); setLangDropdownOpen(false); }}
+                          disabled={langSave === "saving"}
+                          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
+                            isSelected
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                          }`}
+                        >
+                          <FlagEmoji code={firstLocale.flag} />
+                          {group.groupLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -906,28 +1001,144 @@ export default function Profile() {
                 <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_region_label")}</label>
                 <SaveIndicator state={regionSave} t={t} />
               </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowRegionPicker((v) => !v)}
+                  onBlur={() => setTimeout(() => setShowRegionPicker(false), 150)}
+                  aria-haspopup="listbox"
+                  aria-expanded={showRegionPicker}
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
+                >
+                  <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                  <FlagEmoji code={activeRegion} />
+                  <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
+                </button>
+                {showRegionPicker && (
+                  <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
+                    {COMPASS_REGIONS.map((region) => {
+                      const isSelected = region.code === activeRegion;
+                      return (
+                        <button
+                          key={region.code}
+                          role="option"
+                          aria-selected={isSelected}
+                          onMouseDown={() => handleRegionChange(region.code as RegionCode)}
+                          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
+                            isSelected
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                          }`}
+                        >
+                          <FlagEmoji code={region.flag} />
+                          {getRegionName(region.code)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Course Settings (Cursinstellingen) ── */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />
+            {t("profile.course_settings_title")}
+          </CardTitle>
+          <CardDescription className="text-xs font-light text-muted-foreground/70 mt-0.5">
+            {t("profile.course_settings_desc")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+
+          {/* Warning banner */}
+          {showCourseChangeWarning && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-sm bg-amber-50/60 border border-amber-200/60 dark:bg-amber-950/20 dark:border-amber-800/40">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="flex-1 text-sm text-amber-800 dark:text-amber-300 font-light">
+                {t("profile.course_change_warning")}{" "}
+                <Link href="/navigator" className="underline underline-offset-2 font-medium hover:opacity-80 transition-opacity">
+                  {t("profile.course_change_navigator_link")}
+                </Link>
+              </div>
               <button
-                onClick={() => setShowRegionPicker((v) => !v)}
-                aria-expanded={showRegionPicker}
+                onClick={() => setShowCourseChangeWarning(false)}
+                className="text-amber-600/70 hover:text-amber-800 transition-colors shrink-0"
+                aria-label={t("common.close")}
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+
+          {/* Ambition level */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.ambition")}</label>
+              <SaveIndicator state={ambitionSave} t={t} />
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {AMBITION_LEVELS.map(({ key, labelKey, descKey }) => (
+                <button
+                  key={key}
+                  onClick={() => handleAmbitionChange(key)}
+                  disabled={ambitionSave === "saving"}
+                  title={t(descKey)}
+                  className={`px-2.5 py-1 rounded-full text-xs border transition-all ${
+                    normalizeAmbitionLevel(profileData?.ambition_level) === key
+                      ? "bg-primary/10 text-primary border-primary/30 font-medium"
+                      : "border-border/40 text-muted-foreground/60 hover:border-primary/30 hover:text-muted-foreground"
+                  }`}
+                >
+                  {t(labelKey)}
+                </button>
+              ))}
+            </div>
+            {profileData?.ambition_level && (
+              <p className="text-xs text-muted-foreground/60 font-light italic">
+                {t(AMBITION_LEVELS.find((l) => l.key === normalizeAmbitionLevel(profileData.ambition_level))?.descKey ?? "")}
+              </p>
+            )}
+          </div>
+
+          {/* Learning region dropdown */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.pref_region_label")}</label>
+              <SaveIndicator state={regionSave} t={t} />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setCourseRegionDropdownOpen((v) => !v)}
+                onBlur={() => setTimeout(() => setCourseRegionDropdownOpen(false), 150)}
+                aria-haspopup="listbox"
+                aria-expanded={courseRegionDropdownOpen}
                 className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
               >
                 <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
                 <FlagEmoji code={activeRegion} />
                 <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
-                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-90" : ""}`} aria-hidden="true" />
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${courseRegionDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
               </button>
-              {showRegionPicker && (
-                <div className="flex flex-wrap gap-1.5 pt-1 animate-in fade-in duration-200">
+              {courseRegionDropdownOpen && (
+                <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
                   {COMPASS_REGIONS.map((region) => {
                     const isSelected = region.code === activeRegion;
                     return (
                       <button
                         key={region.code}
-                        onClick={() => handleRegionChange(region.code as RegionCode)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-sm text-xs border transition-all ${
+                        role="option"
+                        aria-selected={isSelected}
+                        onMouseDown={() => { handleRegionChange(region.code as RegionCode); setCourseRegionDropdownOpen(false); }}
+                        className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
                           isSelected
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border/40 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                         }`}
                       >
                         <FlagEmoji code={region.flag} />
@@ -938,20 +1149,10 @@ export default function Profile() {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
 
-      {/* ── Interests & Objectives ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.interests_title")}
-        icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        description={t("profile.interests_subtitle")}
-      >
-        <CardContent className="space-y-6">
-
-          {/* Country of origin */}
-          <div className="space-y-2">
+          {/* Country of origin — editable */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
               <SaveIndicator state={countrySave} t={t} />
@@ -961,10 +1162,7 @@ export default function Profile() {
                 <div className="relative flex-1">
                   <Input
                     value={countryInput}
-                    onChange={(e) => {
-                      setCountryInput(e.target.value);
-                      setCountryDropdownOpen(true);
-                    }}
+                    onChange={(e) => { setCountryInput(e.target.value); setCountryDropdownOpen(true); }}
                     onFocus={() => setCountryDropdownOpen(true)}
                     onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 120)}
                     onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
@@ -977,22 +1175,12 @@ export default function Profile() {
                   />
                   {countryDropdownOpen && (() => {
                     const q = countryInput.trim().toLowerCase();
-                    const filtered = q
-                      ? COUNTRIES.filter(c => c.toLowerCase().includes(q))
-                      : COUNTRIES;
+                    const filtered = q ? COUNTRIES.filter(c => c.toLowerCase().includes(q)) : COUNTRIES;
                     return filtered.length > 0 ? (
                       <ul className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-sm border border-border bg-background shadow-md">
                         {filtered.slice(0, 30).map(country => (
                           <li key={country}>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                setCountryInput(country);
-                                setCountryDropdownOpen(false);
-                              }}
-                              className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors"
-                            >
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); setCountryInput(country); setCountryDropdownOpen(false); }} className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors">
                               {country}
                             </button>
                           </li>
@@ -1009,15 +1197,56 @@ export default function Profile() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setEditingCountry(true)}
-                className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors"
-              >
+              <button onClick={() => setEditingCountry(true)} className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors">
                 {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
                 <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
           </div>
+
+          {/* Gender — read-only */}
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.gender_label")}</span>
+            <span className="flex items-center gap-1.5 text-sm text-foreground/70 font-light">
+              {profileData?.gender_identity
+                ? capitalize(profileData.gender_identity.replace("_", " "))
+                : <span className="italic text-muted-foreground/50">{t("profile.country_not_specified")}</span>}
+              <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-hidden="true" />
+            </span>
+          </div>
+
+          {/* Age group — derived from birth_year, read-only */}
+          {(() => {
+            const currentYear = new Date().getFullYear();
+            const age = profileData?.birth_year ? currentYear - profileData.birth_year : null;
+            const ageGroupKey = age === null
+              ? "profile.age_group_unknown"
+              : age < 30
+                ? "profile.age_group_under30"
+                : age <= 50
+                  ? "profile.age_group_30_50"
+                  : "profile.age_group_over50";
+            return (
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.age_group_label")}</span>
+                <span className="flex items-center gap-1.5 text-sm text-foreground/70 font-light">
+                  {t(ageGroupKey)}
+                  <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-hidden="true" />
+                </span>
+              </div>
+            );
+          })()}
+
+        </CardContent>
+      </Card>
+
+      {/* ── Interests & Objectives ── collapsible ── */}
+      <CollapsibleSection
+        title={t("profile.interests_title")}
+        icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.interests_subtitle")}
+      >
+        <CardContent className="space-y-6">
 
           {/* Objectives */}
           <div className="space-y-2.5">

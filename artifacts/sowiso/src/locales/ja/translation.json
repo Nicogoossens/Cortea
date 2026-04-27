@@ -154,7 +154,7 @@
   "profile.phone_coming_soon": "SMS による認証 — 近日公開予定",
   "profile.preferences": "ご設定",
   "profile.pref_language": "ご希望の言語",
-  "profile.pref_region_label": "礼儀の地域",
+  "profile.pref_region_label": "学習地域",
   "profile.saved": "保存されました",
   "profile.save_error": "保存できませんでした。お手数ですが、もう一度お試しください。",
   "profile.danger_zone": "アカウント",
@@ -717,5 +717,14 @@
   "context.active_region": "地域",
   "mirror.context.region": "エチケット地域",
   "mirror.context.dresscode": "検出されたスタイル",
-  "mirror.context.not_analyzed": "未分析"
+  "mirror.context.not_analyzed": "未分析",
+  "profile.course_settings_title": "コース設定",
+  "profile.course_settings_desc": "これらの設定はアトリエでのスタート地点を決定します。慎重に変更してください。",
+  "profile.course_change_warning": "コースのスタート地点が変わりました。学習の抜けを避けるため、The Navigatorで新しいセッションを開始してください。",
+  "profile.course_change_navigator_link": "The Navigatorへ",
+  "profile.age_group_label": "年齢層",
+  "profile.age_group_under30": "30歳未満",
+  "profile.age_group_30_50": "30–50",
+  "profile.age_group_over50": "50歳以上",
+  "profile.age_group_unknown": "未指定"
 }

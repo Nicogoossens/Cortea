@@ -155,7 +155,7 @@
   "profile.phone_coming_soon": "التحقق عبر الرسائل النصية — قريباً",
   "profile.preferences": "التفضيلات",
   "profile.pref_language": "اللغة المفضلة",
-  "profile.pref_region_label": "منطقة الآداب",
+  "profile.pref_region_label": "منطقة التعلم",
   "profile.saved": "تم الحفظ",
   "profile.save_error": "لم يتم الحفظ. يرجى المحاولة مجدداً.",
   "profile.danger_zone": "الحساب",
@@ -717,5 +717,14 @@
   "context.active_region": "المنطقة",
   "mirror.context.region": "منطقة الآداب",
   "mirror.context.dresscode": "الأسلوب المكتشف",
-  "mirror.context.not_analyzed": "لم يتم التحليل بعد"
+  "mirror.context.not_analyzed": "لم يتم التحليل بعد",
+  "profile.course_settings_title": "إعدادات الدورة",
+  "profile.course_settings_desc": "تحدد هذه الإعدادات نقطة انطلاقك في الأتيليه. غيّرها بعناية.",
+  "profile.course_change_warning": "تغيرت نقطة انطلاقك في الدورة. ابدأ جلسة جديدة في الملاح لتجنب الثغرات في تعلمك.",
+  "profile.course_change_navigator_link": "الذهاب إلى الملاح",
+  "profile.age_group_label": "الفئة العمرية",
+  "profile.age_group_under30": "أقل من 30",
+  "profile.age_group_30_50": "30–50",
+  "profile.age_group_over50": "50 وما فوق",
+  "profile.age_group_unknown": "غير محدد"
 }

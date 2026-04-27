@@ -158,7 +158,7 @@
   "profile.phone_coming_soon": "Verification via SMS — coming soon",
   "profile.preferences": "Preferences",
   "profile.pref_language": "Preferred Language",
-  "profile.pref_region_label": "Etiquette Region",
+  "profile.pref_region_label": "Learning Region",
   "profile.saved": "Saved",
   "profile.save_error": "Could not save. Please try again.",
   "profile.danger_zone": "Account",
@@ -732,5 +732,14 @@
   "context.active_region": "Region",
   "mirror.context.region": "Etiquette Region",
   "mirror.context.dresscode": "Detected Style",
-  "mirror.context.not_analyzed": "Not analyzed yet"
+  "mirror.context.not_analyzed": "Not analyzed yet",
+  "profile.course_settings_title": "Course Settings",
+  "profile.course_settings_desc": "These settings determine your starting point in the Atelier. Change them with care.",
+  "profile.course_change_warning": "Your course starting point has changed. Start a new session in The Navigator to avoid gaps in your learning.",
+  "profile.course_change_navigator_link": "Go to The Navigator",
+  "profile.age_group_label": "Age Group",
+  "profile.age_group_under30": "Under 30",
+  "profile.age_group_30_50": "30–50",
+  "profile.age_group_over50": "50 and over",
+  "profile.age_group_unknown": "Not specified"
 }

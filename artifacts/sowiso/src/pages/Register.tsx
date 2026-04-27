@@ -337,14 +337,14 @@ export default function Register() {
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-foreground tracking-wide block">
                 {t("register.password_label")}
-                <span className="ml-1.5 text-xs font-normal text-muted-foreground/60">(optioneel)</span>
+                <span className="ml-1.5 text-xs font-normal text-muted-foreground/60">{t("register.password_optional")}</span>
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  placeholder="min. 8 tekens"
+                  placeholder={t("register.password_placeholder")}
                   value={form.password}
                   onChange={(e) => update("password", e.target.value)}
                   className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"
@@ -360,7 +360,7 @@ export default function Register() {
                 </button>
               </div>
               <p className="text-xs text-muted-foreground/60 font-light">
-                Stel nu een wachtwoord in om direct in te loggen, of gebruik een verificatielink per e-mail.
+                {t("register.password_hint")}
               </p>
             </div>
 
@@ -374,7 +374,7 @@ export default function Register() {
                     id="password_confirm"
                     type={showConfirm ? "text" : "password"}
                     autoComplete="new-password"
-                    placeholder="herhaal wachtwoord"
+                    placeholder={t("register.password_confirm_placeholder")}
                     value={form.password_confirm}
                     onChange={(e) => update("password_confirm", e.target.value)}
                     className="bg-background border-border/60 focus:border-primary/50 rounded-sm pr-10"

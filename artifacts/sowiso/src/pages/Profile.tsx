@@ -1665,24 +1665,20 @@ export default function Profile() {
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
             <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
-            Mijn Badges
+            {t("profile.badges_title")}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground font-light">
-            Badges die je hebt verdiend door leertrajecten te beheersen in het Atelier.
+            {t("profile.badges_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!earnedBadges || earnedBadges.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground/60">
               <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
-              <p className="font-serif text-sm">Nog geen badges verdiend.</p>
-              <p className="text-xs mt-1">
-                Beheers een leertraject in het{" "}
-                <Link href="/atelier" className="underline underline-offset-2 hover:text-foreground transition-colors">
-                  Atelier
-                </Link>{" "}
-                om je eerste badge te behalen.
-              </p>
+              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
+              <Link href="/atelier">
+                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
+              </Link>
             </div>
           ) : (
             <div className="space-y-5">
@@ -1692,10 +1688,10 @@ export default function Profile() {
                 .map((type) => {
                   const group = earnedBadges.filter((b) => b.badge_type === type);
                   const typeLabel =
-                    type === "pillar" ? "Pijler"
-                    : type === "phase" ? "Fase"
-                    : type === "country" ? "Land"
-                    : "Ambassadeur";
+                    type === "pillar" ? t("profile.badges_type_pillar")
+                    : type === "phase" ? t("profile.badges_type_phase")
+                    : type === "country" ? t("profile.badges_type_country")
+                    : t("profile.badges_type_ambassador");
                   const TypeIcon =
                     type === "pillar" ? Medal
                     : type === "phase" ? Trophy
@@ -1951,6 +1947,7 @@ function capitalize(str: string): string {
 }
 
 function PasswordSection() {
+  const { t } = useLanguage();
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -1961,8 +1958,8 @@ function PasswordSection() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!newPw || newPw.length < 8) { setMessage("Wachtwoord moet minimaal 8 tekens hebben."); setState("error"); return; }
-    if (newPw !== confirmPw) { setMessage("De wachtwoorden komen niet overeen."); setState("error"); return; }
+    if (!newPw || newPw.length < 8) { setMessage(t("profile.password_error_length")); setState("error"); return; }
+    if (newPw !== confirmPw) { setMessage(t("profile.password_error_mismatch")); setState("error"); return; }
     setState("loading");
     setMessage(null);
     try {
@@ -1976,30 +1973,30 @@ function PasswordSection() {
       });
       const data = await res.json() as { message?: string; error?: string };
       if (!res.ok) {
-        setMessage(data.error ?? "Instellen mislukt.");
+        setMessage(data.error ?? t("profile.password_error_failed"));
         setState("error");
       } else {
-        setMessage(data.message ?? "Wachtwoord bijgewerkt.");
+        setMessage(data.message ?? t("profile.password_success"));
         setState("done");
         setCurrentPw(""); setNewPw(""); setConfirmPw("");
         setTimeout(() => setState("idle"), 4000);
       }
     } catch {
-      setMessage("Er is een fout opgetreden. Probeer opnieuw.");
+      setMessage(t("profile.password_error_generic"));
       setState("error");
     }
   }
 
   return (
     <CollapsibleSection
-      title="Wachtwoord instellen"
+      title={t("profile.password_title")}
       icon={<KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />}
-      description="Stel een wachtwoord in om direct in te loggen zonder link."
+      description={t("profile.password_desc")}
     >
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-w-sm" noValidate>
           <div className="space-y-1.5">
-            <label htmlFor="pw-current" className="text-sm font-medium text-foreground">Huidig wachtwoord <span className="text-xs text-muted-foreground/60">(leeg laten als nog niet ingesteld)</span></label>
+            <label htmlFor="pw-current" className="text-sm font-medium text-foreground">{t("profile.password_current_label")} <span className="text-xs text-muted-foreground/60">{t("profile.password_current_optional")}</span></label>
             <Input
               id="pw-current"
               type="password"
@@ -2012,13 +2009,13 @@ function PasswordSection() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="pw-new" className="text-sm font-medium text-foreground">Nieuw wachtwoord <span className="text-destructive" aria-hidden="true">*</span></label>
+            <label htmlFor="pw-new" className="text-sm font-medium text-foreground">{t("profile.password_new_label")} <span className="text-destructive" aria-hidden="true">*</span></label>
             <div className="relative">
               <Input
                 id="pw-new"
                 type={showNew ? "text" : "password"}
                 autoComplete="new-password"
-                placeholder="min. 8 tekens"
+                placeholder={t("profile.password_placeholder")}
                 value={newPw}
                 onChange={(e) => { setNewPw(e.target.value); setState("idle"); setMessage(null); }}
                 className="rounded-sm pr-10"
@@ -2031,13 +2028,13 @@ function PasswordSection() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="pw-confirm" className="text-sm font-medium text-foreground">Bevestig wachtwoord <span className="text-destructive" aria-hidden="true">*</span></label>
+            <label htmlFor="pw-confirm" className="text-sm font-medium text-foreground">{t("profile.password_confirm_label")} <span className="text-destructive" aria-hidden="true">*</span></label>
             <div className="relative">
               <Input
                 id="pw-confirm"
                 type={showConfirm ? "text" : "password"}
                 autoComplete="new-password"
-                placeholder="herhaal wachtwoord"
+                placeholder={t("register.password_confirm_placeholder")}
                 value={confirmPw}
                 onChange={(e) => { setConfirmPw(e.target.value); setState("idle"); setMessage(null); }}
                 className="rounded-sm pr-10"
@@ -2062,11 +2059,11 @@ function PasswordSection() {
             disabled={!newPw || !confirmPw || state === "loading"}
           >
             {state === "loading" ? (
-              <><PasswordLoader2 className="w-4 h-4 mr-2 animate-spin" />Opslaan…</>
+              <><PasswordLoader2 className="w-4 h-4 mr-2 animate-spin" />{t("profile.password_saving")}</>
             ) : state === "done" ? (
-              <><CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />Opgeslagen</>
+              <><CheckCircle2 className="w-4 h-4 mr-2 text-green-500" />{t("profile.password_saved")}</>
             ) : (
-              "Wachtwoord opslaan"
+              t("profile.password_save")
             )}
           </Button>
         </form>

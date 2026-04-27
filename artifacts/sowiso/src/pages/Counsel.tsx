@@ -14,7 +14,7 @@ import { LockOverlay } from "@/components/LockOverlay";
 import { BehaviorSkillsCarousel } from "@/components/BehaviorSkillsCarousel";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { SITUATIONS } from "@/lib/situations";
-import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, SITUATION_CHIPS_KEYS } from "@/lib/counsel";
+import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, getSituationChipsForRegion } from "@/lib/counsel";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -480,7 +480,7 @@ export default function Counsel() {
               className="w-full resize-none bg-background border border-border/60 focus:border-primary/50 rounded-sm px-3 py-2 text-sm outline-none transition-colors"
             />
             <div className="flex flex-wrap gap-2">
-              {SITUATION_CHIPS_KEYS.map((key) => {
+              {getSituationChipsForRegion(effectiveRegion).map((key) => {
                 const label = t(key as Parameters<typeof t>[0]);
                 const isActive = situationContext === label;
                 return (

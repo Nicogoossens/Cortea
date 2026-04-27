@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FlagEmoji, useActiveRegion, COMPASS_REGIONS, ACTIVE_REGIONS } from "@/lib/active-region";
+import { useLanguage } from "@/lib/i18n";
 import { SOCIAL_CLASS_CONFIG } from "@/lib/social-class-config";
 import {
   BookOpen, RotateCcw, Trophy, ChevronRight,
@@ -31,11 +32,6 @@ interface Props {
   ageGroup?: string | null;
 }
 
-const AMBITION_LABELS: Record<string, string> = {
-  casual: "Casual",
-  professional: "Professioneel",
-  diplomatic: "Diplomatisch",
-};
 
 const START_CARD_KEY = "cortea_start_card_v1";
 
@@ -59,6 +55,7 @@ function progressPercent(level: number, streak: number): number {
 
 export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel = "casual", gender, ageGroup }: Props) {
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
   const { setActiveRegion, getRegionName } = useActiveRegion();
 
   const [register, setRegister] = useState<Register>(() => {
@@ -247,30 +244,30 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
           <Compass className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
           <div className="flex-1 space-y-1">
             <p className="font-medium text-foreground/90">
-              Op basis van jouw profiel{" "}
+              {t("atelier.track.start_card_intro")}{" "}
               <span className="text-muted-foreground font-normal">
                 ({[
-                  AMBITION_LABELS[ambitionLevel] ?? ambitionLevel,
+                  t(`atelier.track.ambition_${ambitionLevel}`),
                   getRegionName(activeRegion),
                   gender ?? null,
                   ageGroup ?? null,
                 ].filter(Boolean).join(" · ")})
               </span>{" "}
-              adviseren we te starten bij{" "}
+              {t("atelier.track.start_card_recommendation")}{" "}
               <span className="font-serif text-primary">
-                {register === "elite" ? "Elite — " : ""}{currentPhaseName}
+                {register === "elite" ? `${t("atelier.track.register_elite")} — ` : ""}{currentPhaseName}
               </span>.
             </p>
             <button
               onClick={dismissStartCard}
               className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
             >
-              Kies zelf je startpunt
+              {t("atelier.track.start_card_choose")}
             </button>
           </div>
           <button
             onClick={dismissStartCard}
-            aria-label="Kaart sluiten"
+            aria-label={t("atelier.track.start_card_close")}
             className="flex-shrink-0 p-1 rounded-sm text-muted-foreground/60 hover:text-foreground transition-colors"
           >
             <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -293,7 +290,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                   : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
-              {r === "middle_class" ? "Middenklasse" : "Elite"}
+              {r === "middle_class" ? t("atelier.track.register_middle_class") : t("atelier.track.register_elite")}
             </button>
           ))}
         </div>
@@ -304,7 +301,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         <div className="space-y-4">
           <div className="space-y-2">
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              {register === "middle_class" ? "Fase" : "Pillar"}
+              {register === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
             </p>
             <div className="space-y-1.5">
               {phaseOptions.map((opt) => (
@@ -329,7 +326,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
           {register === "middle_class" && (
             <div className="space-y-2">
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                Research Pillar
+                {t("atelier.track.section_pillar")}
               </p>
               <div className="space-y-1.5">
                 {pillarEntries.map(([key, label]) => {
@@ -390,17 +387,17 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                         <FlagEmoji code={activeRegion} className="text-base" />
                         <span>{getRegionName(activeRegion)}</span>
                       </span>{" "}
-                      — inhoud volgt binnenkort.
+                      {t("atelier.track.no_content_suffix")}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Leertrajecten voor deze regio zijn in voorbereiding.
+                      {t("atelier.track.no_content_desc")}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                    Beschikbare regio's
+                    {t("atelier.track.available_regions")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {activeRegionsList.map((region) => (
@@ -420,7 +417,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                 <Link href="/profile">
                   <Button variant="outline" size="sm" className="gap-2 font-serif text-xs">
                     <Compass className="w-3.5 h-3.5" aria-hidden="true" />
-                    Regio wijzigen in profiel
+                    {t("atelier.track.change_region_profile")}
                   </Button>
                 </Link>
               </CardContent>
@@ -430,12 +427,12 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               <CardContent className="py-10 text-center space-y-5">
                 <Trophy className="w-12 h-12 mx-auto text-amber-500" aria-hidden="true" />
                 <h3 className="font-serif text-2xl text-foreground">
-                  Niveau voltooid — Meesterschap bereikt
+                  {t("atelier.track.mastered_title")}
                 </h3>
                 <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                  Je beheerst dit leertraject volledig.
+                  {t("atelier.track.mastered_desc")}
                   {feedback.new_badges.length > 0
-                    ? " Je hebt een badge verdiend."
+                    ? ` ${t("atelier.track.mastered_badge_earned")}`
                     : ""}
                 </p>
 
@@ -469,13 +466,13 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     className="font-serif gap-2"
                   >
                     <RotateCcw className="w-4 h-4" aria-hidden="true" />
-                    Opnieuw starten
+                    {t("atelier.track.restart")}
                   </Button>
                   {feedback.new_badges.length > 0 && (
                     <Link href="/profile#badges">
                       <Button variant="default" className="font-serif gap-2">
                         <Trophy className="w-4 h-4" aria-hidden="true" />
-                        Bekijk mijn badges
+                        {t("atelier.track.view_badges")}
                       </Button>
                     </Link>
                   )}
@@ -487,9 +484,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               {/* Progress indicator */}
               <div className="flex items-center justify-between text-xs font-mono text-muted-foreground/70">
                 <span>
-                  Vraag {currentQuestionIdx + 1} van {session?.questions.length ?? 0}
-                  {" · "}
-                  Level {currentProgress?.current_level ?? 1}
+                  {t("atelier.track.question_progress", { current: currentQuestionIdx + 1, total: session?.questions.length ?? 0, level: currentProgress?.current_level ?? 1 })}
                   {" · "}
                   {register === "middle_class"
                     ? (RESEARCH_PILLARS[researchPillar] ?? researchPillar)
@@ -498,7 +493,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                 {session?.repeat && (
                   <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                     <RotateCcw className="w-3 h-3" aria-hidden="true" />
-                    Herhaling
+                    {t("atelier.track.revision")}
                   </span>
                 )}
               </div>
@@ -507,7 +502,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               {feedback?.level_up && (
                 <div className="flex items-center gap-2 px-4 py-3 rounded-sm border border-green-300/40 bg-green-50/40 dark:bg-green-950/20 text-green-700 dark:text-green-400 text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
                   <Sparkles className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  Level {(currentProgress?.current_level ?? 2)} bereikt!
+                  {t("atelier.track.level_up", { level: currentProgress?.current_level ?? 2 })}
                 </div>
               )}
 
@@ -515,7 +510,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               {session?.repeat && !feedback && (
                 <div className="flex items-center gap-2 px-4 py-3 rounded-sm border border-amber-300/40 bg-amber-50/30 dark:bg-amber-950/10 text-amber-700 dark:text-amber-400 text-sm">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  Laten we dit nog eens bekijken — dezelfde type vragen opnieuw.
+                  {t("atelier.track.repeat_message")}
                 </div>
               )}
 
@@ -587,9 +582,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     {answered && feedback && (
                       <div className={`mt-1 p-4 rounded-sm border space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300 ${tierBadgeColor(feedback.answer_tier)}`}>
                         <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-widest">
-                          {feedback.answer_tier === 1 && <><CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Uitstekend</>}
-                          {feedback.answer_tier === 2 && <><AlertCircle className="w-4 h-4" aria-hidden="true" /> Aanvaardbaar</>}
-                          {feedback.answer_tier === 3 && <><XCircle className="w-4 h-4" aria-hidden="true" /> Niet correct</>}
+                          {feedback.answer_tier === 1 && <><CheckCircle2 className="w-4 h-4" aria-hidden="true" /> {t("atelier.track.feedback_excellent")}</>}
+                          {feedback.answer_tier === 2 && <><AlertCircle className="w-4 h-4" aria-hidden="true" /> {t("atelier.track.feedback_acceptable")}</>}
+                          {feedback.answer_tier === 3 && <><XCircle className="w-4 h-4" aria-hidden="true" /> {t("atelier.track.feedback_incorrect")}</>}
                         </div>
                         <p className="text-sm leading-relaxed">{feedback.motivation}</p>
                         {feedback.historical_context && (
@@ -608,7 +603,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           disabled={selectedOptionIdx === null || submitting}
                           className="font-serif gap-2 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
-                          {submitting ? "Verwerken…" : "Bevestig antwoord"}
+                          {submitting ? t("atelier.track.processing") : t("atelier.track.confirm_answer")}
                           {!submitting && <ChevronRight className="w-4 h-4" aria-hidden="true" />}
                         </Button>
                       ) : !feedback?.mastered ? (
@@ -617,8 +612,8 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           className="font-serif gap-2 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
                           {currentQuestionIdx + 1 < (session?.questions.length ?? 0)
-                            ? "Volgende vraag"
-                            : "Nieuwe sessie starten"}
+                            ? t("atelier.track.next_question")
+                            : t("atelier.track.new_session")}
                           <ArrowRight className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       ) : null}
@@ -631,11 +626,11 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               {currentProgress && (
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest">
-                    <span>Voortgang</span>
+                    <span>{t("atelier.track.progress_label")}</span>
                     <span>
                       {currentProgress.mastered
-                        ? "Voltooid"
-                        : `Level ${currentProgress.current_level} / 5 · ${currentProgress.questions_done} vragen`}
+                        ? t("atelier.track.completed")
+                        : t("atelier.track.progress_detail", { level: currentProgress.current_level, questions: currentProgress.questions_done })}
                     </span>
                   </div>
                   <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
@@ -655,7 +650,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       {register === "middle_class" && (
         <div className="space-y-3 pt-2 border-t border-border/30">
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-            Voortgang per Research Pillar — Fase {phase}
+            {t("atelier.track.progress_overview", { phase })}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {pillarEntries.map(([key, label]) => {
@@ -670,7 +665,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                       {key} <span className="font-light text-muted-foreground/70">{label}</span>
                     </span>
                     <span className="text-[10px] font-mono text-muted-foreground/60">
-                      {mastered ? "✓ Voltooid" : started ? `Level ${level} / 5` : "Nog niet gestart"}
+                      {mastered ? `✓ ${t("atelier.track.completed")}` : started ? `Level ${level} / 5` : t("atelier.track.not_started")}
                     </span>
                   </div>
                   <div className="h-1 bg-border/30 rounded-full overflow-hidden">

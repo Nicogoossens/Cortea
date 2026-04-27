@@ -484,8 +484,8 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
         </div>
       </div>
 
-      {/* ── Progress overview (all pillars) for middle_class ── */}
-      {register === "middle_class" && progressData && progressData.some((p) => p.register === "middle_class") && (
+      {/* ── Progress overview (all pillars) for middle_class — always shown so "not started" is visible ── */}
+      {register === "middle_class" && (
         <div className="space-y-3 pt-2 border-t border-border/30">
           <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
             Voortgang per Research Pillar — Fase {phase}

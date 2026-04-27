@@ -67,7 +67,17 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     const [userRow] = await db.select({
       birth_year: usersTable.birth_year,
       gender_identity: usersTable.gender_identity,
+      subscription_tier: usersTable.subscription_tier,
     }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+    // Tier authorisation: learning tracks require Traveller (middle_class) or Ambassador (elite)
+    const tier = userRow?.subscription_tier ?? "guest";
+    if (tier !== "traveller" && tier !== "ambassador") {
+      return res.status(403).json({ message: "Learning tracks require a Traveller or Ambassador subscription." });
+    }
+    if (register === "elite" && tier !== "ambassador") {
+      return res.status(403).json({ message: "The elite learning track requires an Ambassador subscription." });
+    }
 
     const demographic = userRow
       ? deriveDemographic(userRow.birth_year, userRow.gender_identity)
@@ -169,6 +179,17 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     }
 
     const { question_id, selected_option_index, register, research_pillar, phase } = parsed.data;
+
+    // Verify tier authorisation
+    const [userTierRow] = await db.select({ subscription_tier: usersTable.subscription_tier })
+      .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    const answerTier = userTierRow?.subscription_tier ?? "guest";
+    if (answerTier !== "traveller" && answerTier !== "ambassador") {
+      return res.status(403).json({ message: "Learning tracks require a Traveller or Ambassador subscription." });
+    }
+    if (register === "elite" && answerTier !== "ambassador") {
+      return res.status(403).json({ message: "The elite learning track requires an Ambassador subscription." });
+    }
     const pillarKey = research_pillar ?? null;
 
     const [question] = await db.select()

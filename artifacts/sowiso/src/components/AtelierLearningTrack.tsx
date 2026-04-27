@@ -94,6 +94,20 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     new_badges: Array<{ id: number; slug: string; title: string; description: string; badge_type: string }>;
   } | null>(null);
 
+  const sessionParams = {
+    register,
+    phase,
+    region_code: activeRegion,
+    lang: lang.split("-")[0],
+    ...(register === "middle_class" ? { research_pillar: researchPillar } : {}),
+  };
+
+  const { data: session, isLoading: sessionLoading } = useGetLearningTrackSession(sessionParams, {
+    query: { queryKey: [...getGetLearningTrackSessionQueryKey(sessionParams)], staleTime: 0 },
+  });
+
+  const { data: progressData } = useGetLearningTrackProgress();
+
   useEffect(() => {
     if (!progressData || hasAppliedAutoSelect.current || hasManuallyChanged.current) return;
     hasAppliedAutoSelect.current = true;
@@ -110,20 +124,6 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressData]);
-
-  const sessionParams = {
-    register,
-    phase,
-    region_code: activeRegion,
-    lang: lang.split("-")[0],
-    ...(register === "middle_class" ? { research_pillar: researchPillar } : {}),
-  };
-
-  const { data: session, isLoading: sessionLoading } = useGetLearningTrackSession(sessionParams, {
-    query: { queryKey: [...getGetLearningTrackSessionQueryKey(sessionParams)], staleTime: 0 },
-  });
-
-  const { data: progressData } = useGetLearningTrackProgress();
 
   const { mutate: submitAnswer, isPending: submitting } = usePostLearningTrackAnswer({
     mutation: {

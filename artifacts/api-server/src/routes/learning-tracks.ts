@@ -5,8 +5,9 @@ import {
   learningTrackProgressTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, or, inArray, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
 const router = Router();
 
@@ -48,12 +49,9 @@ const AnswerBodySchema = z.object({
   phase: z.number().int().min(1).max(5),
 });
 
-router.get("/learning-tracks/session", async (req, res) => {
+router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
   try {
-    const sessionUser = (req as unknown as { user?: { userId?: string } }).user;
-    if (!sessionUser?.userId) {
-      return res.status(401).json({ message: "Authentication required to access learning tracks." });
-    }
+    const userId = getResolvedUserId(req);
 
     const parsed = SessionQuerySchema.safeParse(req.query);
     if (!parsed.success) {
@@ -61,7 +59,10 @@ router.get("/learning-tracks/session", async (req, res) => {
     }
 
     const { register, research_pillar, phase, region_code, lang } = parsed.data;
-    const userId = sessionUser.userId;
+
+    if (register === "middle_class" && !research_pillar) {
+      return res.status(400).json({ message: "research_pillar is required for middle_class register." });
+    }
 
     const [userRow] = await db.select({
       birth_year: usersTable.birth_year,
@@ -156,12 +157,9 @@ router.get("/learning-tracks/session", async (req, res) => {
   }
 });
 
-router.post("/learning-tracks/answer", async (req, res) => {
+router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
   try {
-    const sessionUser = (req as unknown as { user?: { userId?: string } }).user;
-    if (!sessionUser?.userId) {
-      return res.status(401).json({ message: "Authentication required." });
-    }
+    const userId = getResolvedUserId(req);
 
     const parsed = AnswerBodySchema.safeParse(req.body);
     if (!parsed.success) {
@@ -169,7 +167,6 @@ router.post("/learning-tracks/answer", async (req, res) => {
     }
 
     const { question_id, selected_option_index, register, research_pillar, phase } = parsed.data;
-    const userId = sessionUser.userId;
     const pillarKey = research_pillar ?? null;
 
     const [question] = await db.select()
@@ -253,7 +250,7 @@ router.post("/learning-tracks/answer", async (req, res) => {
         questions_done: questionsDone,
         correct_streak: correctStreak,
         mastered,
-      }).onConflictDoNothing();
+      });
     }
 
     return res.json({
@@ -273,14 +270,9 @@ router.post("/learning-tracks/answer", async (req, res) => {
   }
 });
 
-router.get("/learning-tracks/progress", async (req, res) => {
+router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
   try {
-    const sessionUser = (req as unknown as { user?: { userId?: string } }).user;
-    if (!sessionUser?.userId) {
-      return res.status(401).json({ message: "Authentication required." });
-    }
-
-    const userId = sessionUser.userId;
+    const userId = getResolvedUserId(req);
 
     const rows = await db.select()
       .from(learningTrackProgressTable)

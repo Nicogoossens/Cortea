@@ -56,8 +56,13 @@ export async function checkAndAwardBadges(
   return newBadges;
 }
 
+/** Postgres unique-constraint violation error code. */
+const PG_UNIQUE_VIOLATION = "23505";
+
 /**
- * Awards a pillar badge by slug. Returns the badge if newly awarded, null if already held.
+ * Awards a badge by slug. Returns the badge if newly awarded, null if already held.
+ * Only unique-constraint violations (already awarded) are silently treated as null.
+ * All other DB errors are re-thrown so callers can observe real failures.
  */
 async function awardBadgeBySlug(userId: string, slug: string): Promise<AwardedBadge | null> {
   const [badge] = await db.select().from(badgesTable).where(eq(badgesTable.slug, slug)).limit(1);
@@ -78,9 +83,13 @@ async function awardBadgeBySlug(userId: string, slug: string): Promise<AwardedBa
       icon_url: badge.icon_url,
       awarded_at: new Date(),
     };
-  } catch {
-    // UNIQUE constraint violation — already awarded; not an error
-    return null;
+  } catch (err) {
+    // Only swallow unique-constraint violations — badge already awarded, which is safe.
+    // Re-throw anything else (FK mismatch, transient connectivity, schema drift, etc.)
+    // so the caller can log and surface the failure.
+    const code = (err as { code?: string }).code;
+    if (code === PG_UNIQUE_VIOLATION) return null;
+    throw err;
   }
 }
 

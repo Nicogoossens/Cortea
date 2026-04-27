@@ -122,7 +122,98 @@ The column is nullable, so existing rows are not affected.
 
 ---
 
-## 3. Real-time register quality check (API + Counsel page)
+## 3. Register Calibration worker — `scripts/register-calibration-worker.mjs`
+
+Rewrites **module-content strings** to the correct language register for the
+module being studied — completely independent of the user's membership level.
+
+| Module flag | Register applied |
+|-------------|-----------------|
+| `--module standard` | Warm, direct, accessible middle-class language |
+| `--module elite` | Formal, refined, prestige-class language |
+
+The mapping is **absolute**: an elite member studying a standard module gets
+middle-class language. A standard member studying an elite module gets elite
+language. No mixing.
+
+### Scope
+
+Only module-content fields are processed using an **explicit allowlist** of
+key prefixes. A key is processed only if it starts with one of:
+
+```
+scenario.   situation.   counsel_advice.   advice.
+learntrack.  track.       question.         hint.
+lesson.      exercise.    module.           content.
+```
+
+Everything else — including `counsel.*` UI labels (`counsel.title`,
+`counsel.placeholder`, etc.), navigation keys, profile keys, and any other
+string not matching the allowlist — is **always skipped**.
+
+Note: Counsel advice content rows use the `counsel_advice.` prefix (with an
+underscore), which is included in the allowlist. The `counsel.` prefix
+(without underscore) covers UI labels only and is excluded.
+
+### Supported locales
+
+Full prompt sets exist for all 9 locales:
+`nl`, `nl-BE`, `fr`, `fr-BE`, `en`, `en-GB`, `de`, `es`, `it`.
+
+When `--locale` is **not** provided, the worker automatically restricts to
+rows whose `language_code` is one of the supported base codes (`nl`, `fr`,
+`en`, `de`, `es`, `it`). Rows with any other language code (e.g. `ar`, `ja`,
+`pt`, `zh`) are **skipped with a warning** rather than silently processed
+with an English prompt. To process a specific unsupported locale, pass
+`--locale <code>` explicitly.
+
+### Usage
+
+```bash
+# Dry-run: see what would change for the standard module (all locales)
+node scripts/register-calibration-worker.mjs --module standard --dry-run
+
+# Live run: apply elite register to all French strings
+node scripts/register-calibration-worker.mjs --module elite --locale fr
+
+# Re-evaluate already-reviewed strings for Flemish content (standard module)
+node scripts/register-calibration-worker.mjs --module standard --locale nl-BE --force
+
+# Verbose dry-run for German elite-module strings
+node scripts/register-calibration-worker.mjs --module elite --locale de --dry-run --verbose
+```
+
+### NPM scripts (shorthand)
+
+```bash
+pnpm calibrate:standard          # --module standard, all locales
+pnpm calibrate:elite             # --module elite, all locales
+```
+
+Both NPM scripts accept extra flags appended after `--`:
+```bash
+pnpm calibrate:standard -- --locale nl --dry-run
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--module <standard\|elite>` | **Required** — selects the register to apply |
+| `--locale <code>` | Restrict to one locale. Base code (`nl`) filters on `language_code`; full locale (`nl-BE`) filters on `region_link` |
+| `--dry-run` | Print planned rewrites; do **not** write to the database |
+| `--verbose` | Show every evaluated string, even those that pass |
+| `--force` | Re-evaluate rows that already have `quality_reviewed_at` set |
+
+### Idempotency
+
+Rows that already have `quality_reviewed_at` set are skipped unless `--force`
+is passed. Failed API or parse responses are never stamped, so they can be
+safely retried.
+
+---
+
+## 4. Real-time register quality check (API + Counsel page)
 
 A live quality check fires as the user types in the Counsel textarea. After a
 900 ms debounce and a minimum of 30 characters, the text is sent to

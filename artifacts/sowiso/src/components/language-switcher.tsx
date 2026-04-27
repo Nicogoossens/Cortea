@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
-import { useLocale, LOCALE_GROUPS, getLocaleDefinition, type SupportedLocale } from "@/lib/i18n";
+import { useLocale, type SupportedLocale } from "@/lib/i18n";
+import { LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-locales";
 import { FlagEmoji } from "@/lib/active-region";
 
 export function LanguageSwitcher() {

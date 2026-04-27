@@ -5,7 +5,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { useLocale, LOCALE_GROUPS, type SupportedLocale } from "@/lib/i18n";
+import { useLocale, type SupportedLocale } from "@/lib/i18n";
+import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { useAccessibility, type FontSize } from "@/lib/accessibility";
 

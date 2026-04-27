@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocale, LOCALE_GROUPS, type SupportedLocale } from "@/lib/i18n";
+import { useLocale, type SupportedLocale } from "@/lib/i18n";
+import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { useActiveRegion, FlagEmoji, COMPASS_REGIONS } from "@/lib/active-region";
 import { X, ChevronDown } from "lucide-react";
 

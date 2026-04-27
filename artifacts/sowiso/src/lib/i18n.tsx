@@ -1,114 +1,16 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import i18n from "@/i18n";
+import {
+  ALL_LOCALES,
+  LOCALE_GROUPS,
+  type SupportedLocale,
+  type SupportedLanguage,
+  type LocaleDefinition,
+} from "@/lib/i18n-locales";
 
-// ── Locale type definitions ─────────────────────────────────────────────────
+export type { SupportedLocale, SupportedLanguage, LocaleDefinition };
 
-export type SupportedLocale =
-  | "en-GB" | "en-US" | "en-AU" | "en-CA"
-  | "nl-NL"
-  | "fr-FR"
-  | "de-DE"
-  | "es-ES" | "es-MX"
-  | "pt-PT" | "pt-BR"
-  | "it-IT"
-  | "ar-SA"
-  | "ja-JP";
-
-export type SupportedLanguage = "en" | "nl" | "fr" | "de" | "es" | "pt" | "it" | "ar" | "ja";
-
-export interface LocaleDefinition {
-  locale: SupportedLocale;
-  languageLabel: string;
-  regionLabel: string;
-  flag: string;
-  baseLang: SupportedLanguage;
-  rtl?: boolean;
-}
-
-export const LOCALE_GROUPS: { groupLabel: string; locales: LocaleDefinition[] }[] = [
-  {
-    groupLabel: "English",
-    locales: [
-      { locale: "en-GB", languageLabel: "English", regionLabel: "United Kingdom", flag: "GB", baseLang: "en" },
-      { locale: "en-US", languageLabel: "English", regionLabel: "United States", flag: "US", baseLang: "en" },
-      { locale: "en-AU", languageLabel: "English", regionLabel: "Australia", flag: "AU", baseLang: "en" },
-      { locale: "en-CA", languageLabel: "English", regionLabel: "Canada", flag: "CA", baseLang: "en" },
-    ],
-  },
-  {
-    groupLabel: "Nederlands",
-    locales: [
-      { locale: "nl-NL", languageLabel: "Nederlands", regionLabel: "Nederland", flag: "NL", baseLang: "nl" },
-    ],
-  },
-  {
-    groupLabel: "Français",
-    locales: [
-      { locale: "fr-FR", languageLabel: "Français", regionLabel: "France", flag: "FR", baseLang: "fr" },
-    ],
-  },
-  {
-    groupLabel: "Deutsch",
-    locales: [
-      { locale: "de-DE", languageLabel: "Deutsch", regionLabel: "Deutschland", flag: "DE", baseLang: "de" },
-    ],
-  },
-  {
-    groupLabel: "Español",
-    locales: [
-      { locale: "es-ES", languageLabel: "Español", regionLabel: "España", flag: "ES", baseLang: "es" },
-      { locale: "es-MX", languageLabel: "Español", regionLabel: "México", flag: "MX", baseLang: "es" },
-    ],
-  },
-  {
-    groupLabel: "Português",
-    locales: [
-      { locale: "pt-PT", languageLabel: "Português", regionLabel: "Portugal", flag: "PT", baseLang: "pt" },
-      { locale: "pt-BR", languageLabel: "Português", regionLabel: "Brasil", flag: "BR", baseLang: "pt" },
-    ],
-  },
-  {
-    groupLabel: "Italiano",
-    locales: [
-      { locale: "it-IT", languageLabel: "Italiano", regionLabel: "Italia", flag: "IT", baseLang: "it" },
-    ],
-  },
-  {
-    groupLabel: "العربية",
-    locales: [
-      { locale: "ar-SA", languageLabel: "العربية", regionLabel: "المملكة العربية السعودية", flag: "SA", baseLang: "ar", rtl: true },
-    ],
-  },
-  {
-    groupLabel: "日本語",
-    locales: [
-      { locale: "ja-JP", languageLabel: "日本語", regionLabel: "日本", flag: "JP", baseLang: "ja" },
-    ],
-  },
-];
-
-export function getLocaleDefinition(locale: SupportedLocale): LocaleDefinition {
-  for (const group of LOCALE_GROUPS) {
-    const found = group.locales.find((l) => l.locale === locale);
-    if (found) return found;
-  }
-  return LOCALE_GROUPS[0].locales[0];
-}
-
-function localeToBaseLang(locale: SupportedLocale): SupportedLanguage {
-  return locale.split("-")[0] as SupportedLanguage;
-}
-
-// RTL languages
-const RTL_LANGS: Set<string> = new Set(["ar"]);
-
-function isRtl(lang: string): boolean {
-  return RTL_LANGS.has(lang);
-}
-
-// ── Context ─────────────────────────────────────────────────────────────────
-
-interface LocaleContextValue {
+export interface LocaleContextValue {
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => void;
   t: (key: string, vars?: Record<string, string | number> | string) => string;
@@ -116,10 +18,19 @@ interface LocaleContextValue {
   language: SupportedLanguage;
 }
 
+function localeToBaseLang(locale: SupportedLocale): SupportedLanguage {
+  return locale.split("-")[0] as SupportedLanguage;
+}
+
+const RTL_LANGS: Set<string> = new Set(["ar"]);
+
+function isRtl(lang: string): boolean {
+  return RTL_LANGS.has(lang);
+}
+
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const STORAGE_KEY = "sowiso_locale";
-export const ALL_LOCALES: SupportedLocale[] = LOCALE_GROUPS.flatMap((g) => g.locales.map((l) => l.locale));
 
 function detectLocale(): SupportedLocale {
   const stored = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null;
@@ -142,7 +53,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const language: SupportedLanguage = localeToBaseLang(locale);
   const dir: "ltr" | "rtl" = isRtl(language) ? "rtl" : "ltr";
 
-  // Apply locale on mount and when it changes
   useEffect(() => {
     const baseLang = localeToBaseLang(locale);
     const direction = isRtl(baseLang) ? "rtl" : "ltr";
@@ -157,7 +67,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dir = direction;
   }, [locale]);
 
-  // Ensure i18n is initialised to the correct language on first mount
   useEffect(() => {
     const baseLang = localeToBaseLang(locale);
     if (i18n.language !== baseLang) {
@@ -171,8 +80,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, newLocale);
   }, []);
 
-  // Thin wrapper around i18n.t — keeps the existing API and handles
-  // both string fallback (legacy) and interpolation object (new call sites)
   const t = useCallback(
     (key: string, vars?: Record<string, string | number> | string): string => {
       if (typeof vars === "string") {
@@ -183,7 +90,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
       return i18n.t(key, { lng: language, defaultValue: key });
     },
-    // Re-create on locale change so all consumers get fresh translations
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [locale]
   );
@@ -204,3 +110,4 @@ export function useLanguage(): LocaleContextValue {
 export function useLocale(): LocaleContextValue {
   return useLanguage();
 }
+

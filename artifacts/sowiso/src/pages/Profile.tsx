@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
-import { useLanguage, type SupportedLocale, LOCALE_GROUPS } from "@/lib/i18n";
+import { useLanguage, type SupportedLocale } from "@/lib/i18n";
+import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";

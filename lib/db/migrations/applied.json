@@ -16,6 +16,22 @@
         "diplomatic": 1
       },
       "status": "verified"
+    },
+    {
+      "id": "0003_learning_track_tables",
+      "file": "lib/db/migrations/0003_learning_track_tables.sql",
+      "appliedAt": "2026-04-27",
+      "environment": "development",
+      "verificationQuery": "SELECT table_name FROM information_schema.tables WHERE table_name IN ('learning_track_questions','learning_track_progress') ORDER BY table_name",
+      "verificationResult": {
+        "rowCount": 2,
+        "rows": [
+          { "table_name": "learning_track_questions" },
+          { "table_name": "learning_track_progress" }
+        ],
+        "note": "Both tables exist with all required indexes: ltq_lookup_idx, ltq_hash_idx (unique), ltp_user_with_pillar_idx (partial, pillar IS NOT NULL), ltp_user_no_pillar_idx (partial, pillar IS NULL)"
+      },
+      "status": "applied"
     }
   ]
 }

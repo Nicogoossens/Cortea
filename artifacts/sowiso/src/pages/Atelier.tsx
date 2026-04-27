@@ -179,6 +179,9 @@ export default function Atelier() {
           tier={tier as "traveller" | "ambassador"}
           activeRegion={activeRegion}
           lang={locale}
+          ambitionLevel={profile?.ambition_level as "casual" | "professional" | "diplomatic" | undefined}
+          gender={profile?.gender}
+          ageGroup={profile?.age_group}
         />
       )}
 

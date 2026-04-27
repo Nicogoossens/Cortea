@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   useGetLearningTrackSession,
@@ -13,11 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FlagEmoji } from "@/lib/active-region";
+import { FlagEmoji, useActiveRegion, COMPASS_REGIONS, ACTIVE_REGIONS } from "@/lib/active-region";
 import { SOCIAL_CLASS_CONFIG } from "@/lib/social-class-config";
 import {
   BookOpen, RotateCcw, Trophy, ChevronRight,
   CheckCircle2, XCircle, AlertCircle, Sparkles, ArrowRight,
+  X, Compass,
 } from "lucide-react";
 import type { RegionCode } from "@/lib/active-region";
 
@@ -25,7 +26,18 @@ interface Props {
   tier: "traveller" | "ambassador";
   activeRegion: RegionCode;
   lang: string;
+  ambitionLevel?: "casual" | "professional" | "diplomatic";
+  gender?: string | null;
+  ageGroup?: string | null;
 }
+
+const AMBITION_LABELS: Record<string, string> = {
+  casual: "Casual",
+  professional: "Professioneel",
+  diplomatic: "Diplomatisch",
+};
+
+const START_CARD_KEY = "cortea_start_card_v1";
 
 type Register = "middle_class" | "elite";
 
@@ -45,12 +57,28 @@ function progressPercent(level: number, streak: number): number {
   return Math.min(100, Math.round(base + streakBonus));
 }
 
-export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
+export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel = "casual", gender, ageGroup }: Props) {
   const queryClient = useQueryClient();
+  const { setActiveRegion, getRegionName } = useActiveRegion();
 
-  const [register, setRegister] = useState<Register>("middle_class");
+  const [register, setRegister] = useState<Register>(() => {
+    if (ambitionLevel === "diplomatic" && tier === "ambassador") return "elite";
+    return "middle_class";
+  });
   const [phase, setPhase] = useState<number>(1);
   const [researchPillar, setResearchPillar] = useState<string>("P1");
+
+  const hasAppliedAutoSelect = useRef(false);
+  const hasManuallyChanged = useRef(false);
+
+  const [showStartCard, setShowStartCard] = useState<boolean>(
+    () => !localStorage.getItem(START_CARD_KEY)
+  );
+
+  function dismissStartCard() {
+    localStorage.setItem(START_CARD_KEY, "1");
+    setShowStartCard(false);
+  }
 
   const [selectedOptionIdx, setSelectedOptionIdx] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
@@ -65,6 +93,22 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
     repeat: boolean;
     new_badges: Array<{ id: number; slug: string; title: string; description: string; badge_type: string }>;
   } | null>(null);
+
+  useEffect(() => {
+    if (!progressData || hasAppliedAutoSelect.current || hasManuallyChanged.current) return;
+    hasAppliedAutoSelect.current = true;
+
+    if (ambitionLevel === "professional") {
+      const highestMastered = progressData
+        .filter((p) => p.mastered && p.register === "middle_class")
+        .reduce((max, p) => Math.max(max, p.phase), 0);
+      const suggestedPhase = Math.min(highestMastered + 1, 5);
+      setPhase(suggestedPhase);
+    } else if (ambitionLevel === "diplomatic" && tier === "ambassador") {
+      // register already "elite" via useState initializer — nothing else needed
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressData]);
 
   const sessionParams = {
     register,
@@ -105,6 +149,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
   const currentQuestion = session?.questions[currentQuestionIdx];
 
   function handleRegisterChange(r: Register) {
+    hasManuallyChanged.current = true;
     setRegister(r);
     setPhase(1);
     setResearchPillar("P1");
@@ -112,11 +157,13 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
   }
 
   function handlePhaseChange(p: number) {
+    hasManuallyChanged.current = true;
     setPhase(p);
     resetQuestion();
   }
 
   function handlePillarChange(p: string) {
+    hasManuallyChanged.current = true;
     setResearchPillar(p);
     resetQuestion();
   }
@@ -182,8 +229,47 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
     );
   }
 
+  const currentPhaseName = register === "middle_class"
+    ? (MIDDLE_CLASS_PHASES.find((p) => p.phase === phase)?.domainName ?? `Fase ${phase}`)
+    : (ELITE_PILLARS.find((p) => p.pillar === phase)?.domainName ?? `Pillar ${phase}`);
+
+  const activeRegionsList = COMPASS_REGIONS.filter((r) => ACTIVE_REGIONS.has(r.code) && r.code !== activeRegion);
+
   return (
     <div className="space-y-6">
+      {/* ── "Jouw startpunt" personalized card ── */}
+      {showStartCard && ambitionLevel && ambitionLevel !== "casual" && (
+        <div className="relative flex items-start gap-4 px-5 py-4 rounded-sm border border-primary/20 bg-primary/5 text-sm animate-in fade-in duration-300">
+          <Compass className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
+          <div className="flex-1 space-y-1">
+            <p className="font-medium text-foreground/90">
+              Op basis van jouw profiel{" "}
+              <span className="text-muted-foreground font-normal">
+                ({AMBITION_LABELS[ambitionLevel] ?? ambitionLevel}
+                {ageGroup ? ` · ${ageGroup}` : ""})
+              </span>{" "}
+              adviseren we te starten bij{" "}
+              <span className="font-serif text-primary">
+                {register === "elite" ? "Elite — " : ""}{currentPhaseName}
+              </span>.
+            </p>
+            <button
+              onClick={dismissStartCard}
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              Kies zelf je startpunt
+            </button>
+          </div>
+          <button
+            onClick={dismissStartCard}
+            aria-label="Kaart sluiten"
+            className="flex-shrink-0 p-1 rounded-sm text-muted-foreground/60 hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       {/* ── Register selector (Ambassador sees both) ── */}
       {tier === "ambassador" && (
         <div className="flex gap-2" role="tablist" aria-label="Learning track register">
@@ -287,19 +373,48 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
             </div>
           ) : !session?.has_questions ? (
             <Card className="border-dashed border-border/50 bg-card/40">
-              <CardContent className="py-12 text-center space-y-3">
-                <BookOpen className="w-10 h-10 mx-auto opacity-20" aria-hidden="true" />
-                <p className="font-serif text-lg text-foreground/70">
-                  De leertrajecten voor{" "}
-                  <span className="inline-flex items-center gap-1">
-                    <FlagEmoji code={activeRegion} className="text-base" />
-                    <span>{activeRegion}</span>
-                  </span>{" "}
-                  zijn in voorbereiding.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Wil je alvast een andere regio verkennen? Wijzig je actieve regio via de contextbalk.
-                </p>
+              <CardContent className="py-10 space-y-5">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-8 h-8 opacity-20 flex-shrink-0" aria-hidden="true" />
+                  <div>
+                    <p className="font-serif text-lg text-foreground/80">
+                      <span className="inline-flex items-center gap-1.5">
+                        <FlagEmoji code={activeRegion} className="text-base" />
+                        <span>{getRegionName(activeRegion)}</span>
+                      </span>{" "}
+                      — inhoud volgt binnenkort.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Leertrajecten voor deze regio zijn in voorbereiding.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                    Beschikbare regio's
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {activeRegionsList.map((region) => (
+                      <button
+                        key={region.code}
+                        onClick={() => setActiveRegion(region.code)}
+                        title={getRegionName(region.code)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border/50 text-xs text-foreground/70 hover:border-primary/40 hover:text-foreground hover:bg-muted/20 transition-all"
+                      >
+                        <FlagEmoji code={region.code} className="text-sm" />
+                        <span className="font-mono">{region.code}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Link href="/profile">
+                  <Button variant="outline" size="sm" className="gap-2 font-serif text-xs">
+                    <Compass className="w-3.5 h-3.5" aria-hidden="true" />
+                    Regio wijzigen in profiel
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : feedback?.mastered ? (

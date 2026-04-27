@@ -92,6 +92,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         eq(learningTrackProgressTable.user_id, userId),
         eq(learningTrackProgressTable.register, register),
         eq(learningTrackProgressTable.phase, phase),
+        eq(learningTrackProgressTable.region_code, region_code.toUpperCase()),
         pillarKey
           ? eq(learningTrackProgressTable.research_pillar, pillarKey)
           : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
@@ -225,6 +226,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       eq(learningTrackProgressTable.user_id, userId),
       eq(learningTrackProgressTable.register, register),
       eq(learningTrackProgressTable.phase, phase),
+      eq(learningTrackProgressTable.region_code, question.region_code),
       pillarKey
         ? eq(learningTrackProgressTable.research_pillar, pillarKey)
         : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
@@ -280,6 +282,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
         register,
         research_pillar: pillarKey,
         phase,
+        region_code: question.region_code,
         current_level: currentLevel,
         questions_done: questionsDone,
         correct_streak: correctStreak,

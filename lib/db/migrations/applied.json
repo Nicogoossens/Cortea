@@ -47,7 +47,7 @@
           { "region_code": "PT", "is_published": true },
           { "region_code": "ZA", "is_published": true }
         ],
-        "note": "All 21 ACTIVE_REGIONS now have is_published=true and en-GB content. NL was an original priority country that had been missed in the initial seed."
+        "note": "All 21 ACTIVE_REGIONS now have is_published=true and en-GB content."
       },
       "status": "applied"
     },
@@ -63,7 +63,20 @@
           { "table_name": "badges" },
           { "table_name": "user_badges" }
         ],
-        "note": "badges table seeded with 568 rows (21 regions × pillars/phase/country + ambassador). user_badges has UNIQUE(user_id, badge_id) for idempotent award logic."
+        "note": "badges table seeded with 568 rows (21 regions × pillars/phase/country + ambassador). Seed SQL is now embedded in the migration file (ON CONFLICT DO NOTHING). user_badges has UNIQUE(user_id, badge_id)."
+      },
+      "status": "applied"
+    },
+    {
+      "id": "0006_progress_region_code",
+      "file": "lib/db/migrations/0006_progress_region_code.sql",
+      "appliedAt": "2026-04-27",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='learning_track_progress' AND column_name='region_code'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "column_name": "region_code" }],
+        "note": "region_code TEXT NOT NULL DEFAULT 'GB' added. Partial unique indexes rebuilt to include region_code, enabling per-region progress tracking. Phase/country badge prerequisites are now correctly scoped by region."
       },
       "status": "applied"
     }

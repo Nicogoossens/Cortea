@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import { badgesTable, userBadgesTable, learningTrackProgressTable } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 
 export interface AwardedBadge {
   id: number;
@@ -99,7 +99,7 @@ async function maybeAwardPhaseBadge(
     ? `mc-${regionCode.toLowerCase()}-ph${phase}-phase`
     : `elite-${regionCode.toLowerCase()}-ph${phase}-phase`;
 
-  // Check prerequisite mastery
+  // Check prerequisite mastery scoped to this specific region
   if (register === "middle_class") {
     const masteredPillars = await db
       .select({ pillar: learningTrackProgressTable.research_pillar })
@@ -107,6 +107,7 @@ async function maybeAwardPhaseBadge(
       .where(and(
         eq(learningTrackProgressTable.user_id, userId),
         eq(learningTrackProgressTable.register, "middle_class"),
+        eq(learningTrackProgressTable.region_code, regionCode),
         eq(learningTrackProgressTable.phase, phase),
         eq(learningTrackProgressTable.mastered, true),
         sql`${learningTrackProgressTable.research_pillar} IS NOT NULL`,
@@ -124,6 +125,7 @@ async function maybeAwardPhaseBadge(
       .where(and(
         eq(learningTrackProgressTable.user_id, userId),
         eq(learningTrackProgressTable.register, "elite"),
+        eq(learningTrackProgressTable.region_code, regionCode),
         eq(learningTrackProgressTable.phase, phase),
         eq(learningTrackProgressTable.mastered, true),
         sql`${learningTrackProgressTable.research_pillar} IS NULL`,
@@ -157,7 +159,7 @@ async function maybeAwardCountryBadge(
     .innerJoin(badgesTable, eq(userBadgesTable.badge_id, badgesTable.id))
     .where(and(
       eq(userBadgesTable.user_id, userId),
-      sql`${badgesTable.slug} = ANY(${JSON.stringify(phaseSlugs)}::text[])`,
+      inArray(badgesTable.slug, phaseSlugs),
     ));
 
   if (heldPhaseBadges.length < 5) return null;

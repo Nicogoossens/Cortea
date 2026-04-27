@@ -10,6 +10,7 @@ export const learningTrackProgressTable = pgTable(
     register:        text("register").notNull(),
     research_pillar: text("research_pillar"),
     phase:           integer("phase").notNull(),
+    region_code:     text("region_code").notNull().default("GB"),
     current_level:   integer("current_level").notNull().default(1),
     questions_done:  integer("questions_done").notNull().default(0),
     correct_streak:  integer("correct_streak").notNull().default(0),
@@ -22,12 +23,13 @@ export const learningTrackProgressTable = pgTable(
      * - NULLs are not considered equal in standard unique indexes.
      * - "with pillar" covers middle_class rows (research_pillar IS NOT NULL).
      * - "no pillar" covers elite rows (research_pillar IS NULL).
+     * Both include region_code so progress is tracked per-region.
      */
     uniqueIndex("ltp_user_with_pillar_idx")
-      .on(table.user_id, table.register, table.research_pillar, table.phase)
+      .on(table.user_id, table.register, table.region_code, table.research_pillar, table.phase)
       .where(sql`${table.research_pillar} IS NOT NULL`),
     uniqueIndex("ltp_user_no_pillar_idx")
-      .on(table.user_id, table.register, table.phase)
+      .on(table.user_id, table.register, table.region_code, table.phase)
       .where(sql`${table.research_pillar} IS NULL`),
   ],
 );

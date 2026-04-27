@@ -103,7 +103,7 @@ export default function Home() {
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated || profile?.subscription_tier !== "ambassador") {
+    if (!isAuthenticated) {
       setAlertTrips([]);
       setAllTrips([]);
       return;
@@ -113,11 +113,13 @@ export default function Home() {
       if (stored) {
         const trips = JSON.parse(stored) as NavigatorTrip[];
         setAllTrips(trips);
-        const active = trips.filter((trip) => {
-          const days = daysUntilDate(trip.departureDate);
-          return days <= 7 && days > -14;
-        });
-        setAlertTrips(active);
+        if (profile?.subscription_tier === "ambassador") {
+          const active = trips.filter((trip) => {
+            const days = daysUntilDate(trip.departureDate);
+            return days <= 7 && days > -14;
+          });
+          setAlertTrips(active);
+        }
       } else {
         setAlertTrips([]);
         setAllTrips([]);
@@ -181,6 +183,9 @@ export default function Home() {
 
   const totalQuestionsDone = atelierProgress.reduce((sum, r) => sum + r.questions_done, 0);
   const tracksMastered = atelierProgress.filter(r => r.mastered).length;
+  const completionPct = atelierProgress.length > 0
+    ? Math.round((tracksMastered / atelierProgress.length) * 100)
+    : 0;
 
   const isAmbassador = profile?.subscription_tier === "ambassador";
   const mirrorHref = !userId ? "/signin" : isAmbassador ? "/mirror" : "/membership";
@@ -328,12 +333,10 @@ export default function Home() {
                     <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.questions_answered")}</p>
                     <p className="text-xl font-serif mt-0.5">{totalQuestionsDone}</p>
                   </div>
-                  {tracksMastered > 0 && (
-                    <div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.tracks_mastered")}</p>
-                      <p className="text-xl font-serif mt-0.5">{tracksMastered}</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.atelier_progress")}</p>
+                    <p className="text-xl font-serif mt-0.5">{completionPct}%</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -540,8 +543,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Registered journeys row (Ambassador only) ── */}
-      {isAuthenticated && isAmbassador && allTrips.length > 0 && (
+      {/* ── Registered journeys row (all authenticated users) ── */}
+      {isAuthenticated && allTrips.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-border pb-2">
             <h2 className="font-serif text-2xl flex items-center gap-2">
@@ -562,6 +565,11 @@ export default function Home() {
                   ? t("navigator.departure_today")
                   : t("navigator.d_minus", { count: days });
               const isPast = days < -30;
+              const regionRows = atelierProgress.filter(r => r.region_code === trip.regionCode);
+              const regionMastered = regionRows.filter(r => r.mastered).length;
+              const readinessPct = regionRows.length > 0
+                ? Math.round((regionMastered / regionRows.length) * 100)
+                : null;
               return (
                 <Link key={trip.id} href="/navigator">
                   <Card className={`group border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer ${isPast ? "opacity-60" : ""}`}>
@@ -576,9 +584,16 @@ export default function Home() {
                             {new Date(trip.departureDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
                           </div>
                         </div>
-                        <Badge variant="outline" className={`font-mono text-xs shrink-0 ${days < 0 ? "border-muted text-muted-foreground" : "border-amber-400/40 text-amber-600"}`}>
-                          {departureLabel}
-                        </Badge>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <Badge variant="outline" className={`font-mono text-xs ${days < 0 ? "border-muted text-muted-foreground" : "border-amber-400/40 text-amber-600"}`}>
+                            {departureLabel}
+                          </Badge>
+                          {readinessPct !== null && (
+                            <span className="text-[10px] font-mono text-muted-foreground">
+                              {readinessPct}% ready
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

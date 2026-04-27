@@ -18,6 +18,7 @@ import type {
 
 import type {
   AnswerResult,
+  BadgeEntry,
   CreateProfileBody,
   CultureCompassDetail,
   CultureCompassEntry,
@@ -1668,6 +1669,49 @@ export function useGetLearningTrackProgress<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetLearningTrackProgressQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getLearningTrackBadges = async (
+  options?: RequestInit,
+): Promise<BadgeEntry[]> => {
+  return customFetch<BadgeEntry[]>(`/api/learning-tracks/badges`, { ...options });
+};
+
+export const getGetLearningTrackBadgesQueryKey = () => {
+  return ["learning-tracks", "badges"] as const;
+};
+
+export const getGetLearningTrackBadgesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLearningTrackBadges>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackBadges>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetLearningTrackBadgesQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLearningTrackBadges>>> = ({ signal }) =>
+    getLearningTrackBadges({ signal } as RequestInit);
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackBadges>>,
+    TError,
+    TData
+  >;
+};
+
+export type GetLearningTrackBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof getLearningTrackBadges>>>;
+export type GetLearningTrackBadgesQueryError = ErrorType<unknown>;
+
+export function useGetLearningTrackBadges<
+  TData = Awaited<ReturnType<typeof getLearningTrackBadges>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackBadges>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLearningTrackBadgesQueryOptions(options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return { ...query, queryKey: queryOptions.queryKey };
 }

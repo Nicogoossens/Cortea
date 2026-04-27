@@ -411,6 +411,20 @@ export interface LearningTrackAnswerBody {
   phase: number;
 }
 
+export interface BadgeEntry {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  badge_type: "pillar" | "phase" | "country" | "ambassador";
+  register: string;
+  research_pillar?: string | null;
+  phase?: number | null;
+  region_code?: string | null;
+  icon_url?: string | null;
+  awarded_at?: string | null;
+}
+
 export interface LearningTrackAnswerResult {
   correct: boolean;
   answer_tier: 1 | 2 | 3;
@@ -421,6 +435,7 @@ export interface LearningTrackAnswerResult {
   repeat: boolean;
   correct_streak: number;
   current_level: number;
+  new_badges: BadgeEntry[];
 }
 
 export interface LearningTrackProgressEntry {

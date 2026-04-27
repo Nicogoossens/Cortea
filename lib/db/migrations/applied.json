@@ -50,6 +50,22 @@
         "note": "All 21 ACTIVE_REGIONS now have is_published=true and en-GB content. NL was an original priority country that had been missed in the initial seed."
       },
       "status": "applied"
+    },
+    {
+      "id": "0005_badge_tables",
+      "file": "lib/db/migrations/0005_badge_tables.sql",
+      "appliedAt": "2026-04-27",
+      "environment": "development",
+      "verificationQuery": "SELECT table_name FROM information_schema.tables WHERE table_name IN ('badges','user_badges') ORDER BY table_name",
+      "verificationResult": {
+        "rowCount": 2,
+        "rows": [
+          { "table_name": "badges" },
+          { "table_name": "user_badges" }
+        ],
+        "note": "badges table seeded with 568 rows (21 regions × pillars/phase/country + ambassador). user_badges has UNIQUE(user_id, badge_id) for idempotent award logic."
+      },
+      "status": "applied"
     }
   ]
 }

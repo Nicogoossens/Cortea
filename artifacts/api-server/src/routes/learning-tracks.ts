@@ -8,6 +8,7 @@ import {
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { checkAndAwardBadges, getUserBadges, getAllBadges } from "../lib/badge-service";
 
 const router = Router();
 
@@ -286,6 +287,22 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       });
     }
 
+    // Award badges when a pillar is newly mastered
+    let newBadges: Awaited<ReturnType<typeof checkAndAwardBadges>> = [];
+    if (mastered && !existing?.mastered) {
+      try {
+        newBadges = await checkAndAwardBadges(
+          userId,
+          register,
+          pillarKey,
+          phase,
+          question.region_code,
+        );
+      } catch (badgeErr) {
+        req.log.warn({ badgeErr }, "Badge award check failed (non-fatal)");
+      }
+    }
+
     return res.json({
       correct: isCorrect,
       answer_tier,
@@ -296,6 +313,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       repeat,
       correct_streak: correctStreak,
       current_level: currentLevel,
+      new_badges: newBadges,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to process learning track answer");
@@ -315,6 +333,36 @@ router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track progress");
     return res.status(500).json({ message: "Progress data is momentarily unavailable." });
+  }
+});
+
+/**
+ * GET /api/learning-tracks/badges
+ * Returns all badges currently held by the authenticated user.
+ */
+router.get("/learning-tracks/badges", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const badges = await getUserBadges(userId);
+    return res.json(badges);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch user badges");
+    return res.status(500).json({ message: "Badge data is momentarily unavailable." });
+  }
+});
+
+/**
+ * GET /api/learning-tracks/badges/available
+ * Returns the full badge catalogue.
+ * Optionally filter by register, region_code, or phase via query params.
+ */
+router.get("/learning-tracks/badges/available", async (req, res) => {
+  try {
+    const badges = await getAllBadges();
+    return res.json(badges);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch badge catalogue");
+    return res.status(500).json({ message: "Badge catalogue is momentarily unavailable." });
   }
 });
 

@@ -2,6 +2,7 @@ import {
   useGetNobleScore,
   useGetPillarProgress,
   useGetNobleScoreLog,
+  useGetLearningTrackBadges,
   getGetNobleScoreQueryKey,
   getGetPillarProgressQueryKey,
   getGetNobleScoreLogQueryKey,
@@ -15,6 +16,7 @@ import {
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
   Layers, MapPin, ArrowRight, UtensilsCrossed,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
+  Trophy, Medal, Shield,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
@@ -361,6 +363,9 @@ export default function Profile() {
   const { data: nobleScore, isLoading: scoreLoading } = useGetNobleScore({ query: { queryKey: getGetNobleScoreQueryKey() } });
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
+  const { data: earnedBadges } = useGetLearningTrackBadges({
+    query: { enabled: !!userId, staleTime: 30_000 },
+  });
 
   const { data: useCasesData } = useQuery<UseCaseWithRating[]>({
     queryKey: ["use-cases-profile", userId],
@@ -1409,6 +1414,91 @@ export default function Profile() {
             <div className="text-center py-12 text-muted-foreground">
               <p className="font-serif text-lg">{t("profile.no_history")}</p>
               <p className="text-sm mt-1">{t("profile.visit_atelier")}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Badges ── */}
+      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+            <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
+            Mijn Badges
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-light">
+            Badges die je hebt verdiend door leertrajecten te beheersen in het Atelier.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!earnedBadges || earnedBadges.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground/60">
+              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
+              <p className="font-serif text-sm">Nog geen badges verdiend.</p>
+              <p className="text-xs mt-1">
+                Beheers een leertraject in het{" "}
+                <Link href="/atelier" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                  Atelier
+                </Link>{" "}
+                om je eerste badge te behalen.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Group badges by type */}
+              {(["pillar", "phase", "country", "ambassador"] as const)
+                .filter((type) => earnedBadges.some((b) => b.badge_type === type))
+                .map((type) => {
+                  const group = earnedBadges.filter((b) => b.badge_type === type);
+                  const typeLabel =
+                    type === "pillar" ? "Pijler"
+                    : type === "phase" ? "Fase"
+                    : type === "country" ? "Land"
+                    : "Ambassadeur";
+                  const TypeIcon =
+                    type === "pillar" ? Medal
+                    : type === "phase" ? Trophy
+                    : type === "country" ? Globe
+                    : Shield;
+                  return (
+                    <div key={type}>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <TypeIcon className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                          {typeLabel} {group.length > 1 ? `(${group.length})` : ""}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {group.map((badge) => (
+                          <div
+                            key={badge.slug}
+                            className="flex items-start gap-3 px-3 py-2.5 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
+                          >
+                            <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
+                              {type === "pillar" ? "🏅"
+                                : type === "phase" ? "🏆"
+                                : type === "country" ? "🌟"
+                                : "🎖️"}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-foreground leading-tight truncate">
+                                {badge.title}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug line-clamp-2">
+                                {badge.description}
+                              </p>
+                              {badge.awarded_at && (
+                                <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
+                                  {format(new Date(badge.awarded_at), "d MMM yyyy", { locale: dateFnsLocale })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </CardContent>

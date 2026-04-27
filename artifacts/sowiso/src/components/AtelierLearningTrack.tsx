@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react";
+import { Link } from "wouter";
 import {
   useGetLearningTrackSession,
   usePostLearningTrackAnswer,
   useGetLearningTrackProgress,
   getGetLearningTrackSessionQueryKey,
   getGetLearningTrackProgressQueryKey,
+  getGetLearningTrackBadgesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +63,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
     level_up: boolean;
     mastered: boolean;
     repeat: boolean;
+    new_badges: Array<{ id: number; slug: string; title: string; description: string; badge_type: string }>;
   } | null>(null);
 
   const sessionParams = {
@@ -88,9 +91,13 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
           level_up: result.level_up,
           mastered: result.mastered,
           repeat: result.repeat,
+          new_badges: result.new_badges ?? [],
         });
         setAnswered(true);
         queryClient.invalidateQueries({ queryKey: getGetLearningTrackProgressQueryKey() });
+        if (result.mastered && (result.new_badges ?? []).length > 0) {
+          queryClient.invalidateQueries({ queryKey: getGetLearningTrackBadgesQueryKey() });
+        }
       },
     },
   });
@@ -297,22 +304,59 @@ export function AtelierLearningTrack({ tier, activeRegion, lang }: Props) {
             </Card>
           ) : feedback?.mastered ? (
             <Card className="border-amber-400/40 bg-amber-50/20 dark:bg-amber-950/10">
-              <CardContent className="py-12 text-center space-y-4">
+              <CardContent className="py-10 text-center space-y-5">
                 <Trophy className="w-12 h-12 mx-auto text-amber-500" aria-hidden="true" />
                 <h3 className="font-serif text-2xl text-foreground">
                   Niveau voltooid — Meesterschap bereikt
                 </h3>
                 <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                  Je beheerst dit leertraject. De badge-verwerking volgt zodra het badge-systeem actief is.
+                  Je beheerst dit leertraject volledig.
+                  {feedback.new_badges.length > 0
+                    ? " Je hebt een badge verdiend."
+                    : ""}
                 </p>
-                <Button
-                  variant="outline"
-                  onClick={resetQuestion}
-                  className="font-serif gap-2"
-                >
-                  <RotateCcw className="w-4 h-4" aria-hidden="true" />
-                  Opnieuw starten
-                </Button>
+
+                {/* Badge notification */}
+                {feedback.new_badges.length > 0 && (
+                  <div className="space-y-2 max-w-xs mx-auto text-left">
+                    {feedback.new_badges.map((badge) => (
+                      <div
+                        key={badge.slug}
+                        className="flex items-start gap-3 px-4 py-3 rounded-sm border border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20"
+                      >
+                        <span className="text-xl shrink-0" aria-hidden="true">
+                          {badge.badge_type === "pillar" ? "🏅"
+                            : badge.badge_type === "phase" ? "🏆"
+                            : badge.badge_type === "country" ? "🌟"
+                            : "🎖️"}
+                        </span>
+                        <div>
+                          <p className="text-xs font-semibold text-foreground leading-tight">{badge.title}</p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug">{badge.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <Button
+                    variant="outline"
+                    onClick={resetQuestion}
+                    className="font-serif gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" aria-hidden="true" />
+                    Opnieuw starten
+                  </Button>
+                  {feedback.new_badges.length > 0 && (
+                    <Link href="/profile#badges">
+                      <Button variant="default" className="font-serif gap-2">
+                        <Trophy className="w-4 h-4" aria-hidden="true" />
+                        Bekijk mijn badges
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ) : (

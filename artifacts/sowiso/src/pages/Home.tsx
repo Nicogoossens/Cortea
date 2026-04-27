@@ -42,6 +42,30 @@ interface MiniUseCase {
   readiness_score: number | null;
 }
 
+interface LearningTrackProgressRow {
+  register: string;
+  region_code: string | null;
+  phase: number;
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  mastered: boolean;
+}
+
+interface EarnedBadge {
+  id: number;
+  slug: string;
+  title: string;
+  description: string;
+  badge_type: string;
+  register: string;
+  research_pillar: string | null;
+  phase: number | null;
+  region_code: string | null;
+  icon_url: string | null;
+  awarded_at: string;
+}
+
 export default function Home() {
   usePageTitle("Home");
   const { t } = useLanguage();
@@ -74,16 +98,21 @@ export default function Home() {
   const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
+  const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
+  const [atelierProgress, setAtelierProgress] = useState<LearningTrackProgressRow[]>([]);
+  const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated || profile?.subscription_tier !== "ambassador") {
       setAlertTrips([]);
+      setAllTrips([]);
       return;
     }
     try {
       const stored = localStorage.getItem(NAVIGATOR_KEY);
       if (stored) {
         const trips = JSON.parse(stored) as NavigatorTrip[];
+        setAllTrips(trips);
         const active = trips.filter((trip) => {
           const days = daysUntilDate(trip.departureDate);
           return days <= 7 && days > -14;
@@ -91,9 +120,22 @@ export default function Home() {
         setAlertTrips(active);
       } else {
         setAlertTrips([]);
+        setAllTrips([]);
       }
-    } catch { setAlertTrips([]); }
+    } catch { setAlertTrips([]); setAllTrips([]); }
   }, [isAuthenticated, profile?.subscription_tier]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`${API_BASE}/api/learning-tracks/progress`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setAtelierProgress(Array.isArray(data) ? data : []))
+      .catch(() => setAtelierProgress([]));
+    fetch(`${API_BASE}/api/learning-tracks/badges`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setEarnedBadges(Array.isArray(data) ? data : []))
+      .catch(() => setEarnedBadges([]));
+  }, [userId]);
 
   useEffect(() => {
     if (profileError && "status" in profileError && profileError.status === 404 && userId) {
@@ -136,6 +178,9 @@ export default function Home() {
   };
 
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;
+
+  const totalQuestionsDone = atelierProgress.reduce((sum, r) => sum + r.questions_done, 0);
+  const tracksMastered = atelierProgress.filter(r => r.mastered).length;
 
   const isAmbassador = profile?.subscription_tier === "ambassador";
   const mirrorHref = !userId ? "/signin" : isAmbassador ? "/mirror" : "/membership";
@@ -261,20 +306,36 @@ export default function Home() {
             <CardTitle className="font-serif text-3xl">{t(levelKey(nobleScore?.level_name))}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t(levelKey(nobleScore?.level_name))}</span>
-                {!nobleScore?.next_level_threshold && <span>{t("profile.current_title")}</span>}
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{t(levelKey(nobleScore?.level_name))}</span>
+                  {!nobleScore?.next_level_threshold && <span>{t("profile.current_title")}</span>}
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-label={t(levelKey(nobleScore?.level_name))} aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.next_level_threshold ? Math.round((nobleScore.total_score / nobleScore.next_level_threshold) * 100) : 100}>
+                  <div
+                    className="h-full transition-all duration-1000 ease-out"
+                    style={{
+                      width: `${nobleScore?.next_level_threshold ? (nobleScore.total_score / nobleScore.next_level_threshold) * 100 : 100}%`,
+                      backgroundColor: nobleScore?.level_color || "var(--primary)"
+                    }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden" role="progressbar" aria-label={t(levelKey(nobleScore?.level_name))} aria-valuemin={0} aria-valuemax={100} aria-valuenow={nobleScore?.next_level_threshold ? Math.round((nobleScore.total_score / nobleScore.next_level_threshold) * 100) : 100}>
-                <div
-                  className="h-full transition-all duration-1000 ease-out"
-                  style={{
-                    width: `${nobleScore?.next_level_threshold ? (nobleScore.total_score / nobleScore.next_level_threshold) * 100 : 100}%`,
-                    backgroundColor: nobleScore?.level_color || "var(--primary)"
-                  }}
-                />
-              </div>
+              {totalQuestionsDone > 0 && (
+                <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.questions_answered")}</p>
+                    <p className="text-xl font-serif mt-0.5">{totalQuestionsDone}</p>
+                  </div>
+                  {tracksMastered > 0 && (
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.tracks_mastered")}</p>
+                      <p className="text-xl font-serif mt-0.5">{tracksMastered}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -309,6 +370,42 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+
+      {isAuthenticated && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h2 className="font-serif text-2xl">{t("home.badges_earned")}</h2>
+            <Link href="/atelier" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              {t("home.view_in_atelier")} <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          {earnedBadges.length === 0 ? (
+            <p className="text-sm text-muted-foreground/60 font-light italic">{t("home.no_badges")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {earnedBadges.slice(0, 5).map((badge) => (
+                <Link key={badge.id} href="/atelier">
+                  <div className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 py-2 hover:border-primary/30 hover:shadow-sm transition-all duration-200 cursor-pointer">
+                    {badge.icon_url ? (
+                      <img src={badge.icon_url} alt="" className="w-5 h-5 object-contain" aria-hidden="true" />
+                    ) : (
+                      <span className="text-base" aria-hidden="true">🎖</span>
+                    )}
+                    <span className="text-sm font-light">{badge.title}</span>
+                  </div>
+                </Link>
+              ))}
+              {earnedBadges.length > 5 && (
+                <Link href="/atelier">
+                  <div className="flex items-center gap-2 rounded-sm border border-border/50 bg-muted/40 px-3 py-2 hover:border-primary/20 transition-all duration-200 cursor-pointer">
+                    <span className="text-xs text-muted-foreground font-mono">+{earnedBadges.length - 5}</span>
+                  </div>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-6">
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("home.continue_studies")}</h2>
@@ -407,10 +504,10 @@ export default function Home() {
           <div className="flex items-center justify-between border-b border-border pb-2">
             <h2 className="font-serif text-2xl flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary/70" aria-hidden="true" />
-              Your situations
+              {t("home.situations")}
             </h2>
             <Link href="/use-cases" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-              View all <ArrowRight className="h-3.5 w-3.5" />
+              {t("home.situations_view_all")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -433,6 +530,55 @@ export default function Home() {
                       </div>
                       <div className="mt-2 h-1 w-full bg-muted rounded-full overflow-hidden">
                         <div className="h-full transition-all duration-700 rounded-full" style={{ width: `${score}%`, backgroundColor: getColor(score) }} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Registered journeys row (Ambassador only) ── */}
+      {isAuthenticated && isAmbassador && allTrips.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <h2 className="font-serif text-2xl flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-amber-600/60" aria-hidden="true" />
+              {t("home.journeys")}
+            </h2>
+            <Link href="/navigator" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              {t("home.navigator_alert_cta")} <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {allTrips.map((trip) => {
+              const region = COMPASS_REGIONS.find(r => r.code === trip.regionCode);
+              const days = daysUntilDate(trip.departureDate);
+              const departureLabel = days < 0
+                ? t("navigator.arrived")
+                : days === 0
+                  ? t("navigator.departure_today")
+                  : t("navigator.d_minus", { count: days });
+              const isPast = days < -30;
+              return (
+                <Link key={trip.id} href="/navigator">
+                  <Card className={`group border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer ${isPast ? "opacity-60" : ""}`}>
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl flex-shrink-0">{region && <FlagEmoji code={region.code} />}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium leading-snug group-hover:text-primary transition-colors truncate">
+                            {region?.names.en ?? trip.regionCode}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(trip.departureDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={`font-mono text-xs shrink-0 ${days < 0 ? "border-muted text-muted-foreground" : "border-amber-400/40 text-amber-600"}`}>
+                          {departureLabel}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>

@@ -735,5 +735,6 @@
   "profile.age_group_under30": "30歳未満",
   "profile.age_group_30_50": "30–50",
   "profile.age_group_over50": "50歳以上",
-  "profile.age_group_unknown": "未指定"
+  "profile.age_group_unknown": "未指定",
+  "home.ready": "準備完了"
 }

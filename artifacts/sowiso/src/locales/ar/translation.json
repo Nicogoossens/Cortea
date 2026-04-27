@@ -735,5 +735,6 @@
   "profile.age_group_under30": "أقل من 30",
   "profile.age_group_30_50": "30–50",
   "profile.age_group_over50": "50 وما فوق",
-  "profile.age_group_unknown": "غير محدد"
+  "profile.age_group_unknown": "غير محدد",
+  "home.ready": "جاهز"
 }

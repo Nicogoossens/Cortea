@@ -68,7 +68,7 @@ interface EarnedBadge {
 
 export default function Home() {
   usePageTitle("Home");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { userId, isAuthenticated } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
@@ -327,7 +327,7 @@ export default function Home() {
                   />
                 </div>
               </div>
-              {totalQuestionsDone > 0 && (
+              {isAuthenticated && (
                 <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.questions_answered")}</p>
@@ -578,7 +578,7 @@ export default function Home() {
                         <span className="text-2xl flex-shrink-0">{region && <FlagEmoji code={region.code} />}</span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium leading-snug group-hover:text-primary transition-colors truncate">
-                            {region?.names.en ?? trip.regionCode}
+                            {(region?.names as Record<string, string> | undefined)?.[language] ?? region?.names.en ?? trip.regionCode}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5">
                             {new Date(trip.departureDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
@@ -590,7 +590,7 @@ export default function Home() {
                           </Badge>
                           {readinessPct !== null && (
                             <span className="text-[10px] font-mono text-muted-foreground">
-                              {readinessPct}% ready
+                              {readinessPct}% {t("home.ready")}
                             </span>
                           )}
                         </div>

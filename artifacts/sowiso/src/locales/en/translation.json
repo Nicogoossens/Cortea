@@ -34,7 +34,7 @@
   "welcome.module_atelier_desc": "Scenario-based practice dissecting real social situations — from boardroom introductions to diplomatic dinners.",
   "welcome.module_counsel_desc": "A discreet adviser answering the etiquette questions one hesitates to ask aloud — from table protocol to professional correspondence.",
   "welcome.module_compass_desc": "A curated cultural atlas mapping the unwritten rules and customs of societies worldwide.",
-  "welcome.module_mirror_desc": "An on-device tool analysing your presence and delivery against the standards of refined conduct.",
+  "welcome.module_mirror_desc": "Discreet on-device presentation analysis",
   "welcome.audience_section_title": "Cortéa is for everyone who wishes to be understood",
   "welcome.audience_professional_heading": "The Professional",
   "welcome.audience_professional_body": "For navigating cross-cultural negotiations, client dinners, and boardroom protocol with confidence and authority.",
@@ -593,7 +593,6 @@
   "mirror.lock.teaser": "The Mirror analyses your presentation through the lens of occasion and rank — discreet, on-device, and precise.",
   "compass.lock.teaser": "Unlock the etiquette codes, cardinal taboos, and cultural compass of this region — essential knowledge for those who move between worlds.",
   "atelier.lock.teaser": "Advanced scenarios immerse you in the nuanced demands of distinction — complex dilemmas, competing conventions, and the invisible codes that separate the refined from the exceptional.",
-  "welcome.module_mirror_desc": "Discreet on-device presentation analysis",
   "welcome.quiz_back": "Back",
   "welcome.quiz_q1_scenario": "You have been invited to dinner at a private residence. The invitation states seven o'clock. At what time should you arrive?",
   "welcome.quiz_q1_opt_a": "Six forty-five — to assist with final preparations.",
@@ -750,5 +749,6 @@
   "profile.age_group_under30": "Under 30",
   "profile.age_group_30_50": "30–50",
   "profile.age_group_over50": "50 and over",
-  "profile.age_group_unknown": "Not specified"
+  "profile.age_group_unknown": "Not specified",
+  "home.ready": "ready"
 }

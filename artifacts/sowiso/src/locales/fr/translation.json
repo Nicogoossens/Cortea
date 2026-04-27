@@ -735,5 +735,6 @@
   "profile.age_group_under30": "Moins de 30 ans",
   "profile.age_group_30_50": "30–50",
   "profile.age_group_over50": "50 ans et plus",
-  "profile.age_group_unknown": "Non précisé"
+  "profile.age_group_unknown": "Non précisé",
+  "home.ready": "prêt"
 }

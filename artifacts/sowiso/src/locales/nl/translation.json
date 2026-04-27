@@ -749,5 +749,6 @@
   "profile.age_group_under30": "Jonger dan 30",
   "profile.age_group_30_50": "30–50",
   "profile.age_group_over50": "50 en ouder",
-  "profile.age_group_unknown": "Niet opgegeven"
+  "profile.age_group_unknown": "Niet opgegeven",
+  "home.ready": "klaar"
 }

@@ -65,7 +65,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     if (ambitionLevel === "diplomatic" && tier === "ambassador") return "elite";
     return "middle_class";
   });
-  const [phase, setPhase] = useState<number>(1);
+  const [phase, setPhase] = useState<number>(() => {
+    if (ambitionLevel === "professional") return 2;
+    return 1;
+  });
   const [researchPillar, setResearchPillar] = useState<string>("P1");
 
   const hasAppliedAutoSelect = useRef(false);

@@ -26,12 +26,17 @@ import type {
   GetCultureCompassParams,
   GetCultureCompassRegionParams,
   GetCultureProtocolsParams,
+  GetLearningTrackSessionParams,
   GetNobleScoreLogParams,
   GetScenarioParams,
   GetScenariosParams,
   GetTranslations200,
   GetTranslationsParams,
   HealthStatus,
+  LearningTrackAnswerBody,
+  LearningTrackAnswerResult,
+  LearningTrackProgressEntry,
+  LearningTrackSession,
   MessageResponse,
   NobleScoreData,
   PillarProgress,
@@ -1487,5 +1492,182 @@ export function useGetTranslations<
     queryKey: QueryKey;
   };
 
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ─── Learning Tracks ──────────────────────────────────────────────────────────
+
+export const getLearningTrackSessionUrl = (params: GetLearningTrackSessionParams) => {
+  const searchParams = new URLSearchParams();
+  searchParams.set("register", params.register);
+  searchParams.set("phase", String(params.phase));
+  searchParams.set("region_code", params.region_code);
+  if (params.research_pillar) searchParams.set("research_pillar", params.research_pillar);
+  if (params.lang) searchParams.set("lang", params.lang);
+  return `/api/learning-tracks/session?${searchParams.toString()}`;
+};
+
+export const getLearningTrackSession = async (
+  params: GetLearningTrackSessionParams,
+  options?: RequestInit,
+): Promise<LearningTrackSession> => {
+  return customFetch<LearningTrackSession>(getLearningTrackSessionUrl(params), { ...options });
+};
+
+export const getGetLearningTrackSessionQueryKey = (params: GetLearningTrackSessionParams) => {
+  return ["learning-tracks", "session", params] as const;
+};
+
+export const getGetLearningTrackSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLearningTrackSession>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetLearningTrackSessionParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackSession>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetLearningTrackSessionQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLearningTrackSession>>> = ({ signal }) =>
+    getLearningTrackSession(params, { signal } as RequestInit);
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackSession>>,
+    TError,
+    TData
+  >;
+};
+
+export type GetLearningTrackSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getLearningTrackSession>>>;
+export type GetLearningTrackSessionQueryError = ErrorType<unknown>;
+
+export function useGetLearningTrackSession<
+  TData = Awaited<ReturnType<typeof getLearningTrackSession>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetLearningTrackSessionParams,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackSession>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLearningTrackSessionQueryOptions(params, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const postLearningTrackAnswer = async (
+  body: LearningTrackAnswerBody,
+  options?: RequestInit,
+): Promise<LearningTrackAnswerResult> => {
+  return customFetch<LearningTrackAnswerResult>(`/api/learning-tracks/answer`, {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(body),
+  });
+};
+
+export const getPostLearningTrackAnswerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postLearningTrackAnswer>>,
+    TError,
+    { data: BodyType<LearningTrackAnswerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postLearningTrackAnswer>>,
+  TError,
+  { data: BodyType<LearningTrackAnswerBody> },
+  TContext
+> => {
+  const mutationKey = ["postLearningTrackAnswer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postLearningTrackAnswer>>,
+    { data: BodyType<LearningTrackAnswerBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+    return postLearningTrackAnswer(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostLearningTrackAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof postLearningTrackAnswer>>>;
+export type PostLearningTrackAnswerMutationBody = BodyType<LearningTrackAnswerBody>;
+export type PostLearningTrackAnswerMutationError = ErrorType<unknown>;
+
+export function usePostLearningTrackAnswer<
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postLearningTrackAnswer>>,
+    TError,
+    { data: BodyType<LearningTrackAnswerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof postLearningTrackAnswer>>,
+  TError,
+  { data: BodyType<LearningTrackAnswerBody> },
+  TContext
+> {
+  const mutationOptions = getPostLearningTrackAnswerMutationOptions(options);
+  return useMutation(mutationOptions);
+}
+
+export const getLearningTrackProgress = async (
+  options?: RequestInit,
+): Promise<LearningTrackProgressEntry[]> => {
+  return customFetch<LearningTrackProgressEntry[]>(`/api/learning-tracks/progress`, { ...options });
+};
+
+export const getGetLearningTrackProgressQueryKey = () => {
+  return ["learning-tracks", "progress"] as const;
+};
+
+export const getGetLearningTrackProgressQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLearningTrackProgress>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackProgress>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetLearningTrackProgressQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLearningTrackProgress>>> = ({ signal }) =>
+    getLearningTrackProgress({ signal } as RequestInit);
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackProgress>>,
+    TError,
+    TData
+  >;
+};
+
+export type GetLearningTrackProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getLearningTrackProgress>>>;
+export type GetLearningTrackProgressQueryError = ErrorType<unknown>;
+
+export function useGetLearningTrackProgress<
+  TData = Awaited<ReturnType<typeof getLearningTrackProgress>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getLearningTrackProgress>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLearningTrackProgressQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return { ...query, queryKey: queryOptions.queryKey };
 }

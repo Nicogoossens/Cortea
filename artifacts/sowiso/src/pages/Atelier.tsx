@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, BookOpen, Lock, Globe } from "lucide-react";
+import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { TierGate } from "@/components/TierGate";
@@ -17,6 +17,7 @@ import { LockOverlay } from "@/components/LockOverlay";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
+import { AtelierLearningTrack } from "@/components/AtelierLearningTrack";
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
 
@@ -31,12 +32,15 @@ function scoreToDifficultyMax(score: number): number {
   return 1;
 }
 
+type AtelierView = "scenarios" | "tracks";
+
 export default function Atelier() {
   usePageTitle("The Atelier");
   const { t, locale } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
+  const [view, setView] = useState<AtelierView>("scenarios");
 
   const { data: nobleScore } = useGetNobleScore();
   const { data: profile } = useGetProfile();
@@ -137,8 +141,49 @@ export default function Atelier() {
         </div>
       )}
 
-      {/* Pillar filter tabs — hidden for unauthenticated visitors */}
-      {!isVisitor && (
+      {/* View toggle: Learning Tracks vs Scenarios (Traveller / Ambassador only) */}
+      {hasFullAccess && (
+        <div className="flex items-center gap-1 border border-border/40 rounded-sm p-0.5 w-fit" role="tablist" aria-label="Atelier view">
+          <button
+            role="tab"
+            aria-selected={view === "scenarios"}
+            onClick={() => setView("scenarios")}
+            className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
+              view === "scenarios"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutList className="w-3.5 h-3.5" aria-hidden="true" />
+            {t("atelier.tab_scenarios") || "Scenario's"}
+          </button>
+          <button
+            role="tab"
+            aria-selected={view === "tracks"}
+            onClick={() => setView("tracks")}
+            className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
+              view === "tracks"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
+            {t("atelier.tab_learning_tracks") || "Leertrajecten"}
+          </button>
+        </div>
+      )}
+
+      {/* Learning Tracks panel */}
+      {hasFullAccess && view === "tracks" && (
+        <AtelierLearningTrack
+          tier={tier as "traveller" | "ambassador"}
+          activeRegion={activeRegion}
+          lang={locale}
+        />
+      )}
+
+      {/* Pillar filter tabs — hidden for unauthenticated visitors and when showing tracks */}
+      {!isVisitor && view === "scenarios" && (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("atelier.pillar")}>
           {PILLARS.map((p) => (
             <button
@@ -158,7 +203,7 @@ export default function Atelier() {
         </div>
       )}
 
-      {isLoading ? (
+      {view === "scenarios" && (isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-label={t("common.loading")} aria-live="polite">
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-64 rounded-sm" />)}
         </div>
@@ -267,7 +312,7 @@ export default function Atelier() {
             </div>
           )}
         </div>
-      )}
+      ))}
     </div>
   );
 }

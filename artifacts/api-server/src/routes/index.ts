@@ -15,6 +15,7 @@ import registerQualityRouter from "./register-quality";
 import useCasesRouter from "./use_cases";
 import mirrorLogRouter from "./mirror-log";
 import googleOAuthRouter from "./google-oauth";
+import learningTracksRouter from "./learning-tracks";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(subscriptionRouter);
 router.use(registerQualityRouter);
 router.use(useCasesRouter);
 router.use(mirrorLogRouter);
+router.use(learningTracksRouter);
 
 export default router;

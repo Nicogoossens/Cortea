@@ -380,3 +380,66 @@ export type GetTranslationsParams = {
 };
 
 export type GetTranslations200 = { [key: string]: string };
+
+export interface LearningTrackQuestionOption {
+  text: string;
+}
+
+export interface LearningTrackSessionQuestion {
+  id: number;
+  question_text: string;
+  historical_context?: string | null;
+  options: LearningTrackQuestionOption[];
+}
+
+export interface LearningTrackSession {
+  questions: LearningTrackSessionQuestion[];
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  mastered: boolean;
+  demographic: string;
+  repeat: boolean;
+  has_questions: boolean;
+}
+
+export interface LearningTrackAnswerBody {
+  question_id: number;
+  selected_option_index: number;
+  register: "middle_class" | "elite";
+  research_pillar?: string | null;
+  phase: number;
+}
+
+export interface LearningTrackAnswerResult {
+  correct: boolean;
+  answer_tier: 1 | 2 | 3;
+  motivation: string;
+  historical_context?: string | null;
+  level_up: boolean;
+  mastered: boolean;
+  repeat: boolean;
+  correct_streak: number;
+  current_level: number;
+}
+
+export interface LearningTrackProgressEntry {
+  id: number;
+  user_id: string;
+  register: string;
+  research_pillar?: string | null;
+  phase: number;
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  mastered: boolean;
+  last_updated?: string | null;
+}
+
+export type GetLearningTrackSessionParams = {
+  register: "middle_class" | "elite";
+  research_pillar?: string;
+  phase: number;
+  region_code: string;
+  lang?: string;
+};

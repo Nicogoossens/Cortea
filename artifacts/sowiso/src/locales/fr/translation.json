@@ -82,6 +82,8 @@
   "atelier.fallback_banner": "Le contenu spécifique à la région {{region}} est en cours de préparation. Des scénarios de savoir-vivre universels sont affichés en attendant.",
   "atelier.region": "Région",
   "atelier.all_pillars": "Tous les Piliers",
+  "atelier.tab_scenarios": "Scénarios",
+  "atelier.tab_learning_tracks": "Parcours",
   "compass.quick_brief": "Résumé Rapide",
   "compass.quick_brief_subtitle": "Les cinq usages à connaître avant votre arrivée",
   "counsel.title": "Le Conseil",

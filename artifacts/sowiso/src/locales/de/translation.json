@@ -82,6 +82,8 @@
   "atelier.fallback_banner": "Regionspezifische Inhalte für {{region}} werden vorbereitet. In der Zwischenzeit werden universelle Etikette-Szenarien angezeigt.",
   "atelier.region": "Region",
   "atelier.all_pillars": "Alle Säulen",
+  "atelier.tab_scenarios": "Szenarien",
+  "atelier.tab_learning_tracks": "Lernpfade",
   "compass.quick_brief": "Kurzüberblick",
   "compass.quick_brief_subtitle": "Die fünf Bräuche, die Sie vor der Ankunft kennen müssen",
   "counsel.title": "Der Rat",

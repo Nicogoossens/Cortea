@@ -86,6 +86,8 @@
   "atelier.fallback_banner": "Region-specific content for {{region}} is being prepared. Showing universal etiquette scenarios in the meantime.",
   "atelier.region": "Region",
   "atelier.all_pillars": "All Pillars",
+  "atelier.tab_scenarios": "Scenarios",
+  "atelier.tab_learning_tracks": "Learning Tracks",
   "compass.quick_brief": "Quick Brief",
   "compass.quick_brief_subtitle": "The five customs you must know before arrival",
   "counsel.title": "The Counsel",

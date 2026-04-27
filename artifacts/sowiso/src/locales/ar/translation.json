@@ -83,6 +83,8 @@
   "atelier.fallback_banner": "يتم إعداد محتوى خاص بمنطقة {{region}}. في غضون ذلك، يتم عرض سيناريوهات آداب سلوك عالمية.",
   "atelier.region": "المنطقة",
   "atelier.all_pillars": "جميع الدعائم",
+  "atelier.tab_scenarios": "السيناريوهات",
+  "atelier.tab_learning_tracks": "مسارات التعلم",
   "compass.quick_brief": "ملخص سريع",
   "compass.quick_brief_subtitle": "العادات الخمس التي يجب أن تعرفها قبل الوصول",
   "counsel.title": "The Counsel",

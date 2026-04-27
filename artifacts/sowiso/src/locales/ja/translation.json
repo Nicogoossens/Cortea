@@ -83,6 +83,8 @@
   "atelier.fallback_banner": "{{region}}の地域固有のコンテンツを準備中です。それまでの間、普遍的なエチケットのシナリオを表示しています。",
   "atelier.region": "地域",
   "atelier.all_pillars": "すべての柱",
+  "atelier.tab_scenarios": "シナリオ",
+  "atelier.tab_learning_tracks": "学習コース",
   "compass.quick_brief": "クイックブリーフ",
   "compass.quick_brief_subtitle": "到着前に知っておくべき五つの慣習",
   "counsel.title": "The Counsel",

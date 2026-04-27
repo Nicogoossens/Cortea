@@ -76,6 +76,8 @@
   "atelier.fallback_banner": "El contenido específico para la región {{region}} está en preparación. Mientras tanto, se muestran escenarios de etiqueta universales.",
   "atelier.region": "Región",
   "atelier.all_pillars": "Todos los Pilares",
+  "atelier.tab_scenarios": "Escenarios",
+  "atelier.tab_learning_tracks": "Trayectorias",
   "compass.quick_brief": "Resumen Rápido",
   "compass.quick_brief_subtitle": "Las cinco costumbres que debe conocer antes de llegar",
   "counsel.title": "El Consejo",

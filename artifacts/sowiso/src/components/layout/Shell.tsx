@@ -29,9 +29,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.atelier",     href: "/atelier",     icon: BookOpen },
     { key: "nav.counsel",     href: "/counsel",     icon: Shield   },
     { key: "nav.compass",     href: "/compass",     icon: Compass  },
-    { key: "nav.use_cases",    href: "/use-cases",   icon: MapPin                              },
-    { key: "nav.mirror",       href: "/mirror",       icon: Scan,        ambassadorOnly: true  },
-    { key: "nav.sensory",      href: "/sensory",      icon: Ear,         ambassadorOnly: true  },
+    { key: "nav.use_cases",    href: "/use-cases",   icon: MapPin,      adminOnly: true       },
+    { key: "nav.mirror",       href: "/mirror",       icon: Scan,        adminOnly: true       },
+    { key: "nav.sensory",      href: "/sensory",      icon: Ear,         adminOnly: true       },
     { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
     { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
     { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true        },
@@ -39,9 +39,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];
 
-  const navigation = allNavigation.filter(
-    (item) => !("authOnly" in item && item.authOnly) || isAuthenticated
-  );
+  const navigation = allNavigation.filter((item) => {
+    if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
+    if ("authOnly" in item && item.authOnly && !isAuthenticated) return false;
+    return true;
+  });
 
   const MAIN_CONTENT_ID = "main-content";
 

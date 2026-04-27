@@ -76,6 +76,8 @@
   "atelier.fallback_banner": "Il contenuto specifico per la regione {{region}} è in preparazione. Nel frattempo vengono visualizzati scenari di galateo universali.",
   "atelier.region": "Regione",
   "atelier.all_pillars": "Tutti i Pilastri",
+  "atelier.tab_scenarios": "Scenari",
+  "atelier.tab_learning_tracks": "Percorsi",
   "compass.quick_brief": "Scheda Rapida",
   "compass.quick_brief_subtitle": "I cinque usi da conoscere prima dell'arrivo",
   "counsel.title": "Il Consiglio",

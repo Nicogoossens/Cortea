@@ -102,7 +102,8 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       const highestMastered = progressData
         .filter((p) => p.mastered && p.register === "middle_class")
         .reduce((max, p) => Math.max(max, p.phase), 0);
-      const suggestedPhase = Math.min(highestMastered + 1, 5);
+      // Default minimum for professional is Fase 2, even without prior progress
+      const suggestedPhase = Math.min(Math.max(highestMastered + 1, 2), 5);
       setPhase(suggestedPhase);
     } else if (ambitionLevel === "diplomatic" && tier === "ambassador") {
       // register already "elite" via useState initializer — nothing else needed
@@ -238,15 +239,19 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   return (
     <div className="space-y-6">
       {/* ── "Jouw startpunt" personalized card ── */}
-      {showStartCard && ambitionLevel && ambitionLevel !== "casual" && (
+      {showStartCard && (
         <div className="relative flex items-start gap-4 px-5 py-4 rounded-sm border border-primary/20 bg-primary/5 text-sm animate-in fade-in duration-300">
           <Compass className="w-5 h-5 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
           <div className="flex-1 space-y-1">
             <p className="font-medium text-foreground/90">
               Op basis van jouw profiel{" "}
               <span className="text-muted-foreground font-normal">
-                ({AMBITION_LABELS[ambitionLevel] ?? ambitionLevel}
-                {ageGroup ? ` · ${ageGroup}` : ""})
+                ({[
+                  AMBITION_LABELS[ambitionLevel] ?? ambitionLevel,
+                  getRegionName(activeRegion),
+                  gender ?? null,
+                  ageGroup ?? null,
+                ].filter(Boolean).join(" · ")})
               </span>{" "}
               adviseren we te starten bij{" "}
               <span className="font-serif text-primary">

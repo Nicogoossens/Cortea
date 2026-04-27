@@ -91,7 +91,9 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     const correctStreak = progressRow?.correct_streak ?? 0;
     const repeat = correctStreak <= -2;
 
-    const lookupLevel = repeat ? Math.max(1, currentLevel - 1) : currentLevel;
+    // When in repeat mode, serve questions at the *current* level (not lower).
+    // The repeat flag signals the UI to show a "let's retry" banner, not a level regression.
+    const lookupLevel = currentLevel;
 
     const baseConditions = [
       eq(learningTrackQuestionsTable.region_code, region_code.toUpperCase()),
@@ -176,6 +178,16 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
 
     if (!question) {
       return res.status(404).json({ message: "Question not found." });
+    }
+
+    // Validate that the submitted track context matches the question's actual track.
+    // This prevents a user from incrementing progress on a different track than the question belongs to.
+    if (
+      question.register !== register ||
+      question.phase !== phase ||
+      (question.research_pillar ?? null) !== pillarKey
+    ) {
+      return res.status(400).json({ message: "Question does not belong to the specified register/phase/pillar." });
     }
 
     const options = question.options as { text: string; answer_tier: 1 | 2 | 3; motivation: string }[];

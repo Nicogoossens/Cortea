@@ -337,6 +337,10 @@ export default function Profile() {
   const [countryInput, setCountryInput] = useState("");
   const [countrySave, setCountrySave] = useState<SaveState>("idle");
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  // Separate state for the Course Settings card country editor
+  const [editingCountryCourse, setEditingCountryCourse] = useState(false);
+  const [countryInputCourse, setCountryInputCourse] = useState("");
+  const [countryDropdownOpenCourse, setCountryDropdownOpenCourse] = useState(false);
   const [objectivesSave, setObjectivesSave] = useState<SaveState>("idle");
   const [sportsSave, setSportsSave] = useState<SaveState>("idle");
   const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
@@ -354,6 +358,7 @@ export default function Profile() {
         setUsernameInput(data?.username ?? "");
         setFullNameInput(data?.full_name ?? "");
         setCountryInput(data?.country_of_origin ?? "");
+        setCountryInputCourse(data?.country_of_origin ?? "");
         setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
       })
@@ -541,8 +546,14 @@ export default function Profile() {
 
   async function handleCountrySubmit() {
     const ok = await patchProfile({ country_of_origin: countryInput.trim() || null }, setCountrySave);
-    if (ok) setShowCourseChangeWarning(true);
+    if (ok) { setShowCourseChangeWarning(true); setCountryInputCourse(countryInput.trim()); }
     setEditingCountry(false);
+  }
+
+  async function handleCountrySubmitCourse() {
+    const ok = await patchProfile({ country_of_origin: countryInputCourse.trim() || null }, setCountrySave);
+    if (ok) { setShowCourseChangeWarning(true); setCountryInput(countryInputCourse.trim()); }
+    setEditingCountryCourse(false);
   }
 
   async function handleTagAdd(
@@ -1157,30 +1168,30 @@ export default function Profile() {
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
               <SaveIndicator state={countrySave} t={t} />
             </div>
-            {editingCountry ? (
+            {editingCountryCourse ? (
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
-                    value={countryInput}
-                    onChange={(e) => { setCountryInput(e.target.value); setCountryDropdownOpen(true); }}
-                    onFocus={() => setCountryDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setCountryDropdownOpen(false), 120)}
+                    value={countryInputCourse}
+                    onChange={(e) => { setCountryInputCourse(e.target.value); setCountryDropdownOpenCourse(true); }}
+                    onFocus={() => setCountryDropdownOpenCourse(true)}
+                    onBlur={() => setTimeout(() => setCountryDropdownOpenCourse(false), 120)}
                     onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                      if (e.key === "Enter") { setCountryDropdownOpen(false); handleCountrySubmit(); }
-                      if (e.key === "Escape") { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }
+                      if (e.key === "Enter") { setCountryDropdownOpenCourse(false); handleCountrySubmitCourse(); }
+                      if (e.key === "Escape") { setCountryDropdownOpenCourse(false); setEditingCountryCourse(false); setCountryInputCourse(profileData?.country_of_origin ?? ""); }
                     }}
                     placeholder="e.g. Belgium"
                     className="h-8 text-sm border-primary/40 focus:border-primary w-full"
                     autoFocus
                   />
-                  {countryDropdownOpen && (() => {
-                    const q = countryInput.trim().toLowerCase();
+                  {countryDropdownOpenCourse && (() => {
+                    const q = countryInputCourse.trim().toLowerCase();
                     const filtered = q ? COUNTRIES.filter(c => c.toLowerCase().includes(q)) : COUNTRIES;
                     return filtered.length > 0 ? (
                       <ul className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-sm border border-border bg-background shadow-md">
                         {filtered.slice(0, 30).map(country => (
                           <li key={country}>
-                            <button type="button" onMouseDown={(e) => { e.preventDefault(); setCountryInput(country); setCountryDropdownOpen(false); }} className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors">
+                            <button type="button" onMouseDown={(e) => { e.preventDefault(); setCountryInputCourse(country); setCountryDropdownOpenCourse(false); }} className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors">
                               {country}
                             </button>
                           </li>
@@ -1189,15 +1200,15 @@ export default function Profile() {
                     ) : null;
                   })()}
                 </div>
-                <button onClick={() => { setCountryDropdownOpen(false); handleCountrySubmit(); }} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
+                <button onClick={() => { setCountryDropdownOpenCourse(false); handleCountrySubmitCourse(); }} className="text-primary hover:text-primary/70 transition-colors" aria-label="Save">
                   <Check className="w-4 h-4" aria-hidden="true" />
                 </button>
-                <button onClick={() => { setCountryDropdownOpen(false); setEditingCountry(false); setCountryInput(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
+                <button onClick={() => { setCountryDropdownOpenCourse(false); setEditingCountryCourse(false); setCountryInputCourse(profileData?.country_of_origin ?? ""); }} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Cancel">
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             ) : (
-              <button onClick={() => setEditingCountry(true)} className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors">
+              <button onClick={() => setEditingCountryCourse(true)} className="group flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors">
                 {profileData?.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
                 <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>

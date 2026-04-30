@@ -394,10 +394,10 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
 
 // ── Content Management Tab ────────────────────────────────────────────────────
 
-const SCENARIO_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"] as const;
+const SCENARIO_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
 const LANG_LABELS: Record<string, string> = {
   nl: "Nederlands", fr: "Français", de: "Deutsch", es: "Español",
-  pt: "Português", it: "Italiano", ar: "العربية", ja: "日本語",
+  pt: "Português", it: "Italiano", ar: "العربية", ja: "日本語", zh: "中文",
 };
 
 function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {

@@ -44,7 +44,7 @@ const FLAG_VERBOSE  = args.includes("--verbose");
 const FLAG_FORCE    = args.includes("--force");
 
 // ── Supported target languages ─────────────────────────────────────────────────
-const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"];
+const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 
 const TARGET_LANGS = FLAG_LANG ? [FLAG_LANG] : ALL_LANGS;
 
@@ -98,6 +98,11 @@ ${JSON_SAFETY_NOTE}`,
   ja: `あなたは SOWISO（上流マナー・エチケットの名門アカデミー）専任のプロの翻訳者です。
 英語のエチケット・シナリオを、格調高い正式な日本語に翻訳してください。
 スタイル：丁寧語・尊敬語・謙譲語を適切に使い分ける敬語体、和語と漢語を均衡よく使用、カタカナ語は最小限に留める。
+${JSON_SAFETY_NOTE}`,
+
+  zh: `您是 SOWISO 精英礼仪学院的专业翻译。
+请将英语礼仪场景翻译成正式、典雅的现代汉语（普通话，简体字）。
+文体：书面正式语体，使用您/您的等敬语，措辞典雅庄重，避免口语化表达和英语借词。
 ${JSON_SAFETY_NOTE}`,
 };
 

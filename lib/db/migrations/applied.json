@@ -1,6 +1,19 @@
 {
   "migrations": [
     {
+      "id": "0001_social_class_schema",
+      "file": "lib/db/migrations/0001_social_class_schema.sql",
+      "appliedAt": "2026-04-30",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='culture_protocols' AND column_name='social_class'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "column_name": "social_class" }],
+        "note": "social_class column added to culture_protocols (NOT NULL DEFAULT 'universal') with check constraint. content_coverage table created. Scenarios columns were already present."
+      },
+      "status": "applied"
+    },
+    {
       "id": "0002_backfill_ambition_levels",
       "file": "lib/db/migrations/0002_backfill_ambition_levels.sql",
       "appliedAt": "2026-04-26",

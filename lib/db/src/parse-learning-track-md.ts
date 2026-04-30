@@ -42,7 +42,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
   let demographic = "common";
 
   const META_RE = /^\s*\*\*([A-Za-z_]+):\*\*\s+(.+?)\s*$/;
-  for (let i = 0; i < Math.min(lines.length, 30); i++) {
+  for (let i = 0; i < Math.min(lines.length, 50); i++) {
     const m = lines[i].match(META_RE);
     if (!m) continue;
     const key = m[1].toLowerCase();

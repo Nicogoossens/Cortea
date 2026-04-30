@@ -41,8 +41,11 @@ export function parseLearningTrackMd(content: string): ParseResult {
   let lang = "en";
   let demographic = "common";
 
+  // Scan until the first level-heading (## Level N) or end of file — no hard cap.
   const META_RE = /^\s*\*\*([A-Za-z_]+):\*\*\s+(.+?)\s*$/;
-  for (let i = 0; i < Math.min(lines.length, 50); i++) {
+  const firstLevelLine = lines.findIndex((l) => /^##\s+Level\s+\d+\b/i.test(l));
+  const headerEnd = firstLevelLine >= 0 ? firstLevelLine : lines.length;
+  for (let i = 0; i < headerEnd; i++) {
     const m = lines[i].match(META_RE);
     if (!m) continue;
     const key = m[1].toLowerCase();
@@ -53,6 +56,16 @@ export function parseLearningTrackMd(content: string): ParseResult {
     else if (key === "pillar") research_pillar = val;
     else if (key === "lang") lang = val.toLowerCase();
     else if (key === "demographic") demographic = val;
+  }
+
+  // ── Required metadata validation ──────────────────────────────────────────
+  if (!region_code) parseErrors.push("Missing required metadata: **Region:**");
+  if (!research_pillar) parseErrors.push("Missing required metadata: **Pillar:**");
+  if (isNaN(phase) || phase < 1) parseErrors.push("Missing or invalid required metadata: **Phase:**");
+
+  // Abort early if required metadata is absent — all questions would be un-insertable.
+  if (!region_code || !research_pillar) {
+    return { questions: [], parseErrors };
   }
 
   // ── State machine ──────────────────────────────────────────────────────────

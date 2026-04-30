@@ -259,7 +259,7 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
       .select({ title_i18n: sql<Record<string, string> | null>`title_i18n` })
       .from(scenariosTable);
 
-    const scenarioLangs = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja"];
+    const scenarioLangs = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
     const scenarioTranslationCoverage: Record<string, number> = {};
     for (const lang of scenarioLangs) {
       scenarioTranslationCoverage[lang] = allScenarios.filter(
@@ -540,7 +540,7 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
       ...(newScenarioIds.length > 0 && {
         translation_queued: true,
         translation_scenario_ids: newScenarioIds,
-        translation_note: "Translations into 8 languages are being generated in the background. This may take a few minutes.",
+        translation_note: "Translations into 9 languages are being generated in the background. This may take a few minutes.",
       }),
     });
   } catch (err) {
@@ -570,7 +570,7 @@ router.post(
         return res.status(422).json({
           error: "No valid questions could be parsed from this file.",
           errors_count: parseErrors.length,
-          errors: parseErrors.slice(0, 20),
+          errors: parseErrors,
           inserted: 0,
           skipped: 0,
         });
@@ -599,7 +599,7 @@ router.post(
         inserted,
         skipped,
         errors_count: parseErrors.length,
-        errors: parseErrors.slice(0, 20),
+        errors: parseErrors,
       });
     } catch (err) {
       req.log?.error({ err }, "Admin: MD learning track import failed");
@@ -826,10 +826,11 @@ const CC_TARGET_LANGUAGES: Record<string, string> = {
   it: "Italian",
   ar: "Arabic",
   ja: "Japanese",
+  zh: "Chinese (Simplified Mandarin)",
 };
 
 /**
- * Translates a rule_cc string into all 8 non-English supported languages
+ * Translates a rule_cc string into all 9 non-English supported languages
  * using a single Claude call. Returns a Record<langCode, translatedText>.
  */
 async function translateRuleCc(
@@ -870,7 +871,8 @@ Expected output format:
   "pt": "<Portuguese translation>",
   "it": "<Italian translation>",
   "ar": "<Arabic translation>",
-  "ja": "<Japanese translation>"
+  "ja": "<Japanese translation>",
+  "zh": "<Chinese translation>"
 }`;
 
   const aiResponse = await fetch(`${anthropicBase}/messages`, {

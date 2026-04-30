@@ -1,16 +1,17 @@
 /**
- * Learning Track Question Import Scaffold
+ * Learning Track Question Import
  *
- * Provides an idempotent batch-import function for learning track questions.
- * Processes records in batches of 500 to handle datasets of 7,000+ questions.
+ * Accepts either a pre-built JSON file or a canonical Markdown (.md) pillar file.
+ * Processes records in batches of 500 for large datasets.
  *
- * Usage once the question dataset is ready:
- *   const data = JSON.parse(fs.readFileSync("data/be-learning-tracks.json", "utf8"));
- *   await importLearningTrackQuestions(data);
+ * Usage:
+ *   tsx src/seed-learning-tracks.ts <path-to.json>
+ *   tsx src/seed-learning-tracks.ts <path-to.md>
  */
 
 import { db } from "./index.js";
 import { learningTrackQuestionsTable, type InsertLearningTrackQuestion } from "./schema/learning-track-questions.js";
+import { parseLearningTrackMd } from "./parse-learning-track-md.js";
 
 const BATCH_SIZE = 500;
 
@@ -41,15 +42,38 @@ export async function importLearningTrackQuestions(
 if (process.argv[1] && process.argv[1].includes("seed-learning-tracks")) {
   const filePath = process.argv[2];
   if (!filePath) {
-    console.error("Usage: tsx seed-learning-tracks.ts <path-to-json-file>");
+    console.error("Usage:");
+    console.error("  tsx seed-learning-tracks.ts <path-to.json>   — import from JSON array");
+    console.error("  tsx seed-learning-tracks.ts <path-to.md>     — import from canonical MD pillar file");
     process.exit(1);
   }
 
   import("fs").then(async (fs) => {
     const raw = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(raw) as InsertLearningTrackQuestion[];
-    console.log(`Importing ${data.length} learning track questions from ${filePath}...`);
-    const { inserted, skipped } = await importLearningTrackQuestions(data);
+
+    let questions: InsertLearningTrackQuestion[];
+
+    if (filePath.endsWith(".md")) {
+      console.log(`Parsing MD file: ${filePath}...`);
+      const { questions: parsed, parseErrors } = parseLearningTrackMd(raw);
+      if (parseErrors.length > 0) {
+        console.warn(`  ${parseErrors.length} parse warning(s):`);
+        parseErrors.forEach((e) => console.warn(`    ${e}`));
+      }
+      console.log(`  Parsed ${parsed.length} questions.`);
+      questions = parsed;
+    } else {
+      questions = JSON.parse(raw) as InsertLearningTrackQuestion[];
+      console.log(`  Loaded ${questions.length} questions from JSON.`);
+    }
+
+    if (questions.length === 0) {
+      console.error("No questions to import. Exiting.");
+      process.exit(1);
+    }
+
+    console.log(`Importing ${questions.length} learning track questions...`);
+    const { inserted, skipped } = await importLearningTrackQuestions(questions);
     console.log(`Done. Inserted: ${inserted}, Skipped (already existed): ${skipped}`);
     process.exit(0);
   }).catch((err) => {

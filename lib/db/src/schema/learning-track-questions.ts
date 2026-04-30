@@ -22,7 +22,7 @@ export const learningTrackQuestionsTable = pgTable(
     question_text:      text("question_text").notNull(),
     historical_context: text("historical_context"),
     options:            jsonb("options").$type<LearningTrackOption[]>().notNull().default([]),
-    lang:               text("lang").notNull().default("nl"),
+    lang:               text("lang").notNull().default("en"),
     created_at:         timestamp("created_at").defaultNow(),
     /**
      * Computed hash for idempotent imports.

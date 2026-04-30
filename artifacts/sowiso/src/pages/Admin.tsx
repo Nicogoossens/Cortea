@@ -407,7 +407,12 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [seedOutput, setSeedOutput] = useState<string[]>([]);
   const [importState, setImportState] = useState<ActionState>("idle");
   const [importResult, setImportResult] = useState<{ inserted: number; errors_count: number; errors: string[]; translation_queued?: boolean; translation_scenario_ids?: number[]; translation_note?: string } | null>(null);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [mdImportState, setMdImportState] = useState<ActionState>("idle");
+  const [mdImportResult, setMdImportResult] = useState<{ parsed: number; inserted: number; skipped: number; errors_count: number; errors: string[] } | null>(null);
+  const mdFileRef = useRef<HTMLInputElement>(null);
 
   const fetchStatus = useCallback(async () => {
     setLoadingStatus(true);
@@ -440,28 +445,88 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     setTimeout(() => setSeedState("idle"), 5000);
   }
 
-  async function handleImport(type: "scenarios" | "compass_regions") {
+  async function handleImport(type: "scenarios" | "compass_regions" | "learning_tracks") {
     const file = fileRef.current?.files?.[0];
     if (!file) return;
 
     setImportState("loading");
     setImportResult(null);
+    setImportProgress(null);
+
     try {
       const text = await file.text();
       const items = JSON.parse(text) as unknown[];
-      const res = await fetch(`${API_BASE}/api/admin/content/import`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, items }),
+
+      const CHUNK_SIZE = 500;
+      const chunks: unknown[][] = [];
+      for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+        chunks.push(items.slice(i, i + CHUNK_SIZE));
+      }
+
+      let totalInserted = 0;
+      let totalErrors = 0;
+      const allErrors: string[] = [];
+      let lastData: { inserted: number; errors_count: number; errors: string[]; translation_queued?: boolean; translation_scenario_ids?: number[]; translation_note?: string } | null = null;
+
+      for (let c = 0; c < chunks.length; c++) {
+        setImportProgress({ current: c + 1, total: chunks.length });
+        const res = await fetch(`${API_BASE}/api/admin/content/import`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type, items: chunks[c] }),
+        });
+        const data = await res.json() as { inserted: number; errors_count: number; errors: string[]; translation_queued?: boolean; translation_scenario_ids?: number[]; translation_note?: string };
+        totalInserted += data.inserted ?? 0;
+        totalErrors += data.errors_count ?? 0;
+        allErrors.push(...(data.errors ?? []));
+        lastData = data;
+        if (!res.ok) {
+          setImportResult({ inserted: totalInserted, errors_count: totalErrors, errors: allErrors.slice(0, 20) });
+          setImportState("error");
+          setImportProgress(null);
+          return;
+        }
+      }
+
+      setImportResult({
+        inserted: totalInserted,
+        errors_count: totalErrors,
+        errors: allErrors.slice(0, 20),
+        translation_queued: lastData?.translation_queued,
+        translation_scenario_ids: lastData?.translation_scenario_ids,
+        translation_note: lastData?.translation_note,
       });
-      const data = await res.json() as { inserted: number; errors_count: number; errors: string[] };
-      setImportResult(data);
-      setImportState(res.ok ? "done" : "error");
-      if (res.ok) fetchStatus();
+      setImportState("done");
+      setImportProgress(null);
+      fetchStatus();
     } catch (err) {
       setImportResult({ inserted: 0, errors_count: 1, errors: [String(err)] });
       setImportState("error");
+      setImportProgress(null);
+    }
+  }
+
+  async function handleMdImport() {
+    const file = mdFileRef.current?.files?.[0];
+    if (!file) return;
+
+    setMdImportState("loading");
+    setMdImportResult(null);
+    try {
+      const content = await file.text();
+      const res = await fetch(`${API_BASE}/api/admin/content/import-learning-tracks-md`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "text/plain" },
+        body: content,
+      });
+      const data = await res.json() as { parsed: number; inserted: number; skipped: number; errors_count: number; errors: string[] };
+      setMdImportResult(data);
+      setMdImportState(res.ok ? "done" : "error");
+    } catch (err) {
+      setMdImportResult({ parsed: 0, inserted: 0, skipped: 0, errors_count: 1, errors: [String(err)] });
+      setMdImportState("error");
     }
   }
 
@@ -659,6 +724,63 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
                   <p className="mt-1 text-blue-700 font-light">{importResult.translation_note}</p>
                   <p className="mt-1 text-blue-600">Scenario IDs: {importResult.translation_scenario_ids?.join(", ")}</p>
                 </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Learning Track MD Import */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <Upload className="w-4 h-4" />
+            Import Learning Tracks (MD)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground font-light">
+            Upload a canonical <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">.md</span> file (one file per pillar).
+            The file is parsed server-side and questions are inserted directly — no JSON conversion needed.
+            Duplicate questions are silently skipped.
+          </p>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              ref={mdFileRef}
+              type="file"
+              accept=".md,.txt"
+              className="text-xs text-muted-foreground font-mono file:mr-3 file:px-3 file:py-1.5 file:rounded-sm file:border file:border-border/60 file:bg-muted file:text-xs file:font-mono file:text-foreground hover:file:bg-muted/70 cursor-pointer flex-1 min-w-48"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs"
+              disabled={mdImportState === "loading"}
+              onClick={handleMdImport}
+            >
+              {mdImportState === "loading"
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> Importing…</>
+                : mdImportState === "done"
+                ? <><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Done</>
+                : mdImportState === "error"
+                ? <><XCircle className="w-3.5 h-3.5 mr-1" /> Failed</>
+                : "Import Learning Tracks (MD)"}
+            </Button>
+          </div>
+
+          {mdImportResult && (
+            <div className={`text-xs font-mono p-3 rounded-sm border space-y-1 ${mdImportState === "done" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+              <p>
+                Parsed: <strong>{mdImportResult.parsed}</strong> questions —
+                Inserted: <strong>{mdImportResult.inserted}</strong> —
+                Skipped (duplicates): <strong>{mdImportResult.skipped}</strong> —
+                Errors: <strong>{mdImportResult.errors_count}</strong>
+              </p>
+              {mdImportResult.errors.length > 0 && (
+                <ul className="mt-2 space-y-1 list-disc list-inside">
+                  {mdImportResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
               )}
             </div>
           )}

@@ -39,7 +39,7 @@ const SessionQuerySchema = z.object({
   research_pillar: z.string().optional(),
   phase: z.coerce.number().int().min(1).max(5),
   region_code: z.string().min(1).max(10),
-  lang: z.string().default("nl"),
+  lang: z.string().default("en"),
 });
 
 const AnswerBodySchema = z.object({

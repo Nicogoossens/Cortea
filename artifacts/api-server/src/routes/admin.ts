@@ -1,11 +1,12 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
+import express, { Router, type Request, type Response, type NextFunction } from "express";
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
+import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
@@ -401,9 +402,29 @@ const CompassRegionImportSchema = z.object({
   content: z.record(z.string(), z.unknown()),
 });
 
+const LearningTrackImportSchema = z.object({
+  register: z.enum(["middle_class", "elite"]),
+  research_pillar: z.string().nullable().optional(),
+  phase: z.number().int().min(1).max(5),
+  level: z.number().int().min(1).max(5),
+  region_code: z.string().min(2).max(10),
+  demographic: z.string().default("common"),
+  question_text: z.string().min(1),
+  historical_context: z.string().nullable().optional(),
+  options: z.array(z.object({
+    text: z.string().min(1),
+    answer_tier: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    motivation: z.string().min(1),
+  })).min(2).max(6).refine(
+    (opts) => opts.filter((o) => o.answer_tier === 1).length === 1,
+    { message: "Exactly one option must have answer_tier = 1 (the best answer)." },
+  ),
+  lang: z.string().default("en"),
+});
+
 const BulkImportBodySchema = z.object({
-  type: z.enum(["scenarios", "compass_regions", "culture_protocols"]),
-  items: z.array(z.unknown()).min(1).max(500),
+  type: z.enum(["scenarios", "compass_regions", "culture_protocols", "learning_tracks"]),
+  items: z.array(z.unknown()).min(1).max(5000),
 });
 
 /** POST /admin/content/import — bulk upsert scenarios or compass regions from JSON */
@@ -487,6 +508,28 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
           .onConflictDoNothing({ target: [cultureProtocolsTable.region_code, cultureProtocolsTable.pillar, cultureProtocolsTable.rule_type] });
         inserted++;
       }
+    } else if (type === "learning_tracks") {
+      const BATCH_SIZE = 500;
+      const valid: z.infer<typeof LearningTrackImportSchema>[] = [];
+
+      for (let i = 0; i < items.length; i++) {
+        const result = LearningTrackImportSchema.safeParse(items[i]);
+        if (!result.success) {
+          errors.push(`Item ${i}: ${JSON.stringify(result.error.flatten().fieldErrors)}`);
+          continue;
+        }
+        valid.push(result.data);
+      }
+
+      for (let i = 0; i < valid.length; i += BATCH_SIZE) {
+        const batch = valid.slice(i, i + BATCH_SIZE);
+        const rows = await db
+          .insert(learningTrackQuestionsTable)
+          .values(batch)
+          .onConflictDoNothing()
+          .returning({ id: learningTrackQuestionsTable.id });
+        inserted += rows.length;
+      }
     }
 
     return res.json({
@@ -505,6 +548,65 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
     return res.status(500).json({ error: "A difficulty arose during bulk import." });
   }
 });
+
+// ── Learning Track MD Import ───────────────────────────────────────────────────
+
+
+/** POST /admin/content/import-learning-tracks-md — parse & import a canonical MD file */
+router.post(
+  "/admin/content/import-learning-tracks-md",
+  requireAdmin,
+  express.text({ limit: "10mb", type: ["text/plain", "text/markdown", "application/octet-stream"] }),
+  async (req, res) => {
+    try {
+      const content = typeof req.body === "string" ? req.body : "";
+      if (!content.trim()) {
+        return res.status(400).json({ error: "Empty or missing MD content." });
+      }
+
+      const { questions, parseErrors } = parseLearningTrackMd(content);
+
+      if (questions.length === 0) {
+        return res.status(422).json({
+          error: "No valid questions could be parsed from this file.",
+          errors_count: parseErrors.length,
+          errors: parseErrors.slice(0, 20),
+          inserted: 0,
+          skipped: 0,
+        });
+      }
+
+      const BATCH_SIZE = 500;
+      let inserted = 0;
+      let skipped = 0;
+
+      for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+        const batch = questions.slice(i, i + BATCH_SIZE);
+        const rows = await db
+          .insert(learningTrackQuestionsTable)
+          .values(batch)
+          .onConflictDoNothing()
+          .returning({ id: learningTrackQuestionsTable.id });
+        inserted += rows.length;
+        skipped += batch.length - rows.length;
+      }
+
+      req.log?.info({ inserted, skipped, parseErrors: parseErrors.length }, "Admin: MD learning track import done");
+
+      return res.json({
+        ok: true,
+        parsed: questions.length,
+        inserted,
+        skipped,
+        errors_count: parseErrors.length,
+        errors: parseErrors.slice(0, 20),
+      });
+    } catch (err) {
+      req.log?.error({ err }, "Admin: MD learning track import failed");
+      return res.status(500).json({ error: "A difficulty arose during MD import." });
+    }
+  },
+);
 
 // ── CC Screening Worker ────────────────────────────────────────────────────────
 

@@ -60,9 +60,17 @@ export function parseLearningTrackMd(content: string): ParseResult {
   }
 
   // ── Required metadata validation ──────────────────────────────────────────
+  const VALID_REGIONS = [
+    "GB", "US", "AE", "CN", "JP", "FR", "DE", "NL", "AU", "CA",
+    "IT", "IN", "ES", "PT", "SG", "BR", "ZA", "MX", "CO", "BE", "CH",
+  ];
   const VALID_PILLARS = ["P1", "P2", "P3", "P4", "P5"];
 
-  if (!region_code) parseErrors.push("Missing required metadata: **Region:**");
+  if (!region_code) {
+    parseErrors.push("Missing required metadata: **Region:**");
+  } else if (!VALID_REGIONS.includes(region_code)) {
+    parseErrors.push(`Unrecognised **Region:** "${region_code}" — must be one of ${VALID_REGIONS.join(", ")}`);
+  }
 
   if (!research_pillar) {
     parseErrors.push("Missing required metadata: **Pillar:**");
@@ -77,8 +85,9 @@ export function parseLearningTrackMd(content: string): ParseResult {
   }
 
   // Abort early if required metadata is absent or invalid — questions would be un-insertable.
+  const regionInvalid = !!region_code && !VALID_REGIONS.includes(region_code);
   const pillarInvalid = research_pillar !== null && !VALID_PILLARS.includes(research_pillar);
-  if (!region_code || !research_pillar || pillarInvalid || phaseRaw === null || isNaN(phase) || phase < 1) {
+  if (!region_code || regionInvalid || !research_pillar || pillarInvalid || phaseRaw === null || isNaN(phase) || phase < 1) {
     return { questions: [], parseErrors };
   }
 

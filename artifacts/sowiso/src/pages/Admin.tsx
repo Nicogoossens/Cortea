@@ -674,7 +674,7 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
           <p className="text-sm text-muted-foreground font-light">
             Upload a JSON array of scenario or compass region objects. Scenarios are inserted as new rows;
             compass regions are upserted by region_code. New scenarios are automatically translated into
-            8 languages (nl, fr, de, es, pt, it, ar, ja) in the background after import.
+            9 languages (nl, fr, de, es, pt, it, ar, ja, zh) in the background after import.
           </p>
 
           <div className="flex flex-wrap gap-3 items-start">

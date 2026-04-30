@@ -36,6 +36,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
   // ── Header metadata defaults ───────────────────────────────────────────────
   let region_code = "";
   let register: "middle_class" | "elite" = "middle_class";
+  let phaseRaw: string | null = null;  // null = not found in header
   let phase = 1;
   let research_pillar: string | null = null;
   let lang = "en";
@@ -52,19 +53,32 @@ export function parseLearningTrackMd(content: string): ParseResult {
     const val = m[2].trim();
     if (key === "region") region_code = val.toUpperCase();
     else if (key === "register") register = val as "middle_class" | "elite";
-    else if (key === "phase") phase = parseInt(val, 10) || 1;
+    else if (key === "phase") { phaseRaw = val; phase = parseInt(val, 10); }
     else if (key === "pillar") research_pillar = val;
     else if (key === "lang") lang = val.toLowerCase();
     else if (key === "demographic") demographic = val;
   }
 
   // ── Required metadata validation ──────────────────────────────────────────
-  if (!region_code) parseErrors.push("Missing required metadata: **Region:**");
-  if (!research_pillar) parseErrors.push("Missing required metadata: **Pillar:**");
-  if (isNaN(phase) || phase < 1) parseErrors.push("Missing or invalid required metadata: **Phase:**");
+  const VALID_PILLARS = ["P1", "P2", "P3", "P4", "P5"];
 
-  // Abort early if required metadata is absent — all questions would be un-insertable.
-  if (!region_code || !research_pillar) {
+  if (!region_code) parseErrors.push("Missing required metadata: **Region:**");
+
+  if (!research_pillar) {
+    parseErrors.push("Missing required metadata: **Pillar:**");
+  } else if (!VALID_PILLARS.includes(research_pillar)) {
+    parseErrors.push(`Invalid **Pillar:** "${research_pillar}" — must be one of ${VALID_PILLARS.join(", ")}`);
+  }
+
+  if (phaseRaw === null) {
+    parseErrors.push("Missing required metadata: **Phase:**");
+  } else if (isNaN(phase) || phase < 1) {
+    parseErrors.push(`Invalid **Phase:** "${phaseRaw}" — must be a positive integer`);
+  }
+
+  // Abort early if required metadata is absent or invalid — questions would be un-insertable.
+  const pillarInvalid = research_pillar !== null && !VALID_PILLARS.includes(research_pillar);
+  if (!region_code || !research_pillar || pillarInvalid || phaseRaw === null || isNaN(phase) || phase < 1) {
     return { questions: [], parseErrors };
   }
 

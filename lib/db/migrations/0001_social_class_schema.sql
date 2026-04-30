@@ -48,3 +48,32 @@ CREATE TABLE IF NOT EXISTS content_coverage (
   CONSTRAINT content_coverage_social_class_check CHECK (social_class IN ('universal','elite','middle_class')),
   CONSTRAINT content_coverage_status_check CHECK (status IN ('draft','active','complete'))
 );
+
+-- 8. Ensure seed-critical unique constraints exist on both tables (idempotent)
+-- culture_protocols: uniqueness key for ON CONFLICT seed upsert
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'culture_protocols_region_pillar_rule_key'
+      AND table_name = 'culture_protocols'
+  ) THEN
+    ALTER TABLE culture_protocols
+      ADD CONSTRAINT culture_protocols_region_pillar_rule_key
+      UNIQUE (region_code, pillar, rule_type);
+  END IF;
+END $$;
+
+-- scenarios: uniqueness key for ON CONFLICT seed upsert
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'scenarios_region_pillar_title_key'
+      AND table_name = 'scenarios'
+  ) THEN
+    ALTER TABLE scenarios
+      ADD CONSTRAINT scenarios_region_pillar_title_key
+      UNIQUE (region_code, pillar, title);
+  END IF;
+END $$;

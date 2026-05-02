@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { requireAuthUser } from "../lib/auth-middleware";
+import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import type { AuthenticatedRequest } from "../lib/auth-middleware";
+import { db } from "@workspace/db";
+import { counselQualityLogTable, userUseCaseRatingsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -121,6 +124,29 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
     }
 
     const finalScore = result.score ?? 7;
+    const userId = getResolvedUserId(req);
+
+    // Log the quality score so it feeds into the counsel component of
+    // use-case readiness scores on the next /use-cases request.
+    try {
+      await db.insert(counselQualityLogTable).values({
+        user_id: userId,
+        domain: domain ?? "general",
+        score: finalScore,
+      });
+    } catch (logErr) {
+      req.log.warn({ logErr }, "Could not persist counsel quality log");
+    }
+
+    // Invalidate use-case readiness cache independently so a transient log
+    // failure does not prevent stale scores from being evicted.
+    try {
+      await db.delete(userUseCaseRatingsTable).where(
+        eq(userUseCaseRatingsTable.user_id, userId)
+      );
+    } catch (cacheErr) {
+      req.log.warn({ cacheErr }, "Could not invalidate use-case readiness cache after counsel check");
+    }
 
     return res.json({
       pass:  result.pass  ?? true,

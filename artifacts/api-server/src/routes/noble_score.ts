@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent, type WardrobeItem, getPillarName } from "@workspace/db";
+import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, userUseCaseRatingsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent, type WardrobeItem, getPillarName } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
@@ -395,6 +395,18 @@ router.post("/noble-score/submit", async (req, res) => {
         trigger,
         level_name_after: newLevelName,
       });
+
+      // Invalidate use-case readiness cache so the next /use-cases request
+      // recomputes fresh scores that reflect the updated pillar progress.
+      // Isolated in its own try/catch so a transient cache-delete failure
+      // does not turn a successful scenario submission into a 500 response.
+      try {
+        await db.delete(userUseCaseRatingsTable).where(
+          eq(userUseCaseRatingsTable.user_id, userId)
+        );
+      } catch (cacheErr) {
+        req.log.warn({ cacheErr }, "Could not invalidate use-case readiness cache after scenario submit");
+      }
 
       ageBand = getAgeBand(user?.birth_year);
     }

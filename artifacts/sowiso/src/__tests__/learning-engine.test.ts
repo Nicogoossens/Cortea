@@ -337,3 +337,32 @@ describe("remediation lifecycle", () => {
     expect(pickRemediationCandidate([remRow])).toBe(null);
   });
 });
+
+// ── Pass-engine: window readiness gates fail/remediation ─────────────────
+// Mirrors the new completion logic in /learning-tracks/answer:
+//   - windowFilled < windowRequired  → outcome=insufficient_window, passed=null
+//   - shouldLevelUp                  → outcome=window_pass,         passed=true
+//   - else                           → outcome=window_fail_remediation, passed=false
+type WinResult = { windowFilled: number; windowRequired: number; shouldLevelUp: boolean };
+function classifyOutcome(win: WinResult): { passed: boolean | null; outcome: string } {
+  if (win.windowFilled < win.windowRequired) return { passed: null, outcome: "insufficient_window" };
+  if (win.shouldLevelUp) return { passed: true, outcome: "window_pass" };
+  return { passed: false, outcome: "window_fail_remediation" };
+}
+describe("pass engine — window readiness gates remediation", () => {
+  it("first middle-class session (8 attempts) cannot trigger remediation", () => {
+    // mc session size = 8, window required at level 1 = 10
+    const win: WinResult = { windowFilled: 8, windowRequired: 10, shouldLevelUp: false };
+    expect(classifyOutcome(win)).toEqual({ passed: null, outcome: "insufficient_window" });
+  });
+
+  it("two mc sessions (16 attempts) can pass when threshold met", () => {
+    const win: WinResult = { windowFilled: 10, windowRequired: 10, shouldLevelUp: true };
+    expect(classifyOutcome(win)).toEqual({ passed: true, outcome: "window_pass" });
+  });
+
+  it("window full + below threshold triggers remediation", () => {
+    const win: WinResult = { windowFilled: 10, windowRequired: 10, shouldLevelUp: false };
+    expect(classifyOutcome(win)).toEqual({ passed: false, outcome: "window_fail_remediation" });
+  });
+});

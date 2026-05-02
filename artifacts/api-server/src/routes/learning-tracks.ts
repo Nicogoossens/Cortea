@@ -472,19 +472,22 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     let scorePct: number | null = null;
     let passed: boolean | null = null;
     let nextAction: "level_up" | "continue" | "remediation" | "mastered" = "continue";
+    // Outcome buckets surfaced in the response so the UI can pick the right
+    // copy. Drives the spec-required "window not yet filled" UX where we
+    // must NOT trigger remediation prematurely.
+    let outcome: "in_progress" | "insufficient_window" | "window_pass" | "window_fail_remediation" | "mastered" | "remediation_pass" | "remediation_fail" = "in_progress";
 
     if (sessionComplete) {
       scorePct = session.total_questions === 0
         ? 0
         : Math.round((newCorrect / session.total_questions) * 100);
-      const cfg = getRegisterConfig(register);
-      const [winSize, requiredPct] = cfg.passThresholds[Math.min(Math.max(session.level, 1), 5) as 1 | 2 | 3 | 4 | 5];
-      // Per-session pass: same percentage threshold as the rolling window
-      passed = scorePct >= requiredPct;
-      // If the user passed this session, they get a clean slate for repetition
-      if (passed) repeatList.length = 0;
+      // NOTE: per-session percentage is reported for the summary screen, but
+      // it does NOT determine pass/fail. Pass/fail is derived from the
+      // rolling-window evaluator below (post-attempt insert), which is the
+      // single source of truth for level outcomes.
     }
 
+    // Persist counters now; pass/score finalized after window evaluation.
     await db.update(learningTrackSessionsTable).set({
       answers_given: newAnswered,
       correct_answers: newCorrect,
@@ -492,7 +495,6 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       ...(sessionComplete && {
         completed_at: new Date(),
         score_pct: scorePct,
-        passed,
       }),
     }).where(eq(learningTrackSessionsTable.id, session.id));
 
@@ -522,30 +524,62 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       else correctStreak = Math.min(0, correctStreak) - 1;
     }
 
-    // Pass-engine: only evaluate at session end and only for non-remediation
+    // Pass-engine: only evaluate at session end. Pass/fail/remediation are
+    // derived from the rolling window — NOT from the current session score.
+    // This guarantees we don't force remediation before the window minimum
+    // (e.g. mc session size 8 < window min 10) is reached.
     let levelUp = false;
     if (sessionComplete && !session.is_remediation && !mastered) {
       const win = await evaluatePassWindow(userId, register, question.region_code, pillar, phase, currentLevel);
-      if (win.shouldLevelUp) {
+      if (win.windowFilled < win.windowRequired) {
+        // Not enough attempts at this level yet to make a pass/fail call.
+        passed = null;
+        nextAction = "continue";
+        outcome = "insufficient_window";
+      } else if (win.shouldLevelUp) {
+        passed = true;
         const maxLevel = REGISTER_CONFIG[register].maxLevel;
-        // Clamp first so we never momentarily exceed maxLevel — if already at
-        // top, mark mastered instead of incrementing past the threshold table.
         if (currentLevel >= maxLevel) {
           mastered = true;
           currentLevel = maxLevel;
           nextAction = "mastered";
+          outcome = "mastered";
         } else {
           currentLevel = currentLevel + 1;
           nextAction = "level_up";
+          outcome = "window_pass";
         }
         levelUp = true;
         correctStreak = 0;
-      } else if (passed === false) {
+        repeatList.length = 0;
+      } else {
+        // Window is full but threshold not met → remediation.
+        passed = false;
         nextAction = "remediation";
+        outcome = "window_fail_remediation";
       }
     } else if (sessionComplete && session.is_remediation) {
-      // After remediation, decide whether the user can return to progression
-      nextAction = passed ? "continue" : "remediation";
+      // Remediation sessions: per-session pass IS appropriate (the goal is
+      // to clear the failed questions, not progress level).
+      const cfg = getRegisterConfig(register);
+      const [, reqPct] = cfg.passThresholds[Math.min(Math.max(session.level, 1), 5) as 1 | 2 | 3 | 4 | 5];
+      passed = (scorePct ?? 0) >= reqPct;
+      if (passed) {
+        nextAction = "continue";
+        outcome = "remediation_pass";
+        repeatList.length = 0;
+      } else {
+        nextAction = "remediation";
+        outcome = "remediation_fail";
+      }
+    }
+
+    // Finalize the persisted pass flag once it's known.
+    if (sessionComplete) {
+      await db.update(learningTrackSessionsTable).set({
+        passed,
+        repeat_question_ids: repeatList,
+      }).where(eq(learningTrackSessionsTable.id, session.id));
     }
 
     if (progressExisting) {
@@ -598,6 +632,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       session_score_pct: scorePct,
       session_passed: passed,
       next_action: nextAction,
+      outcome,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to process learning track answer");

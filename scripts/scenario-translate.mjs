@@ -10,7 +10,7 @@
  *   node scripts/scenario-translate.mjs [flags]
  *
  * Flags:
- *   --lang <code>   Base language code to translate into (nl, fr, de, es, pt, it, hi).
+ *   --lang <code>   Base language code to translate into (nl, fr, de, es, pt, it, ar, ja, zh).
  *                   Omit to translate into ALL supported languages.
  *   --id <n>        Translate only the scenario with this ID.
  *   --dry-run       Print planned translations; do not write to database.

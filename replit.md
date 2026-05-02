@@ -1,144 +1,65 @@
-# Workspace
-
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Cortéa is an etiquette intelligence app designed to enhance social and cultural understanding. It provides scenario-based training, an AI etiquette advisor, and country-specific cultural guides. The project aims to deliver a sophisticated, personalized learning experience in etiquette through a multi-module application.
 
-## Stack
+Its core capabilities include:
+- **The Atelier**: Scenario-based training tailored to specific regions and etiquette pillars.
+- **The Counsel**: An AI-powered advisor for real-time etiquette guidance using Anthropic Claude.
+- **The Cultural Compass**: Comprehensive, country-by-country etiquette guides, including curated local venue recommendations.
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
+The app uses a pnpm workspace monorepo with TypeScript, Express.js for the API, PostgreSQL with Drizzle ORM for data management, and React for the frontend. Key features include a unique magic-link authentication system, a sophisticated behavioral psychology layer for personalized profiling, gamification elements, and a multi-tier subscription model.
+
+## User Preferences
+
+I prefer clear, concise explanations and direct answers.
+I expect an iterative development process, with frequent updates and opportunities for feedback.
+Please ask for confirmation before making any significant architectural changes or adding new external dependencies.
+Ensure all code adheres to the established coding standards, especially regarding error handling, module structure, and documentation.
+Prioritize the use of Drizzle ORM for database interactions and Tailwind CSS for styling.
+Do not introduce global state management solutions beyond React Query for server state.
+For any user-facing strings, ensure they are externalized for internationalization.
+
+## System Architecture
+
+The Cortéa application is structured as a pnpm workspace monorepo.
+
+**Core Technologies**:
+- **Monorepo Tool**: pnpm workspaces
+- **Backend**: Node.js 24, Express 5, TypeScript 5.9
+- **Database**: PostgreSQL with Drizzle ORM
+- **Validation**: Zod
+- **AI Integration**: Anthropic Claude (`@anthropic-ai/sdk`)
+- **Frontend**: React (details on specific frameworks like Next.js or Vite are not provided, assuming standard React setup), Tailwind CSS for styling, React Query for server state management.
+- **Internationalization**: `react-i18next` with `i18next-http-backend` supporting 9 locales, including RTL for Arabic.
+
+**Architectural Patterns & Decisions**:
+- **Monorepo Structure**: Facilitates shared code, consistent tooling, and independent package development.
+- **API Design**: All API routes are prefixed with `/api` and defined in `app.ts`. Route handlers avoid the `/api` prefix internally.
+- **Authentication**: Magic-link email authentication (passwordless, OAuth-less, SMS-less). Session tokens are server-side stored and used as Bearer tokens.
+- **Internationalization (i18n)**: Supports 9 languages with locale-aware content and UI. Content is bundled JSON or fetched via API with upsert capabilities. RTL direction is handled dynamically.
+- **Content Segmentation**: Differentiates `locale` (UI language) from `activeRegion` (etiquette context).
+- **Module Structure**: Emphasizes separation of concerns; routes handle validation and service calls, while services contain business logic and DB queries.
+- **Behavioral Psychology Layer**: Invisible profiling (`behavior_profile` JSON column on users) tracks user behavior (e.g., listening score, assertiveness style, conflict mode) and influences AI responses and personalized content. User-facing labels are etiquette-focused, not psychological.
+- **Gamification Layer**: Includes daily streaks, quests, wardrobe unlocks, and an "Oeps-Knop" (emergency apology guide). Pillar mastery unlocks avatar customizations.
+- **Subscription Tiers**: Three tiers (Guest, Traveller, Ambassador) with feature flagging and Stripe integration for payments. Content gating is implemented with blurred overlays and upgrade prompts.
+- **Cultural Compass (The Local)**: Integrates curated venue data for specific regions and categories, providing context to AI counsel. This data is static and in-memory.
+- **Admin Tools**: `CC Screening Worker` for AI-driven extraction and multilingual translation of etiquette rules from text fragments.
+
+**UI/UX Decisions**:
+- **Styling**: Exclusively uses Tailwind CSS.
+- **Component Design**: `FlagEmoji` component for consistent country flag display. `TierGate` for subscription content gating. `VenueCard` for displaying curated local venues.
+- **Dynamic Content**: Uses `useState` for local UI state and React Query for server state.
+- **Accessibility**: Includes an accessibility panel with high-contrast and text-size controls.
+- **Narrative Modes**: Scenario.tsx features Classic/Story Mode toggle.
+
+## External Dependencies
+
+- **Database**: PostgreSQL
+- **AI**: Anthropic Claude (via Replit-managed integration)
+- **Payment Gateway**: Stripe (with a note for future integration of Mollie, PayPal, and regional methods)
+- **i18n**: `react-i18next`, `i18next-http-backend`
+- **ORM**: Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **AI**: Anthropic Claude (via Replit-managed integration, `@anthropic-ai/sdk`)
-
-## Key Commands
-
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/db run seed-compass` — seed/update compass region data (all 13 locales)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-
-## Cortéa App Architecture
-
-**Cortéa** is an etiquette intelligence app with 3 modules:
-- **The Atelier** — Scenario-based training filtered by `activeRegion` and pillar (1–5)
-- **The Counsel** — AI etiquette advisor powered by Claude claude-sonnet-4-5 via `/api/counsel` POST
-- **The Cultural Compass** — Country-by-country etiquette guides with Quick Brief panel
-
-### Key Design Decisions
-
-- **Locale vs Region**: `locale` (9 languages) controls UI text; `activeRegion` (20 `RegionCode` values) controls etiquette context
-- **ACTIVE_REGIONS**: 17 priority countries have full Compass content (GB, AU, CN, US, JP, DE, IT, FR, BE, CH, SG, IN, MX, BR, ES, CO, AE). ~238 total country stubs in DB with `is_published=false`
-- **API routes**: All mounted at `/api` prefix in `app.ts`. Route handlers use paths WITHOUT `/api/` prefix
-- **Counsel AI**: `artifacts/api-server/src/routes/counsel.ts` — POST `/api/counsel` calls Anthropic; uses `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` + `AI_INTEGRATIONS_ANTHROPIC_API_KEY` env vars
-- **Region detection**: GET `/api/detect-region` returns IP-guessed region (session-only, GDPR-safe; no persistence unless user confirms)
-- **i18n (Task #6 — complete)**: react-i18next with `i18next-http-backend`. 9 locales: en, nl, fr, de, es, pt, it, ar (RTL), ja. 386 keys each. Bundled JSON in `src/locales/{lang}/translation.json`; DB-backed via `GET /api/translations?language_code={lng}` (upsert with `ON CONFLICT`). RTL direction applied to `<html dir="rtl">` for Arabic. Accessibility panel with high-contrast + text-size controls. All 60 scenarios translated into ar + ja.
-- **Content labels**: `pillarDomainKey()`, `levelKey()`, `triggerLabel()` in `artifacts/sowiso/src/lib/content-labels.ts`
-- **Noble Score**: 5 levels (Aware 0–19, Composed 20–39, Refined 40–59, Distinguished 60–79, Sovereign 80–100)
-- **Auth model (deliberate design decision)**: Cortéa uses magic-link email authentication — no passwords, no OAuth, no SMS. `POST /api/auth/signin` emails a one-time link; `GET /api/auth/verify` exchanges the token for a session. Session token is stored server-side in the DB and sent as a Bearer token. All protected routes resolve user identity from this token only (no query-param identity). This is intentional for the current scope.
-- **Email service**: `artifacts/api-server/src/lib/email.ts` — builds branded HTML activation email; sends via SMTP if `SMTP_HOST/SMTP_USER/SMTP_PASS` env vars are set, otherwise logs token + link to console for development
-- **Auth routes**: `artifacts/api-server/src/routes/auth.ts` — `POST /api/auth/register`, `GET /api/auth/verify`, `POST /api/auth/resend`, `POST /api/auth/signin`
-- **Registration pages**: `/register` (Register.tsx) and `/verify-email` (EmailVerify.tsx) — full locale-aware UI
-- **Users schema**: includes `email`, `email_verified`, `verification_token`, `token_expires_at`, `full_name`, `birth_year`, `gender_identity`, `is_admin` (bool), `suspended_at` (nullable timestamp) columns
-- **noble_score_log schema**: includes `level_name_after` (nullable text) — captured on level-up events
-- **Profile.tsx** (Task #16 + #17): Full rewrite — auth-aware (lock screen for guests), Personal Details panel (masked email, birth year, gender), Preferences section (language selector → persists via PUT /api/users/profile; region picker → persists via PATCH /api/users/profile/region), Noble Standing + Domain Mastery cards, enriched Recent Log timeline (scenario title, pillar domain, level-up badge, Review link), Account/Danger Zone with DELETE confirmation dialog
-- **Enriched log API**: `GET /api/noble-score/log` LEFT JOINs scenarios table, returns `scenario_title`, `scenario_pillar`, `scenario_pillar_domain`, `level_name_after` per entry
-- **Account deletion**: `DELETE /api/users/profile` cascades: removes `noble_score_log` + `zuil_voortgang` rows before deleting user record
-- **i18n**: 25+ new keys added to English (`profile.personal_details`, `profile.delete_account_*`, `profile.log.*`, etc.) — all other locales auto-fallback to English via `t()` chain
-
-- **Task #27 — Behavioral Psychology Layer (SILENT)**: Invisible behavior profiling embedded across all modules. Key implementation:
-  - **DB**: `behavior_profile` JSON column on users (Bolton cluster tracking: listening_score, assertiveness_style, conflict_mode, nonverbal_awareness, eq_dimensions); `behavioral_tags`, `bolton_cluster`, `correction_style` columns on scenarios
-  - **noble_score.ts**: `updateBehaviorProfile()` updates user behavior profile on every scenario answer based on `bolton_cluster` (1=listening, 2=assertiveness, 3=conflict). Saves `correction_style` as mentor feedback when user answers incorrectly.
-  - **counsel.ts**: Enriched system prompt with Bolton 3-step structure (Acknowledge → Illuminate → Guide) + Mehrabian nonverbal weighting map for 18 regions (tone/nonverbal/words breakdown per culture)
-  - **culture.ts**: `MEHRABIAN_WEIGHTS` map added; compass region detail API now includes `mehrabian_weight: { nonverbal, tone, words, note }` in response
-  - **seed.ts**: 3 Bolton cluster scenarios added (Cluster 1: "The Interrupted Confidence" GB, Cluster 2: "The Persistent Host" CN, Cluster 3: "The Misread Remark" US)
-  - **Profile.tsx**: Refinement Compass card with SVG pentagon radar chart (5 etiquette-language dimensions: Attentiveness, Composure, Discernment, Diplomacy, Presence). Fetches `GET /api/users/behavior-profile` in parallel with profile fetch. Card only appears for authenticated users with a behavior profile.
-  - All user-facing labels are in etiquette language — no psychological labels shown to the user
-
-- **Task #21 — Youth Gamification & Social Avatar Layer**: Streak engine, daily quest system, wardrobe unlocks, Oeps-Knop emergency guide, and Story Mode. Key implementation:
-  - **DB**: `daily_streak`, `last_activity_date`, `avatar_state` (JSON), `wardrobe_unlocks` (JSON array) columns on `users`. New tables: `quests` (seeded with 7 daily quests, one per `day_of_week`) and `quest_completions` (tracks per-user/per-day completion).
-  - **Streak logic**: `noble_score.ts` submit endpoint updates `daily_streak` (+1 if consecutive day, reset to 1 if gap, no change if same day). Pillar 2 mastery thresholds (20/40/60/80) auto-unlock garments: Italian Suit, Arabic Thobe, Japanese Hakama, Scottish Tartan. Avatar `style_tier` updates from 1→4.
-  - **Quests**: `routes/quests.ts` — `GET /api/quests/daily` (returns today's quest, locale-aware via `title_nl/fr/de`), `POST /api/quests/complete` (marks done, awards `noble_score_reward`, advances streak), `GET /api/streak` (current streak count).
-  - **Oeps-Knop (Emergency Guide)**: `POST /api/counsel/apology` — body `{ situation, language, region }`, returns AI-generated apology + cultural counsel via Claude. Counsel.tsx has mode toggle between standard counsel and emergency apology.
-  - **Frontend**:
-    - `Home.tsx` — Sophistication Streak widget (Flame icon above grid), Daily Quests grid (3-column), Avatar mini-view in Standing card with link to Wardrobe.
-    - `Wardrobe.tsx` — locked/unlocked garment cards, Pillar 2 mastery hints.
-    - `Scenario.tsx` — Classic/Story Mode toggle (top-right, persisted in localStorage). Story mode renders narrative with drop-cap first letter and vertical accent line.
-    - `Shell.tsx` — Wardrobe nav item (ShirtIcon, authOnly).
-  - **i18n**: All new keys translated in EN/NL/FR/DE: `home.streak`, `home.daily_quests`, `home.quest_*`, `home.avatar_*`, `wardrobe.*`, `counsel.oeps.*`, `scenario.story_mode`, `scenario.classic_mode`, `nav.wardrobe`.
-
-- **CC Screening Worker (Task #24)**: Admin tool for extracting etiquette rules from book fragments. Key implementation:
-  - **Routes**: `POST /api/admin/cc-screen` (AI extraction) + `POST /api/admin/cc-save` (persist)
-  - **Multilingual**: `cc-save` automatically translates `rule_cc` into 8 languages (nl/fr/de/es/pt/it/ar/ja) via single Claude call after insert, stored in `rule_cc_i18n jsonb` column on `culture_protocols`
-  - **Culture protocols API**: `GET /api/culture/protocols?locale=nl-NL` resolves locale-aware `display_rule` field per record (`rule_cc_i18n[lang]` → `rule_cc` → `rule_description` fallback chain)
-  - **Admin UI**: After save, translations panel shows all 8 language versions of `rule_cc` immediately
-
-- **The Local — Curated Venues (Task #10)**: Venue data layer + Compass integration + Counsel context.
-  - **Data**: `artifacts/api-server/src/data/venues.ts` — 14 regions (GB, US, AE, CN, JP, FR, DE, NL, AU, CA, IT, IN, ES, PT), 5 categories (shops, dining, activities, accommodations, transport), 3–5 venues per category (~160 total). Pure in-memory static data — curated, no external APIs.
-  - **API**: `GET /api/venues?region=XX&category=YYY` in `artifacts/api-server/src/routes/venues.ts`. Optional query params filter by region and/or category.
-  - **VenueCard**: `artifacts/sowiso/src/components/VenueCard.tsx` — renders name, subcategory badge, tier badge (★), description, occasion tags, and a collapsible etiquette tip. Occasion tags use colour-coded pills (business=blue, romantic=rose, family=amber, social=emerald).
-  - **Compass "The Local" section**: Added at the bottom of `CompassRegion.tsx`. Tab-based (Winkels / Dinen / Activiteiten / Verblijven / Transport). Dining tab includes occasion filter pills (Zakelijk / Romantisch / Familiair / Vriendschappelijk). Fetches `/api/venues?region=XX` on mount.
-  - **Counsel context**: `artifacts/api-server/src/routes/counsel.ts` now calls `getVenuesForCounsel(region)` and injects all curated venues as structured context into the AI system prompt. The AI is instructed to mention venue names naturally when answering shopping, dining, accommodation, activities, or transport questions.
-
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
-
-## Coding Standards
-
-### Error handling
-- **Every async Express route must have a top-level `try/catch`**. Do not let unhandled promise rejections crash the server.
-- `detect-region.ts` and any new utility routes are no exception — always wrap in `try/catch`.
-- **Error responses always use `{ error: "..." }`** (never `{ message: "..." }` for failures). Success responses may use `{ message: "..." }` for action confirmations (e.g. `204 No Content` equivalents).
-- Log errors with `req.log.error({ err }, "human-readable context")` before returning the 500/4xx.
-
-### Module structure
-- **No fat route files.** Once a route exceeds ~120 lines of business logic, extract a service layer:
-  - `artifacts/api-server/src/routes/<domain>.ts` — validates request, calls service, returns response.
-  - `artifacts/api-server/src/services/<domain>.ts` — all DB queries and business logic. Pure functions; testable independently.
-- Shared DB helpers go in `lib/db/src/`.
-
-### Documentation
-- **JSDoc on any function that is non-obvious.** This includes: multi-step DB queries, AI prompt builders, scoring algorithms, locale-resolution chains, and any function whose name alone doesn't describe its side-effects.
-- Single-line functions with self-documenting names (e.g. `getRegionName`) do not need JSDoc.
-
-### Frontend
-- **Tailwind only** — no inline `style={}` except for dynamic values (e.g. SVG dimensions, animation delays) that Tailwind cannot express.
-- **No raw Unicode flag codepoints** (`0x1F1E0`). Always use `<FlagEmoji code={...} />` from `@/lib/active-region`.
-- State: local `useState` for UI-only state; React Query (`@tanstack/react-query`) for all server state. No global stores.
-- All user-visible strings go through `t("key")`. No hardcoded English strings in JSX.
-
-### Database
-- **Drizzle ORM only** — no raw `sql` tagged template literals except for upsert `set:` expressions where Drizzle doesn't support it natively.
-- Migrations via `pnpm --filter @workspace/db run push` (drizzle-kit push). Never write manual SQL migration files.
-- **Do not change primary key column types** on existing tables — this generates destructive ALTER TABLE statements.
-
-## Subscription Tiers (Task #4)
-
-Three tiers are implemented: **The Guest** (free), **The Traveller** (€9.99/mo, €79/yr), **The Ambassador** (€29/mo, €249/yr).
-
-- **Feature flags**: `artifacts/api-server/src/lib/tier-features.ts`
-- **Backend routes**: `artifacts/api-server/src/routes/subscription.ts` — `/api/subscription/tiers`, `/api/subscription/plans`, `/api/subscription/checkout`, `/api/subscription/portal`, `/api/subscription/features`
-- **Webhook handler**: `artifacts/api-server/src/webhookHandlers.ts` — auto-updates `subscription_tier` in DB on Stripe events
-- **Frontend gate**: `artifacts/sowiso/src/components/TierGate.tsx` — inline blurred content with upgrade prompt (never pop-ups)
-- **Membership page**: `artifacts/sowiso/src/pages/Membership.tsx` — 3-tier comparison with monthly/yearly toggle
-- **DB schema**: `stripe_customer_id` column added to `users` table
-
-### Payment Integration — PRE-LAUNCH TODO
-
-> **IMPORTANT**: Stripe is not available in all countries worldwide. Before launching, we must add additional payment providers to ensure full global coverage. Options to evaluate:
-> - **Mollie** — strong EU coverage, ideal for Belgian/Dutch market
-> - **PayPal** — broad international reach
-> - **Local/regional methods** — iDEAL (NL), Bancontact (BE), etc.
->
-> The Stripe integration code is ready but **Stripe credentials are not yet connected**. To activate payments:
-> 1. Connect Stripe via the Replit integrations panel (connector ID: `ccfg_stripe_default_org_ernmlb`)
-> 2. Run `pnpm --filter @workspace/scripts exec tsx src/seed-products.ts` to create products in Stripe
-> 3. Set `STRIPE_WEBHOOK_SECRET` in environment secrets for the webhook endpoint
-> 4. Evaluate and add at least one additional payment provider before launch
+- **API Codegen**: Orval
+- **Build Tool**: esbuild
+- **Frontend State Management**: `@tanstack/react-query` (React Query)

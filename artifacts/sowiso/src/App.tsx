@@ -43,6 +43,7 @@ import Wardrobe from "@/pages/Wardrobe";
 import InviteLanding from "@/pages/InviteLanding";
 import Companion from "@/pages/Companion";
 import RoleplayScenario from "@/pages/RoleplayScenario";
+import ResetPassword from "@/pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -164,6 +165,11 @@ function AppRouter() {
       <Route path="/signin">
         <LandingLayout authLink="register">
           <SignIn />
+        </LandingLayout>
+      </Route>
+      <Route path="/reset-password">
+        <LandingLayout>
+          <ResetPassword />
         </LandingLayout>
       </Route>
 

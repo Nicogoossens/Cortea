@@ -5,7 +5,7 @@ import { eq, count } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
-import { sendActivationEmail } from "../lib/email";
+import { sendActivationEmail, sendPasswordResetEmail } from "../lib/email";
 import { extractToken, setSessionCookie, clearSessionCookie } from "../lib/auth-middleware";
 
 const router = Router();
@@ -494,6 +494,139 @@ router.post("/auth/set-password", async (req, res) => {
     return res.json({ message: "Your password has been updated successfully." });
   } catch (err) {
     req.log.error({ err }, "Set password failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+// ── Forgot password — sends a reset link ──────────────────────────────────────
+const ForgotPasswordBodySchema = z.object({
+  email: z.string().email(),
+});
+
+router.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const parsed = ForgotPasswordBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "A valid email address is required." });
+    }
+
+    const { email } = parsed.data;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, normalizedEmail))
+      .limit(1);
+
+    // Always return the same message to prevent email enumeration
+    const genericMessage = "If this address is registered, a password reset link will be dispatched.";
+
+    if (!user || !user.email_verified) {
+      return res.json({ message: genericMessage });
+    }
+
+    if (user.suspended_at) {
+      return res.json({ message: genericMessage });
+    }
+
+    const token = generateToken();
+    // Reset links expire in 1 hour
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    await db
+      .update(usersTable)
+      .set({ verification_token: token, token_expires_at: expiresAt })
+      .where(eq(usersTable.id, user.id));
+
+    const { sent, url } = await sendPasswordResetEmail({
+      to: normalizedEmail,
+      token,
+      locale: user.language_code,
+    });
+
+    return res.json({
+      message: genericMessage,
+      ...(!sent ? { dev_reset_url: url } : {}),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Forgot password failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+// ── Reset password — validates token and sets new password ────────────────────
+const ResetPasswordBodySchema = z.object({
+  password: z.string().min(8).max(128),
+  token: z.string().min(1).optional(),
+});
+
+const ResetPasswordQuerySchema = z.object({
+  token: z.string().min(1).optional(),
+});
+
+router.post("/auth/reset-password", async (req, res) => {
+  try {
+    const parsedBody = ResetPasswordBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      return res.status(400).json({
+        error: "A password of at least 8 characters is required.",
+        details: parsedBody.error.flatten().fieldErrors,
+      });
+    }
+
+    const parsedQuery = ResetPasswordQuerySchema.safeParse(req.query);
+    const token = (parsedQuery.success ? parsedQuery.data.token : undefined) ?? parsedBody.data.token;
+    const { password } = parsedBody.data;
+
+    if (!token) {
+      return res.status(400).json({ error: "A reset token is required." });
+    }
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.verification_token, token))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: "This reset link is not recognised. Please request a new one." });
+    }
+
+    if (user.suspended_at) {
+      return res.status(403).json({ error: "This account has been suspended. Please contact support." });
+    }
+
+    if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
+      return res.status(410).json({ error: "This reset link has expired. Please request a new one." });
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const sessionToken = generateToken();
+
+    await db
+      .update(usersTable)
+      .set({
+        password_hash: passwordHash,
+        verification_token: null,
+        token_expires_at: null,
+        session_token: sessionToken,
+        email_verified: true,
+      })
+      .where(eq(usersTable.id, user.id));
+
+    setSessionCookie(res, sessionToken);
+    return res.json({
+      message: "Your password has been reset. Welcome back.",
+      user_id: user.id,
+      full_name: user.full_name,
+      is_admin: user.is_admin,
+      language_code: user.language_code,
+      active_region: user.active_region,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Reset password failed");
     return res.status(500).json({ error: "A difficulty arose. Please try again." });
   }
 });

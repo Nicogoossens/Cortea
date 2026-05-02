@@ -255,6 +255,12 @@ export default function SignIn() {
               </p>
             )}
 
+            <div className="flex justify-end">
+              <Link href="/reset-password" className="text-xs text-muted-foreground/70 hover:text-primary hover:underline underline-offset-2 font-mono">
+                {t("signin.forgot_password")}
+              </Link>
+            </div>
+
             <Button
               type="submit"
               size="lg"

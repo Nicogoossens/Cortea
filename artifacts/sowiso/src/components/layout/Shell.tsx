@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon } from "lucide-react";, FileText } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {

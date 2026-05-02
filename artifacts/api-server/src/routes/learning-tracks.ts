@@ -107,6 +107,22 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     let session = await findOpenSession(userId, register, regionCode, pillar, phase);
 
     if (!session) {
+      // Serialize concurrent /session calls per (user, register) using a
+      // postgres advisory lock so two near-simultaneous requests can't both
+      // pass the daily-limit check and create a second session.
+      // pg_advisory_xact_lock auto-releases at transaction end.
+      const lockKey1 = Math.abs(
+        userId.split("").reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)
+      );
+      const lockKey2 = register === "elite" ? 2 : 1;
+      await db.execute(sql`SELECT pg_advisory_xact_lock(${lockKey1}::int, ${lockKey2}::int)`);
+
+      // Re-check inside the lock — another request may have already created
+      // an open session while we were waiting.
+      session = await findOpenSession(userId, register, regionCode, pillar, phase);
+    }
+
+    if (!session) {
       const limits = await computeSessionLimits(userId, register);
       if (!limits.allowed) {
         return res.status(429).json({
@@ -392,16 +408,19 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     if (sessionComplete && !session.is_remediation && !mastered) {
       const win = await evaluatePassWindow(userId, register, question.region_code, pillar, phase, currentLevel);
       if (win.shouldLevelUp) {
-        currentLevel = Math.min(currentLevel + 1, REGISTER_CONFIG[register].maxLevel + 1);
-        levelUp = true;
-        correctStreak = 0;
-        if (currentLevel > REGISTER_CONFIG[register].maxLevel) {
+        const maxLevel = REGISTER_CONFIG[register].maxLevel;
+        // Clamp first so we never momentarily exceed maxLevel — if already at
+        // top, mark mastered instead of incrementing past the threshold table.
+        if (currentLevel >= maxLevel) {
           mastered = true;
-          currentLevel = REGISTER_CONFIG[register].maxLevel;
+          currentLevel = maxLevel;
           nextAction = "mastered";
         } else {
+          currentLevel = currentLevel + 1;
           nextAction = "level_up";
         }
+        levelUp = true;
+        correctStreak = 0;
       } else if (passed === false) {
         nextAction = "remediation";
       }

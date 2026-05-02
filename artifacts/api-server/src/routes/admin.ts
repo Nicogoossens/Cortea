@@ -295,9 +295,90 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Migration guard ───────────────────────────────────────────────────────────
+
+interface MigrationEntry {
+  id: string;
+  verificationQuery?: string;
+  verificationResult?: { rowCount: number; note?: string };
+}
+
+interface MigrationCheckFailure {
+  id: string;
+  verificationQuery: string;
+  expectedRowCount: number;
+  actualRowCount: number;
+  note: string;
+}
+
+/**
+ * Reads applied.json and runs each migration's verificationQuery against the DB.
+ * Only checks migrations where verificationResult.rowCount > 0 (structural schema
+ * changes — columns, tables, constraints). Data-cleanup migrations (rowCount === 0)
+ * are skipped because zero rows is an ambiguous signal.
+ *
+ * Returns ok=true when every checked migration passes, or a list of failures.
+ */
+async function checkMigrations(): Promise<{ ok: boolean; failures: MigrationCheckFailure[] }> {
+  const appliedJsonPath = path.join(WORKSPACE_ROOT, "lib/db/migrations/applied.json");
+  const { migrations }: { migrations: MigrationEntry[] } = JSON.parse(
+    readFileSync(appliedJsonPath, "utf-8"),
+  );
+
+  const failures: MigrationCheckFailure[] = [];
+
+  for (const migration of migrations) {
+    const { verificationQuery, verificationResult } = migration;
+    if (!verificationQuery) continue;
+
+    const expectedRowCount = verificationResult?.rowCount ?? 0;
+    if (expectedRowCount === 0) {
+      continue;
+    }
+
+    let actualRowCount = 0;
+    try {
+      const result = await db.execute(sql.raw(verificationQuery));
+      actualRowCount = result.rows.length;
+    } catch {
+      actualRowCount = 0;
+    }
+
+    if (actualRowCount < expectedRowCount) {
+      failures.push({
+        id: migration.id,
+        verificationQuery,
+        expectedRowCount,
+        actualRowCount,
+        note: verificationResult?.note ?? "",
+      });
+    }
+  }
+
+  return { ok: failures.length === 0, failures };
+}
+
 /** POST /admin/content/seed — trigger idempotent seed scripts */
 router.post("/admin/content/seed", requireAdmin, async (req, res) => {
   try {
+    // ── Pre-flight: verify all tracked DB migrations are present ─────────────
+    const { ok: migrationsOk, failures } = await checkMigrations();
+    if (!migrationsOk) {
+      const missing = failures.map((f) => ({
+        migration: f.id,
+        expected_rows: f.expectedRowCount,
+        actual_rows: f.actualRowCount,
+        verification_query: f.verificationQuery,
+        note: f.note,
+      }));
+      req.log?.error({ missing }, "Admin: seed aborted — missing DB migrations");
+      return res.status(409).json({
+        ok: false,
+        error: "One or more required DB migrations have not been applied. Run the missing migrations before seeding.",
+        missing_migrations: missing,
+      });
+    }
+
     const results: string[] = [];
     let anyFailed = false;
 

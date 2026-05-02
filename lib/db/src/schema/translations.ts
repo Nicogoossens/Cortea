@@ -13,6 +13,7 @@ export const translationsTable = pgTable(
     key: text("key").notNull(),
     value: text("value").notNull(),
     quality_reviewed_at: timestamp("quality_reviewed_at"),
+    calibrated_module: text("calibrated_module").$type<"standard" | "elite" | null>(),
   },
   (t) => [uniqueIndex("translations_lang_key_idx").on(t.language_code, t.key)]
 );

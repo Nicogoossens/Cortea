@@ -31,8 +31,10 @@
  *   --locale <code>             Only process this language_code or region_link
  *   --dry-run                   Print planned rewrites without touching the DB
  *   --verbose                   Show every evaluated string, even those that pass
- *   --force                     Re-evaluate strings already stamped with
- *                               quality_reviewed_at
+ *   --force                     Re-evaluate all strings regardless of
+ *                               calibrated_module; without this flag only
+ *                               rows with a different or missing register are
+ *                               processed (different register always re-runs)
  */
 
 import { createRequire } from "module";
@@ -334,7 +336,7 @@ async function main() {
   } else {
     console.log(`Filter:  supported locales only (${[...SUPPORTED_BASE_CODES].join(", ")})`);
   }
-  if (FLAG_FORCE) console.log("Force:   re-evaluating already-reviewed strings");
+  if (FLAG_FORCE) console.log("Force:   re-evaluating all strings (ignoring calibrated_module)");
   console.log("─".repeat(60));
 
   const conditions = ["1=1"];
@@ -349,11 +351,12 @@ async function main() {
     }
   }
   if (!FLAG_FORCE) {
-    conditions.push("quality_reviewed_at IS NULL");
+    params.push(FLAG_MODULE);
+    conditions.push(`(calibrated_module IS NULL OR calibrated_module != $${params.length})`);
   }
 
   const query =
-    `SELECT id, language_code, formality_register, region_link, key, value ` +
+    `SELECT id, language_code, formality_register, region_link, key, value, calibrated_module ` +
     `FROM translations ` +
     `WHERE ${conditions.join(" AND ")} ` +
     `ORDER BY language_code, key`;
@@ -462,8 +465,8 @@ async function main() {
     if (!FLAG_DRY_RUN) {
       const newValue = result.pass ? row.value : result.rewritten;
       await client.query(
-        "UPDATE translations SET value = $1, quality_reviewed_at = NOW() WHERE id = $2",
-        [newValue, row.id]
+        "UPDATE translations SET value = $1, quality_reviewed_at = NOW(), calibrated_module = $2 WHERE id = $3",
+        [newValue, FLAG_MODULE, row.id]
       );
     }
 

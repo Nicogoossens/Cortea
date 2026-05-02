@@ -92,6 +92,14 @@
         "note": "region_code TEXT NOT NULL DEFAULT 'GB' added. Partial unique indexes rebuilt to include region_code, enabling per-region progress tracking. Phase/country badge prerequisites are now correctly scoped by region."
       },
       "status": "applied"
+    },
+    {
+      "id": "0007_calibrated_module_column",
+      "file": "lib/db/migrations/0007_calibrated_module_column.sql",
+      "appliedAt": "2026-05-02",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='translations' AND column_name='calibrated_module'",
+      "status": "pending"
     }
   ]
 }

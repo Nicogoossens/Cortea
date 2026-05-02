@@ -79,12 +79,12 @@ export function ContextBar() {
     >
       {/* Active context label — always visible */}
       <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 pointer-events-none select-none min-w-0">
-        <FlagEmoji code={currentLocale?.flag ?? "US"} className="text-base flex-shrink-0" />
+        <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" className="flex-shrink-0" />
         <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block">
           {currentLocale?.languageLabel ?? "English"}
         </span>
         <span className="text-muted-foreground/40 hidden sm:inline">·</span>
-        <FlagEmoji code={activeRegion} className="text-base flex-shrink-0 hidden sm:inline-block" />
+        <FlagEmoji code={activeRegion} size="sm" className="flex-shrink-0 hidden sm:inline-block" />
         <span className="font-medium text-foreground/70 truncate hidden sm:block">
           {getRegionName(activeRegion)}
         </span>
@@ -98,7 +98,7 @@ export function ContextBar() {
           icon={<Globe className="w-3 h-3" aria-hidden="true" />}
           ariaLabel={t("locale.choose_region")}
         >
-          <FlagEmoji code={currentLocale?.flag ?? "US"} />
+          <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
           <span className="hidden sm:inline">{currentLocale?.languageLabel ?? "English"}</span>
         </PillTrigger>
 
@@ -124,7 +124,7 @@ export function ContextBar() {
                   selected={isSelected}
                   onClick={() => setLocale(representative.locale as SupportedLocale)}
                 >
-                  <FlagEmoji code={representative.flag} />
+                  <FlagEmoji code={representative.flag} size="sm" />
                   <span className="flex-1">{group.groupLabel}</span>
                 </Item>
               );
@@ -141,7 +141,7 @@ export function ContextBar() {
           icon={<MapPin className="w-3 h-3" aria-hidden="true" />}
           ariaLabel={t("region.choose")}
         >
-          <FlagEmoji code={activeRegion} />
+          <FlagEmoji code={activeRegion} size="sm" />
           <span className="hidden sm:inline">{getRegionName(activeRegion)}</span>
         </PillTrigger>
 
@@ -166,7 +166,7 @@ export function ContextBar() {
                   selected={region.code === activeRegion}
                   onClick={() => setActiveRegion(region.code as RegionCode)}
                 >
-                  <FlagEmoji code={region.flag} />
+                  <FlagEmoji code={region.flag} size="sm" />
                   <span className="flex-1">{getRegionName(region.code)}</span>
                   {!fullContent && (
                     <span className="text-[9px] font-mono uppercase tracking-widest border border-current/20 rounded-[2px] px-1 py-0.5 leading-none shrink-0 opacity-50">

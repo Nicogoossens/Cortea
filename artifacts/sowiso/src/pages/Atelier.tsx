@@ -353,7 +353,7 @@ export default function Atelier() {
                 <p className="text-sm max-w-sm mx-auto">
                   {t("atelier.empty_region_hint")}
                   <span className="font-medium inline-flex items-center gap-1 ml-1">
-                    <FlagEmoji code={activeRegion} />
+                    <FlagEmoji code={activeRegion} size="sm" />
                     {getRegionName(activeRegion)}
                   </span>.
                 </p>

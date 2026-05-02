@@ -144,7 +144,7 @@ export default function Situations() {
             </p>
             {regionTips.length > 0 && (
               <p className="text-xs font-mono uppercase tracking-widest text-primary mt-2 flex items-center gap-1.5">
-                <FlagEmoji code={activeRegion} />
+                <FlagEmoji code={activeRegion} size="sm" />
                 {t("situations.region_tips", { region: activeRegion })}
               </p>
             )}

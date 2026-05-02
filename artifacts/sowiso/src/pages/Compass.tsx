@@ -130,7 +130,7 @@ export default function Compass() {
                   {isActive && (
                     <div className="absolute top-3 right-3 z-10">
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md ring-2 ring-primary/20">
-                        <FlagEmoji code={activeRegion} className="text-sm leading-none" />
+                        <FlagEmoji code={activeRegion} size="sm" />
                         {t("compass.your_region")}
                       </span>
                     </div>
@@ -140,7 +140,7 @@ export default function Compass() {
                     <div className="flex flex-wrap gap-2 mb-2 items-center">
                       {cluster.members.map((code) => (
                         <span key={code} className="flex items-center gap-1">
-                          <FlagEmoji code={code} className="text-2xl leading-none" />
+                          <FlagEmoji code={code} size="lg" />
                         </span>
                       ))}
                     </div>
@@ -212,7 +212,7 @@ export default function Compass() {
                         <div className="h-2 w-full bg-muted" aria-hidden="true" />
                         <CardHeader>
                           <div className="flex justify-between items-center mb-2">
-                            <FlagEmoji code={region.region_code} className="text-3xl sm:text-4xl leading-none opacity-30" ariaLabel={region.region_name} />
+                            <FlagEmoji code={region.region_code} size="lg" className="opacity-30" ariaLabel={region.region_name} />
                             <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest uppercase text-muted-foreground/50">
                               <Lock className="h-3 w-3" aria-hidden="true" />
                               <span>The Traveller</span>
@@ -246,7 +246,7 @@ export default function Compass() {
                       <div className="h-2 w-full bg-muted/40" aria-hidden="true" />
                       <CardHeader>
                         <div className="flex justify-between items-center mb-2">
-                          <FlagEmoji code={region.region_code} className="text-3xl sm:text-4xl leading-none opacity-40" ariaLabel={region.region_name} />
+                          <FlagEmoji code={region.region_code} size="lg" className="opacity-40" ariaLabel={region.region_name} />
                           <div className="flex items-center gap-1.5 text-xs font-mono tracking-widest uppercase text-muted-foreground/50">
                             <Clock className="h-3 w-3" aria-hidden="true" />
                             <span>{t("compass.coming_soon")}</span>
@@ -273,11 +273,11 @@ export default function Compass() {
                       <div className={`h-2 w-full transition-colors ${isUserRegion ? "bg-primary/30" : "bg-muted group-hover:bg-primary/20"}`} aria-hidden="true" />
                       <CardHeader>
                         <div className="flex justify-between items-center mb-2">
-                          <FlagEmoji code={region.region_code} className="text-3xl sm:text-4xl leading-none" ariaLabel={region.region_name} />
+                          <FlagEmoji code={region.region_code} size="lg" ariaLabel={region.region_name} />
                           <div className="flex items-center gap-2">
                             {isUserRegion && (
                               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md ring-2 ring-primary/20">
-                                <FlagEmoji code={region.region_code} className="text-sm leading-none" />
+                                <FlagEmoji code={region.region_code} size="sm" />
                                 {t("compass.your_region")}
                               </span>
                             )}

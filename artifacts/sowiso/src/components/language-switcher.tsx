@@ -36,7 +36,7 @@ export function LanguageSwitcher() {
       >
         <Globe className="w-3 h-3 flex-shrink-0 opacity-60" aria-hidden="true" />
         <span className="flex items-center gap-1.5 flex-1 min-w-0">
-          <FlagEmoji code={current.flag} />
+          <FlagEmoji code={current.flag} size="sm" />
           <span className="truncate font-mono tracking-wide leading-none">
             {current.languageLabel}
             {((LOCALE_GROUPS.find((g) => g.locales.some((l) => l.locale === locale))?.locales.length ?? 1) > 1) && (
@@ -77,7 +77,7 @@ export function LanguageSwitcher() {
                           : "text-sidebar-foreground/80 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
                       }`}
                     >
-                      <FlagEmoji code={def.flag} />
+                      <FlagEmoji code={def.flag} size="sm" />
                       <span className="flex-1 text-left leading-tight">
                         <span className="block font-medium">{def.languageLabel}</span>
                         <span className="block text-[10px] opacity-60">{def.regionLabel}</span>

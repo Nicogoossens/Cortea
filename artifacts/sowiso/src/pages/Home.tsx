@@ -383,7 +383,7 @@ export default function Home() {
                   return (
                     <div key={trip.id} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 font-light text-sm text-foreground">
-                        {region && <FlagEmoji code={region.code} />}
+                        {region && <FlagEmoji code={region.code} size="sm" />}
                         <span>{region?.names.en ?? trip.regionCode}</span>
                       </div>
                       <Badge variant="outline" className="font-mono text-xs border-amber-400/40 text-amber-600 shrink-0">
@@ -476,7 +476,7 @@ export default function Home() {
                         return (
                           <div key={code} className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <FlagEmoji code={code} className="text-sm shrink-0" />
+                              <FlagEmoji code={code} size="sm" className="shrink-0" />
                               <span className="text-xs font-light truncate">
                                 {region?.names[language] ?? code}
                               </span>
@@ -767,7 +767,7 @@ export default function Home() {
                   <Card className={`group border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer ${isPast ? "opacity-60" : ""}`}>
                     <CardContent className="pt-4 pb-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl flex-shrink-0">{region && <FlagEmoji code={region.code} />}</span>
+                        <span className="flex-shrink-0">{region && <FlagEmoji code={region.code} size="lg" />}</span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium leading-snug group-hover:text-primary transition-colors truncate">
                             {(region?.names as Record<string, string> | undefined)?.[language] ?? region?.names.en ?? trip.regionCode}

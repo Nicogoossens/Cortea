@@ -179,15 +179,40 @@ export function useActiveRegion(): ActiveRegionContextValue {
 }
 
 /**
+ * Size variants for FlagEmoji.
+ * sm — badge / pill contexts (text-sm)
+ * md — inline / nav contexts (text-xl) — default
+ * lg — card headers, capped so flags never overflow their card (text-2xl sm:text-3xl)
+ */
+export type FlagSize = "sm" | "md" | "lg";
+
+const FLAG_SIZE_CLASSES: Record<FlagSize, string> = {
+  sm: "text-sm leading-none",
+  md: "text-xl leading-none",
+  lg: "text-2xl sm:text-3xl leading-none",
+};
+
+/**
  * Renders a country flag using the bundled flag-icons CSS library.
  * No external CDN — SVGs are bundled locally with the app.
- * className controls size via font-size (e.g. "text-xl", "text-4xl").
+ * Use the `size` prop to control font-size; pass `className` only for
+ * non-font-size utilities (opacity, drop-shadow, flex-shrink, etc.).
  */
-export function FlagEmoji({ code, className, ariaLabel }: { code: string; className?: string; ariaLabel?: string }) {
+export function FlagEmoji({
+  code,
+  size = "md",
+  className,
+  ariaLabel,
+}: {
+  code: string;
+  size?: FlagSize;
+  className?: string;
+  ariaLabel?: string;
+}) {
   const lower = code.toLowerCase().slice(0, 2);
   return (
     <span
-      className={`fi fi-${lower} ${className ?? "text-xl"}`}
+      className={`fi fi-${lower} ${FLAG_SIZE_CLASSES[size]}${className ? ` ${className}` : ""}`}
       role="img"
       aria-label={ariaLabel ?? code.toUpperCase()}
     />

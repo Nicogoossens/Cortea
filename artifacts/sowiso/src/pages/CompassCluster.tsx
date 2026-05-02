@@ -68,7 +68,7 @@ export default function CompassCluster() {
         <div className="flex flex-wrap gap-2 md:gap-3 mb-4 items-center">
           {cluster.members.map((code) => (
             <span key={code} className="flex flex-col items-center gap-0.5">
-              <FlagEmoji code={code} className="text-xl md:text-3xl leading-none" />
+              <FlagEmoji code={code} size="lg" />
               <span className="text-[8px] md:text-[9px] font-mono text-muted-foreground/50 uppercase tracking-wide">{getCountryName(code)}</span>
             </span>
           ))}
@@ -200,7 +200,7 @@ export default function CompassCluster() {
                     <Card className="border-border/20 bg-muted/5 relative overflow-hidden">
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-3">
-                          <FlagEmoji code={code} className="text-3xl leading-none opacity-20" />
+                          <FlagEmoji code={code} size="lg" className="opacity-20" />
                           <div>
                             <p className="text-sm font-serif text-muted-foreground/30">{countryName}</p>
                             <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/30 mt-0.5">
@@ -221,7 +221,7 @@ export default function CompassCluster() {
                     <Card className="border-border/30 bg-muted/10 cursor-pointer hover:border-primary/20 transition-colors group relative overflow-hidden">
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-3">
-                          <FlagEmoji code={code} className="text-3xl leading-none opacity-30" />
+                          <FlagEmoji code={code} size="lg" className="opacity-30" />
                           <div>
                             <p className="text-sm font-serif text-muted-foreground/40">{countryName}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -246,7 +246,7 @@ export default function CompassCluster() {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <FlagEmoji code={code} className="text-3xl leading-none" />
+                          <FlagEmoji code={code} size="lg" />
                           <div>
                             <CardTitle className="font-serif text-lg group-hover:text-primary transition-colors">
                               {region.region_name}

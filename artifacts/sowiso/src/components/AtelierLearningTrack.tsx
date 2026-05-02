@@ -384,7 +384,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                   <div>
                     <p className="font-serif text-lg text-foreground/80">
                       <span className="inline-flex items-center gap-1.5">
-                        <FlagEmoji code={activeRegion} className="text-base" />
+                        <FlagEmoji code={activeRegion} size="sm" />
                         <span>{getRegionName(activeRegion)}</span>
                       </span>{" "}
                       {t("atelier.track.no_content_suffix")}
@@ -407,7 +407,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                         title={getRegionName(region.code)}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border/50 text-xs text-foreground/70 hover:border-primary/40 hover:text-foreground hover:bg-muted/20 transition-all"
                       >
-                        <FlagEmoji code={region.code} className="text-sm" />
+                        <FlagEmoji code={region.code} size="sm" />
                         <span className="font-mono">{region.code}</span>
                       </button>
                     ))}

@@ -113,7 +113,7 @@ export default function RegionDetectionBanner() {
         <p className="text-sm text-foreground leading-snug">
           {t("detect.banner_prefix")}{" "}
           <span className="font-medium inline-flex items-center gap-1">
-            <FlagEmoji code={suggestedRegion} />
+            <FlagEmoji code={suggestedRegion} size="sm" />
             {getRegionName(suggestedRegion)}
           </span>{" "}
           {t("detect.banner_suffix")}

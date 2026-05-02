@@ -71,7 +71,7 @@ function RegionPicker() {
                   : "border-border/50 bg-card text-foreground/60 hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
               }`}
             >
-              <FlagEmoji code={code} />
+              <FlagEmoji code={code} size="sm" />
               <span className="hidden sm:inline">{getRegionName(code)}</span>
               <span className="sm:hidden">{code}</span>
             </button>

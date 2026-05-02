@@ -53,7 +53,7 @@ export function ActiveContextChips() {
           aria-expanded={showLangPicker}
           aria-haspopup="listbox"
         >
-          <FlagEmoji code={currentLocale?.flag ?? "US"} className="text-sm" />
+          <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
           <span>{languageLabel}</span>
           <ChevronDown
             className={`w-3 h-3 opacity-50 transition-transform duration-150 ${showLangPicker ? "rotate-180" : ""}`}
@@ -70,7 +70,7 @@ export function ActiveContextChips() {
           aria-expanded={showRegionPicker}
           aria-haspopup="listbox"
         >
-          <FlagEmoji code={activeRegion} className="text-sm" />
+          <FlagEmoji code={activeRegion} size="sm" />
           <span>{getRegionName(activeRegion)}</span>
           <ChevronDown
             className={`w-3 h-3 opacity-50 transition-transform duration-150 ${showRegionPicker ? "rotate-180" : ""}`}
@@ -100,7 +100,7 @@ export function ActiveContextChips() {
                     : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
                 }`}
               >
-                <FlagEmoji code={l.flag} />
+                <FlagEmoji code={l.flag} size="sm" />
                 {l.languageLabel}
               </button>
             );
@@ -129,7 +129,7 @@ export function ActiveContextChips() {
                     : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
                 }`}
               >
-                <FlagEmoji code={region.flag} />
+                <FlagEmoji code={region.flag} size="sm" />
                 {getRegionName(region.code)}
               </button>
             );

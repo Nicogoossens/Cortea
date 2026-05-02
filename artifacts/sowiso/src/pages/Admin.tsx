@@ -807,6 +807,14 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
 
 // ── CC Screening Worker Tab ───────────────────────────────────────────────────
 
+const CC_SUBCATEGORIES: Record<string, string[]> = {
+  Z1: ["religious_impact", "holidays", "gift_giving", "taboos", "color_symbolism", "alternative_behavior"],
+  Z2: ["forms_of_address", "greeting_ritual", "communication_context", "safe_smalltalk", "topics_to_avoid", "nonverbal_style"],
+  Z3: ["cutlery_use", "seating_order", "payment_ritual", "consumption_sounds", "table_posture", "wine_and_drinks"],
+  Z4: ["gender_nuances", "seniority_business", "hierarchy_social", "networking", "relationship_gifts", "conflict_face_saving"],
+  Z5: ["dress_code_business", "dress_code_social", "modest_dress", "eye_contact_personal_space", "touch_etiquette", "accessories_symbols"],
+};
+
 const CC_BOOKS = [
   { code: "DH", label: "DH — Debrett's Handbook (UK)" },
   { code: "AV", label: "AV — Amy Vanderbilt (Universeel West)" },
@@ -894,7 +902,62 @@ function PendingRecordRow({
   const [deleteState, setDeleteState] = useState<ActionState>("idle");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const isUrgent = record.urgency === 3;
+  const [editRuleCc, setEditRuleCc] = useState(record.rule_cc ?? "");
+  const [editSubcategory, setEditSubcategory] = useState(record.subcategory ?? "");
+  const [editUrgency, setEditUrgency] = useState<number>(record.urgency ?? 1);
+  const [editRegionCode, setEditRegionCode] = useState(record.region_code ?? "");
+  const [saveState, setSaveState] = useState<ActionState>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [baseline, setBaseline] = useState({
+    rule_cc: record.rule_cc ?? "",
+    subcategory: record.subcategory ?? "",
+    urgency: record.urgency ?? 1,
+    region_code: record.region_code ?? "",
+  });
+
+  const isUrgent = editUrgency === 3;
+  const pillarCode = record.pillar_code ?? "";
+  const subcategoryOptions = CC_SUBCATEGORIES[pillarCode] ?? [];
+
+  const isDirty =
+    editRuleCc !== baseline.rule_cc ||
+    editSubcategory !== baseline.subcategory ||
+    editUrgency !== baseline.urgency ||
+    editRegionCode !== baseline.region_code;
+
+  async function handleSaveChanges() {
+    setSaveState("loading");
+    setSaveError(null);
+    try {
+      const payload: Record<string, unknown> = {};
+      if (editRuleCc !== baseline.rule_cc) payload.rule_cc = editRuleCc;
+      if (editSubcategory !== baseline.subcategory) payload.subcategory = editSubcategory;
+      if (editUrgency !== baseline.urgency) payload.urgency = editUrgency;
+      if (editRegionCode !== baseline.region_code) payload.region_code = editRegionCode;
+
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        setBaseline({ rule_cc: editRuleCc, subcategory: editSubcategory, urgency: editUrgency, region_code: editRegionCode });
+        setSaveState("done");
+        setTimeout(() => setSaveState("idle"), 2000);
+      } else {
+        const data = await res.json() as { error?: string; message?: string };
+        setSaveError(data.message ?? data.error ?? "Opslaan mislukt.");
+        setSaveState("error");
+        setTimeout(() => setSaveState("idle"), 3000);
+      }
+    } catch {
+      setSaveError("Verbinding mislukt.");
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
 
   async function handleApprove() {
     setApproveState("loading");
@@ -902,6 +965,8 @@ function PendingRecordRow({
       const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "PATCH",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approve: true }),
       });
       if (res.ok) {
         setApproveState("done");
@@ -946,18 +1011,18 @@ function PendingRecordRow({
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono font-medium text-foreground">
-              {record.pillar_code ?? "—"} · {record.subcategory ?? "—"}
+              {record.pillar_code ?? "—"} · {editSubcategory || record.subcategory || "—"}
             </span>
-            <UrgencyBadge urgency={record.urgency} />
+            <UrgencyBadge urgency={editUrgency} />
             <span className="text-[10px] font-mono text-muted-foreground border border-border/50 px-1.5 py-0.5 rounded-sm">
-              {record.region_code}
+              {editRegionCode || record.region_code}
             </span>
             <span className="text-[10px] font-mono text-muted-foreground">
               {record.source_book} · p.{record.source_page}
             </span>
           </div>
           <p className="text-xs text-muted-foreground font-light truncate">
-            {record.rule_cc ? record.rule_cc.slice(0, 120) + (record.rule_cc.length > 120 ? "…" : "") : "—"}
+            {editRuleCc ? editRuleCc.slice(0, 120) + (editRuleCc.length > 120 ? "…" : "") : "—"}
           </p>
         </div>
         <div className="shrink-0 pt-0.5">
@@ -969,16 +1034,88 @@ function PendingRecordRow({
         <div className="px-3 pb-3 pt-1 border-t border-border/30 space-y-3 animate-in fade-in duration-150">
           {record.rule_raw && (
             <div className="space-y-1">
-              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern)</p>
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern — alleen-lezen)</p>
               <p className="text-xs font-light text-muted-foreground italic bg-muted/30 rounded-sm px-2 py-1.5">{record.rule_raw}</p>
             </div>
           )}
-          {record.rule_cc && (
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</label>
+            <textarea
+              value={editRuleCc}
+              onChange={(e) => setEditRuleCc(e.target.value)}
+              rows={3}
+              className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs font-light leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="space-y-1">
-              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
-              <p className="text-xs font-light leading-relaxed bg-muted/30 rounded-sm px-2 py-1.5">{record.rule_cc}</p>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Subcategorie</label>
+              <select
+                value={editSubcategory}
+                onChange={(e) => setEditSubcategory(e.target.value)}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
+              >
+                {subcategoryOptions.length > 0 ? (
+                  subcategoryOptions.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))
+                ) : (
+                  <option value={editSubcategory}>{editSubcategory || "—"}</option>
+                )}
+              </select>
             </div>
-          )}
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Urgentie</label>
+              <select
+                value={editUrgency}
+                onChange={(e) => setEditUrgency(Number(e.target.value))}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
+              >
+                <option value={1}>1 — Nice-to-know</option>
+                <option value={2}>2 — Belangrijk</option>
+                <option value={3}>3 — Kritisch</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Regiecode</label>
+              <input
+                type="text"
+                value={editRegionCode}
+                onChange={(e) => setEditRegionCode(e.target.value.toUpperCase())}
+                maxLength={10}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs gap-1.5"
+              disabled={saveState === "loading" || !isDirty || approveState === "loading"}
+              onClick={handleSaveChanges}
+            >
+              {saveState === "loading"
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <Save className="w-3.5 h-3.5" />
+              }
+              Wijzigingen opslaan
+            </Button>
+            {saveState === "done" && (
+              <span className="text-xs text-green-600 font-mono flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Opgeslagen
+              </span>
+            )}
+            {saveState === "error" && saveError && (
+              <span className="text-xs text-red-600 font-mono">{saveError}</span>
+            )}
+          </div>
+
           <div className="text-[10px] font-mono text-muted-foreground space-x-4">
             <span>ID: {record.id}</span>
             <span>Bron: {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
@@ -994,8 +1131,9 @@ function PendingRecordRow({
               <Button
                 size="sm"
                 variant="outline"
-                className="font-mono text-xs gap-1.5 border-green-400/60 text-green-700 hover:bg-green-50"
-                disabled={approveState === "loading" || deleteState === "loading"}
+                className="font-mono text-xs gap-1.5 border-green-400/60 text-green-700 hover:bg-green-50 disabled:opacity-40"
+                disabled={approveState === "loading" || deleteState === "loading" || saveState === "loading" || isDirty}
+                title={isDirty ? "Sla eerst de wijzigingen op voordat je goedkeurt" : undefined}
                 onClick={handleApprove}
               >
                 {approveState === "loading"
@@ -1004,6 +1142,9 @@ function PendingRecordRow({
                 }
                 Goedkeuren
               </Button>
+              {isDirty && (
+                <span className="text-[10px] text-amber-600 font-mono">Sla wijzigingen op voor goedkeuring</span>
+              )}
 
               {!showDeleteConfirm ? (
                 <Button

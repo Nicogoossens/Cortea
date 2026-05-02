@@ -1169,11 +1169,26 @@ router.get("/admin/cc-protocols", requireAdmin, async (req, res) => {
   }
 });
 
-/** PATCH /admin/cc-protocols/:id — approve a pending CC-extracted record (sets verified = true) */
+const PatchCCProtocolBodySchema = z.object({
+  approve: z.boolean().optional(),
+  rule_cc: z.string().min(1).optional(),
+  subcategory: z.string().min(1).optional(),
+  urgency: z.number().int().min(1).max(3).optional(),
+  region_code: z.string().min(2).max(10).optional(),
+});
+
+/** PATCH /admin/cc-protocols/:id — update fields and/or approve a pending CC-extracted record */
 router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
+
+    const parsed = PatchCCProtocolBodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request body.", details: parsed.error.flatten().fieldErrors });
+    }
+
+    const body = parsed.data;
 
     // Only operate on pending extracted rows (source_book IS NOT NULL AND verified = false)
     const [existing] = await db
@@ -1186,29 +1201,53 @@ router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
     if (!existing.source_book) {
       return res.status(409).json({ error: "This record is not a CC-extracted record and cannot be managed through this endpoint." });
     }
+
+    const hasFieldUpdates = body.rule_cc !== undefined || body.subcategory !== undefined
+      || body.urgency !== undefined || body.region_code !== undefined;
+    const shouldApprove = body.approve === true || (!hasFieldUpdates && Object.keys(body).length === 0);
+
     if (existing.verified) {
-      return res.status(409).json({ error: "Record is already verified." });
+      return res.status(409).json({ error: "Record is already verified and can no longer be modified through this endpoint." });
     }
 
-    // Atomic update: conditions in WHERE prevent race-condition mutations
+    const updatePayload: Record<string, unknown> = {};
+    if (body.rule_cc !== undefined) updatePayload.rule_cc = body.rule_cc;
+    if (body.subcategory !== undefined) updatePayload.subcategory = body.subcategory;
+    if (body.urgency !== undefined) updatePayload.urgency = body.urgency;
+    if (body.region_code !== undefined) updatePayload.region_code = body.region_code.toUpperCase();
+    if (shouldApprove) updatePayload.verified = true;
+
+    if (Object.keys(updatePayload).length === 0) {
+      return res.status(400).json({ error: "No updatable fields were provided." });
+    }
+
+    const whereCondition = and(
+      eq(cultureProtocolsTable.id, id),
+      sql`source_book IS NOT NULL`,
+      eq(cultureProtocolsTable.verified, false),
+    );
+
     const [updated] = await db
       .update(cultureProtocolsTable)
-      .set({ verified: true })
-      .where(and(
-        eq(cultureProtocolsTable.id, id),
-        sql`source_book IS NOT NULL`,
-        eq(cultureProtocolsTable.verified, false),
-      ))
-      .returning({ id: cultureProtocolsTable.id, verified: cultureProtocolsTable.verified });
+      .set(updatePayload)
+      .where(whereCondition)
+      .returning({
+        id: cultureProtocolsTable.id,
+        verified: cultureProtocolsTable.verified,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        subcategory: cultureProtocolsTable.subcategory,
+        urgency: cultureProtocolsTable.urgency,
+        region_code: cultureProtocolsTable.region_code,
+      });
 
     if (!updated) {
       return res.status(409).json({ error: "Record not found or is no longer in pending state." });
     }
 
-    return res.json({ ok: true, id: updated.id, verified: updated.verified });
+    return res.json({ ok: true, ...updated });
   } catch (err) {
-    req.log?.error({ err }, "Admin: failed to approve CC protocol");
-    return res.status(500).json({ error: "A difficulty arose approving the record." });
+    req.log?.error({ err }, "Admin: failed to update CC protocol");
+    return res.status(500).json({ error: "A difficulty arose updating the record." });
   }
 });
 

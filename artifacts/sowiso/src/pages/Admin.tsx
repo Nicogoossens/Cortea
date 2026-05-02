@@ -864,6 +864,22 @@ interface PendingCCRecord {
   created_at: string;
 }
 
+interface VerifiedCCRecord {
+  id: number;
+  region_code: string;
+  pillar_code: string | null;
+  subcategory: string | null;
+  rule_cc: string | null;
+  urgency: number | null;
+  source_book: string | null;
+  source_page: string | null;
+  source_reference: string | null;
+  created_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  reviewer_name: string | null;
+}
+
 function UrgencyBadge({ urgency }: { urgency: number | null }) {
   if (urgency === 3) {
     return (
@@ -1329,6 +1345,167 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
   );
 }
 
+function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const [records, setRecords] = useState<VerifiedCCRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const fetchVerified = useCallback(async (p = 1) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/verified?page=${p}&limit=20`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json() as { records: VerifiedCCRecord[]; total: number; pages: number; page: number };
+        setRecords(data.records);
+        setTotal(data.total);
+        setTotalPages(data.pages ?? 1);
+        setPage(data.page ?? 1);
+      }
+    } catch { } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchVerified(1); }, [fetchVerified]);
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+          <BadgeCheck className="w-4 h-4 text-green-600" />
+          Geverifieerde records
+          {total > 0 && (
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-green-300 bg-green-50 text-green-700 font-mono">
+              {total} geverifieerd
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground font-light">
+          Goedgekeurde CC-records met informatie over wie en wanneer de review heeft plaatsgevonden.
+        </p>
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-mono text-muted-foreground">
+            {loading ? "Laden…" : `${total} geverifieerd record${total !== 1 ? "s" : ""}`}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs gap-1.5"
+            onClick={() => fetchVerified(page)}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Vernieuwen
+          </Button>
+        </div>
+
+        {loading && records.length === 0 ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 rounded-sm" />)}
+          </div>
+        ) : records.length === 0 ? (
+          <div className="py-8 text-center">
+            <BadgeCheck className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
+            <p className="text-sm text-muted-foreground font-light">Nog geen geverifieerde records.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {records.map((r) => (
+              <div key={r.id} className="border border-green-200/60 bg-green-50/20 rounded-sm overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                  className="w-full flex items-start gap-3 p-3 text-left hover:bg-muted/20 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono font-medium text-foreground">
+                        {r.pillar_code ?? "—"} · {r.subcategory ?? "—"}
+                      </span>
+                      <UrgencyBadge urgency={r.urgency} />
+                      <span className="text-[10px] font-mono text-muted-foreground border border-border/50 px-1.5 py-0.5 rounded-sm">
+                        {r.region_code}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-light truncate">
+                      {r.rule_cc ? r.rule_cc.slice(0, 120) + (r.rule_cc.length > 120 ? "…" : "") : "—"}
+                    </p>
+                    <p className="text-[10px] font-mono text-green-700">
+                      Beoordeeld door{" "}
+                      <span className="font-semibold">{r.reviewer_name ?? "onbekend"}</span>
+                      {r.reviewed_at ? (
+                        <> op {new Date(r.reviewed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}</>
+                      ) : null}
+                    </p>
+                  </div>
+                  <div className="shrink-0 pt-0.5">
+                    {expanded === r.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {expanded === r.id && (
+                  <div className="px-3 pb-3 pt-1 border-t border-green-200/40 space-y-2 animate-in fade-in duration-150">
+                    {r.rule_cc && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
+                        <p className="text-xs font-light leading-relaxed bg-muted/30 rounded-sm px-2 py-1.5">{r.rule_cc}</p>
+                      </div>
+                    )}
+                    <div className="text-[10px] font-mono text-muted-foreground space-x-4">
+                      <span>ID: {r.id}</span>
+                      <span>Bron: {r.source_reference ?? `${r.source_book}:${r.source_page}`}</span>
+                      <span>Toegevoegd: {new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-green-700 flex items-center gap-1.5 pt-1">
+                      <BadgeCheck className="w-3 h-3" />
+                      Reviewer: <span className="font-semibold">{r.reviewer_name ?? r.reviewed_by ?? "—"}</span>
+                      {r.reviewed_at && (
+                        <> · {new Date(r.reviewed_at).toLocaleString("nl-NL")}</>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs"
+              disabled={page <= 1 || loading}
+              onClick={() => fetchVerified(page - 1)}
+            >
+              ← Vorige
+            </Button>
+            <span className="text-xs font-mono text-muted-foreground px-2">
+              {page} / {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs"
+              disabled={page >= totalPages || loading}
+              onClick={() => fetchVerified(page + 1)}
+            >
+              Volgende →
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [fragment, setFragment] = useState("");
   const [sourceBook, setSourceBook] = useState("DH");
@@ -1421,6 +1598,9 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
     <div className="space-y-6">
       {/* Pending review queue */}
       <PendingReviewPanel authHeaders={authHeaders} refreshKey={pendingRefreshKey} />
+
+      {/* Verified records */}
+      <VerifiedPanel authHeaders={authHeaders} />
 
       {/* Input card */}
       <Card className="bg-card border-border">

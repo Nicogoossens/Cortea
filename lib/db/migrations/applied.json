@@ -117,6 +117,35 @@
         "note": "15 cultural origin records seeded (5 per region: GB, CN, CA). Indexes co_region_code_idx and co_region_domain_idx created. ON CONFLICT DO NOTHING ensures idempotent re-runs."
       },
       "status": "applied"
+    },
+    {
+      "id": "0009_cc_review_audit",
+      "file": "lib/db/migrations/0009_cc_review_audit.sql",
+      "appliedAt": "2026-05-02",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='culture_protocols' AND column_name IN ('reviewed_by','reviewed_at') ORDER BY column_name",
+      "verificationResult": {
+        "rowCount": 2,
+        "rows": [
+          { "column_name": "reviewed_at" },
+          { "column_name": "reviewed_by" }
+        ],
+        "note": "reviewed_by (TEXT nullable) and reviewed_at (TIMESTAMPTZ nullable) added to culture_protocols for CC approval/deletion audit trail."
+      },
+      "status": "applied"
+    },
+    {
+      "id": "0010_cc_protocol_removals",
+      "file": "lib/db/migrations/0010_cc_protocol_removals.sql",
+      "appliedAt": "2026-05-02",
+      "environment": "development",
+      "verificationQuery": "SELECT table_name FROM information_schema.tables WHERE table_name='cc_protocol_removals'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "table_name": "cc_protocol_removals" }],
+        "note": "cc_protocol_removals table created to permanently record audit info for every hard-deleted CC protocol record (actor id, timestamp, and key snapshot fields)."
+      },
+      "status": "applied"
     }
   ]
 }

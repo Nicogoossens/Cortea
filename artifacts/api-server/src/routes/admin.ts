@@ -5,7 +5,7 @@ import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
@@ -1177,6 +1177,56 @@ const PatchCCProtocolBodySchema = z.object({
   region_code: z.string().min(2).max(10).optional(),
 });
 
+/** GET /admin/cc-protocols/verified — list verified CC records with reviewer info */
+router.get("/admin/cc-protocols/verified", requireAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const offset = (page - 1) * limit;
+
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(cultureProtocolsTable)
+      .where(sql`verified = true AND source_book IS NOT NULL`);
+
+    const rows = await db
+      .select({
+        id: cultureProtocolsTable.id,
+        region_code: cultureProtocolsTable.region_code,
+        pillar_code: cultureProtocolsTable.pillar_code,
+        subcategory: cultureProtocolsTable.subcategory,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        rule_raw: cultureProtocolsTable.rule_raw,
+        urgency: cultureProtocolsTable.urgency,
+        source_book: cultureProtocolsTable.source_book,
+        source_page: cultureProtocolsTable.source_page,
+        source_reference: cultureProtocolsTable.source_reference,
+        verified: cultureProtocolsTable.verified,
+        created_at: cultureProtocolsTable.created_at,
+        reviewed_by: cultureProtocolsTable.reviewed_by,
+        reviewed_at: cultureProtocolsTable.reviewed_at,
+        reviewer_name: usersTable.full_name,
+      })
+      .from(cultureProtocolsTable)
+      .leftJoin(usersTable, eq(cultureProtocolsTable.reviewed_by, usersTable.id))
+      .where(sql`verified = true AND source_book IS NOT NULL`)
+      .orderBy(desc(cultureProtocolsTable.reviewed_at))
+      .limit(limit)
+      .offset(offset);
+
+    return res.json({
+      records: rows,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit)),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to list verified CC protocols");
+    return res.status(500).json({ error: "A difficulty arose retrieving verified records." });
+  }
+});
+
 /** PATCH /admin/cc-protocols/:id — update fields and/or approve a pending CC-extracted record */
 router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
   try {
@@ -1189,6 +1239,7 @@ router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
     }
 
     const body = parsed.data;
+    const requesterId = (req as Request & { resolvedUserId: string }).resolvedUserId;
 
     // Only operate on pending extracted rows (source_book IS NOT NULL AND verified = false)
     const [existing] = await db
@@ -1215,7 +1266,11 @@ router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
     if (body.subcategory !== undefined) updatePayload.subcategory = body.subcategory;
     if (body.urgency !== undefined) updatePayload.urgency = body.urgency;
     if (body.region_code !== undefined) updatePayload.region_code = body.region_code.toUpperCase();
-    if (shouldApprove) updatePayload.verified = true;
+    if (shouldApprove) {
+      updatePayload.verified = true;
+      updatePayload.reviewed_by = requesterId;
+      updatePayload.reviewed_at = new Date();
+    }
 
     if (Object.keys(updatePayload).length === 0) {
       return res.status(400).json({ error: "No updatable fields were provided." });
@@ -1257,9 +1312,23 @@ router.delete("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
 
+    const requesterId = (req as Request & { resolvedUserId: string }).resolvedUserId;
+
     // Only operate on pending extracted rows (source_book IS NOT NULL AND verified = false)
+    // Fetch full snapshot fields needed for the removal audit log
     const [existing] = await db
-      .select({ id: cultureProtocolsTable.id, verified: cultureProtocolsTable.verified, source_book: cultureProtocolsTable.source_book })
+      .select({
+        id: cultureProtocolsTable.id,
+        verified: cultureProtocolsTable.verified,
+        source_book: cultureProtocolsTable.source_book,
+        source_page: cultureProtocolsTable.source_page,
+        region_code: cultureProtocolsTable.region_code,
+        pillar_code: cultureProtocolsTable.pillar_code,
+        subcategory: cultureProtocolsTable.subcategory,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        rule_raw: cultureProtocolsTable.rule_raw,
+        urgency: cultureProtocolsTable.urgency,
+      })
       .from(cultureProtocolsTable)
       .where(eq(cultureProtocolsTable.id, id))
       .limit(1);
@@ -1272,17 +1341,39 @@ router.delete("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
       return res.status(409).json({ error: "Only pending (unverified) records may be deleted through this endpoint." });
     }
 
-    // Atomic delete: conditions in WHERE prevent race-condition mutations
-    const deleted = await db
-      .delete(cultureProtocolsTable)
-      .where(and(
-        eq(cultureProtocolsTable.id, id),
-        sql`source_book IS NOT NULL`,
-        eq(cultureProtocolsTable.verified, false),
-      ))
-      .returning({ id: cultureProtocolsTable.id });
+    // Atomic transaction: persist audit snapshot then hard-delete the row
+    let deletedId: number | null = null;
+    await db.transaction(async (tx) => {
+      // Insert audit snapshot before the row disappears
+      await tx.insert(ccProtocolRemovalsTable).values({
+        protocol_id: existing.id,
+        removed_by: requesterId,
+        removed_at: new Date(),
+        region_code: existing.region_code,
+        pillar_code: existing.pillar_code,
+        subcategory: existing.subcategory,
+        rule_cc: existing.rule_cc,
+        rule_raw: existing.rule_raw,
+        urgency: existing.urgency,
+        source_book: existing.source_book,
+        source_page: existing.source_page,
+      });
 
-    if (deleted.length === 0) {
+      // Hard-delete (conditions re-checked in WHERE for race safety)
+      const [row] = await tx
+        .delete(cultureProtocolsTable)
+        .where(and(
+          eq(cultureProtocolsTable.id, id),
+          sql`source_book IS NOT NULL`,
+          eq(cultureProtocolsTable.verified, false),
+        ))
+        .returning({ id: cultureProtocolsTable.id });
+
+      if (!row) throw new Error("RACE_CONDITION");
+      deletedId = row.id;
+    });
+
+    if (!deletedId) {
       return res.status(409).json({ error: "Record not found or is no longer in pending state." });
     }
 

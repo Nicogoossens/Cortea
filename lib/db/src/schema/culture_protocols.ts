@@ -27,6 +27,9 @@ export const cultureProtocolsTable = pgTable("culture_protocols", {
   urgency: integer("urgency").default(2),
   verified: boolean("verified").default(false),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // Audit: who reviewed (approved or removed) this record and when
+  reviewed_by: text("reviewed_by"),
+  reviewed_at: timestamp("reviewed_at", { withTimezone: true }),
   // Social class register
   social_class: text("social_class").notNull().default("universal"),
 }, (t) => [

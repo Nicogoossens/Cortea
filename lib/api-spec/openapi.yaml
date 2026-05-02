@@ -157,6 +157,31 @@ paths:
           schema:
             type: string
             enum: [business, social, general]
+        - name: pillar_code
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [Z1, Z2, Z3, Z4, Z5]
+          description: Filter to verified CC Screening records under a single 5-pillar code (Z1-Z5).
+        - name: verified_only
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: When true, only verified CC Screening records (verified = true, source_book set) are returned.
+        - name: locale
+          in: query
+          required: false
+          schema:
+            type: string
+          description: BCP 47 locale; resolves rule_cc_i18n into display_rule.
+        - name: situational_interests
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated sphere keys (e.g. business,gastronomy) used to sort matching contexts to the top.
       responses:
         "200":
           description: Culture protocols
@@ -598,6 +623,33 @@ components:
         context:
           type: string
           enum: [business, social, general, formal, dining]
+        display_rule:
+          type: string
+          description: Locale-aware display text. Falls back to rule_cc, then rule_description.
+        pillar_code:
+          type: string
+          enum: [Z1, Z2, Z3, Z4, Z5]
+          nullable: true
+          description: CC Screening Worker 5-pillar code.
+        subcategory:
+          type: string
+          nullable: true
+        rule_cc:
+          type: string
+          nullable: true
+          description: C&C mentor-formulation, used as the display rule when present.
+        urgency:
+          type: integer
+          minimum: 1
+          maximum: 3
+          nullable: true
+          description: 1 = nice-to-know, 2 = important, 3 = critical (First Aid).
+        verified:
+          type: boolean
+          nullable: true
+        source_book:
+          type: string
+          nullable: true
       required:
         - id
         - region_code

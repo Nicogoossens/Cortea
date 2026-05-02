@@ -7,6 +7,7 @@
  */
 import type { CultureProtocolContext } from "./cultureProtocolContext";
 import type { CultureProtocolGenderApplicability } from "./cultureProtocolGenderApplicability";
+import type { CultureProtocolPillarCode } from "./cultureProtocolPillarCode";
 
 export interface CultureProtocol {
   id: number;
@@ -16,4 +17,19 @@ export interface CultureProtocol {
   rule_description: string;
   gender_applicability: CultureProtocolGenderApplicability;
   context: CultureProtocolContext;
+  /** Locale-aware display text. Falls back to rule_cc, then rule_description. */
+  display_rule?: string;
+  /** CC Screening Worker 5-pillar code. */
+  pillar_code?: CultureProtocolPillarCode;
+  subcategory?: string | null;
+  /** C&C mentor-formulation, used as the display rule when present. */
+  rule_cc?: string | null;
+  /**
+   * 1 = nice-to-know, 2 = important, 3 = critical (First Aid).
+   * @minimum 1
+   * @maximum 3
+   */
+  urgency?: number | null;
+  verified?: boolean | null;
+  source_book?: string | null;
 }

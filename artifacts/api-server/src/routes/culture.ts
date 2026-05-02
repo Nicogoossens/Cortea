@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { cultureProtocolsTable, compassRegionsTable } from "@workspace/db";
-import { eq, and, or, isNull } from "drizzle-orm";
+import { eq, and, or, isNull, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -50,10 +50,23 @@ const SPHERE_CONTEXTS_CULTURE: Record<string, string[]> = {
 const ProtocolsQuerySchema = z.object({
   region_code: z.string().min(1),
   pillar: z.coerce.number().int().min(1).max(5).optional(),
+  pillar_code: z.enum(["Z1", "Z2", "Z3", "Z4", "Z5"]).optional(),
   context: z.string().optional(),
   locale: z.string().optional(),
   situational_interests: z.string().optional(),
+  verified_only: z.coerce.boolean().optional(),
 });
+
+// Maps the integer pillar (1-5) used by legacy records to the CC Screening
+// Worker's 5-pillar code (Z1-Z5). Both schemes correspond to the same five
+// universal etiquette pillars (Culture, Interaction, Table, Status, Appearance).
+const PILLAR_TO_PILLAR_CODE: Record<number, string> = {
+  1: "Z1",
+  2: "Z2",
+  3: "Z3",
+  4: "Z4",
+  5: "Z5",
+};
 
 const RegionCodeParamSchema = z.object({
   regionCode: z.string().min(1).max(10),
@@ -71,15 +84,47 @@ router.get("/culture/protocols", async (req, res) => {
       return res.status(400).json({ message: "A region must be specified to retrieve cultural protocols." });
     }
 
-    const { region_code, pillar, context, locale, situational_interests } = parsed.data;
+    const { region_code, pillar, pillar_code, context, locale, situational_interests, verified_only } = parsed.data;
     const conditions = [eq(cultureProtocolsTable.region_code, region_code)];
 
-    if (pillar !== undefined) {
-      conditions.push(eq(cultureProtocolsTable.pillar, pillar));
+    // CC Screening records are recognised by source_book IS NOT NULL AND verified = true.
+    const verifiedCCExpr = and(
+      isNotNull(cultureProtocolsTable.source_book),
+      eq(cultureProtocolsTable.verified, true),
+    );
+
+    if (verified_only) {
+      conditions.push(verifiedCCExpr!);
+    }
+
+    if (pillar_code !== undefined) {
+      // pillar_code filter targets verified CC records exclusively.
+      conditions.push(eq(cultureProtocolsTable.pillar_code, pillar_code));
+      conditions.push(verifiedCCExpr!);
+    } else if (pillar !== undefined) {
+      // Match legacy records by integer pillar OR verified CC records whose
+      // pillar_code corresponds to the same pillar (Z1↔1 ... Z5↔5).
+      const mappedCode = PILLAR_TO_PILLAR_CODE[pillar];
+      conditions.push(
+        or(
+          eq(cultureProtocolsTable.pillar, pillar),
+          and(
+            eq(cultureProtocolsTable.pillar_code, mappedCode),
+            verifiedCCExpr!,
+          )!,
+        )!,
+      );
     }
 
     if (context !== undefined) {
-      conditions.push(eq(cultureProtocolsTable.context, context));
+      // CC records frequently leave context at its default "general"; keep them
+      // in the result set so the Counsel still surfaces verified guidance.
+      conditions.push(
+        or(
+          eq(cultureProtocolsTable.context, context),
+          verifiedCCExpr!,
+        )!,
+      );
     }
 
     const spheres = (situational_interests ?? "")
@@ -101,7 +146,8 @@ router.get("/culture/protocols", async (req, res) => {
 
     const protocols = await db.select()
       .from(cultureProtocolsTable)
-      .where(and(...conditions, verificationGate));
+      .where(and(...conditions, verificationGate))
+      .orderBy(sql`COALESCE(${cultureProtocolsTable.urgency}, 0) DESC`, cultureProtocolsTable.id);
 
     // Resolve locale-aware display text
     // lang is the base language code (e.g. "nl" from "nl-NL", "fr" from "fr-FR")

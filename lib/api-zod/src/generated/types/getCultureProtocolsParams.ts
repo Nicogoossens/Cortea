@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { GetCultureProtocolsContext } from "./getCultureProtocolsContext";
+import type { GetCultureProtocolsPillarCode } from "./getCultureProtocolsPillarCode";
 
 export type GetCultureProtocolsParams = {
   /**
@@ -19,4 +20,20 @@ export type GetCultureProtocolsParams = {
    */
   pillar?: number;
   context?: GetCultureProtocolsContext;
+  /**
+   * Filter to verified CC Screening records under a single 5-pillar code (Z1-Z5).
+   */
+  pillar_code?: GetCultureProtocolsPillarCode;
+  /**
+   * When true, only verified CC Screening records (verified = true, source_book set) are returned.
+   */
+  verified_only?: boolean;
+  /**
+   * BCP 47 locale; resolves rule_cc_i18n into display_rule.
+   */
+  locale?: string;
+  /**
+   * Comma-separated sphere keys (e.g. business,gastronomy) used to sort matching contexts to the top.
+   */
+  situational_interests?: string;
 };

@@ -205,7 +205,31 @@ export const GetCultureProtocolsQueryParams = zod.object({
     .optional()
     .describe("Pillar number (1-5). Omit for all pillars."),
   context: zod.enum(["business", "social", "general"]).optional(),
+  pillar_code: zod
+    .enum(["Z1", "Z2", "Z3", "Z4", "Z5"])
+    .optional()
+    .describe(
+      "Filter to verified CC Screening records under a single 5-pillar code (Z1-Z5).",
+    ),
+  verified_only: zod.coerce
+    .boolean()
+    .optional()
+    .describe(
+      "When true, only verified CC Screening records (verified = true, source_book set) are returned.",
+    ),
+  locale: zod.coerce
+    .string()
+    .optional()
+    .describe("BCP 47 locale; resolves rule_cc_i18n into display_rule."),
+  situational_interests: zod.coerce
+    .string()
+    .optional()
+    .describe(
+      "Comma-separated sphere keys (e.g. business,gastronomy) used to sort matching contexts to the top.",
+    ),
 });
+
+export const getCultureProtocolsResponseUrgencyMax = 3;
 
 export const GetCultureProtocolsResponseItem = zod.object({
   id: zod.number(),
@@ -215,6 +239,29 @@ export const GetCultureProtocolsResponseItem = zod.object({
   rule_description: zod.string(),
   gender_applicability: zod.enum(["all", "masculine", "feminine", "fluid"]),
   context: zod.enum(["business", "social", "general", "formal", "dining"]),
+  display_rule: zod
+    .string()
+    .optional()
+    .describe(
+      "Locale-aware display text. Falls back to rule_cc, then rule_description.",
+    ),
+  pillar_code: zod
+    .enum(["Z1", "Z2", "Z3", "Z4", "Z5"])
+    .nullish()
+    .describe("CC Screening Worker 5-pillar code."),
+  subcategory: zod.string().nullish(),
+  rule_cc: zod
+    .string()
+    .nullish()
+    .describe("C&C mentor-formulation, used as the display rule when present."),
+  urgency: zod
+    .number()
+    .min(1)
+    .max(getCultureProtocolsResponseUrgencyMax)
+    .nullish()
+    .describe("1 = nice-to-know, 2 = important, 3 = critical (First Aid)."),
+  verified: zod.boolean().nullish(),
+  source_book: zod.string().nullish(),
 });
 export const GetCultureProtocolsResponse = zod.array(
   GetCultureProtocolsResponseItem,
@@ -399,7 +446,6 @@ export const GetNobleScoreResponse = zod.object({
   level_name: zod.string(),
   level_color: zod.string(),
   next_level_threshold: zod.number(),
-  next_level_name: zod.string().nullable().optional(),
   pillars: zod.array(
     zod.object({
       pillar: zod.number(),

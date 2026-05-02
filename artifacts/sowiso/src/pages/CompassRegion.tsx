@@ -4,11 +4,12 @@ import {
   useGetCultureProtocols,
   getGetCultureProtocolsQueryKey,
   useGetProfile,
+  type CultureProtocol,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -16,6 +17,18 @@ import { FlagEmoji } from "@/lib/active-region";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
+
+type PillarCode = "Z1" | "Z2" | "Z3" | "Z4" | "Z5";
+
+const CC_PILLAR_ORDER: PillarCode[] = ["Z1", "Z2", "Z3", "Z4", "Z5"];
+
+const CC_PILLAR_META: Record<PillarCode, { titleKey: string; descKey: string }> = {
+  Z1: { titleKey: "compass.cc.z1.title", descKey: "compass.cc.z1.desc" },
+  Z2: { titleKey: "compass.cc.z2.title", descKey: "compass.cc.z2.desc" },
+  Z3: { titleKey: "compass.cc.z3.title", descKey: "compass.cc.z3.desc" },
+  Z4: { titleKey: "compass.cc.z4.title", descKey: "compass.cc.z4.desc" },
+  Z5: { titleKey: "compass.cc.z5.title", descKey: "compass.cc.z5.desc" },
+};
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -217,7 +230,40 @@ export default function CompassRegion() {
     },
   });
 
+  const ccProtocolsParams = {
+    region_code: regionCode,
+    locale,
+    verified_only: true,
+    ...(spheresParam ? { situational_interests: spheresParam } : {}),
+  };
+
+  const { data: ccProtocols } = useGetCultureProtocols(
+    ccProtocolsParams,
+    {
+      query: {
+        enabled: !!regionCode,
+        queryKey: [...getGetCultureProtocolsQueryKey(ccProtocolsParams), locale, spheresParam, "verified"],
+      },
+    }
+  );
+
   const sphereHighlights = new Set<string>(detail?.sphere_highlights ?? []);
+
+  const verifiedCCRecords: CultureProtocol[] = (ccProtocols ?? []).filter(
+    (p) => p.verified === true && !!p.source_book && !!p.pillar_code,
+  );
+
+  const firstAidRecords = verifiedCCRecords.filter((p) => p.urgency === 3);
+  const recordsByPillar = CC_PILLAR_ORDER.reduce<Record<PillarCode, CultureProtocol[]>>(
+    (acc, code) => {
+      acc[code] = verifiedCCRecords.filter((p) => p.pillar_code === code);
+      return acc;
+    },
+    { Z1: [], Z2: [], Z3: [], Z4: [], Z5: [] },
+  );
+
+  const ccDisplay = (p: CultureProtocol): string =>
+    p.display_rule ?? p.rule_cc ?? p.rule_description;
 
   if (isLoading) {
     return (
@@ -348,6 +394,39 @@ export default function CompassRegion() {
         </div>
       </section>
 
+      {/* First Aid — urgency 3 verified CC records */}
+      {firstAidRecords.length > 0 && (
+        <section
+          aria-labelledby="first-aid-heading"
+          className="bg-destructive/5 border border-destructive/30 rounded-sm p-6 md:p-8 space-y-5"
+        >
+          <div className="flex items-center gap-3 pb-4 border-b border-destructive/15">
+            <LifeBuoy className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+            <div>
+              <h2 id="first-aid-heading" className="text-sm font-mono uppercase tracking-widest text-destructive font-semibold">
+                {t("compass.cc.first_aid")}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("compass.cc.first_aid_subtitle")}</p>
+            </div>
+          </div>
+          <ul className="space-y-3" aria-label={t("compass.cc.first_aid")}>
+            {firstAidRecords.map((p) => (
+              <li key={p.id} className="flex gap-3 items-start text-sm">
+                <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" aria-hidden="true" />
+                <div className="space-y-1">
+                  <p className="text-foreground/90 leading-relaxed">{ccDisplay(p)}</p>
+                  {p.source_book && (
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                      {t("compass.cc.source_label")} · {p.source_book}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Core Value + Taboo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-primary/5 border-primary/20">
@@ -475,6 +554,65 @@ export default function CompassRegion() {
           </section>
         );
       })()}
+
+      {/* Verified CC Screening records grouped by 5-Pillar code (Z1–Z5) */}
+      {verifiedCCRecords.length > 0 && (
+        <section aria-labelledby="cc-pillars-heading" className="space-y-6 pt-4">
+          <div className="flex items-center justify-between border-b border-border pb-2 gap-3 flex-wrap">
+            <h2 id="cc-pillars-heading" className="font-serif text-2xl">
+              {t("compass.cc.heading")}
+            </h2>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/70 inline-flex items-center gap-1.5">
+              <BookOpen className="w-3 h-3" aria-hidden="true" />
+              {t("compass.cc.heading_subtitle")}
+            </span>
+          </div>
+
+          <div className="space-y-6">
+            {CC_PILLAR_ORDER.map((code) => {
+              const records = recordsByPillar[code];
+              if (records.length === 0) return null;
+              return (
+                <Card key={code} className="border-border shadow-sm">
+                  <CardHeader className="pb-3 border-b border-border/30 bg-muted/10">
+                    <CardTitle className="text-lg font-serif flex items-baseline gap-3">
+                      <span className="text-xs font-mono uppercase tracking-widest text-primary">
+                        {code}
+                      </span>
+                      {t(CC_PILLAR_META[code].titleKey as Parameters<typeof t>[0])}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t(CC_PILLAR_META[code].descKey as Parameters<typeof t>[0])}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ul className="space-y-3" aria-label={t(CC_PILLAR_META[code].titleKey as Parameters<typeof t>[0])}>
+                      {records.map((p) => (
+                        <li key={p.id} className="flex gap-3 items-start">
+                          <span className="text-primary/70 mt-1.5 flex-shrink-0" aria-hidden="true">•</span>
+                          <div className="space-y-1 flex-1">
+                            <p className="text-sm text-foreground/85 leading-relaxed">{ccDisplay(p)}</p>
+                            <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                              {p.subcategory && (
+                                <span className="px-1.5 py-0.5 border border-border/40 rounded-[2px]">
+                                  {p.subcategory.replace(/_/g, " ")}
+                                </span>
+                              )}
+                              {p.source_book && (
+                                <span>{t("compass.cc.source_label")} · {p.source_book}</span>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Communication Presence — Mehrabian cultural calibration */}
       {detail.mehrabian_weight && (

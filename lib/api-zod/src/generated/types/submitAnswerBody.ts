@@ -10,4 +10,5 @@ export interface SubmitAnswerBody {
   scenario_id: number;
   selected_option_index: number;
   time_taken_seconds?: number;
+  lang?: string;
 }

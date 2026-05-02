@@ -82,16 +82,30 @@ function pickLang(queryLang?: string, acceptLanguage?: string): string | undefin
   return undefined;
 }
 
+/** Defensively coerce an i18n field to an object. Some drivers may return
+ *  jsonb columns as raw strings; this guards against that without breaking
+ *  callers that already receive parsed objects. */
+function asI18nMap<T>(raw: unknown): Record<string, T> | undefined {
+  if (raw == null) return undefined;
+  if (typeof raw === "string") {
+    try { return JSON.parse(raw) as Record<string, T>; } catch { return undefined; }
+  }
+  if (typeof raw === "object") return raw as Record<string, T>;
+  return undefined;
+}
+
 /** Resolve a single scenario's title and content to the requested language.
  *  Falls back to the canonical English fields when no translation is available.
  *  Also normalises options so that `correct` is always present (backwards compat). */
 function resolveScenarioLocale(scenario: Scenario, lang?: string): Scenario {
   const baseLang = lang ? lang.split("-")[0] : undefined;
+  const titleI18n = asI18nMap<string>(scenario.title_i18n);
+  const contentI18n = asI18nMap<ScenarioContent>(scenario.content_i18n);
   const title = baseLang
-    ? (scenario.title_i18n?.[lang!] ?? scenario.title_i18n?.[baseLang] ?? scenario.title)
+    ? (titleI18n?.[lang!] ?? titleI18n?.[baseLang] ?? scenario.title)
     : scenario.title;
   const rawContent: ScenarioContent | null | undefined = baseLang
-    ? ((scenario.content_i18n?.[lang!] ?? scenario.content_i18n?.[baseLang] ?? scenario.content_json) as ScenarioContent | null | undefined)
+    ? (contentI18n?.[lang!] ?? contentI18n?.[baseLang] ?? scenario.content_json)
     : scenario.content_json;
   const content_json = normalizeContent(rawContent);
   return { ...scenario, title, content_json };

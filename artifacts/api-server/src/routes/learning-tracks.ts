@@ -107,16 +107,29 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     let session = await findOpenSession(userId, register, regionCode, pillar, phase);
 
     // ── Race-safe session creation ─────────────────────────────────────────
-    // We wrap the (lock → re-check open → check limits → INSERT) sequence in
-    // a real DB transaction so that:
+    // We wrap the entire (lock → re-check open → check limits → INSERT)
+    // sequence in a single DB transaction so that:
     //   - pg_advisory_xact_lock is held on the SAME connection as the INSERT
     //     and is auto-released only when the txn commits/rolls back, and
     //   - any second concurrent request blocks on SELECT pg_advisory_xact_lock
     //     until the first transaction completes, then sees the freshly
     //     inserted session via the inside-the-lock re-check.
-    // This makes "4th session of the day" enforcement and the
-    // "no duplicate open sessions" invariant strictly serialized per
-    // (user, register).
+    // The 429 limit check ALSO runs inside the lock so two near-simultaneous
+    // requests cannot both pass the daily-limit check.
+    let limitDenial: {
+      reason: "daily_limit" | "cooldown";
+      retryAfterSeconds?: number;
+      sessionsToday: number;
+      dailyLimit: number;
+      cooldownMinutes: number;
+      lastCompletedAt: Date | null;
+    } | null = null;
+    let inlineQuestions: Awaited<ReturnType<typeof selectQuestions>> | null = null;
+    let inlineProgressRow: typeof learningTrackProgressTable.$inferSelect | null = null;
+    let inlineCurrentLevel = 1;
+    let inlineDemographic = "common";
+    let inlineIsRemediation = false;
+
     if (!session) {
       const lockKey1 = Math.abs(
         userId.split("").reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)
@@ -126,8 +139,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       session = await db.transaction(async (tx) => {
         await tx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey1}::int, ${lockKey2}::int)`);
 
-        // Re-check inside the lock — another request may have already created
-        // an open session while we were waiting on the lock.
+        // 1) Re-check open session inside the lock.
         const [reuse] = await tx.select().from(learningTrackSessionsTable)
           .where(and(
             eq(learningTrackSessionsTable.user_id, userId),
@@ -141,92 +153,115 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           ))
           .orderBy(desc(learningTrackSessionsTable.id))
           .limit(1);
-        return reuse ?? null;
-      });
-    }
+        if (reuse) return reuse;
 
-    if (!session) {
-      const limits = await computeSessionLimits(userId, register);
-      if (!limits.allowed) {
+        // 2) Check rate limits inside the lock so two concurrent requests
+        //    cannot both pass the 4-of-the-day check.
+        const limits = await computeSessionLimits(userId, register);
+        if (!limits.allowed) {
+          limitDenial = {
+            reason: limits.reason!,
+            retryAfterSeconds: limits.retryAfterSeconds,
+            sessionsToday: limits.sessionsToday,
+            dailyLimit: limits.dailyLimit,
+            cooldownMinutes: limits.cooldownMinutes,
+            lastCompletedAt: limits.lastCompletedAt,
+          };
+          return null;
+        }
+
+        // 3) Build the question set + INSERT the new session, all inside
+        //    the same locked transaction.
+        const failed = await lastFailedSession(userId, register, regionCode, pillar, phase);
+        const remediationIds = failed?.repeat_question_ids ?? [];
+
+        const [progressRow] = await tx.select()
+          .from(learningTrackProgressTable)
+          .where(and(
+            eq(learningTrackProgressTable.user_id, userId),
+            eq(learningTrackProgressTable.register, register),
+            eq(learningTrackProgressTable.phase, phase),
+            eq(learningTrackProgressTable.region_code, regionCode),
+            pillar
+              ? eq(learningTrackProgressTable.research_pillar, pillar)
+              : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
+          ))
+          .limit(1);
+
+        const cfg = getRegisterConfig(register);
+        const currentLevel = Math.min(progressRow?.current_level ?? 1, cfg.maxLevel);
+        const demographic = deriveDemographic(user.birth_year, user.gender_identity);
+        const isRemediation = remediationIds.length > 0;
+
+        const filteredForced: number[] = [];
+        const exhaustedIds: number[] = [];
+        for (const qid of remediationIds) {
+          const n = await repetitionCount(userId, qid);
+          if (n < 2) filteredForced.push(qid);
+          else exhaustedIds.push(qid);
+        }
+
+        const questions = await selectQuestions({
+          userId,
+          register,
+          regionCode,
+          countryOfOrigin: user.country_of_origin ?? null,
+          situationalInterests: user.situational_interests ?? [],
+          demographic,
+          pillar,
+          phase,
+          level: currentLevel,
+          lang,
+          size: cfg.sessionSize,
+          forcedIds: filteredForced,
+          excludeIds: exhaustedIds,
+        });
+
+        const [created] = await tx.insert(learningTrackSessionsTable).values({
+          user_id: userId,
+          register,
+          region_code: regionCode,
+          research_pillar: pillar,
+          phase,
+          level: currentLevel,
+          is_remediation: isRemediation,
+          served_question_ids: questions.map((q) => q.id),
+          repeat_question_ids: [],
+          total_questions: questions.length,
+        }).returning();
+
+        inlineQuestions = questions;
+        inlineProgressRow = progressRow ?? null;
+        inlineCurrentLevel = currentLevel;
+        inlineDemographic = demographic;
+        inlineIsRemediation = isRemediation;
+        return created;
+      });
+
+      if (limitDenial) {
         return res.status(429).json({
-          message: limits.reason === "daily_limit"
+          message: limitDenial.reason === "daily_limit"
             ? "You have reached today's session limit for this track. Return tomorrow."
             : "A short reflection cooldown is in effect. Please try again shortly.",
-          reason: limits.reason,
-          retry_after_seconds: limits.retryAfterSeconds,
-          sessions_today: limits.sessionsToday,
-          daily_limit: limits.dailyLimit,
-          cooldown_minutes: limits.cooldownMinutes,
-          last_completed_at: limits.lastCompletedAt,
+          reason: limitDenial.reason,
+          retry_after_seconds: limitDenial.retryAfterSeconds,
+          sessions_today: limitDenial.sessionsToday,
+          daily_limit: limitDenial.dailyLimit,
+          cooldown_minutes: limitDenial.cooldownMinutes,
+          last_completed_at: limitDenial.lastCompletedAt,
         });
       }
+    }
 
-      // Pick up unresolved wrong answers from the most recently failed session
-      const failed = await lastFailedSession(userId, register, regionCode, pillar, phase);
-      const remediationIds = failed?.repeat_question_ids ?? [];
-
-      const [progressRow] = await db.select()
-        .from(learningTrackProgressTable)
-        .where(and(
-          eq(learningTrackProgressTable.user_id, userId),
-          eq(learningTrackProgressTable.register, register),
-          eq(learningTrackProgressTable.phase, phase),
-          eq(learningTrackProgressTable.region_code, regionCode),
-          pillar
-            ? eq(learningTrackProgressTable.research_pillar, pillar)
-            : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
-        ))
-        .limit(1);
-
-      const cfg = getRegisterConfig(register);
-      const currentLevel = Math.min(progressRow?.current_level ?? 1, cfg.maxLevel);
-      const demographic = deriveDemographic(user.birth_year, user.gender_identity);
-      const isRemediation = remediationIds.length > 0;
-
-      // Filter remediation list against the "max 2 retries" rule. Questions
-      // that have already been repeated >= 2 times are NOT forced again, AND
-      // are globally excluded from the candidate pool for this session, so
-      // the cascade can't accidentally reselect them. The cascade then picks
-      // a similar replacement (same register/phase/level/pillar/demographic
-      // and re-ranked by interest tags) from the remaining pool.
-      const filteredForced: number[] = [];
-      const exhaustedIds: number[] = [];
-      for (const qid of remediationIds) {
-        const n = await repetitionCount(userId, qid);
-        if (n < 2) filteredForced.push(qid);
-        else exhaustedIds.push(qid);
-      }
-
-      const questions = await selectQuestions({
-        userId,
-        register,
-        regionCode,
-        countryOfOrigin: user.country_of_origin ?? null,
-        situationalInterests: user.situational_interests ?? [],
-        demographic,
-        pillar,
-        phase,
-        level: currentLevel,
-        lang,
-        size: cfg.sessionSize,
-        forcedIds: filteredForced,
-        excludeIds: exhaustedIds,
-      });
-
-      const [created] = await db.insert(learningTrackSessionsTable).values({
-        user_id: userId,
-        register,
-        region_code: regionCode,
-        research_pillar: pillar,
-        phase,
-        level: currentLevel,
-        is_remediation: isRemediation,
-        served_question_ids: questions.map((q) => q.id),
-        repeat_question_ids: [],
-        total_questions: questions.length,
-      }).returning();
-
-      session = created;
+    // Newly-created path: emit using the in-memory question set built inside
+    // the transaction so we don't re-query (and so per-question metadata
+    // matches what was persisted on the row).
+    if (inlineQuestions && session) {
+      const progressRow = inlineProgressRow;
+      const currentLevel = inlineCurrentLevel;
+      const demographic = inlineDemographic;
+      const isRemediation = inlineIsRemediation;
+      const questions = inlineQuestions;
 
       // Cache the questions on the row so subsequent /session calls (page reload)
       // return the same set, but preserving the per-question metadata requires

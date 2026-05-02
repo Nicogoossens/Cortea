@@ -146,6 +146,29 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
 
     const data = bodyParsed.data;
 
+    // ── active_region invariant ──────────────────────────────────────────────
+    // The unified profile patch must enforce the same rule as
+    // `PATCH /users/profile/region`: active_region must be ∈ the user's
+    // (non-hidden) country interests once any interests exist. Without this
+    // guard a caller could desync focus region from interests by routing
+    // through the unified endpoint.
+    if (data.active_region !== undefined) {
+      const interests = await db.select({
+        region_code: userCountryInterestsTable.region_code,
+      })
+        .from(userCountryInterestsTable)
+        .where(and(
+          eq(userCountryInterestsTable.user_id, userId),
+          isNull(userCountryInterestsTable.hidden_at),
+        ));
+      if (interests.length > 0 && !interests.some((r) => r.region_code === data.active_region)) {
+        return res.status(403).json({
+          code: "REGION_NOT_IN_INTERESTS",
+          message: "Add this country to your interests before switching focus to it.",
+        });
+      }
+    }
+
     if (data.username) {
       const [taken] = await db.select({ id: usersTable.id }).from(usersTable)
         .where(and(eq(usersTable.username, data.username), ne(usersTable.id, userId))).limit(1);

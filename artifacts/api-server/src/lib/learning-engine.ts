@@ -351,8 +351,10 @@ export async function selectQuestions(ctx: SelectionContext): Promise<SelectedQu
   }
 
   // Tier 4: cross-demographic mandatory mix-in once level >= threshold.
-  // Now using the reserved slot count (not "leftover space").
-  if (mustCross) {
+  // Gated directly on the reserved slot count (the pure helper already
+  // returns 0 when the user IS the 'common' demographic or the level is
+  // below the per-register threshold).
+  if (crossReserve > 0) {
     const crossCap = crossReserve;
     const crossPool = await fetchPool(ctx.level, siblingDemographics(ctx.demographic));
     const rankedCross = reRankByInterestAndContrast(crossPool as RawQuestion[], ctx)

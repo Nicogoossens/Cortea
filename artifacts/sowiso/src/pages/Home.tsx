@@ -4,7 +4,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, Scan, Crown, X, MapPin, Bell } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, X, MapPin, Bell } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
@@ -188,8 +188,6 @@ export default function Home() {
     : 0;
 
   const isAmbassador = profile?.subscription_tier === "ambassador";
-  const mirrorHref = !userId ? "/signin" : isAmbassador ? "/mirror" : "/membership";
-
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
   const levelLabel = t(levelKey(nobleScore?.level_name));
 
@@ -462,39 +460,6 @@ export default function Home() {
               <CardContent className="flex justify-end">
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" aria-hidden="true" />
               </CardContent>
-            </Card>
-          </Link>
-
-          <Link href={mirrorHref} className="group">
-            <Card className="h-full border-amber-200/50 bg-card transition-all duration-300 hover:shadow-md hover:border-amber-400/40 cursor-pointer relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-amber-400/60 to-amber-600/30" aria-hidden="true" />
-              <CardHeader>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-12 w-12 rounded-sm bg-amber-50/60 flex items-center justify-center group-hover:bg-amber-100/60 transition-colors">
-                    <Scan className="h-6 w-6 text-amber-700/70" aria-hidden="true" />
-                  </div>
-                  {!isAmbassador && (
-                    <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-amber-700/60 border border-amber-300/50 rounded-[2px] px-1.5 py-0.5 bg-amber-50/50">
-                      <Crown className="h-2.5 w-2.5" aria-hidden="true" />
-                      {t("mirror.tier_label")}
-                    </span>
-                  )}
-                </div>
-                <CardTitle className="font-serif text-xl text-amber-900/80 group-hover:text-amber-900 transition-colors">{t("nav.mirror")}</CardTitle>
-                <CardDescription className="text-base leading-relaxed">
-                  {t("mirror.subtitle")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-end">
-                <ArrowRight className="h-5 w-5 text-amber-400/60 group-hover:text-amber-600 transition-all group-hover:translate-x-1" aria-hidden="true" />
-              </CardContent>
-              {!isAmbassador && (
-                <LockOverlay
-                  requiredTier="ambassador"
-                  teaser={t("mirror.lock.teaser")}
-                  isAuthenticated={isAuthenticated}
-                />
-              )}
             </Card>
           </Link>
 

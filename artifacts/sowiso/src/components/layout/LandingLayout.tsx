@@ -111,8 +111,8 @@ export function LandingLayout({
         </Link>
 
         <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
-          {(["nav.atelier", "nav.counsel", "nav.compass", "nav.mirror"] as const).map((key, i) => {
-            const paths = ["/atelier", "/counsel", "/compass", "/mirror"];
+          {(["nav.atelier", "nav.counsel", "nav.compass"] as const).map((key, i) => {
+            const paths = ["/atelier", "/counsel", "/compass"];
             return (
               <Link key={key} href={paths[i]}>
                 <span className="text-xs font-mono tracking-wide text-muted-foreground/70 hover:text-foreground transition-colors cursor-pointer">

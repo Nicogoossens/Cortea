@@ -210,6 +210,60 @@ function planActiveRegionDeletion(opts: {
   return { action: "switch_then_hide", newActive: opts.otherInterests[0] };
 }
 
+// ── region-membership guard for /learning-tracks/session ───────────────────
+function planSessionRegionGuard(opts: { regionCode: string; interests: string[] }):
+  | { status: 200 }
+  | { status: 403; code: "REGION_NOT_IN_INTERESTS" } {
+  if (opts.interests.length > 0 && !opts.interests.includes(opts.regionCode)) {
+    return { status: 403, code: "REGION_NOT_IN_INTERESTS" };
+  }
+  return { status: 200 };
+}
+
+describe("region-membership guard for /learning-tracks/session", () => {
+  it("rejects a session for a region not in the user's interests", () => {
+    expect(planSessionRegionGuard({ regionCode: "FR", interests: ["GB", "IT"] }))
+      .toEqual({ status: 403, code: "REGION_NOT_IN_INTERESTS" });
+  });
+
+  it("permits a session for a region that IS in the user's interests", () => {
+    expect(planSessionRegionGuard({ regionCode: "GB", interests: ["GB", "IT"] }))
+      .toEqual({ status: 200 });
+  });
+
+  it("permits any region for legacy users with no interests yet", () => {
+    expect(planSessionRegionGuard({ regionCode: "FR", interests: [] }))
+      .toEqual({ status: 200 });
+  });
+});
+
+// ── contrast boost suppression when origin == interest region ──────────────
+function isContrastEnabled(origin: string | null, interestRegion: string): boolean {
+  const o = origin?.trim().toLowerCase() ?? "";
+  if (!o) return false;
+  const r = interestRegion.toLowerCase();
+  if (o === r || o.includes(r) || r.includes(o)) return false;
+  return true;
+}
+
+describe("contrast boost gate", () => {
+  it("disables contrast scoring when studying your own country", () => {
+    expect(isContrastEnabled("Belgium", "BE")).toBe(false); // "belgium".includes("be")
+    expect(isContrastEnabled("be", "BE")).toBe(false);
+    expect(isContrastEnabled("United Kingdom", "United Kingdom")).toBe(false);
+  });
+
+  it("enables contrast scoring when origin and interest country differ", () => {
+    expect(isContrastEnabled("Belgium", "GB")).toBe(true);
+    expect(isContrastEnabled("Italy", "FR")).toBe(true);
+  });
+
+  it("disables contrast scoring when origin is not set", () => {
+    expect(isContrastEnabled(null, "GB")).toBe(false);
+    expect(isContrastEnabled("", "GB")).toBe(false);
+  });
+});
+
 describe("delete-active-region invariant", () => {
   it("plain hide when the target is not the active region", () => {
     expect(planActiveRegionDeletion({ activeRegion: "GB", target: "IT", otherInterests: ["GB"] }))

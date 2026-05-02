@@ -102,6 +102,24 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       });
     }
 
+    // ── Region-membership guard ─────────────────────────────────────────────
+    // The requested region must be one of the user's active country interests.
+    // We allow a single legacy bypass: if the user has NO interests yet, we
+    // fall through (the GET /users/country-interests handler will backfill on
+    // the next read), so existing sessions don't 403 mid-flight.
+    const userInterests = await db.select({ region_code: userCountryInterestsTable.region_code })
+      .from(userCountryInterestsTable)
+      .where(and(
+        eq(userCountryInterestsTable.user_id, userId),
+        isNull(userCountryInterestsTable.hidden_at),
+      ));
+    if (userInterests.length > 0 && !userInterests.some((r) => r.region_code === regionCode)) {
+      return res.status(403).json({
+        code: "REGION_NOT_IN_INTERESTS",
+        message: "Add this country to your interests before studying it.",
+      });
+    }
+
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.
     let session = await findOpenSession(userId, register, regionCode, pillar, phase);

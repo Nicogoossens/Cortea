@@ -203,6 +203,15 @@ function reRankByInterestAndContrast(
 ): { question: RawQuestion; source: SelectedQuestion["source"] }[] {
   const interests = new Set(ctx.situationalInterests.map((s) => s.toLowerCase()));
   const origin = ctx.countryOfOrigin?.trim().toLowerCase() ?? "";
+  // Contrast scoring is meaningful only when the user is studying a country
+  // OTHER than their own. If the origin matches the interest country (either
+  // by ISO code or by name appearing in the country name table), we suppress
+  // the contrast boost to avoid surfacing "look how different they are"
+  // material when the answer is "this IS your home country".
+  const interestRegion = ctx.regionCode?.toLowerCase() ?? "";
+  const originMatchesInterest =
+    !!origin && (origin === interestRegion || origin.includes(interestRegion) || interestRegion.includes(origin));
+  const contrastEnabled = !!origin && !originMatchesInterest;
 
   function score(q: RawQuestion): { score: number; source: SelectedQuestion["source"] } {
     let s = 0;
@@ -213,7 +222,7 @@ function reRankByInterestAndContrast(
       s += overlap * 10;
       source = "interest_boost";
     }
-    if (origin) {
+    if (contrastEnabled) {
       const haystack = `${q.question_text} ${q.historical_context ?? ""}`.toLowerCase();
       if (haystack.includes(origin)) {
         s += 7;

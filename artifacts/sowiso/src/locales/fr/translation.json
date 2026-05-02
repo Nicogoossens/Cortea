@@ -612,6 +612,7 @@
   "home.no_badges": "Aucune distinction — commencez votre premier parcours",
   "home.view_in_atelier": "Voir tout dans L'Atelier",
   "home.region_breakdown": "Par région",
+  "home.region_questions": "{{count}} questions",
   "home.region_tracks": "{{mastered}}/{{total}} maîtrisé",
   "home.region_all_mastered": "Tout maîtrisé",
   "home.region_more": "+{{count}} de plus — tout voir",

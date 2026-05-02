@@ -612,6 +612,7 @@
   "home.no_badges": "Noch keine Auszeichnungen — beginnen Sie Ihren ersten Lernpfad",
   "home.view_in_atelier": "Alles im Atelier ansehen",
   "home.region_breakdown": "Nach Region",
+  "home.region_questions": "{{count}} Fragen",
   "home.region_tracks": "{{mastered}}/{{total}} gemeistert",
   "home.region_all_mastered": "Alles gemeistert",
   "home.region_more": "+{{count}} weitere — alle ansehen",

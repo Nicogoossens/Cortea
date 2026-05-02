@@ -612,6 +612,7 @@
   "home.no_badges": "まだ称号はありません — 最初の学習トラックを始めましょう",
   "home.view_in_atelier": "アトリエですべて見る",
   "home.region_breakdown": "地域別",
+  "home.region_questions": "{{count}} 問",
   "home.region_tracks": "{{mastered}}/{{total}} 習得済み",
   "home.region_all_mastered": "すべて習得済み",
   "home.region_more": "+{{count}} さらに — すべて見る",

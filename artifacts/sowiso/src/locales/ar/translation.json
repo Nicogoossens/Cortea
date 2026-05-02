@@ -612,6 +612,7 @@
   "home.no_badges": "لا توجد أوسمة بعد — ابدأ أول مسار تعليمي",
   "home.view_in_atelier": "عرض الكل في الأتيلييه",
   "home.region_breakdown": "حسب المنطقة",
+  "home.region_questions": "{{count}} أسئلة",
   "home.region_tracks": "{{mastered}}/{{total}} متقن",
   "home.region_all_mastered": "كل شيء متقن",
   "home.region_more": "+{{count}} المزيد — عرض الكل",

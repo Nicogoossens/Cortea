@@ -626,6 +626,7 @@
   "home.no_badges": "No distinctions yet — begin your first learning track",
   "home.view_in_atelier": "View all in The Atelier",
   "home.region_breakdown": "By region",
+  "home.region_questions": "{{count}} questions",
   "home.region_tracks": "{{mastered}}/{{total}} mastered",
   "home.region_all_mastered": "All mastered",
   "home.region_more": "+{{count}} more — view all",

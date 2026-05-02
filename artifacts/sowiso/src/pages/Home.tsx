@@ -375,7 +375,7 @@ export default function Home() {
                               )}
                             </div>
                             <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0">
-                              {t("home.region_tracks", { mastered: stats.mastered, total: stats.total })}
+                              {t("home.region_questions", { count: stats.questions })} · {t("home.region_tracks", { mastered: stats.mastered, total: stats.total })}
                             </span>
                           </div>
                         );

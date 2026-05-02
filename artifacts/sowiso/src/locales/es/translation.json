@@ -612,6 +612,7 @@
   "home.no_badges": "Aún no hay distinciones — comience su primer recorrido",
   "home.view_in_atelier": "Ver todo en El Atelier",
   "home.region_breakdown": "Por región",
+  "home.region_questions": "{{count}} preguntas",
   "home.region_tracks": "{{mastered}}/{{total}} dominado",
   "home.region_all_mastered": "Todo dominado",
   "home.region_more": "+{{count}} más — ver todo",

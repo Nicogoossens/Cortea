@@ -626,6 +626,7 @@
   "home.no_badges": "尚无荣誉——开始您的第一个学习轨道",
   "home.view_in_atelier": "在训练坊中查看全部",
   "home.region_breakdown": "按地区",
+  "home.region_questions": "{{count}} 道题",
   "home.region_tracks": "{{mastered}}/{{total}} 已掌握",
   "home.region_all_mastered": "全部掌握",
   "home.region_more": "+{{count}} 更多 — 查看全部",

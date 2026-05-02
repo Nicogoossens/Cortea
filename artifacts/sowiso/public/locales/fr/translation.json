@@ -577,5 +577,9 @@
   "welcome.disclaimer": "Cet outil est développé sur la base de plusieurs ouvrages reconnus, notamment des études psychologiques sur les interactions sociales et la théorie des manières au sein des différentes couches de la société.",
   "home.welcome_back_anonymous": "Bienvenue.",
   "home.welcome_back_prompt": "Ajoutez votre nom pour personnaliser ce message.",
-  "home.welcome_back_dismiss": "Fermer"
+  "home.welcome_back_dismiss": "Fermer",
+"profile.member_fallback": "Membre",
+  "profile.born": "Né(e) en {{year}}",
+  "profile.lang_label": "Langue",
+  "profile.region_label": "Région"
 }

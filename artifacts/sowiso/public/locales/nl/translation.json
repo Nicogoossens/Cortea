@@ -583,5 +583,9 @@
   "welcome.disclaimer": "Deze tool wordt ontwikkeld op basis van meerdere gerenommeerde werken, waaronder psychologische studies over sociale omgang en de leer van omgangsvormen binnen verschillende lagen van de samenleving.",
   "home.welcome_back_anonymous": "Welkom terug.",
   "home.welcome_back_prompt": "Voeg uw naam toe om deze begroeting te personaliseren.",
-  "home.welcome_back_dismiss": "Sluiten"
+  "home.welcome_back_dismiss": "Sluiten",
+"profile.member_fallback": "Lid",
+  "profile.born": "Geboren {{year}}",
+  "profile.lang_label": "Taal",
+  "profile.region_label": "Regio"
 }

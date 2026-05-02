@@ -577,5 +577,9 @@
   "welcome.disclaimer": "تم تطوير هذه الأداة استناداً إلى عدد من الأعمال المشهورة، بما فيها دراسات نفسية حول التفاعل الاجتماعي ونظرية الآداب عبر مختلف طبقات المجتمع.",
   "home.welcome_back_anonymous": "مرحباً بعودتك.",
   "home.welcome_back_prompt": "أضف اسمك لتخصيص هذه التحية.",
-  "home.welcome_back_dismiss": "إغلاق"
+  "home.welcome_back_dismiss": "إغلاق",
+"profile.member_fallback": "عضو",
+  "profile.born": "مواليد {{year}}",
+  "profile.lang_label": "اللغة",
+  "profile.region_label": "المنطقة"
 }

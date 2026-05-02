@@ -11,7 +11,6 @@ export type UserProfileSubscriptionTier =
 
 export const UserProfileSubscriptionTier = {
   guest: "guest",
-  student: "student",
   traveller: "traveller",
   ambassador: "ambassador",
 } as const;

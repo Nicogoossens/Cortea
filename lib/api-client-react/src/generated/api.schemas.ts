@@ -117,6 +117,13 @@ export interface UpdateRegionBody {
   region_code: string;
 }
 
+export interface PatchProfilePreferencesBody {
+  /** BCP-47 base language code (e.g. en, nl, fr). */
+  language_code?: string;
+  /** ISO 3166-1 alpha-2 region code (e.g. GB, NL, US). */
+  active_region?: string;
+}
+
 export type CultureProtocolGenderApplicability =
   (typeof CultureProtocolGenderApplicability)[keyof typeof CultureProtocolGenderApplicability];
 
@@ -184,6 +191,7 @@ export interface CultureCompassEntry {
   core_value: string;
   biggest_taboo: string;
   flag_emoji: string;
+  /** True when this region has at least one locale of compass content ready. */
   has_content: boolean;
 }
 
@@ -230,6 +238,7 @@ export interface Scenario {
   difficulty_level: number;
   estimated_minutes?: number;
   noble_score_impact: number;
+  /** True when the scenario belongs to the requested region; false when it is a universal fallback. */
   is_regional?: boolean;
   content_json: ScenarioContent;
 }
@@ -254,6 +263,7 @@ export interface NobleScoreData {
   level_name: string;
   level_color: string;
   next_level_threshold: number;
+  next_level_name?: string | null;
   pillars: PillarProgress[];
 }
 
@@ -283,6 +293,20 @@ export interface ScoreLogEntry {
   timestamp: string;
 }
 
+export type GetProfileParams = {
+  /**
+   * Optional user identifier; bearer token is the source of truth.
+   */
+  user_id?: string;
+};
+
+export type PatchProfilePreferencesParams = {
+  /**
+   * User identifier; must match the authenticated session.
+   */
+  user_id: string;
+};
+
 export type GetCultureProtocolsParams = {
   /**
    * ISO country code (e.g. GB, CN, CA)
@@ -304,7 +328,7 @@ export type GetCultureProtocolsParams = {
    */
   verified_only?: boolean;
   /**
-   * BCP 47 locale code for localised rule text (e.g. en-GB, nl-NL); resolves rule_cc_i18n into display_rule. Defaults to en-GB.
+   * BCP 47 locale; resolves rule_cc_i18n into display_rule.
    */
   locale?: string;
   /**
@@ -397,81 +421,3 @@ export type GetTranslationsParams = {
 };
 
 export type GetTranslations200 = { [key: string]: string };
-
-export interface LearningTrackQuestionOption {
-  text: string;
-}
-
-export interface LearningTrackSessionQuestion {
-  id: number;
-  question_text: string;
-  historical_context?: string | null;
-  options: LearningTrackQuestionOption[];
-}
-
-export interface LearningTrackSession {
-  questions: LearningTrackSessionQuestion[];
-  current_level: number;
-  questions_done: number;
-  correct_streak: number;
-  mastered: boolean;
-  demographic: string;
-  repeat: boolean;
-  has_questions: boolean;
-}
-
-export interface LearningTrackAnswerBody {
-  question_id: number;
-  selected_option_index: number;
-  register: "middle_class" | "elite";
-  research_pillar?: string | null;
-  phase: number;
-}
-
-export interface BadgeEntry {
-  id: number;
-  slug: string;
-  title: string;
-  description: string;
-  badge_type: "pillar" | "phase" | "country" | "ambassador";
-  register: string;
-  research_pillar?: string | null;
-  phase?: number | null;
-  region_code?: string | null;
-  icon_url?: string | null;
-  awarded_at?: string | null;
-}
-
-export interface LearningTrackAnswerResult {
-  correct: boolean;
-  answer_tier: 1 | 2 | 3;
-  motivation: string;
-  historical_context?: string | null;
-  level_up: boolean;
-  mastered: boolean;
-  repeat: boolean;
-  correct_streak: number;
-  current_level: number;
-  new_badges: BadgeEntry[];
-}
-
-export interface LearningTrackProgressEntry {
-  id: number;
-  user_id: string;
-  register: string;
-  research_pillar?: string | null;
-  phase: number;
-  current_level: number;
-  questions_done: number;
-  correct_streak: number;
-  mastered: boolean;
-  last_updated?: string | null;
-}
-
-export type GetLearningTrackSessionParams = {
-  register: "middle_class" | "elite";
-  research_pillar?: string;
-  phase: number;
-  region_code: string;
-  lang?: string;
-};

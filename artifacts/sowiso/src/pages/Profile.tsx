@@ -189,6 +189,39 @@ function getInitials(name: string | null | undefined): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/**
+ * Mask an e-mail address as `j••••@example.com`: first character of the local
+ * part, four bullet characters, then the original domain. Never reveals the
+ * full local part on the read-only Personal Details panel.
+ */
+function maskEmail(email: string | null | undefined): string {
+  if (!email) return "—";
+  const trimmed = email.trim();
+  const at = trimmed.indexOf("@");
+  if (at <= 0) return trimmed;
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at);
+  return `${local[0]}••••${domain}`;
+}
+
+/**
+ * Eight base languages selectable from the Profile preferences dropdown.
+ * Each entry maps a base language code (used for `language_code` persisted to
+ * the DB) to a sensible default regional locale (used for `setLocale()` so the
+ * UI switches immediately). The codebase ships translations for these
+ * languages today; if a Hindi locale is added later it should be appended here.
+ */
+const PROFILE_LANGUAGE_OPTIONS: { code: string; locale: SupportedLocale; label: string }[] = [
+  { code: "en", locale: "en-GB", label: "English" },
+  { code: "nl", locale: "nl-NL", label: "Nederlands" },
+  { code: "fr", locale: "fr-FR", label: "Français" },
+  { code: "de", locale: "de-DE", label: "Deutsch" },
+  { code: "es", locale: "es-ES", label: "Español" },
+  { code: "pt", locale: "pt-PT", label: "Português" },
+  { code: "it", locale: "it-IT", label: "Italiano" },
+  { code: "ja", locale: "ja-JP", label: "日本語" },
+];
+
 function logStatusKey(delta: number): string {
   if (delta > 0) return "profile.log.refined";
   if (delta < 0) return "profile.log.reconsidered";
@@ -357,8 +390,12 @@ export default function Profile() {
 
   const fetchProfile = useCallback(() => {
     if (!userId) { setProfileLoading(false); return; }
+    // Pass `user_id` as a query param so the server loads the authenticated
+    // user's record. Auth still flows via the HttpOnly `cortea_session`
+    // cookie (sent automatically with `credentials: "include"`).
+    const profileUrl = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`;
     Promise.all([
-      fetch(`${API_BASE}/api/users/profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+      fetch(profileUrl, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
       fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
       fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
     ])
@@ -439,51 +476,55 @@ export default function Profile() {
     }
   }
 
-  async function handleLanguageChange(newLocale: SupportedLocale) {
-    if (!userId) return;
-    setLangSave("saving");
-    const langCode = newLocale.split("-")[0];
+  /**
+   * Persist a single profile preference (language or region) via the
+   * unified PATCH /users/profile?user_id=... endpoint. Returns true on
+   * success so callers can chain UI updates (e.g. setLocale).
+   */
+  async function patchPreferences(
+    body: { language_code?: string; active_region?: string },
+    setSave: (s: SaveState) => void,
+  ): Promise<boolean> {
+    if (!userId) return false;
+    setSave("saving");
     try {
-      const res = await fetch(`${API_BASE}/api/users/profile`, {
+      const url = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`;
+      const res = await fetch(url, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language_code: langCode }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
-        setLocale(newLocale);
-        setLangSave("saved");
-        setTimeout(() => setLangSave("idle"), 2500);
-      } else {
-        setLangSave("error");
+        const updated = await res.json();
+        setProfileData(updated);
+        setSave("saved");
+        setTimeout(() => setSave("idle"), 2500);
+        return true;
       }
+      setSave("error");
+      return false;
     } catch {
-      setLangSave("error");
+      setSave("error");
+      return false;
     }
+  }
+
+  async function handleLanguageChange(newLocale: SupportedLocale) {
+    if (!userId) return;
+    const langCode = newLocale.split("-")[0];
+    const ok = await patchPreferences({ language_code: langCode }, setLangSave);
+    if (ok) setLocale(newLocale);
   }
 
   async function handleRegionChange(code: RegionCode) {
     setActiveRegion(code);
     setShowRegionPicker(false);
-    if (!userId) return;
-    setRegionSave("saving");
-    try {
-      const res = await fetch(`${API_BASE}/api/users/profile/region`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region_code: code }),
-      });
-      if (res.ok) {
-        setRegionSave("saved");
-        setShowCourseChangeWarning(true);
-        setTimeout(() => setRegionSave("idle"), 2500);
-      } else {
-        setRegionSave("error");
-      }
-    } catch {
-      setRegionSave("error");
-    }
+    // Persist via the unified PATCH /users/profile?user_id=... endpoint
+    // (Task #16). On success, surface the existing "course change" warning
+    // so the user is reminded that learning content recalibrates per region.
+    const ok = await patchPreferences({ active_region: code }, setRegionSave);
+    if (ok) setShowCourseChangeWarning(true);
   }
 
   async function handleUsernameSubmit() {
@@ -680,7 +721,7 @@ export default function Profile() {
 
         {/* Name + Meta */}
         <div className="flex-1 space-y-2 min-w-0">
-          {/* Full name — editable only when empty, locked once set */}
+          {/* Full name — shows "Member" as a graceful fallback when unset */}
           <div className="flex flex-wrap items-center gap-3">
             {profileData?.full_name ? (
               <span className="text-3xl font-serif text-foreground flex items-center gap-2">
@@ -712,7 +753,7 @@ export default function Profile() {
                 onClick={() => setEditingFullName(true)}
                 aria-label="Edit full name"
               >
-                <span className="text-muted-foreground font-light italic text-xl">{t("profile.set_name_placeholder")}</span>
+                <span className="text-foreground/80">{t("profile.member_fallback")}</span>
                 <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
               </button>
             )}
@@ -854,73 +895,46 @@ export default function Profile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Read-only display of identity fields. Editing of these is
+                handled during onboarding; here we present them as a static
+                "ID card" view so the user can verify what is on file. */}
             <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} locked={!!profileData?.full_name} />
-            <DetailRow label={t("profile.email_label")} value={profileData?.email ?? "—"} />
 
-            {/* Birth year — editable when empty, locked when set */}
+            {/* Email is masked (e.g. j••••@domain) so the local-part is never
+                shown on a screen that may be visible to onlookers. */}
+            <DetailRow label={t("profile.email_label")} value={maskEmail(profileData?.email)} />
+
+            {/* Born YYYY — read-only; em-dash if not on file */}
             <div className="border-b border-border/40 pb-2">
               <div className="flex justify-between items-center gap-2">
                 <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.birth_year_label")}</span>
                 {profileData?.birth_year ? (
                   <span className="flex items-center gap-1.5 text-sm text-foreground font-light">
-                    {profileData.birth_year}
+                    {t("profile.born", { year: profileData.birth_year })}
                     <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
                   </span>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      value={birthYearInput}
-                      onChange={(e) => setBirthYearInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleBirthYearSubmit(); }}
-                      placeholder={t("profile.birth_year_placeholder")}
-                      className="h-7 py-0 px-2 text-sm w-24 border-border/50 focus:border-primary/40 text-right"
-                    />
-                    <button
-                      onClick={handleBirthYearSubmit}
-                      disabled={!birthYearInput || birthYearSave === "saving"}
-                      className="text-primary hover:text-primary/70 disabled:opacity-40"
-                      aria-label="Save year of birth"
-                    >
-                      <Check className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                    <SaveIndicator state={birthYearSave} t={t} />
-                  </div>
+                  <span className="text-sm text-muted-foreground/60 font-light">—</span>
                 )}
               </div>
             </div>
 
-            {/* Gender — chips when empty, locked when set */}
-            <div className="border-b border-border/40 pb-2 last:border-0 space-y-2">
-              <div className="flex justify-between items-center gap-2">
-                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.gender_label")}</span>
-                {profileData?.gender_identity ? (
+            {/* Gender — only rendered when the user has provided one */}
+            {profileData?.gender_identity && (
+              <div className="border-b border-border/40 pb-2">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.gender_label")}</span>
                   <span className="flex items-center gap-1.5 text-sm text-foreground font-light">
                     {capitalize(profileData.gender_identity.replace("_", " "))}
                     <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
                   </span>
-                ) : (
-                  <div className="flex items-center gap-0.5">
-                    <SaveIndicator state={genderSave} t={t} />
-                  </div>
-                )}
-              </div>
-              {!profileData?.gender_identity && (
-                <div className="flex flex-wrap gap-1.5">
-                  {GENDER_OPTIONS.map(({ value, labelKey }) => (
-                    <button
-                      key={value}
-                      onClick={() => handleGenderSelect(value)}
-                      disabled={genderSave === "saving"}
-                      className="px-2.5 py-1 rounded-sm text-xs border border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30 transition-all"
-                    >
-                      {t(labelKey)}
-                    </button>
-                  ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Country of origin — editable */}
+            {/* Country of origin — editable. Retained from the upstream
+                Personal Details panel; not in scope for Task #16 but kept so
+                users can still update it. */}
             <div className="border-b border-border/40 pb-2 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
@@ -983,6 +997,7 @@ export default function Profile() {
               )}
             </div>
 
+            {/* Phone — placeholder; real SMS verification ships later */}
             <div className="pt-1 border-t border-border/50">
               <div className="flex justify-between items-baseline">
                 <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/60">{t("profile.phone_label")}</span>
@@ -1001,59 +1016,36 @@ export default function Profile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/* Language */}
+            {/* Language — labelled <select> dropdown of the supported base
+                languages. Selecting an option PATCHes the user profile and
+                immediately switches the UI locale. */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_language")}</label>
+                <label
+                  htmlFor="profile-language-select"
+                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground"
+                >
+                  {t("profile.pref_language")}
+                </label>
                 <SaveIndicator state={langSave} t={t} />
               </div>
-              <div className="relative">
-                <button
-                  onClick={() => setLangDropdownOpen((v) => !v)}
-                  onBlur={() => setTimeout(() => setLangDropdownOpen(false), 150)}
-                  disabled={langSave === "saving"}
-                  aria-haspopup="listbox"
-                  aria-expanded={langDropdownOpen}
-                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
-                >
-                  {(() => {
-                    const selectedGroup = LOCALE_GROUPS.find((g) => g.locales.some((l) => l.locale === locale));
-                    const firstLocale = selectedGroup?.locales[0];
-                    return firstLocale ? (
-                      <>
-                        <FlagEmoji code={firstLocale.flag} />
-                        <span className="font-medium flex-1">{selectedGroup?.groupLabel}</span>
-                      </>
-                    ) : <span className="flex-1 font-light text-muted-foreground">{locale}</span>;
-                  })()}
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${langDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {langDropdownOpen && (
-                  <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
-                    {LOCALE_GROUPS.map((group) => {
-                      const firstLocale = group.locales[0];
-                      const isSelected = group.locales.some((l) => l.locale === locale);
-                      return (
-                        <button
-                          key={group.groupLabel}
-                          role="option"
-                          aria-selected={isSelected}
-                          onMouseDown={() => { handleLanguageChange(firstLocale.locale); setLangDropdownOpen(false); }}
-                          disabled={langSave === "saving"}
-                          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
-                            isSelected
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          }`}
-                        >
-                          <FlagEmoji code={firstLocale.flag} />
-                          {group.groupLabel}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <select
+                id="profile-language-select"
+                aria-label={t("profile.lang_label")}
+                value={locale.split("-")[0]}
+                disabled={langSave === "saving"}
+                onChange={(e) => {
+                  const opt = PROFILE_LANGUAGE_OPTIONS.find((o) => o.code === e.target.value);
+                  if (opt) handleLanguageChange(opt.locale);
+                }}
+                className="w-full px-3 py-2 rounded-sm border border-border/60 bg-card text-sm text-foreground hover:border-primary/40 focus:border-primary focus:outline-none transition-all"
+              >
+                {PROFILE_LANGUAGE_OPTIONS.map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Region */}

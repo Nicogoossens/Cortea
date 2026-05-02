@@ -10,5 +10,6 @@ export interface SubmitAnswerBody {
   scenario_id: number;
   selected_option_index: number;
   time_taken_seconds?: number;
+  /** BCP-47 language tag (e.g. "nl", "fr"). Used to return mentor feedback in the correct language. */
   lang?: string;
 }

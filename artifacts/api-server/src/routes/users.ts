@@ -192,6 +192,79 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
 router.put("/users/profile", requireAuthUser, handleUpdateProfile);
 router.patch("/users/profile", requireAuthUser, handleUpdateProfile);
 
+const PatchPreferencesQuerySchema = z.object({
+  user_id: z.string().min(1),
+});
+
+const PatchPreferencesBodySchema = z.object({
+  language_code: z.string().min(2).max(10).optional(),
+  active_region: z.string().min(2).max(10).optional(),
+}).refine(
+  (data) => data.language_code !== undefined || data.active_region !== undefined,
+  { message: "At least one of language_code or active_region must be provided." },
+);
+
+/**
+ * PATCH /users/profile?user_id=...
+ *
+ * Lightweight preference update. Accepts only `language_code` and/or
+ * `active_region` so the Profile page can persist the user's chosen
+ * language and etiquette region without touching any other field.
+ *
+ * Authentication: requires a valid bearer session token. The `user_id`
+ * supplied as a query parameter is additionally validated to match the
+ * authenticated user, preventing cross-account writes even if a token
+ * is somehow shared.
+ */
+router.patch("/users/profile", requireAuthUser, async (req, res) => {
+  try {
+    const authedUserId = getResolvedUserId(req);
+
+    const queryParsed = PatchPreferencesQuerySchema.safeParse(req.query);
+    if (!queryParsed.success) {
+      return res.status(400).json({ message: "A user identifier is required to update preferences." });
+    }
+    if (queryParsed.data.user_id !== authedUserId) {
+      return res.status(403).json({ message: "You may only update your own preferences." });
+    }
+
+    const bodyParsed = PatchPreferencesBodySchema.safeParse(req.body);
+    if (!bodyParsed.success) {
+      return res.status(400).json({ message: "The preferences provided are not valid." });
+    }
+
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, authedUserId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    const data = bodyParsed.data;
+    const updateFields: Partial<typeof usersTable.$inferInsert> = {};
+    if (data.language_code !== undefined) updateFields.language_code = data.language_code;
+    if (data.active_region !== undefined) {
+      updateFields.active_region = data.active_region;
+      updateFields.region_history = Array.from(
+        new Set([...existing.region_history, data.active_region]),
+      );
+    }
+
+    const [updated] = await db.update(usersTable)
+      .set(updateFields)
+      .where(eq(usersTable.id, authedUserId))
+      .returning();
+
+    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    return res.json({
+      ...safeUser,
+      age_group: computeAgeGroup(updated.birth_year, updated.noble_score),
+      gender: updated.gender_identity ?? null,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to patch profile preferences");
+    return res.status(500).json({ message: "A difficulty arose while updating your preferences." });
+  }
+});
+
 const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),
 });

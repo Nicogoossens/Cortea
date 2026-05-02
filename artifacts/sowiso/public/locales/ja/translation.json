@@ -577,5 +577,9 @@
   "welcome.disclaimer": "このツールは、社会的な相互作用に関する心理学的研究や、社会の様々な階層におけるマナーの研究を含む、多くの高名な著作に基づいて開発されています。",
   "home.welcome_back_anonymous": "おかえりなさい。",
   "home.welcome_back_prompt": "名前を追加して、このご挨拶をパーソナライズしてください。",
-  "home.welcome_back_dismiss": "閉じる"
+  "home.welcome_back_dismiss": "閉じる",
+"profile.member_fallback": "メンバー",
+  "profile.born": "{{year}}年生まれ",
+  "profile.lang_label": "言語",
+  "profile.region_label": "地域"
 }

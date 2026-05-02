@@ -41,6 +41,13 @@ paths:
       operationId: getProfile
       tags: [users]
       summary: Get current user profile
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional user identifier; bearer token is the source of truth.
       responses:
         "200":
           description: User profile
@@ -88,6 +95,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: patchProfilePreferences
+      tags: [users]
+      summary: Patch user preferences (language and active region)
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User identifier; must match the authenticated session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchProfilePreferencesBody"
+      responses:
+        "200":
+          description: Profile preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Profile not found
           content:
@@ -603,6 +646,16 @@ components:
           type: string
       required:
         - region_code
+
+    PatchProfilePreferencesBody:
+      type: object
+      properties:
+        language_code:
+          type: string
+          description: BCP-47 base language code (e.g. en, nl, fr).
+        active_region:
+          type: string
+          description: ISO 3166-1 alpha-2 region code (e.g. GB, NL, US).
 
     CultureProtocol:
       type: object

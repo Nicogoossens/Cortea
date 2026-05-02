@@ -18,6 +18,13 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get current user profile
  */
+export const GetProfileQueryParams = zod.object({
+  user_id: zod.coerce
+    .string()
+    .optional()
+    .describe("Optional user identifier; bearer token is the source of truth."),
+});
+
 export const GetProfileResponse = zod.object({
   id: zod.string(),
   full_name: zod.string().nullish(),
@@ -110,6 +117,59 @@ export const UpdateProfileBody = zod.object({
 });
 
 export const UpdateProfileResponse = zod.object({
+  id: zod.string(),
+  full_name: zod.string().nullish(),
+  email: zod.string().nullish(),
+  email_verified: zod.boolean(),
+  birth_year: zod.number().nullish(),
+  gender_identity: zod.string().nullish(),
+  gender_expression: zod.string().nullish(),
+  gender: zod.string().nullish().describe("Computed alias for gender_identity"),
+  age_group: zod
+    .string()
+    .nullish()
+    .describe('Computed from birth_year (e.g. \"18-25\", \"26-35\")'),
+  noble_score: zod.number(),
+  ambition_level: zod.enum(["casual", "professional", "diplomatic"]),
+  subscription_tier: zod.enum(["guest", "traveller", "ambassador"]),
+  subscription_status: zod.string(),
+  language_code: zod.string(),
+  active_region: zod.string(),
+  region_history: zod.array(zod.string()),
+  is_admin: zod.boolean(),
+  suspended_at: zod.coerce.date().nullish(),
+  onboarding_completed: zod.boolean(),
+  country_of_origin: zod.string().nullish(),
+  objectives: zod.array(zod.string()),
+  interests_sports: zod.array(zod.string()),
+  interests_cuisine: zod.array(zod.string()),
+  interests_dress_code: zod.array(zod.string()),
+  payment_customer_id: zod.string().nullish(),
+  trial_ends_at: zod.coerce.date().nullish(),
+  created_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Patch user preferences (language and active region)
+ */
+export const PatchProfilePreferencesQueryParams = zod.object({
+  user_id: zod.coerce
+    .string()
+    .describe("User identifier; must match the authenticated session."),
+});
+
+export const PatchProfilePreferencesBody = zod.object({
+  language_code: zod
+    .string()
+    .optional()
+    .describe("BCP-47 base language code (e.g. en, nl, fr)."),
+  active_region: zod
+    .string()
+    .optional()
+    .describe("ISO 3166-1 alpha-2 region code (e.g. GB, NL, US)."),
+});
+
+export const PatchProfilePreferencesResponse = zod.object({
   id: zod.string(),
   full_name: zod.string().nullish(),
   email: zod.string().nullish(),
@@ -446,6 +506,7 @@ export const GetNobleScoreResponse = zod.object({
   level_name: zod.string(),
   level_color: zod.string(),
   next_level_threshold: zod.number(),
+  next_level_name: zod.string().nullish(),
   pillars: zod.array(
     zod.object({
       pillar: zod.number(),
@@ -466,6 +527,12 @@ export const SubmitScenarioAnswerBody = zod.object({
   scenario_id: zod.number(),
   selected_option_index: zod.number(),
   time_taken_seconds: zod.number().optional(),
+  lang: zod
+    .string()
+    .optional()
+    .describe(
+      'BCP-47 language tag (e.g. \"nl\", \"fr\"). Used to return mentor feedback in the correct language.',
+    ),
 });
 
 export const SubmitScenarioAnswerResponse = zod.object({

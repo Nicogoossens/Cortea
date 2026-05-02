@@ -685,5 +685,9 @@
   "privacy.data_scenarios_label": "Szenarioantworten",
   "privacy.data_scenarios_detail": "Lokal für die Sitzungskontinuität gespeichert. Ihre Punktzahl wird unabhängig serverseitig aufgezeichnet.",
   "privacy.data_calling_card_label": "Visitenkarte",
-  "privacy.data_calling_card_detail": "Nur für verifizierte Botschafter sichtbar. Ihre E-Mail und persönliche Daten werden niemals weitergegeben."
+  "privacy.data_calling_card_detail": "Nur für verifizierte Botschafter sichtbar. Ihre E-Mail und persönliche Daten werden niemals weitergegeben.",
+"profile.member_fallback": "Mitglied",
+  "profile.born": "Geboren {{year}}",
+  "profile.lang_label": "Sprache",
+  "profile.region_label": "Region"
 }

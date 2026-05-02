@@ -583,5 +583,9 @@
   "welcome.disclaimer": "This tool is developed on the basis of multiple acclaimed works, including psychological studies on social interaction and the study of manners across the different strata of society.",
   "home.welcome_back_anonymous": "Welcome back.",
   "home.welcome_back_prompt": "Add your name to personalise this greeting.",
-  "home.welcome_back_dismiss": "Dismiss"
+  "home.welcome_back_dismiss": "Dismiss",
+"profile.member_fallback": "Member",
+  "profile.born": "Born {{year}}",
+  "profile.lang_label": "Language",
+  "profile.region_label": "Region"
 }

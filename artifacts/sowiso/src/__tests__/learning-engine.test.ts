@@ -237,25 +237,37 @@ describe("region-membership guard for /learning-tracks/session", () => {
   });
 });
 
-// ── contrast boost suppression when origin == interest region ──────────────
+// ── contrast boost suppression: canonical ISO mapping (no substrings) ──────
+import { originMatchesRegion } from "../../../api-server/src/lib/learning-engine-pure";
+const NAME_TO_ISO: Record<string, string> = {
+  "belgium": "BE", "united kingdom": "GB", "italy": "IT", "france": "FR",
+  "benin": "BJ", "india": "IN", "china": "CN", "indonesia": "ID",
+};
 function isContrastEnabled(origin: string | null, interestRegion: string): boolean {
-  const o = origin?.trim().toLowerCase() ?? "";
-  if (!o) return false;
-  const r = interestRegion.toLowerCase();
-  if (o === r || o.includes(r) || r.includes(o)) return false;
-  return true;
+  if (!origin || !origin.trim()) return false;
+  return !originMatchesRegion(origin, interestRegion, NAME_TO_ISO);
 }
 
 describe("contrast boost gate", () => {
-  it("disables contrast scoring when studying your own country", () => {
-    expect(isContrastEnabled("Belgium", "BE")).toBe(false); // "belgium".includes("be")
-    expect(isContrastEnabled("be", "BE")).toBe(false);
-    expect(isContrastEnabled("United Kingdom", "United Kingdom")).toBe(false);
+  it("disables contrast scoring when studying your own country (canonical match)", () => {
+    expect(isContrastEnabled("Belgium", "BE")).toBe(false);
+    expect(isContrastEnabled("BE", "BE")).toBe(false);
+    expect(isContrastEnabled("United Kingdom", "GB")).toBe(false);
   });
 
   it("enables contrast scoring when origin and interest country differ", () => {
     expect(isContrastEnabled("Belgium", "GB")).toBe(true);
     expect(isContrastEnabled("Italy", "FR")).toBe(true);
+  });
+
+  it("does NOT false-positive on substring overlaps", () => {
+    // "Benin".includes("in") would have suppressed contrast for India — bug.
+    expect(isContrastEnabled("Benin", "IN")).toBe(true);
+    expect(isContrastEnabled("China", "IN")).toBe(true);
+    expect(isContrastEnabled("Indonesia", "IN")).toBe(true);
+    // And the legacy "Belgium" vs "BE" substring trap is fixed too.
+    expect(isContrastEnabled("Belgium", "BE")).toBe(false); // genuine match
+    expect(isContrastEnabled("Belize", "BE")).toBe(true);   // different country
   });
 
   it("disables contrast scoring when origin is not set", () => {

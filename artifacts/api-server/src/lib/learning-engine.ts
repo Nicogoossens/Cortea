@@ -18,7 +18,18 @@ import {
   shouldLevelUp as pureShouldLevelUp,
   computeReserve as pureComputeReserve,
   isSessionAllowed as pureIsSessionAllowed,
+  originMatchesRegion,
 } from "./learning-engine-pure";
+import { WORLD_COUNTRIES } from "./world-countries";
+
+// Build a name->ISO map once at module load. Lower-cased English names map
+// to their ISO-2 code. Used by reRankByInterestAndContrast for deterministic
+// origin-vs-region comparison (no fragile substring matches).
+const COUNTRY_NAME_TO_ISO: Record<string, string> = (() => {
+  const m: Record<string, string> = {};
+  for (const c of WORLD_COUNTRIES) m[c.name.toLowerCase()] = c.code;
+  return m;
+})();
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Configuration
@@ -204,13 +215,13 @@ function reRankByInterestAndContrast(
   const interests = new Set(ctx.situationalInterests.map((s) => s.toLowerCase()));
   const origin = ctx.countryOfOrigin?.trim().toLowerCase() ?? "";
   // Contrast scoring is meaningful only when the user is studying a country
-  // OTHER than their own. If the origin matches the interest country (either
-  // by ISO code or by name appearing in the country name table), we suppress
-  // the contrast boost to avoid surfacing "look how different they are"
-  // material when the answer is "this IS your home country".
-  const interestRegion = ctx.regionCode?.toLowerCase() ?? "";
-  const originMatchesInterest =
-    !!origin && (origin === interestRegion || origin.includes(interestRegion) || interestRegion.includes(origin));
+  // OTHER than their own. We compare via canonical ISO mapping (name->ISO)
+  // rather than substrings to avoid false positives like "Benin".includes("in").
+  const originMatchesInterest = originMatchesRegion(
+    ctx.countryOfOrigin ?? null,
+    ctx.regionCode ?? "",
+    COUNTRY_NAME_TO_ISO,
+  );
   const contrastEnabled = !!origin && !originMatchesInterest;
 
   function score(q: RawQuestion): { score: number; source: SelectedQuestion["source"] } {

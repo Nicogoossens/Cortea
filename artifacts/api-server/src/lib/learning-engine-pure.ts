@@ -113,3 +113,26 @@ export interface ProgressRow { register: string; phase: number; region_code: str
 export function lookupProgress(rows: ProgressRow[], register: string, phase: number, region: string) {
   return rows.find((r) => r.register === register && r.phase === phase && r.region_code === region);
 }
+
+/**
+ * Canonical-ISO origin matcher. The user's `country_of_origin` is stored as
+ * a free-text string (English country name OR ISO-2 code, depending on
+ * which form the UI captured). To compare it against an ISO-2 region code
+ * deterministically we normalize via a name->ISO map, falling back to a
+ * direct ISO equality check. Substring matches are NOT used (they cause
+ * false positives like "Benin".includes("in") -> India).
+ */
+export function originMatchesRegion(
+  origin: string | null | undefined,
+  regionCode: string,
+  nameToIso: Record<string, string>,
+): boolean {
+  if (!origin) return false;
+  const o = origin.trim();
+  if (!o) return false;
+  const r = regionCode.trim().toUpperCase();
+  if (!r) return false;
+  if (o.toUpperCase() === r) return true;
+  const mapped = nameToIso[o.toLowerCase()];
+  return !!mapped && mapped.toUpperCase() === r;
+}

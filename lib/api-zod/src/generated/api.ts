@@ -250,6 +250,34 @@ export const UpdateActiveRegionResponse = zod.object({
 });
 
 /**
+ * @summary Get historical and cultural origin records for a region
+ */
+export const GetCulturalOriginsQueryParams = zod.object({
+  region_code: zod.coerce
+    .string()
+    .describe("ISO country code (e.g. GB, CN, CA)"),
+  domain: zod
+    .enum(["dining", "business", "greetings", "gift-giving", "dress"])
+    .optional()
+    .describe("Filter by domain. Omit for all domains."),
+});
+
+export const GetCulturalOriginsResponseItem = zod.object({
+  id: zod.number(),
+  region_code: zod.string(),
+  domain: zod.string(),
+  tradition: zod.string(),
+  origin_summary: zod.string(),
+  era: zod.string(),
+  influences: zod.array(zod.string()),
+  connected_rule: zod.string(),
+  created_at: zod.coerce.date().optional(),
+});
+export const GetCulturalOriginsResponse = zod.array(
+  GetCulturalOriginsResponseItem,
+);
+
+/**
  * @summary Get culture protocols for a region and pillar
  */
 export const getCultureProtocolsQueryPillarMax = 5;
@@ -577,6 +605,130 @@ export const GetPillarProgressResponseItem = zod.object({
 });
 export const GetPillarProgressResponse = zod.array(
   GetPillarProgressResponseItem,
+);
+
+/**
+ * @summary Get a learning track session for the current user
+ */
+export const GetLearningTrackSessionQueryParams = zod.object({
+  register: zod.enum(["middle_class", "elite"]),
+  research_pillar: zod.coerce.string().optional(),
+  phase: zod.coerce.number(),
+  region_code: zod.coerce.string(),
+  lang: zod.coerce.string().optional(),
+});
+
+export const GetLearningTrackSessionResponse = zod.object({
+  questions: zod.array(
+    zod.object({
+      id: zod.number(),
+      question_text: zod.string(),
+      historical_context: zod.string().nullish(),
+      options: zod.array(
+        zod.object({
+          text: zod.string(),
+        }),
+      ),
+    }),
+  ),
+  current_level: zod.number(),
+  questions_done: zod.number(),
+  correct_streak: zod.number(),
+  mastered: zod.boolean(),
+  demographic: zod.string(),
+  repeat: zod.boolean(),
+  has_questions: zod.boolean(),
+});
+
+/**
+ * @summary Submit an answer to a learning track question
+ */
+export const PostLearningTrackAnswerBody = zod.object({
+  question_id: zod.number(),
+  selected_option_index: zod.number(),
+  register: zod.enum(["middle_class", "elite"]),
+  research_pillar: zod.string().nullish(),
+  phase: zod.number(),
+});
+
+export const PostLearningTrackAnswerResponse = zod.object({
+  correct: zod.boolean(),
+  answer_tier: zod.number(),
+  motivation: zod.string(),
+  historical_context: zod.string().nullish(),
+  level_up: zod.boolean(),
+  mastered: zod.boolean(),
+  repeat: zod.boolean(),
+  correct_streak: zod.number(),
+  current_level: zod.number(),
+  new_badges: zod.array(
+    zod.object({
+      id: zod.number(),
+      badge_key: zod.string(),
+      badge_name: zod.string(),
+      badge_description: zod.string().nullish(),
+      badge_type: zod.string(),
+      register: zod.string().nullish(),
+      region_code: zod.string().nullish(),
+      phase: zod.number().nullish(),
+      research_pillar: zod.string().nullish(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get learning track progress for the current user
+ */
+export const GetLearningTrackProgressResponseItem = zod.object({
+  id: zod.number(),
+  user_id: zod.string(),
+  register: zod.string(),
+  research_pillar: zod.string().nullish(),
+  phase: zod.number(),
+  region_code: zod.string(),
+  current_level: zod.number(),
+  questions_done: zod.number(),
+  correct_streak: zod.number(),
+  mastered: zod.boolean(),
+});
+export const GetLearningTrackProgressResponse = zod.array(
+  GetLearningTrackProgressResponseItem,
+);
+
+/**
+ * @summary Get badges earned by the current user
+ */
+export const GetLearningTrackBadgesResponseItem = zod.object({
+  id: zod.number(),
+  badge_key: zod.string(),
+  badge_name: zod.string(),
+  badge_description: zod.string().nullish(),
+  badge_type: zod.string(),
+  register: zod.string().nullish(),
+  region_code: zod.string().nullish(),
+  phase: zod.number().nullish(),
+  research_pillar: zod.string().nullish(),
+});
+export const GetLearningTrackBadgesResponse = zod.array(
+  GetLearningTrackBadgesResponseItem,
+);
+
+/**
+ * @summary Get all available badges in the catalogue
+ */
+export const GetLearningTrackBadgesAvailableResponseItem = zod.object({
+  id: zod.number(),
+  badge_key: zod.string(),
+  badge_name: zod.string(),
+  badge_description: zod.string().nullish(),
+  badge_type: zod.string(),
+  register: zod.string().nullish(),
+  region_code: zod.string().nullish(),
+  phase: zod.number().nullish(),
+  research_pillar: zod.string().nullish(),
+});
+export const GetLearningTrackBadgesAvailableResponse = zod.array(
+  GetLearningTrackBadgesAvailableResponseItem,
 );
 
 /**

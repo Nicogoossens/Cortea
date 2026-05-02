@@ -3,13 +3,15 @@ import {
   getGetCultureCompassRegionQueryKey,
   useGetCultureProtocols,
   getGetCultureProtocolsQueryKey,
+  useGetCulturalOrigins,
+  getGetCulturalOriginsQueryKey,
   useGetProfile,
   type CultureProtocol,
 } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -34,6 +36,8 @@ const CC_PILLAR_META: Record<PillarCode, { titleKey: string; descKey: string }> 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const DOMAIN_ORDER = ["dining", "business", "greetings", "gift-giving", "dress"];
 
 type VenueCategoryTab = {
   id: VenueCategory;
@@ -189,6 +193,127 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
           </div>
         )}
       </div>
+    </section>
+  );
+}
+
+function domainLabel(domain: string, t: (k: string) => string): string {
+  const key = `compass.origins_domain_${domain}`;
+  const translated = t(key);
+  return translated !== key ? translated : domain.charAt(0).toUpperCase() + domain.slice(1);
+}
+
+function OriginsSection({ regionCode, t }: { regionCode: string; t: (k: string, v?: Record<string, string | number> | string) => string }) {
+  const [open, setOpen] = useState(false);
+
+  const { data: origins, isLoading } = useGetCulturalOrigins(
+    { region_code: regionCode },
+    {
+      query: {
+        enabled: !!regionCode,
+        queryKey: getGetCulturalOriginsQueryKey({ region_code: regionCode }),
+      },
+    }
+  );
+
+  const grouped: Record<string, typeof origins> = {};
+  if (origins) {
+    for (const o of origins) {
+      if (!grouped[o.domain]) grouped[o.domain] = [];
+      grouped[o.domain]!.push(o);
+    }
+  }
+
+  const sortedDomains = DOMAIN_ORDER.filter((d) => grouped[d]).concat(
+    Object.keys(grouped).filter((d) => !DOMAIN_ORDER.includes(d))
+  );
+
+  return (
+    <section aria-labelledby="origins-heading" className="space-y-4 pt-4 border-t border-border/40">
+      <button
+        id="origins-heading"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 group py-2"
+        aria-expanded={open}
+        aria-controls="origins-panel"
+      >
+        <div className="flex items-center gap-3">
+          <BookOpen className="w-5 h-5 text-primary flex-shrink-0" aria-hidden="true" />
+          <div className="text-left">
+            <h2 className="font-serif text-2xl text-foreground group-hover:text-primary transition-colors">
+              {t("compass.origins_title")}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("compass.origins_subtitle")}</p>
+          </div>
+        </div>
+        {open
+          ? <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+          : <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
+        }
+      </button>
+
+      {open && (
+        <div id="origins-panel" className="space-y-8 animate-in fade-in duration-300">
+          {isLoading && (
+            <div className="space-y-4">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          )}
+
+          {!isLoading && origins && origins.length === 0 && (
+            <p className="text-sm text-muted-foreground italic py-4">{t("compass.origins_empty")}</p>
+          )}
+
+          {!isLoading && sortedDomains.map((domain) => (
+            <div key={domain} className="space-y-4">
+              <h3 className="text-xs font-mono uppercase tracking-widest text-primary/70 border-b border-border pb-2">
+                {domainLabel(domain, t)}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {grouped[domain]!.map((origin) => (
+                  <Card key={origin.id} className="border-border/60 shadow-sm bg-card hover:border-primary/30 transition-colors">
+                    <CardHeader className="pb-3 border-b border-border/20 bg-muted/5">
+                      <CardTitle className="text-base font-serif leading-snug">{origin.tradition}</CardTitle>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground mt-1">
+                        <span className="text-primary/60 uppercase tracking-widest">{t("compass.origins_era")}:</span>
+                        {origin.era}
+                      </span>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">{origin.origin_summary}</p>
+
+                      {origin.influences && origin.influences.length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">
+                            {t("compass.origins_influences")}
+                          </span>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {origin.influences.map((inf) => (
+                              <span key={inf} className="px-2 py-0.5 text-xs rounded-sm bg-primary/8 text-primary/80 border border-primary/15 font-light">
+                                {inf}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-2 border-t border-border/30 space-y-1">
+                        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">
+                          {t("compass.origins_connected_rule")}
+                        </span>
+                        <p className="text-sm font-serif italic text-foreground/80 leading-relaxed">
+                          "{origin.connected_rule}"
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -646,6 +771,9 @@ export default function CompassRegion() {
           </div>
         </section>
       )}
+
+      {/* Oorsprong & Kroniek — Historical origins */}
+      <OriginsSection regionCode={regionCode} t={t} />
 
       {/* Full dos and don'ts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8">

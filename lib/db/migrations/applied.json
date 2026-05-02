@@ -100,6 +100,23 @@
       "environment": "development",
       "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='translations' AND column_name='calibrated_module'",
       "status": "pending"
+    },
+    {
+      "id": "0008_cultural_origins_table",
+      "file": "lib/db/migrations/0008_cultural_origins_table.sql",
+      "appliedAt": "2026-05-02",
+      "environment": "development",
+      "verificationQuery": "SELECT COUNT(*) AS count, region_code FROM cultural_origins GROUP BY region_code ORDER BY region_code",
+      "verificationResult": {
+        "rowCount": 3,
+        "rows": [
+          { "count": "5", "region_code": "CA" },
+          { "count": "5", "region_code": "CN" },
+          { "count": "5", "region_code": "GB" }
+        ],
+        "note": "15 cultural origin records seeded (5 per region: GB, CN, CA). Indexes co_region_code_idx and co_region_domain_idx created. ON CONFLICT DO NOTHING ensures idempotent re-runs."
+      },
+      "status": "applied"
     }
   ]
 }

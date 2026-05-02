@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { cultureProtocolsTable, compassRegionsTable } from "@workspace/db";
+import { cultureProtocolsTable, compassRegionsTable, culturalOriginsTable } from "@workspace/db";
 import { eq, and, or, isNull, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -278,6 +278,38 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass region");
     return res.status(500).json({ message: "The Cultural Compass is momentarily unavailable." });
+  }
+});
+
+const CulturalOriginsQuerySchema = z.object({
+  region_code: z.string().min(1).max(10),
+  domain: z.string().optional(),
+});
+
+router.get("/culture/origins", async (req, res) => {
+  try {
+    const parsed = CulturalOriginsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "A valid region code must be specified." });
+    }
+
+    const { region_code, domain } = parsed.data;
+    const regionCode = region_code.toUpperCase();
+
+    const conditions = [eq(culturalOriginsTable.region_code, regionCode)];
+    if (domain) {
+      conditions.push(eq(culturalOriginsTable.domain, domain));
+    }
+
+    const rows = await db.select()
+      .from(culturalOriginsTable)
+      .where(and(...conditions))
+      .orderBy(culturalOriginsTable.domain, culturalOriginsTable.id);
+
+    return res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch cultural origins");
+    return res.status(500).json({ message: "Cultural origins are momentarily unavailable." });
   }
 });
 

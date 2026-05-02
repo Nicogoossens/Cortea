@@ -1,12 +1,11 @@
 import { useGetScenario, useSubmitScenarioAnswer, getGetScenarioQueryKey } from "@workspace/api-client-react";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Check, X, ShieldAlert, BookOpen, FileText } from "lucide-react";
-import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 import { levelKey } from "@/lib/content-labels";
 
@@ -17,6 +16,8 @@ function scoreDeltaKey(delta: number): string {
   if (delta < 0) return "profile.log.reconsidered";
   return "profile.log.observed";
 }
+
+const REGIONS_WITH_ORIGINS = ["GB", "CN", "CA"];
 
 export default function Scenario() {
   usePageTitle("Practice Scenario");
@@ -104,6 +105,9 @@ export default function Scenario() {
       }
     );
   };
+
+  const regionCode = scenario.region_code?.toUpperCase() ?? "";
+  const hasOriginsForRegion = REGIONS_WITH_ORIGINS.includes(regionCode);
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
@@ -241,40 +245,64 @@ export default function Scenario() {
       )}
 
       {result && (
-        <Card className="mt-8 border-primary/20 bg-primary/5 shadow-md animate-in slide-in-from-bottom-4" aria-live="polite" aria-atomic="true">
-          <CardHeader>
-            <CardTitle className="font-serif flex items-center gap-3">
-              <ShieldAlert className="w-6 h-6 text-primary" aria-hidden="true" />
-              {t("scenario.mentor_counsel")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-lg leading-relaxed font-serif italic text-foreground/90">
-              "{t(result.mentor_feedback)}"
-            </p>
+        <>
+          <Card className="mt-8 border-primary/20 bg-primary/5 shadow-md animate-in slide-in-from-bottom-4" aria-live="polite" aria-atomic="true">
+            <CardHeader>
+              <CardTitle className="font-serif flex items-center gap-3">
+                <ShieldAlert className="w-6 h-6 text-primary" aria-hidden="true" />
+                {t("scenario.mentor_counsel")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-lg leading-relaxed font-serif italic text-foreground/90">
+                "{t(result.mentor_feedback)}"
+              </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-t border-border/50 gap-4">
-              <div className="space-y-1">
-                <span className="text-xs text-muted-foreground uppercase tracking-widest font-mono">{t("scenario.impact")}</span>
-                <div className={`text-sm font-mono uppercase tracking-widest ${result.score_delta > 0 ? "text-green-600" : result.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                  {t(scoreDeltaKey(result.score_delta))}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-t border-border/50 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground uppercase tracking-widest font-mono">{t("scenario.impact")}</span>
+                  <div className={`text-sm font-mono uppercase tracking-widest ${result.score_delta > 0 ? "text-green-600" : result.score_delta < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                    {t(scoreDeltaKey(result.score_delta))}
+                  </div>
                 </div>
+
+                {result.level_up && result.new_level_name && (
+                  <div className="bg-secondary/20 text-secondary-foreground px-4 py-2 rounded-sm text-center border border-secondary/30">
+                    <div className="text-xs uppercase tracking-widest mb-1 opacity-80">{t("scenario.promotion")}</div>
+                    <div className="font-serif font-medium">{t("scenario.elevated_to")} {t(levelKey(result.new_level_name))}</div>
+                  </div>
+                )}
               </div>
+            </CardContent>
+            <CardFooter className="bg-background/50 border-t border-border/50 py-4 flex justify-end">
+              <Button variant="outline" onClick={() => setLocation("/atelier")} className="font-serif">
+                {t("scenario.return_atelier")}
+              </Button>
+            </CardFooter>
+          </Card>
 
-              {result.level_up && result.new_level_name && (
-                <div className="bg-secondary/20 text-secondary-foreground px-4 py-2 rounded-sm text-center border border-secondary/30">
-                  <div className="text-xs uppercase tracking-widest mb-1 opacity-80">{t("scenario.promotion")}</div>
-                  <div className="font-serif font-medium">{t("scenario.elevated_to")} {t(levelKey(result.new_level_name))}</div>
+          {/* Verdiep je verder — deeplink to Compass historical context */}
+          {hasOriginsForRegion && regionCode && (
+            <Link
+              href={`/compass/${regionCode}`}
+              className="group block animate-in slide-in-from-bottom-4 duration-500"
+              aria-label={t("scenario.go_deeper_cta", { region: regionCode })}
+            >
+              <div className="border border-border/50 hover:border-primary/40 bg-muted/20 hover:bg-primary/5 rounded-sm p-5 flex items-start gap-4 transition-all">
+                <div className="flex-shrink-0 mt-0.5">
+                  <div className="w-9 h-9 rounded-sm bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
+                  </div>
                 </div>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="bg-background/50 border-t border-border/50 py-4 flex justify-end">
-            <Button variant="outline" onClick={() => setLocation("/atelier")} className="font-serif">
-              {t("scenario.return_atelier")}
-            </Button>
-          </CardFooter>
-        </Card>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-mono uppercase tracking-widest text-primary mb-1">{t("scenario.go_deeper")}</p>
+                  <p className="text-sm text-foreground/80 leading-snug">{t("scenario.go_deeper_desc")}</p>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0 rotate-180 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+              </div>
+            </Link>
+          )}
+        </>
       )}
     </div>
   );

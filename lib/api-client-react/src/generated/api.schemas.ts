@@ -124,6 +124,18 @@ export interface PatchProfilePreferencesBody {
   active_region?: string;
 }
 
+export interface CulturalOrigin {
+  id: number;
+  region_code: string;
+  domain: string;
+  tradition: string;
+  origin_summary: string;
+  era: string;
+  influences: string[];
+  connected_rule: string;
+  created_at?: string;
+}
+
 export type CultureProtocolGenderApplicability =
   (typeof CultureProtocolGenderApplicability)[keyof typeof CultureProtocolGenderApplicability];
 
@@ -293,6 +305,82 @@ export interface ScoreLogEntry {
   timestamp: string;
 }
 
+export type LearningTrackQuestionOptionsItem = {
+  text: string;
+};
+
+export interface LearningTrackQuestion {
+  id: number;
+  question_text: string;
+  historical_context?: string | null;
+  options: LearningTrackQuestionOptionsItem[];
+}
+
+export interface LearningTrackSession {
+  questions: LearningTrackQuestion[];
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  mastered: boolean;
+  demographic: string;
+  repeat: boolean;
+  has_questions: boolean;
+}
+
+export type LearningTrackAnswerBodyRegister =
+  (typeof LearningTrackAnswerBodyRegister)[keyof typeof LearningTrackAnswerBodyRegister];
+
+export const LearningTrackAnswerBodyRegister = {
+  middle_class: "middle_class",
+  elite: "elite",
+} as const;
+
+export interface LearningTrackAnswerBody {
+  question_id: number;
+  selected_option_index: number;
+  register: LearningTrackAnswerBodyRegister;
+  research_pillar?: string | null;
+  phase: number;
+}
+
+export interface UserBadge {
+  id: number;
+  badge_key: string;
+  badge_name: string;
+  badge_description?: string | null;
+  badge_type: string;
+  register?: string | null;
+  region_code?: string | null;
+  phase?: number | null;
+  research_pillar?: string | null;
+}
+
+export interface LearningTrackAnswerResult {
+  correct: boolean;
+  answer_tier: number;
+  motivation: string;
+  historical_context?: string | null;
+  level_up: boolean;
+  mastered: boolean;
+  repeat: boolean;
+  correct_streak: number;
+  current_level: number;
+  new_badges: UserBadge[];
+}
+
+export interface LearningTrackProgress {
+  id: number;
+  user_id: string;
+  register: string;
+  research_pillar?: string | null;
+  phase: number;
+  region_code: string;
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  mastered: boolean;
+}
+
 export type GetProfileParams = {
   /**
    * Optional user identifier; bearer token is the source of truth.
@@ -306,6 +394,28 @@ export type PatchProfilePreferencesParams = {
    */
   user_id: string;
 };
+
+export type GetCulturalOriginsParams = {
+  /**
+   * ISO country code (e.g. GB, CN, CA)
+   */
+  region_code: string;
+  /**
+   * Filter by domain. Omit for all domains.
+   */
+  domain?: GetCulturalOriginsDomain;
+};
+
+export type GetCulturalOriginsDomain =
+  (typeof GetCulturalOriginsDomain)[keyof typeof GetCulturalOriginsDomain];
+
+export const GetCulturalOriginsDomain = {
+  dining: "dining",
+  business: "business",
+  greetings: "greetings",
+  "gift-giving": "gift-giving",
+  dress: "dress",
+} as const;
 
 export type GetCultureProtocolsParams = {
   /**
@@ -412,6 +522,22 @@ export type GetScenarioParams = {
 export type GetNobleScoreLogParams = {
   limit?: number;
 };
+
+export type GetLearningTrackSessionParams = {
+  register: GetLearningTrackSessionRegister;
+  research_pillar?: string;
+  phase: number;
+  region_code: string;
+  lang?: string;
+};
+
+export type GetLearningTrackSessionRegister =
+  (typeof GetLearningTrackSessionRegister)[keyof typeof GetLearningTrackSessionRegister];
+
+export const GetLearningTrackSessionRegister = {
+  middle_class: "middle_class",
+  elite: "elite",
+} as const;
 
 export type GetTranslationsParams = {
   /**

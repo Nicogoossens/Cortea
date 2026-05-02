@@ -174,6 +174,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserProfile"
 
+  /culture/origins:
+    get:
+      operationId: getCulturalOrigins
+      tags: [culture]
+      summary: Get historical and cultural origin records for a region
+      parameters:
+        - name: region_code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ISO country code (e.g. GB, CN, CA)
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [dining, business, greetings, gift-giving, dress]
+          description: Filter by domain. Omit for all domains.
+      responses:
+        "200":
+          description: Cultural origin records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CulturalOrigin"
+        "400":
+          description: Missing or invalid region code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /culture/protocols:
     get:
       operationId: getCultureProtocols
@@ -443,6 +478,110 @@ paths:
                 items:
                   $ref: "#/components/schemas/PillarProgress"
 
+  /learning-tracks/session:
+    get:
+      operationId: getLearningTrackSession
+      tags: [culture]
+      summary: Get a learning track session for the current user
+      parameters:
+        - name: register
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [middle_class, elite]
+        - name: research_pillar
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: phase
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: region_code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: lang
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Learning track session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningTrackSession"
+
+  /learning-tracks/answer:
+    post:
+      operationId: postLearningTrackAnswer
+      tags: [culture]
+      summary: Submit an answer to a learning track question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LearningTrackAnswerBody"
+      responses:
+        "200":
+          description: Answer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningTrackAnswerResult"
+
+  /learning-tracks/progress:
+    get:
+      operationId: getLearningTrackProgress
+      tags: [culture]
+      summary: Get learning track progress for the current user
+      responses:
+        "200":
+          description: Progress records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LearningTrackProgress"
+
+  /learning-tracks/badges:
+    get:
+      operationId: getLearningTrackBadges
+      tags: [culture]
+      summary: Get badges earned by the current user
+      responses:
+        "200":
+          description: User badges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBadge"
+
+  /learning-tracks/badges/available:
+    get:
+      operationId: getLearningTrackBadgesAvailable
+      tags: [culture]
+      summary: Get all available badges in the catalogue
+      responses:
+        "200":
+          description: Badge catalogue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBadge"
+
   /translations:
     get:
       operationId: getTranslations
@@ -656,6 +795,40 @@ components:
         active_region:
           type: string
           description: ISO 3166-1 alpha-2 region code (e.g. GB, NL, US).
+
+    CulturalOrigin:
+      type: object
+      properties:
+        id:
+          type: integer
+        region_code:
+          type: string
+        domain:
+          type: string
+        tradition:
+          type: string
+        origin_summary:
+          type: string
+        era:
+          type: string
+        influences:
+          type: array
+          items:
+            type: string
+        connected_rule:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - region_code
+        - domain
+        - tradition
+        - origin_summary
+        - era
+        - influences
+        - connected_rule
 
     CultureProtocol:
       type: object
@@ -974,3 +1147,183 @@ components:
         - score_delta
         - trigger
         - timestamp
+
+    LearningTrackQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        question_text:
+          type: string
+        historical_context:
+          type: string
+          nullable: true
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+            required:
+              - text
+      required:
+        - id
+        - question_text
+        - options
+
+    LearningTrackSession:
+      type: object
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearningTrackQuestion"
+        current_level:
+          type: integer
+        questions_done:
+          type: integer
+        correct_streak:
+          type: integer
+        mastered:
+          type: boolean
+        demographic:
+          type: string
+        repeat:
+          type: boolean
+        has_questions:
+          type: boolean
+      required:
+        - questions
+        - current_level
+        - questions_done
+        - correct_streak
+        - mastered
+        - demographic
+        - repeat
+        - has_questions
+
+    LearningTrackAnswerBody:
+      type: object
+      properties:
+        question_id:
+          type: integer
+        selected_option_index:
+          type: integer
+        register:
+          type: string
+          enum: [middle_class, elite]
+        research_pillar:
+          type: string
+          nullable: true
+        phase:
+          type: integer
+      required:
+        - question_id
+        - selected_option_index
+        - register
+        - phase
+
+    LearningTrackAnswerResult:
+      type: object
+      properties:
+        correct:
+          type: boolean
+        answer_tier:
+          type: integer
+        motivation:
+          type: string
+        historical_context:
+          type: string
+          nullable: true
+        level_up:
+          type: boolean
+        mastered:
+          type: boolean
+        repeat:
+          type: boolean
+        correct_streak:
+          type: integer
+        current_level:
+          type: integer
+        new_badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserBadge"
+      required:
+        - correct
+        - answer_tier
+        - motivation
+        - level_up
+        - mastered
+        - repeat
+        - correct_streak
+        - current_level
+        - new_badges
+
+    LearningTrackProgress:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: string
+        register:
+          type: string
+        research_pillar:
+          type: string
+          nullable: true
+        phase:
+          type: integer
+        region_code:
+          type: string
+        current_level:
+          type: integer
+        questions_done:
+          type: integer
+        correct_streak:
+          type: integer
+        mastered:
+          type: boolean
+      required:
+        - id
+        - user_id
+        - register
+        - phase
+        - region_code
+        - current_level
+        - questions_done
+        - correct_streak
+        - mastered
+
+    UserBadge:
+      type: object
+      properties:
+        id:
+          type: integer
+        badge_key:
+          type: string
+        badge_name:
+          type: string
+        badge_description:
+          type: string
+          nullable: true
+        badge_type:
+          type: string
+        register:
+          type: string
+          nullable: true
+        region_code:
+          type: string
+          nullable: true
+        phase:
+          type: integer
+          nullable: true
+        research_pillar:
+          type: string
+          nullable: true
+      required:
+        - id
+        - badge_key
+        - badge_name
+        - badge_type

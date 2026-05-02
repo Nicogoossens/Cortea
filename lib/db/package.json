@@ -10,7 +10,8 @@
     "./seed-compass": "./src/seed-compass.ts",
     "./seed-use-cases": "./src/seed-use-cases.ts",
     "./seed-world-stubs": "./src/seed-world-stubs.ts",
-    "./parse-learning-track-md": "./src/parse-learning-track-md.ts"
+    "./parse-learning-track-md": "./src/parse-learning-track-md.ts",
+    "./seed-cultural-origins": "./src/seed-cultural-origins.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
@@ -23,7 +24,8 @@
     "migrate-0002": "tsx src/migrate-0002-ambition-backfill.ts",
     "seed:be": "tsx src/seed-learning-tracks.ts ../../data/be-learning-tracks.json",
     "seed:be-md": "tsx src/seed-learning-tracks.ts ../../attached_assets/Belgie_middenklasse_Phase1_Pillar1_1777563340991.md",
-    "validate:be": "node ../../scripts/validate-be-learning-tracks.mjs"
+    "validate:be": "node ../../scripts/validate-be-learning-tracks.mjs",
+    "seed-cultural-origins": "tsx src/seed-cultural-origins.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

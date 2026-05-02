@@ -172,6 +172,71 @@ function checkActiveRegion(interests: string[], incoming: string) {
   return { status: 200 as const };
 }
 
+// ── max-2 repetition rule + similar replacement ─────────────────────────────
+//
+// Mirrors the rule enforced in /learning-tracks/session: a question that has
+// already been repeated >= 2 times is dropped from forcedIds AND added to the
+// excludeIds set so the cascade cannot reselect it. The cascade then fills
+// the slot with a similar question from the same level/demographic pool.
+function planRemediationSession(opts: {
+  remediationIds: number[];
+  repetitionCounts: Record<number, number>;
+  candidatePool: Array<{ id: number; demographic: string; level: number }>;
+  size: number;
+}) {
+  const forced: number[] = [];
+  const exclude: number[] = [];
+  for (const id of opts.remediationIds) {
+    if ((opts.repetitionCounts[id] ?? 0) < 2) forced.push(id);
+    else exclude.push(id);
+  }
+  const excludeSet = new Set([...exclude, ...forced]);
+  const replacements = opts.candidatePool
+    .filter((q) => !excludeSet.has(q.id))
+    .slice(0, opts.size - forced.length);
+  return { forced, exclude, served: [...forced, ...replacements.map((q) => q.id)] };
+}
+
+describe("max-2 repetition rule", () => {
+  const pool = [
+    { id: 101, demographic: "elite", level: 2 },
+    { id: 102, demographic: "elite", level: 2 },
+    { id: 103, demographic: "elite", level: 2 },
+  ];
+
+  it("does not re-serve a question with >= 2 prior repetitions", () => {
+    const plan = planRemediationSession({
+      remediationIds: [42],
+      repetitionCounts: { 42: 2 },
+      candidatePool: pool,
+      size: 5,
+    });
+    expect(plan.served).not.toContain(42);
+    expect(plan.exclude).toContain(42);
+  });
+
+  it("substitutes a similar replacement from the same-level pool", () => {
+    const plan = planRemediationSession({
+      remediationIds: [42],
+      repetitionCounts: { 42: 2 },
+      candidatePool: pool,
+      size: 1,
+    });
+    expect(plan.served).toEqual([101]);
+  });
+
+  it("still forces a question when the user has only seen it once before", () => {
+    const plan = planRemediationSession({
+      remediationIds: [42],
+      repetitionCounts: { 42: 1 },
+      candidatePool: pool,
+      size: 1,
+    });
+    expect(plan.forced).toEqual([42]);
+    expect(plan.served).toEqual([42]);
+  });
+});
+
 describe("active_region constraint", () => {
   it("rejects an arbitrary region with 403 once interests exist", () => {
     expect(checkActiveRegion(["GB", "IT"], "FR"))

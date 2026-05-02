@@ -160,11 +160,18 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       const demographic = deriveDemographic(user.birth_year, user.gender_identity);
       const isRemediation = remediationIds.length > 0;
 
-      // Filter remediation list against the "max 2 retries" rule
+      // Filter remediation list against the "max 2 retries" rule. Questions
+      // that have already been repeated >= 2 times are NOT forced again, AND
+      // are globally excluded from the candidate pool for this session, so
+      // the cascade can't accidentally reselect them. The cascade then picks
+      // a similar replacement (same register/phase/level/pillar/demographic
+      // and re-ranked by interest tags) from the remaining pool.
       const filteredForced: number[] = [];
+      const exhaustedIds: number[] = [];
       for (const qid of remediationIds) {
         const n = await repetitionCount(userId, qid);
         if (n < 2) filteredForced.push(qid);
+        else exhaustedIds.push(qid);
       }
 
       const questions = await selectQuestions({
@@ -180,6 +187,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         lang,
         size: cfg.sessionSize,
         forcedIds: filteredForced,
+        excludeIds: exhaustedIds,
       });
 
       const [created] = await db.insert(learningTrackSessionsTable).values({

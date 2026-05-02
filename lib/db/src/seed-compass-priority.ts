@@ -30,6 +30,190 @@ const PRIORITY_SEED = [
           "Avoid physical contact beyond a handshake without clear social signals",
           "Do not assume silence means agreement"
         ]
+      },
+      nl: {
+        region_name: "Verenigde Staten",
+        core_value: "Kansen, zelfredzaamheid en zelfverzekerde expressie",
+        biggest_taboo: "Passief of weinig ambitieus overkomen; salaris wordt in formele kringen als privé beschouwd",
+        dining_etiquette: "De vork wordt in de rechterhand gehouden na het snijden. Rekening delen is gebruikelijk. Fooi van 18–22% wordt verwacht.",
+        language_notes: "Direct en positief taalgebruik is de norm. Voornamen worden meteen gebruikt. 'How are you?' is een begroeting, geen vraag.",
+        gift_protocol: "Cadeaus worden direct geopend en hartelijk geprezen. Alcohol is acceptabel. Vermijd overdreven extravagante cadeaus in zakelijke context.",
+        dress_code: "Business casual is gangbaar in de meeste sectoren. Nette spijkerbroek is op veel werkplekken acceptabel. Kies liever voor netjes.",
+        dos: [
+          "Spreek mensen meteen bij de voornaam aan",
+          "Glimlach en houd oogcontact tijdens het gesprek",
+          "Erken prestaties en complimenteer werk direct",
+          "Wees op tijd — punctualiteit toont respect",
+          "Toon enthousiasme openlijk — understatement wordt vaak als desinteresse gelezen"
+        ],
+        donts: [
+          "Bespreek geen politiek of religie tenzij uitdrukkelijk uitgenodigd",
+          "Vermijd overdreven bescheidenheid — dat komt onzeker over",
+          "Kom niet te laat zonder vooraf te melden",
+          "Vermijd lichamelijk contact buiten een handdruk om",
+          "Ga er niet van uit dat stilte instemming betekent"
+        ]
+      },
+      fr: {
+        region_name: "États-Unis",
+        core_value: "Opportunité, autonomie et expression confiante",
+        biggest_taboo: "Paraître passif ou sans ambition ; le salaire est considéré comme privé dans les contextes formels",
+        dining_etiquette: "La fourchette est tenue dans la main droite après avoir coupé. Le partage de l'addition est courant. Un pourboire de 18 à 22 % est attendu.",
+        language_notes: "Un langage direct et positif est la norme. Les prénoms sont utilisés dès le premier contact. 'How are you?' est une salutation, pas une question.",
+        gift_protocol: "Les cadeaux sont ouverts immédiatement et chaleureusement appréciés. L'alcool est acceptable. Évitez les cadeaux trop extravagants en contexte professionnel.",
+        dress_code: "Le business casual est la norme dans la plupart des secteurs. Le jean soigné est accepté dans de nombreux milieux professionnels.",
+        dos: [
+          "Appelez les gens par leur prénom dès le premier contact",
+          "Souriez et maintenez le contact visuel pendant la conversation",
+          "Reconnaissez les réussites et complimentez le travail directement",
+          "Soyez ponctuel — cela témoigne du respect",
+          "Exprimez votre enthousiasme librement"
+        ],
+        donts: [
+          "Ne discutez pas de politique ou de religion sauf invitation explicite",
+          "Évitez l'excès de modestie — cela passe pour de l'insécurité",
+          "N'arrivez pas en retard sans prévenir",
+          "Évitez tout contact physique au-delà d'une poignée de main",
+          "Ne supposez pas que le silence signifie un accord"
+        ]
+      },
+      de: {
+        region_name: "Vereinigte Staaten",
+        core_value: "Chancen, Eigenverantwortung und selbstbewusster Ausdruck",
+        biggest_taboo: "Passiv oder wenig ehrgeizig wirken; das Gehalt gilt in formellen Umgebungen als Privatsache",
+        dining_etiquette: "Die Gabel wird nach dem Schneiden in der rechten Hand gehalten. Gemeinsames Bezahlen ist üblich. Trinkgeld von 18–22 % wird erwartet.",
+        language_notes: "Direkte, positive Sprache ist die Norm. Vornamen werden sofort verwendet. 'How are you?' ist eine Begrüßung, keine Frage.",
+        gift_protocol: "Geschenke werden sofort geöffnet und herzlich gelobt. Alkohol ist akzeptabel. Vermeiden Sie übertrieben aufwendige Geschenke im Geschäftskontext.",
+        dress_code: "Business Casual ist in den meisten Branchen Standard. Gepflegte Jeans sind in vielen beruflichen Umfeldern akzeptabel.",
+        dos: [
+          "Sprechen Sie Menschen von Anfang an mit dem Vornamen an",
+          "Lächeln Sie und halten Sie Augenkontakt im Gespräch",
+          "Erkennen Sie Leistungen an und loben Sie Arbeit direkt",
+          "Seien Sie pünktlich — Pünktlichkeit signalisiert Respekt",
+          "Zeigen Sie Begeisterung offen — Zurückhaltung wird oft als Desinteresse gedeutet"
+        ],
+        donts: [
+          "Sprechen Sie Politik oder Religion nicht an, außer Sie werden ausdrücklich dazu eingeladen",
+          "Vermeiden Sie übertriebene Bescheidenheit — sie wirkt unsicher",
+          "Kommen Sie nicht zu spät ohne vorherige Ankündigung",
+          "Vermeiden Sie körperlichen Kontakt über einen Handschlag hinaus",
+          "Nehmen Sie nicht an, dass Schweigen Zustimmung bedeutet"
+        ]
+      },
+      es: {
+        region_name: "Estados Unidos",
+        core_value: "Oportunidad, autonomía y expresión segura",
+        biggest_taboo: "Parecer pasivo o poco ambicioso; el salario se considera privado en entornos formales",
+        dining_etiquette: "El tenedor se sostiene en la mano derecha tras cortar. Es habitual dividir la cuenta. Se espera una propina del 18 al 22 %.",
+        language_notes: "El lenguaje directo y positivo es la norma. Los nombres de pila se usan desde el primer momento. '¿Cómo estás?' es un saludo, no una pregunta.",
+        gift_protocol: "Los regalos se abren de inmediato y se elogian con calidez. El alcohol es aceptable. Evite regalos demasiado extravagantes en contextos profesionales.",
+        dress_code: "El business casual es el estándar en la mayoría de los sectores. Los vaqueros bien presentados son aceptables en muchos entornos profesionales.",
+        dos: [
+          "Diríjase a las personas por su nombre de pila desde el primer encuentro",
+          "Sonría y mantenga el contacto visual durante la conversación",
+          "Reconozca los logros y felicite el trabajo directamente",
+          "Sea puntual — la puntualidad demuestra respeto",
+          "Exprese entusiasmo abiertamente"
+        ],
+        donts: [
+          "No hable de política ni religión salvo invitación explícita",
+          "Evite la modestia excesiva — se interpreta como inseguridad",
+          "No llegue tarde sin avisar con antelación",
+          "Evite el contacto físico más allá de un apretón de manos",
+          "No suponga que el silencio implica acuerdo"
+        ]
+      },
+      pt: {
+        region_name: "Estados Unidos",
+        core_value: "Oportunidade, autonomia e expressão confiante",
+        biggest_taboo: "Parecer passivo ou sem ambição; o salário é considerado privado em contextos formais",
+        dining_etiquette: "O garfo é segurado na mão direita após cortar. Dividir a conta é comum. Gorjeta de 18 a 22% é esperada.",
+        language_notes: "Linguagem direta e positiva é a norma. Primeiros nomes são usados desde o início. 'How are you?' é uma saudação, não uma pergunta.",
+        gift_protocol: "Os presentes são abertos imediatamente e elogiados com entusiasmo. Álcool é aceitável. Evite presentes muito extravagantes em contextos profissionais.",
+        dress_code: "Business casual é padrão na maioria dos setores. Jeans bem cuidados são aceites em muitos ambientes profissionais.",
+        dos: [
+          "Trate as pessoas pelo primeiro nome desde o primeiro encontro",
+          "Sorria e mantenha contacto visual durante a conversa",
+          "Reconheça conquistas e elogie o trabalho diretamente",
+          "Seja pontual — a pontualidade demonstra respeito",
+          "Expresse entusiasmo abertamente"
+        ],
+        donts: [
+          "Não discuta política ou religião salvo convite explícito",
+          "Evite modéstia excessiva — é interpretada como insegurança",
+          "Não chegue atrasado sem avisar antecipadamente",
+          "Evite contacto físico além de um aperto de mão",
+          "Não assuma que o silêncio significa concordância"
+        ]
+      },
+      it: {
+        region_name: "Stati Uniti",
+        core_value: "Opportunità, autonomia ed espressione sicura di sé",
+        biggest_taboo: "Apparire passivi o privi di ambizione; lo stipendio è considerato privato nei contesti formali",
+        dining_etiquette: "La forchetta si tiene nella mano destra dopo aver tagliato. Dividere il conto è comune. Una mancia del 18–22% è attesa.",
+        language_notes: "Un linguaggio diretto e positivo è la norma. I nomi di battesimo si usano fin dall'inizio. 'How are you?' è un saluto, non una domanda.",
+        gift_protocol: "I regali vengono aperti subito e lodati con calore. L'alcol è accettabile. Evitare regali troppo stravaganti in contesti professionali.",
+        dress_code: "Il business casual è lo standard nella maggior parte dei settori. I jeans curati sono accettabili in molti ambienti professionali.",
+        dos: [
+          "Rivolgersi alle persone per nome fin dal primo incontro",
+          "Sorridere e mantenere il contatto visivo durante la conversazione",
+          "Riconoscere i successi e complimentarsi direttamente per il lavoro",
+          "Essere puntuali — la puntualità segnala rispetto",
+          "Esprimere entusiasmo apertamente"
+        ],
+        donts: [
+          "Non discutere di politica o religione salvo esplicito invito",
+          "Evitare un'eccessiva modestia — viene percepita come insicurezza",
+          "Non arrivare in ritardo senza avvisare in anticipo",
+          "Evitare il contatto fisico oltre una stretta di mano",
+          "Non presupporre che il silenzio significhi accordo"
+        ]
+      },
+      ar: {
+        region_name: "الولايات المتحدة الأمريكية",
+        core_value: "الفرصة والاعتماد على الذات والتعبير بثقة",
+        biggest_taboo: "الظهور بمظهر سلبي أو غير طموح؛ الراتب يُعدّ أمرًا خاصًا في البيئات الرسمية",
+        dining_etiquette: "يُمسك الشوكة باليد اليمنى بعد التقطيع. تقسيم الفاتورة شائع. يُتوقع إكرامية بنسبة 18–22٪.",
+        language_notes: "اللغة المباشرة والإيجابية هي المعيار. الأسماء الأولى تُستخدم فورًا. 'كيف حالك؟' تحية وليست سؤالاً حقيقيًا.",
+        gift_protocol: "تُفتح الهدايا فورًا وتُشكر بحرارة. الكحول مقبول. تجنّب الهدايا المبالغ في تكلفتها في السياقات المهنية.",
+        dress_code: "الزي غير الرسمي للأعمال هو المعيار في معظم القطاعات. الجينز الأنيق مقبول في كثير من البيئات المهنية.",
+        dos: [
+          "خاطب الناس بأسمائهم الأولى منذ اللقاء الأول",
+          "ابتسم وحافظ على التواصل البصري أثناء المحادثة",
+          "اعترف بالإنجازات وامدح العمل مباشرةً",
+          "كن في الموعد — الالتزام بالوقت يعكس الاحترام",
+          "أبدِ حماسك بصراحة"
+        ],
+        donts: [
+          "لا تناقش السياسة أو الدين إلا إذا دُعيت صراحةً",
+          "تجنّب التواضع المفرط — يُفسَّر على أنه قلة ثقة بالنفس",
+          "لا تتأخر دون إشعار مسبق",
+          "تجنّب الاتصال الجسدي بعيدًا عن المصافحة",
+          "لا تفترض أن الصمت يعني الموافقة"
+        ]
+      },
+      ja: {
+        region_name: "アメリカ合衆国",
+        core_value: "機会、自立心、そして自信ある表現",
+        biggest_taboo: "受け身に見えること、野心がないと思われること。給与は改まった場では個人的な話題とされる",
+        dining_etiquette: "カットした後はフォークを右手で持つ。割り勘が一般的。チップは18〜22%が期待される。",
+        language_notes: "直接的でポジティブな言葉遣いが標準。最初から名前（ファーストネーム）で呼ぶ。'How are you?'は挨拶であって質問ではない。",
+        gift_protocol: "プレゼントはすぐに開けて温かく褒める。アルコールは問題ない。ビジネスの場では過度に豪華な贈り物は避ける。",
+        dress_code: "ほとんどの業種でビジネスカジュアルが標準。きれいめなデニムも多くの職場で許容される。",
+        dos: [
+          "最初の出会いからファーストネームで呼ぶ",
+          "会話中は笑顔でアイコンタクトを保つ",
+          "実績を認め、仕事を直接褒める",
+          "時間厳守を心がける——時間を守ることは敬意の表れ",
+          "熱意は率直に示す——控えめな表現は無関心と受け取られがち"
+        ],
+        donts: [
+          "明確な招待がない限り政治や宗教の話題を持ち出さない",
+          "謙遜しすぎない——自信のなさに見える",
+          "予告なしの遅刻はしない",
+          "握手以上の身体的接触は避ける",
+          "沈黙を同意と解釈しない"
+        ]
       }
     }
   },
@@ -59,6 +243,190 @@ const PRIORITY_SEED = [
           "Avoid pointing directly at people or objects",
           "Do not tip — it is considered insulting",
           "Never speak loudly in restaurants, public transport, or shared spaces"
+        ]
+      },
+      nl: {
+        region_name: "Japan",
+        core_value: "Harmonie, precisie en impliciete respect",
+        biggest_taboo: "Iemand publiekelijk gezichtsverlies laten lijden — onenigheid moet altijd indirect worden beheerd",
+        dining_etiquette: "Wacht tot u wordt begeleid naar uw tafel. Zeg 'itadakimasu' voor het eten. Steek nooit stokjes rechtop in rijst. Schenk altijd eerst voor anderen.",
+        language_notes: "Spreek zacht en bedachtzaam. Stilte is respectvolle bezinning, geen ongemak. Onderbreek nooit.",
+        gift_protocol: "Wikkel cadeaus elegant in. Geef nooit sets van vier (shi klinkt als dood). Cadeaus worden opzijgelegd en privé geopend.",
+        dress_code: "Conservatief en onberispelijk. Donkere kleuren in zakelijke omgeving. Schoenen uitdoen bij thuiskomst. Draag altijd een schone zakdoek.",
+        dos: [
+          "Geef en ontvang visitekaartjes met beide handen en een lichte buiging",
+          "Buig bij de begroeting — de diepte van de buiging weerspiegelt de status",
+          "Wacht tot de oudste aanwezige begint te eten",
+          "Wacht geduldig en stil in de rij",
+          "Toon dankbaarheid regelmatig en oprecht specifiek"
+        ],
+        donts: [
+          "Schrijf nooit met rode inkt — dit is geassocieerd met de dood",
+          "Snuit uw neus niet in het openbaar — ga discreet weg",
+          "Wijs niet direct naar mensen of objecten",
+          "Geef geen fooi — dit wordt als beledigend beschouwd",
+          "Spreek nooit luid in restaurants, openbaar vervoer of gedeelde ruimtes"
+        ]
+      },
+      fr: {
+        region_name: "Japon",
+        core_value: "Harmonie, précision et respect implicite",
+        biggest_taboo: "Faire perdre la face publiquement à quelqu'un — le désaccord doit toujours être géré indirectement",
+        dining_etiquette: "Attendez d'être placé. Dites 'itadakimasu' avant de manger. Ne plantez jamais les baguettes verticalement dans le riz. Servez toujours les autres avant vous.",
+        language_notes: "Parlez doucement et délibérément. Le silence est une réflexion respectueuse, non une gêne. N'interrompez jamais.",
+        gift_protocol: "Emballez les cadeaux avec élégance. N'offrez jamais des ensembles de quatre (shi ressemble au mot mort). Les cadeaux sont mis de côté et ouverts en privé.",
+        dress_code: "Conservateur et impeccable. Couleurs sombres en affaires. Retirez vos chaussures en entrant dans les foyers. Portez toujours un mouchoir propre.",
+        dos: [
+          "Présentez et recevez les cartes de visite des deux mains avec une légère révérence",
+          "S'incliner lors des salutations — la profondeur reflète le statut relatif",
+          "Attendre que la personne la plus haut placée commence à manger",
+          "Faire la queue patiemment et silencieusement",
+          "Exprimer sa gratitude fréquemment et avec une sincérité spécifique"
+        ],
+        donts: [
+          "Ne jamais écrire à l'encre rouge — c'est associé à la mort",
+          "Ne pas se moucher en public — excusez-vous discrètement",
+          "Éviter de pointer directement vers des personnes ou des objets",
+          "Ne pas donner de pourboire — c'est considéré comme insultant",
+          "Ne jamais parler fort dans les restaurants, transports ou espaces partagés"
+        ]
+      },
+      de: {
+        region_name: "Japan",
+        core_value: "Harmonie, Präzision und impliziter Respekt",
+        biggest_taboo: "Jemanden öffentlich das Gesicht verlieren zu lassen — Meinungsverschiedenheiten müssen stets indirekt gehandhabt werden",
+        dining_etiquette: "Warten Sie, bis Sie zu Ihrem Platz geführt werden. Sagen Sie 'itadakimasu' vor dem Essen. Stecken Sie nie Stäbchen aufrecht in den Reis. Schenken Sie zuerst für andere ein.",
+        language_notes: "Sprechen Sie leise und bedachtsam. Stille ist respektvolle Reflexion, keine Verlegenheit. Unterbrechen Sie nie.",
+        gift_protocol: "Wickeln Sie Geschenke elegant ein. Geben Sie nie Vierersets (shi klingt wie Tod). Geschenke werden beiseitegelegt und privat geöffnet.",
+        dress_code: "Konservativ und tadellos. Dunkle Farben im Geschäftsleben. Schuhe ausziehen beim Betreten von Wohnungen. Immer ein sauberes Taschentuch dabei haben.",
+        dos: [
+          "Visitenkarten mit beiden Händen und leichter Verbeugung überreichen und entgegennehmen",
+          "Bei der Begrüßung verbeugen — die Tiefe spiegelt den relativen Status wider",
+          "Warten, bis die ranghöchste Person mit dem Essen beginnt",
+          "Geduldig und ruhig in der Schlange warten",
+          "Dankbarkeit häufig und mit aufrichtiger Spezifität ausdrücken"
+        ],
+        donts: [
+          "Niemals mit roter Tinte schreiben — sie ist mit dem Tod verbunden",
+          "Nicht in der Öffentlichkeit die Nase putzen — diskret entfernen",
+          "Nicht direkt auf Personen oder Gegenstände zeigen",
+          "Kein Trinkgeld geben — es gilt als beleidigend",
+          "Niemals laut in Restaurants, öffentlichen Verkehrsmitteln oder Gemeinschaftsräumen sprechen"
+        ]
+      },
+      es: {
+        region_name: "Japón",
+        core_value: "Armonía, precisión y respeto implícito",
+        biggest_taboo: "Hacer que alguien pierda la cara públicamente — el desacuerdo siempre debe gestionarse de forma indirecta",
+        dining_etiquette: "Espere a ser conducido a su mesa. Diga 'itadakimasu' antes de comer. Nunca clave los palillos verticalmente en el arroz. Sirva siempre a los demás antes que a usted.",
+        language_notes: "Hable con suavidad y deliberación. El silencio es reflexión respetuosa, no incomodidad. No interrumpa nunca.",
+        gift_protocol: "Envuelva los regalos con elegancia. Nunca regale conjuntos de cuatro (shi suena como muerte). Los regalos se dejan a un lado y se abren en privado.",
+        dress_code: "Conservador e impecable. Colores oscuros en negocios. Quítese los zapatos al entrar en los hogares. Lleve siempre un pañuelo limpio.",
+        dos: [
+          "Entregue y reciba tarjetas de visita con ambas manos y una ligera inclinación",
+          "Inclinarse al saludar — la profundidad refleja el estatus relativo",
+          "Esperar a que la persona de mayor rango comience a comer",
+          "Hacer cola con paciencia y en silencio",
+          "Expresar gratitud con frecuencia y sinceridad específica"
+        ],
+        donts: [
+          "Nunca escribir con tinta roja — está asociada con la muerte",
+          "No sonarse la nariz en público — discúlpese discretamente",
+          "Evitar señalar directamente a personas u objetos",
+          "No dar propina — se considera un insulto",
+          "Nunca hablar en voz alta en restaurantes, transporte público o espacios compartidos"
+        ]
+      },
+      pt: {
+        region_name: "Japão",
+        core_value: "Harmonia, precisão e respeito implícito",
+        biggest_taboo: "Fazer alguém perder a face publicamente — o desacordo deve ser sempre gerido de forma indireta",
+        dining_etiquette: "Aguarde ser conduzido à mesa. Diga 'itadakimasu' antes de comer. Nunca espete os pauzinhos verticalmente no arroz. Sirva sempre os outros antes de si.",
+        language_notes: "Fale calmamente e de forma deliberada. O silêncio é reflexão respeitosa, não constrangimento. Nunca interrompa.",
+        gift_protocol: "Embrulhe os presentes com elegância. Nunca ofereça conjuntos de quatro (shi soa como morte). Os presentes são guardados e abertos em privado.",
+        dress_code: "Conservador e impecável. Cores escuras nos negócios. Retire os sapatos ao entrar em casas. Leve sempre um lenço limpo.",
+        dos: [
+          "Entregue e receba cartões de visita com ambas as mãos e uma ligeira vénia",
+          "Inclinar-se ao cumprimentar — a profundidade reflete o estatuto relativo",
+          "Aguardar que a pessoa de maior hierarquia comece a comer",
+          "Fazer fila com paciência e silêncio",
+          "Expressar gratidão com frequência e sinceridade específica"
+        ],
+        donts: [
+          "Nunca escrever com tinta vermelha — está associada à morte",
+          "Não assoar o nariz em público — afaste-se discretamente",
+          "Evitar apontar diretamente para pessoas ou objetos",
+          "Não dar gorjeta — é considerado insultuoso",
+          "Nunca falar alto em restaurantes, transportes públicos ou espaços partilhados"
+        ]
+      },
+      it: {
+        region_name: "Giappone",
+        core_value: "Armonia, precisione e rispetto implicito",
+        biggest_taboo: "Far perdere la faccia pubblicamente a qualcuno — il disaccordo deve essere sempre gestito indirettamente",
+        dining_etiquette: "Aspettare di essere accompagnati al tavolo. Dire 'itadakimasu' prima di mangiare. Non piantare mai le bacchette verticalmente nel riso. Servire sempre gli altri prima di sé.",
+        language_notes: "Parlare sottovoce e con deliberazione. Il silenzio è riflessione rispettosa, non imbarazzo. Non interrompere mai.",
+        gift_protocol: "Incartare i regali con eleganza. Non regalare mai set da quattro (shi suona come morte). I regali vengono messi da parte e aperti in privato.",
+        dress_code: "Conservatore e impeccabile. Colori scuri negli affari. Togliersi le scarpe entrando nelle case. Portare sempre un fazzoletto pulito.",
+        dos: [
+          "Presentare e ricevere i biglietti da visita con entrambe le mani e un leggero inchino",
+          "Inchinarsi al momento del saluto — la profondità riflette lo status relativo",
+          "Aspettare che la persona di rango più alto inizi a mangiare",
+          "Fare la fila con pazienza e in silenzio",
+          "Esprimere gratitudine frequentemente e con sincera specificità"
+        ],
+        donts: [
+          "Non scrivere mai con inchiostro rosso — è associato alla morte",
+          "Non soffiarsi il naso in pubblico — allontanarsi discretamente",
+          "Evitare di indicare direttamente persone o oggetti",
+          "Non lasciare la mancia — è considerata un insulto",
+          "Non parlare mai ad alta voce in ristoranti, mezzi pubblici o spazi condivisi"
+        ]
+      },
+      ar: {
+        region_name: "اليابان",
+        core_value: "الانسجام والدقة والاحترام الضمني",
+        biggest_taboo: "إحراج شخص ما علنًا — يجب دائمًا معالجة الخلافات بشكل غير مباشر",
+        dining_etiquette: "انتظر حتى يُرشدك أحدهم إلى مقعدك. قل 'إيتاداكيماسو' قبل الأكل. لا تغرز العصي في الأرز أبدًا. اسكب للآخرين قبل نفسك.",
+        language_notes: "تحدّث بهدوء وتأنٍّ. الصمت تأمل محترم وليس إحراجًا. لا تقاطع أحدًا أبدًا.",
+        gift_protocol: "ارفق الهدايا بتغليف أنيق. لا تُهدِ أشياء بمجموعات رباعية (shi تبدو كالموت). تُوضع الهدايا جانبًا وتُفتح في الخصوصية.",
+        dress_code: "محافظ وأنيق. ألوان داكنة في بيئة العمل. اخلع حذاءك عند دخول المنازل. احمل دائمًا منديلًا نظيفًا.",
+        dos: [
+          "قدّم واستقبل بطاقات العمل بكلتا اليدين مع انحناءة خفيفة",
+          "انحنِ عند التحية — عمق الانحناء يعكس المكانة النسبية",
+          "انتظر حتى يبدأ أكبر الحاضرين سنًا في الأكل",
+          "انتظر في الطابور بصبر وهدوء",
+          "أعرب عن الامتنان بصدق وتفصيل"
+        ],
+        donts: [
+          "لا تكتب بالحبر الأحمر أبدًا — مرتبط بالموت",
+          "لا تمسح أنفك في العلن — ابتعد بهدوء",
+          "تجنّب الإشارة مباشرة إلى الأشخاص أو الأشياء",
+          "لا تُعطِ إكراميات — يُعدّ ذلك إهانةً",
+          "لا تتحدث بصوت عالٍ في المطاعم أو وسائل النقل العام أو الأماكن المشتركة"
+        ]
+      },
+      ja: {
+        region_name: "日本",
+        core_value: "調和、精確さ、そして暗黙の敬意",
+        biggest_taboo: "人前で相手の面子を潰すこと——意見の相違は常に間接的に処理しなければならない",
+        dining_etiquette: "席に案内されるまで待つ。食事の前に「いただきます」と言う。ご飯に箸を立てない。自分の前に他の人に注ぐ。",
+        language_notes: "静かに、思慮深く話す。沈黙は気まずさではなく、敬意ある思索。決して話を遮らない。",
+        gift_protocol: "贈り物は丁寧に包む。4個セットは避ける（「し」は死を連想させる）。贈り物は脇に置き、後で個人的に開ける。",
+        dress_code: "保守的で清潔感がある。ビジネスでは濃い色。家に入るときは靴を脱ぐ。清潔なハンカチを必ず携帯する。",
+        dos: [
+          "名刺は両手で渡し、軽くお辞儀をする",
+          "挨拶の際はお辞儀をする——深さは相対的な地位を示す",
+          "最も上位の人が食べ始めるのを待つ",
+          "常に静かに順番を待つ",
+          "感謝の気持ちを頻繁かつ誠実に具体的に伝える"
+        ],
+        donts: [
+          "赤いインクで書かない——死を連想させる",
+          "人前で鼻をかまない——そっと席を外す",
+          "人や物を直接指差さない",
+          "チップを渡さない——侮辱と受け取られる",
+          "レストラン、公共交通機関、共有スペースで大声で話さない"
         ]
       }
     }
@@ -90,6 +458,190 @@ const PRIORITY_SEED = [
           "Do not begin eating before the host signals you to do so",
           "Avoid discussing salary or personal finances in social settings"
         ]
+      },
+      nl: {
+        region_name: "Duitsland",
+        core_value: "Precisie, betrouwbaarheid en inhoudelijke directheid",
+        biggest_taboo: "Te laat komen, vaagheid of holle vleierij — dit alles wordt gezien als een teken van slecht karakter",
+        dining_etiquette: "Wacht tot de gastheer 'Guten Appetit' zegt. Houd handen zichtbaar op tafel. Oogcontact tijdens het proost is verplicht.",
+        language_notes: "Duitse directheid is precisie, geen grofheid. Verwacht eerlijke, directe feedback. Gebruik titels (Doktor, Professor) totdat anders wordt gezegd.",
+        gift_protocol: "Bloemen zijn welkom — vermijd rode rozen (romantisch) en lelies (begrafenis). Pak cadeaus netjes in. Een goede fles wijn is altijd veilig.",
+        dress_code: "Formeel, ingetogen en conservatief. Kwaliteit spreekt voor zichzelf. Schreeuwerige kleuren of opzichtige merknamen gelden als slechte smaak.",
+        dos: [
+          "Wees punctueel — te vroeg is op tijd, op tijd is te laat",
+          "Spreek mensen formeel aan (Sie, Herr, Frau) totdat voornaamgebruik wordt uitgenodigd",
+          "Bereid u grondig voor op elke vergadering — improvisatie wordt afgekeurd",
+          "Houd stevig oogcontact tijdens het proost",
+          "Breng uw doel duidelijk en zonder omhaal ter sprake"
+        ],
+        donts: [
+          "Maak geen grove opmerkingen of praat licht over de Duitse geschiedenis",
+          "Steek niet over bij rood licht — ook niet als er geen verkeer is",
+          "Verwar directheid nooit met vijandigheid — het is gewoon eerlijke communicatie",
+          "Begin niet te eten voordat de gastheer aangeeft dat u kunt beginnen",
+          "Bespreek geen salaris of persoonlijke financiën in sociale settings"
+        ]
+      },
+      fr: {
+        region_name: "Allemagne",
+        core_value: "Précision, fiabilité et franchise substantielle",
+        biggest_taboo: "Le retard, le vague ou la flatterie creuse — tout cela est perçu comme un signe de mauvais caractère",
+        dining_etiquette: "Attendre que l'hôte dise 'Guten Appetit'. Garder les mains visibles sur la table. Le contact visuel lors du toast est obligatoire.",
+        language_notes: "La franchise allemande est de la précision, non de la grossièreté. Attendez-vous à des retours directs et honnêtes. Utilisez les titres (Doktor, Professor) jusqu'à indication contraire.",
+        gift_protocol: "Les fleurs sont bienvenues — évitez les roses rouges (romantiques) et les lys (funèbres). Emballez les cadeaux correctement. Une bonne bouteille de vin est toujours sûre.",
+        dress_code: "Formel, discret et conservateur. La qualité parle d'elle-même. Les couleurs criardes ou les logos ostentatoires sont de mauvais goût.",
+        dos: [
+          "Être ponctuel — tôt est à l'heure, à l'heure c'est en retard",
+          "S'adresser formellement aux gens (Sie, Herr, Frau) jusqu'à invitation au tutoiement",
+          "Se préparer soigneusement pour toute réunion — l'improvisation est mal vue",
+          "Maintenir un contact visuel ferme lors du toast",
+          "Énoncer clairement son propos sans préambule inutile"
+        ],
+        donts: [
+          "Ne pas faire de remarques générales ou parler légèrement de l'histoire allemande",
+          "Éviter de traverser au rouge — même en l'absence de circulation",
+          "Ne jamais confondre franchise et hostilité — c'est simplement une communication honnête",
+          "Ne pas commencer à manger avant que l'hôte ne le signale",
+          "Éviter de discuter du salaire ou des finances personnelles"
+        ]
+      },
+      de: {
+        region_name: "Deutschland",
+        core_value: "Präzision, Zuverlässigkeit und sachliche Direktheit",
+        biggest_taboo: "Unpünktlichkeit, Vaguheit oder inhaltsleere Schmeichelei — all das gilt als Zeichen schlechten Charakters",
+        dining_etiquette: "Warten Sie, bis der Gastgeber 'Guten Appetit' sagt. Hände sichtbar auf dem Tisch halten. Augenkontakt beim Anstoßen ist Pflicht.",
+        language_notes: "Deutsche Direktheit ist Präzision, keine Unhöflichkeit. Erwarten Sie offenes, ehrliches Feedback. Verwenden Sie Titel (Doktor, Professor), bis etwas anderes mitgeteilt wird.",
+        gift_protocol: "Blumen sind willkommen — rote Rosen (romantisch) und Lilien (Begräbnis) meiden. Geschenke ordentlich einpacken. Eine gute Flasche Wein ist immer sicher.",
+        dress_code: "Formell, dezent und konservativ. Qualität spricht für sich. Grelle Farben oder auffälliges Branding gelten als schlechten Geschmack.",
+        dos: [
+          "Pünktlich sein — zu früh ist pünktlich, pünktlich ist zu spät",
+          "Menschen formell ansprechen (Sie, Herr, Frau), bis zur Einladung zum Duzen",
+          "Jeden Termin gründlich vorbereiten — Improvisation wird nicht geschätzt",
+          "Beim Anstoßen festen Augenkontakt halten",
+          "Den eigenen Standpunkt klar und ohne unnötige Vorrede formulieren"
+        ],
+        donts: [
+          "Keine pauschalen Aussagen machen oder leichtfertig über die deutsche Geschichte sprechen",
+          "Nicht bei Rot über die Straße gehen — auch wenn kein Verkehr da ist",
+          "Direktheit niemals mit Feindseligkeit verwechseln — es ist schlicht ehrliche Kommunikation",
+          "Nicht mit dem Essen beginnen, bevor der Gastgeber das Zeichen gibt",
+          "Gehalt oder persönliche Finanzen in gesellschaftlichen Runden nicht ansprechen"
+        ]
+      },
+      es: {
+        region_name: "Alemania",
+        core_value: "Precisión, fiabilidad y franqueza sustantiva",
+        biggest_taboo: "La impuntualidad, la vaguedad o la adulación vacía — todo ello se considera un signo de mal carácter",
+        dining_etiquette: "Espere a que el anfitrión diga 'Guten Appetit'. Mantenga las manos visibles sobre la mesa. El contacto visual al brindar es obligatorio.",
+        language_notes: "La franqueza alemana es precisión, no grosería. Espere comentarios directos y honestos. Use títulos (Doktor, Professor) hasta que se indique lo contrario.",
+        gift_protocol: "Las flores son bienvenidas — evite las rosas rojas (románticas) y los lirios (fúnebres). Envuelva los regalos correctamente. Una buena botella de vino siempre es segura.",
+        dress_code: "Formal, discreto y conservador. La calidad habla por sí sola. Los colores llamativos o las marcas ostentosas se consideran de mal gusto.",
+        dos: [
+          "Sea puntual — llegar temprano es llegar a tiempo, llegar a tiempo es llegar tarde",
+          "Diríjase a las personas formalmente (Sie, Herr, Frau) hasta que se le invite a usar el nombre",
+          "Prepárese a fondo para cualquier reunión — la improvisación está mal vista",
+          "Mantenga contacto visual firme al brindar",
+          "Exponga su propósito con claridad y sin preámbulos innecesarios"
+        ],
+        donts: [
+          "No haga comentarios generales ni hable a la ligera sobre la historia alemana",
+          "Evite cruzar con el semáforo en rojo — aunque no haya tráfico",
+          "Nunca confunda la franqueza con hostilidad — es simplemente comunicación honesta",
+          "No comience a comer antes de que el anfitrión lo indique",
+          "Evite hablar de salario o finanzas personales en entornos sociales"
+        ]
+      },
+      pt: {
+        region_name: "Alemanha",
+        core_value: "Precisão, fiabilidade e franqueza substantiva",
+        biggest_taboo: "Atraso, vagueza ou adulação vazia — tudo isso é visto como sinal de mau caráter",
+        dining_etiquette: "Aguarde que o anfitrião diga 'Guten Appetit'. Mantenha as mãos visíveis sobre a mesa. O contacto visual ao brindar é obrigatório.",
+        language_notes: "A franqueza alemã é precisão, não grosseria. Espere feedback direto e honesto. Use títulos (Doktor, Professor) até que lhe digam o contrário.",
+        gift_protocol: "As flores são bem-vindas — evite rosas vermelhas (românticas) e lírios (fúnebres). Embale os presentes adequadamente. Uma boa garrafa de vinho é sempre segura.",
+        dress_code: "Formal, discreto e conservador. A qualidade fala por si. Cores berrantes ou marcas ostensivas são consideradas mau gosto.",
+        dos: [
+          "Seja pontual — chegar cedo é chegar a tempo, chegar a tempo é chegar tarde",
+          "Trate as pessoas formalmente (Sie, Herr, Frau) até ser convidado a usar o nome próprio",
+          "Prepare-se a fundo para qualquer reunião — a improvisação é mal vista",
+          "Mantenha contacto visual firme ao brindar",
+          "Exprima o seu propósito com clareza e sem preâmbulos desnecessários"
+        ],
+        donts: [
+          "Não faça comentários gerais nem fale levianamente sobre a história alemã",
+          "Evite atravessar com o sinal vermelho — mesmo sem tráfego",
+          "Nunca confunda franqueza com hostilidade — é simplesmente comunicação honesta",
+          "Não comece a comer antes de o anfitrião dar o sinal",
+          "Evite falar de salário ou finanças pessoais em contextos sociais"
+        ]
+      },
+      it: {
+        region_name: "Germania",
+        core_value: "Precisione, affidabilità e franchezza sostanziale",
+        biggest_taboo: "Il ritardo, la vaghezza o la lusinga vuota — tutto ciò è considerato un segno di cattivo carattere",
+        dining_etiquette: "Attendere che l'ospite dica 'Guten Appetit'. Tenere le mani visibili sul tavolo. Il contatto visivo durante il brindisi è obbligatorio.",
+        language_notes: "La franchezza tedesca è precisione, non scortesia. Aspettarsi feedback diretto e onesto. Usare i titoli (Doktor, Professor) finché non viene detto altrimenti.",
+        gift_protocol: "I fiori sono benvenuti — evitare le rose rosse (romantiche) e i gigli (funebri). Incartare i regali con cura. Una buona bottiglia di vino è sempre una scelta sicura.",
+        dress_code: "Formale, sobrio e conservatore. La qualità parla da sola. I colori sgargianti o i loghi appariscenti sono considerati di cattivo gusto.",
+        dos: [
+          "Essere puntuali — arrivare presto è arrivare in orario, arrivare in orario è essere in ritardo",
+          "Rivolgersi alle persone formalmente (Sie, Herr, Frau) fino all'invito a usare il nome",
+          "Prepararsi accuratamente per qualsiasi riunione — l'improvvisazione è disapprovata",
+          "Mantenere un fermo contatto visivo durante il brindisi",
+          "Esporre il proprio scopo chiaramente e senza preamboli inutili"
+        ],
+        donts: [
+          "Non fare osservazioni generiche né parlare superficialmente della storia tedesca",
+          "Evitare di attraversare con il semaforo rosso — anche in assenza di traffico",
+          "Non confondere mai la franchezza con l'ostilità — è semplicemente comunicazione onesta",
+          "Non iniziare a mangiare prima che l'ospite lo segnali",
+          "Evitare di discutere dello stipendio o delle finanze personali in contesti sociali"
+        ]
+      },
+      ar: {
+        region_name: "ألمانيا",
+        core_value: "الدقة والموثوقية والصراحة الجوهرية",
+        biggest_taboo: "التأخير أو الغموض أو المجاملة الفارغة — كل ذلك يُعدّ دليلاً على سوء الشخصية",
+        dining_etiquette: "انتظر حتى يقول المضيف 'Guten Appetit'. ضع يديك على الطاولة بشكل واضح. التواصل البصري عند التحميص إلزامي.",
+        language_notes: "الصراحة الألمانية دقة وليست وقاحة. توقّع ردود فعل صريحة وصادقة. استخدم الألقاب (Doktor, Professor) حتى يُخبرك بغير ذلك.",
+        gift_protocol: "الزهور مرحّب بها — تجنّب الورود الحمراء (رومانسية) والزنابق (جنائزية). ارفق الهدايا بتغليف مناسب. زجاجة نبيذ جيدة آمنة دائمًا.",
+        dress_code: "رسمي ومتحفظ وهادئ. الجودة تتكلم بنفسها. الألوان الصارخة أو الشعارات الفاخرة تُعدّ ذوقًا سيئًا.",
+        dos: [
+          "كن في الموعد — الحضور مبكرًا هو الحضور في الوقت، والحضور في الوقت يعني التأخر",
+          "خاطب الناس رسميًا (Sie, Herr, Frau) حتى تُدعى لاستخدام الاسم الأول",
+          "استعدّ جيدًا لأي اجتماع — الارتجال غير مقبول",
+          "حافظ على تواصل بصري ثابت عند التحميص",
+          "وضّح هدفك بوضوح ودون مقدمات غير ضرورية"
+        ],
+        donts: [
+          "لا تُدلِ بتعليقات فضفاضة أو تتحدث باستخفاف عن التاريخ الألماني",
+          "تجنّب العبور في الضوء الأحمر — حتى في غياب حركة المرور",
+          "لا تخلط أبدًا بين الصراحة والعدوانية — إنها ببساطة تواصل صادق",
+          "لا تبدأ الأكل قبل أن يشير المضيف إلى ذلك",
+          "تجنّب مناقشة الراتب أو الشؤون المالية الشخصية في التجمعات الاجتماعية"
+        ]
+      },
+      ja: {
+        region_name: "ドイツ",
+        core_value: "精確さ、信頼性、そして実質的な率直さ",
+        biggest_taboo: "遅刻、曖昧さ、中身のないお世辞——いずれも品格の欠如と見なされる",
+        dining_etiquette: "ホストが「グーテン・アペティート」と言うまで待つ。手はテーブルの上に見えるように置く。乾杯の際は必ずアイコンタクトを取る。",
+        language_notes: "ドイツ人の率直さは精確さであり、無礼ではない。率直で誠実なフィードバックを期待する。別途指示があるまで肩書き（ドクター、プロフェッサー）を使う。",
+        gift_protocol: "花は歓迎される——赤いバラ（恋愛的）とユリ（葬儀的）は避ける。プレゼントはきちんと包む。良質なワインは常に安全な選択。",
+        dress_code: "フォーマルで控えめ、かつ保守的。品質は自ずと語る。派手な色や目立つブランドロゴは悪趣味と見なされる。",
+        dos: [
+          "時間厳守——早く来ることが時間通り、時間通りは遅刻",
+          "名前の使用を勧められるまでは丁寧に（Sie、Herr、Frau）話す",
+          "どんな会議も徹底的に準備する——即興は嫌われる",
+          "乾杯の際にしっかりとアイコンタクトを保つ",
+          "目的を明確に、余分な前置きなしに述べる"
+        ],
+        donts: [
+          "広範な発言をしたり、ドイツの歴史を軽々しく話したりしない",
+          "赤信号では道路を渡らない——車がいなくても",
+          "率直さを敵意と混同しない——それは単に誠実なコミュニケーション",
+          "ホストが合図するまで食事を始めない",
+          "社交の場で給与や個人の財政について話さない"
+        ]
       }
     }
   },
@@ -119,6 +671,190 @@ const PRIORITY_SEED = [
           "Do not rush a meal or signal impatience before everyone has finished",
           "Never put cheese on seafood pasta — it is considered a genuine culinary error",
           "Avoid arriving early to a dinner invitation"
+        ]
+      },
+      nl: {
+        region_name: "Italië",
+        core_value: "Bella figura — uzelf en uw gedrag in alle omstandigheden mooi presenteren",
+        biggest_taboo: "Een brutta figura maken: goedkoop, slecht gekleed of grof overkomen in beschaafd gezelschap",
+        dining_etiquette: "De lunch is de hoofdmaaltijd. Meng geen gangen — pasta staat los van salade. Cappuccino is strikt een ochtenddrankje. Eet langzaam en geniet.",
+        language_notes: "Warmte en passie in expressie zijn vanzelfsprekend en verwacht. Geanimeerde handen zijn onderdeel van de taal. Stilte in gesprek wordt actief vermeden.",
+        gift_protocol: "Kwaliteitssnoep, wijn of bloemen — geen chrysanten. Breng iets mee als u voor het diner wordt uitgenodigd. Cadeaus worden direct geopend.",
+        dress_code: "Altijd elegant en doordacht. Zelfs casual kleding moet stijlvol zijn. Vermijd sportkleding buiten sportieve contexten. Uiterlijk signaleert zelfrespect.",
+        dos: [
+          "Groet met twee zoenen (linker wang eerst) bij bekenden",
+          "Leer een paar Italiaanse zinnen — de moeite wordt opgemerkt",
+          "Kleed u onberispelijk, zeker in kerken en formele omgevingen",
+          "Accepteer aangeboden eten en drinken royaal",
+          "Complimenteer de maaltijd oprecht en specifiek"
+        ],
+        donts: [
+          "Bestel na 12 uur geen cappuccino — dat verraden direct een buitenstaander",
+          "Bekritiseer geen Italiaanse tradities, eten of de familie",
+          "Haast geen maaltijd en laat geen ongeduld blijken",
+          "Zet nooit kaas op zeevruchtenpasta — dit is een echte culinaire fout",
+          "Kom niet te vroeg op een dineruitnodiging"
+        ]
+      },
+      fr: {
+        region_name: "Italie",
+        core_value: "La bella figura — se présenter et se conduire avec élégance en toutes circonstances",
+        biggest_taboo: "Faire une brutta figura : paraître radin, mal habillé ou vulgaire en bonne compagnie",
+        dining_etiquette: "Le déjeuner est le repas principal. Ne mélangez pas les plats — les pâtes sont séparées de la salade. Le cappuccino est strictement une boisson du matin. Mangez lentement et savourez.",
+        language_notes: "La chaleur et la passion dans l'expression sont naturelles et attendues. Les mains animées font partie du langage. Le silence dans la conversation est activement évité.",
+        gift_protocol: "Confiseries de qualité, vin ou fleurs — pas de chrysanthèmes. Apporter quelque chose quand on est invité à dîner. Les cadeaux sont ouverts immédiatement.",
+        dress_code: "Élégant et soigné en toutes circonstances. Même la tenue décontractée doit être stylée. Éviter les vêtements de sport hors contexte sportif. L'apparence traduit le respect de soi.",
+        dos: [
+          "Saluer avec deux bises (joue gauche en premier) entre connaissances",
+          "Apprendre quelques phrases en italien — l'effort est remarqué et apprécié",
+          "S'habiller impeccablement, surtout dans les églises et tout cadre formel",
+          "Accepter généreusement la nourriture et les boissons offertes",
+          "Complimenter le repas avec sincérité et appréciation spécifique"
+        ],
+        donts: [
+          "Ne pas commander de cappuccino après midi — cela trahit immédiatement un non-initié",
+          "Éviter de critiquer les traditions italiennes, la cuisine ou la famille",
+          "Ne pas précipiter un repas ni signaler l'impatience avant la fin",
+          "Ne jamais mettre du fromage sur des pâtes aux fruits de mer — c'est une véritable erreur culinaire",
+          "Éviter d'arriver trop tôt à une invitation à dîner"
+        ]
+      },
+      de: {
+        region_name: "Italien",
+        core_value: "Bella figura — sich selbst und sein Verhalten in allen Lebenslagen schön präsentieren",
+        biggest_taboo: "Eine brutta figura zu machen: billig, schlecht gekleidet oder grob zu wirken in guter Gesellschaft",
+        dining_etiquette: "Das Mittagessen ist die Hauptmahlzeit. Gänge nicht mischen — Pasta ist getrennt vom Salat. Cappuccino ist streng ein Morgengetränk. Langsam essen und genießen.",
+        language_notes: "Wärme und Leidenschaft im Ausdruck sind selbstverständlich und erwünscht. Lebhafte Hände sind Teil der Sprache. Stille im Gespräch wird aktiv vermieden.",
+        gift_protocol: "Hochwertige Süßwaren, Wein oder Blumen — keine Chrysanthemen. Etwas mitbringen, wenn man zum Abendessen eingeladen ist. Geschenke werden sofort geöffnet.",
+        dress_code: "Stets elegant und durchdacht. Auch Freizeitkleidung sollte stilvoll sein. Sportkleidung außerhalb sportlicher Kontexte vermeiden. Äußeres signalisiert Selbstachtung.",
+        dos: [
+          "Mit zwei Küssen (linke Wange zuerst) unter Bekannten begrüßen",
+          "Einige italienische Phrasen lernen — die Mühe wird bemerkt und geschätzt",
+          "Tadellos gekleidet sein, besonders in Kirchen und formellen Umgebungen",
+          "Angebotenes Essen und Trinken großzügig annehmen",
+          "Das Essen aufrichtig und mit spezifischer Wertschätzung loben"
+        ],
+        donts: [
+          "Nach dem Mittag keinen Cappuccino bestellen — das verrät sofort einen Uneingeweihten",
+          "Keine Kritik an italienischen Traditionen, Essen oder allem, was mit der Familie zu tun hat",
+          "Kein Essen hetzen oder Ungeduld zeigen, bevor alle fertig sind",
+          "Niemals Käse auf Meeresfrüchte-Pasta geben — das gilt als echter Kochfehler",
+          "Nicht zu früh zu einer Abendeinladung erscheinen"
+        ]
+      },
+      es: {
+        region_name: "Italia",
+        core_value: "La bella figura — presentarse y comportarse con elegancia en todas las circunstancias",
+        biggest_taboo: "Hacer una brutta figura: parecer tacaño, mal vestido o vulgar en buena compañía",
+        dining_etiquette: "El almuerzo es la comida principal. No mezcle platos — la pasta va separada de la ensalada. El capuchino es estrictamente una bebida matutina. Coma despacio y disfrute.",
+        language_notes: "La calidez y la pasión en la expresión son naturales y esperadas. Las manos expresivas forman parte del lenguaje. El silencio en la conversación se evita activamente.",
+        gift_protocol: "Confitería de calidad, vino o flores — no crisantemos. Lleve algo cuando sea invitado a cenar. Los regalos se abren de inmediato.",
+        dress_code: "Elegante y cuidado en todo momento. Incluso la ropa informal debe ser estilosa. Evite la ropa deportiva fuera de contextos deportivos. El aspecto señala el autorrespeto.",
+        dos: [
+          "Salude con dos besos (mejilla izquierda primero) entre conocidos",
+          "Aprenda algunas frases en italiano — el esfuerzo se nota y se agradece",
+          "Vístase impecablemente, especialmente en iglesias y entornos formales",
+          "Acepte generosamente la comida y la bebida ofrecida",
+          "Elogie la comida con sinceridad y apreciación específica"
+        ],
+        donts: [
+          "No pida capuchino después del mediodía — eso delata de inmediato a un no iniciado",
+          "Evite criticar las tradiciones italianas, la comida o la familia",
+          "No apresure una comida ni muestre impaciencia antes de que todos hayan terminado",
+          "Nunca ponga queso en la pasta con mariscos — es un error culinario real",
+          "Evite llegar antes de tiempo a una invitación a cenar"
+        ]
+      },
+      pt: {
+        region_name: "Itália",
+        core_value: "Bella figura — apresentar-se e comportar-se com elegância em todas as circunstâncias",
+        biggest_taboo: "Fazer uma brutta figura: parecer barato, mal vestido ou grosseiro em boa companhia",
+        dining_etiquette: "O almoço é a refeição principal. Não misture pratos — a massa é separada da salada. O cappuccino é estritamente uma bebida matinal. Coma devagar e desfrute.",
+        language_notes: "Calor e paixão na expressão são naturais e esperados. As mãos expressivas fazem parte da linguagem. O silêncio na conversa é ativamente evitado.",
+        gift_protocol: "Confeitaria de qualidade, vinho ou flores — não crisântemos. Leve algo quando for convidado para jantar. Os presentes são abertos imediatamente.",
+        dress_code: "Elegante e cuidado em todos os momentos. Mesmo o traje casual deve ser estiloso. Evite roupa desportiva fora de contextos desportivos. A aparência sinaliza autorrespeito.",
+        dos: [
+          "Cumprimente com dois beijos (bochecha esquerda primeiro) entre conhecidos",
+          "Aprenda algumas frases em italiano — o esforço é notado e bem recebido",
+          "Vista-se impecavelmente, especialmente em igrejas e ambientes formais",
+          "Aceite com generosidade a comida e a bebida oferecidas",
+          "Elogie a refeição com sinceridade e apreciação específica"
+        ],
+        donts: [
+          "Não peça cappuccino depois do meio-dia — isso delata imediatamente um não iniciado",
+          "Evite criticar as tradições italianas, a comida ou tudo o que esteja ligado à família",
+          "Não apresse uma refeição nem dê sinais de impaciência antes de todos terem terminado",
+          "Nunca coloque queijo em massa com frutos do mar — é considerado um erro culinário real",
+          "Evite chegar cedo a um jantar"
+        ]
+      },
+      it: {
+        region_name: "Italia",
+        core_value: "Bella figura — presentarsi e comportarsi con eleganza in ogni circostanza",
+        biggest_taboo: "Fare una brutta figura: apparire tirato, mal vestito o volgare in buona compagnia",
+        dining_etiquette: "Il pranzo è il pasto principale. Non mescolare i piatti — la pasta è separata dall'insalata. Il cappuccino è rigorosamente una bevanda mattutina. Mangiare lentamente e assaporare.",
+        language_notes: "Il calore e la passione nell'espressione sono naturali e attesi. Le mani animate fanno parte del linguaggio. Il silenzio in conversazione viene attivamente evitato.",
+        gift_protocol: "Dolciumi di qualità, vino o fiori — non crisantemi. Portare qualcosa quando si è invitati a cena. I regali vengono aperti subito.",
+        dress_code: "Elegante e curato in ogni momento. Anche l'abbigliamento casual deve essere stiloso. Evitare l'abbigliamento sportivo fuori dai contesti sportivi. L'aspetto segnala il rispetto per sé stessi.",
+        dos: [
+          "Salutare con due baci (guancia sinistra per prima) tra conoscenti",
+          "Imparare alcune frasi in italiano — lo sforzo viene notato e apprezzato",
+          "Vestirsi in modo impeccabile, specialmente nelle chiese e in contesti formali",
+          "Accettare con generosità cibo e bevande offerti",
+          "Complimentarsi per il pasto con sincerità e apprezzamento specifico"
+        ],
+        donts: [
+          "Non ordinare cappuccino dopo mezzogiorno — tradisce subito chi non è del posto",
+          "Evitare di criticare le tradizioni italiane, il cibo o qualsiasi cosa legata alla famiglia",
+          "Non affrettare un pasto né segnalare impazienza prima che tutti abbiano finito",
+          "Non mettere mai il formaggio sulla pasta ai frutti di mare — è considerato un vero errore culinario",
+          "Evitare di arrivare in anticipo a un invito a cena"
+        ]
+      },
+      ar: {
+        region_name: "إيطاليا",
+        core_value: "البيلا فيغورا — تقديم نفسك وسلوكك بأسلوب جميل في جميع الأحوال",
+        biggest_taboo: "ارتكاب البروتا فيغورا: الظهور ببخل أو بمظهر سيء أو بخشونة في المجتمعات الراقية",
+        dining_etiquette: "الغداء هو الوجبة الرئيسية. لا تخلط بين الأطباق — المعكرونة منفصلة عن السلطة. الكابتشينو يُشرب حصرًا في الصباح. تناول الطعام ببطء واستمتع.",
+        language_notes: "الدفء والعاطفة في التعبير طبيعيان ومتوقعان. حركة اليدين جزء من اللغة. الصمت في الحديث يُتجنّب بنشاط.",
+        gift_protocol: "حلويات راقية أو نبيذ أو ورود — لا أقحوان. أحضر شيئًا عند الدعوة لتناول العشاء. تُفتح الهدايا فورًا.",
+        dress_code: "أنيق ومتأنٍّ دائمًا. حتى الملابس غير الرسمية يجب أن تكون أنيقة. تجنّب ملابس الرياضة خارج السياق الرياضي. المظهر يعكس احترام الذات.",
+        dos: [
+          "حيِّ بقبلتين على الخد (الخد الأيسر أولاً) بين المعارف",
+          "تعلّم بعض العبارات الإيطالية — الجهد يُلاحظ ويُقدَّر",
+          "ارتدِ ملابس أنيقة، خاصةً في الكنائس والمناسبات الرسمية",
+          "اقبل الطعام والشراب المقدَّم بكرم",
+          "أثنِ على الوجبة بصدق وامتنان محدد"
+        ],
+        donts: [
+          "لا تطلب كابتشينو بعد الظهر — يكشف فورًا عن كونك غير مُلمّ بالثقافة",
+          "تجنّب انتقاد التقاليد الإيطالية أو الطعام أو أي شيء يتعلق بالعائلة",
+          "لا تستعجل الوجبة ولا تُظهر التذمّر قبل انتهاء الجميع",
+          "لا تضع الجبن أبدًا على معكرونة المأكولات البحرية — يُعدّ خطأً طهويًا حقيقيًا",
+          "تجنّب الحضور المبكر لدعوة العشاء"
+        ]
+      },
+      ja: {
+        region_name: "イタリア",
+        core_value: "ベッラ・フィグーラ——あらゆる状況で自分と振る舞いを美しく見せること",
+        biggest_taboo: "ブルッタ・フィグーラをすること——礼儀正しい席で安っぽく見えたり、着こなしが悪かったり、粗野な言葉を使うこと",
+        dining_etiquette: "昼食がメインの食事。コースは混ぜない——パスタとサラダは別々。カプチーノは厳密に午前中の飲み物。ゆっくり食べて楽しむ。",
+        language_notes: "表現における温かさと情熱は自然で期待される。身振り手振りは言語の一部。会話の沈黙は積極的に避けられる。",
+        gift_protocol: "高品質の菓子、ワイン、または花——菊は避ける。ディナーに招かれた際は何か持参する。プレゼントはすぐに開ける。",
+        dress_code: "常に上品で考え抜かれた装い。カジュアルな服でもスタイリッシュに。スポーツウェアはスポーツの場だけに。外見は自尊心を示す。",
+        dos: [
+          "知り合い同士では両頬にキス（左から）で挨拶する",
+          "イタリア語のフレーズをいくつか覚える——その努力は必ず気づかれる",
+          "特に教会やフォーマルな場では完璧な服装を心がける",
+          "勧められた食べ物や飲み物は寛大に受け入れる",
+          "食事を誠実かつ具体的に褒める"
+        ],
+        donts: [
+          "正午以降にカプチーノを注文しない——すぐに素人だとわかる",
+          "イタリアの伝統、料理、家族に関することを批判しない",
+          "食事を急いだり、全員が終わる前に焦りを見せたりしない",
+          "シーフードパスタにチーズを乗せない——本物の料理上の誤りとされる",
+          "ディナーの招待に早く到着しない"
         ]
       }
     }
@@ -150,6 +886,190 @@ const PRIORITY_SEED = [
           "Avoid excessive cheerfulness with strangers — warmth must be earned gradually",
           "Never complain about French culture to a French person"
         ]
+      },
+      nl: {
+        region_name: "Frankrijk",
+        core_value: "Intellectuele strengheid, culturele trots en de kunst van het gracieus leven",
+        biggest_taboo: "Helemaal geen Frans spreken, gecombineerd met luid of transactioneel gedrag — het signaleert een gebrek aan opvoeding en respect",
+        dining_etiquette: "Gangen zijn gescheiden en ongehaast. Houd beide handen zichtbaar op tafel. Brood hoort bij de maaltijd, geen boter. Wijn wordt besproken met echte kennis.",
+        language_notes: "Frans is een punt van nationale trots. Begin in het Frans, hoe gebrekkig ook — de poging is wat telt. Intellectueel debat is betrokkenheid, geen conflict.",
+        gift_protocol: "Kwaliteitswijn, champagne of specifieke chocolaatjes. Breng geen fles wijn als u gastheer bent. Vermijd chrysanten (begrafenis). Ongepakte wijn is acceptabel.",
+        dress_code: "Stil elegant. Kwaliteitsmaterialen en doordachte keuzes. Sportkleding is alleen voor sport. Parijse stijl is ingetogen maar altijd precies.",
+        dos: [
+          "Begin elke interactie met 'Bonjour' — niet groeten wordt als onbeleefd beschouwd",
+          "Neem vrij deel aan intellectuele discussies met oprechte zelfverzekerdheid",
+          "Complimenteer het eten specifiek — Frans culinair erfgoed is een bron van echte trots",
+          "Respecteer het ongehaaste tempo van maaltijden en vergaderingen",
+          "Kleed u zorgvuldig, ook voor schijnbaar informele gelegenheden"
+        ],
+        donts: [
+          "Begin niet in het Engels zonder eerst Frans te proberen",
+          "Bespreek geen geld, salaris of prijzen in sociale settings",
+          "Haast u niet — ongeduld wordt als plat en provinciaal beschouwd",
+          "Vermijd overdreven vrolijkheid met vreemden — warmte moet geleidelijk worden verdiend",
+          "Klaag nooit over de Franse cultuur bij een Fransman"
+        ]
+      },
+      fr: {
+        region_name: "France",
+        core_value: "Rigueur intellectuelle, fierté culturelle et art de vivre avec grâce",
+        biggest_taboo: "Ne parler aucun français, associé à un comportement bruyant ou transactionnel — cela signale un manque d'éducation et de respect",
+        dining_etiquette: "Les plats sont séparés et servis sans hâte. Garder les deux mains visibles sur la table. Le pain accompagne le repas, sans beurre. Le vin se discute avec une vraie connaissance.",
+        language_notes: "Le français est une fierté nationale. Commencer en français, aussi hésitant soit-on — c'est la tentative qui compte. Le débat intellectuel est un engagement, pas un conflit.",
+        gift_protocol: "Vin de qualité, champagne ou chocolats choisis. Ne pas apporter une bouteille de vin si vous recevez. Éviter les chrysanthèmes (funéraires). Le vin non emballé est acceptable.",
+        dress_code: "Élégance discrète. Matières de qualité et choix réfléchis. La tenue de sport est réservée au sport. Le style parisien est sobre mais toujours précis.",
+        dos: [
+          "Commencer chaque interaction par 'Bonjour' — ne pas saluer est considéré comme impoli",
+          "S'engager librement dans la discussion intellectuelle avec une vraie assurance",
+          "Complimenter spécifiquement la nourriture — l'identité culinaire de la France est une source de fierté réelle",
+          "Respecter le rythme non pressé des repas et des réunions",
+          "S'habiller soigneusement même pour ce qui semble être une occasion décontractée"
+        ],
+        donts: [
+          "Ne pas commencer directement en anglais sans essayer le français",
+          "Éviter de parler d'argent, de salaire ou de prix dans tout contexte social",
+          "Ne pas se précipiter — l'impatience est considérée comme vulgaire et provinciale",
+          "Éviter une jovialité excessive avec des inconnus — la chaleur doit être gagnée progressivement",
+          "Ne jamais critiquer la culture française à un Français"
+        ]
+      },
+      de: {
+        region_name: "Frankreich",
+        core_value: "Intellektuelle Strenge, kultureller Stolz und die Kunst des geistreichen Lebens",
+        biggest_taboo: "Überhaupt kein Französisch sprechen, verbunden mit lautem oder transaktionalem Verhalten — das signalisiert mangelnde Bildung und Respekt",
+        dining_etiquette: "Gänge sind getrennt und werden ohne Eile serviert. Beide Hände sichtbar auf dem Tisch halten. Brot begleitet die Mahlzeit, ohne Butter. Wein wird mit echtem Wissen diskutiert.",
+        language_notes: "Französisch ist ein Punkt des Nationalstolzes. Auf Französisch beginnen, wie auch immer holprig — der Versuch zählt. Intellektuelle Debatte ist Engagement, kein Konflikt.",
+        gift_protocol: "Hochwertiger Wein, Champagner oder ausgewählte Schokolade. Keine Weinflasche mitbringen, wenn Sie der Gastgeber sind. Chrysanthemen (Trauerblumen) meiden. Nicht eingewickelter Wein ist akzeptabel.",
+        dress_code: "Still elegant. Qualitätsmaterialien und durchdachte Auswahl. Sportkleidung ist nur für den Sport. Pariser Stil ist unauffällig, aber immer präzise.",
+        dos: [
+          "Jede Interaktion mit 'Bonjour' beginnen — nicht zu grüßen gilt als unhöflich",
+          "Frei und mit echtem Selbstvertrauen an intellektuellen Diskussionen teilnehmen",
+          "Das Essen spezifisch loben — Frankreichs kulinarische Identität ist eine Quelle echten Stolzes",
+          "Das gemächliche Tempo von Mahlzeiten und Besprechungen respektieren",
+          "Sich sorgfältig kleiden, auch für scheinbar informelle Anlässe"
+        ],
+        donts: [
+          "Nicht auf Englisch einsteigen, ohne zuerst Französisch zu versuchen",
+          "Geld, Gehalt oder Preise in keinem gesellschaftlichen Umfeld ansprechen",
+          "Nicht hetzen — Ungeduld gilt als plump und provinziell",
+          "Übermäßige Fröhlichkeit gegenüber Fremden vermeiden — Wärme muss allmählich verdient werden",
+          "Gegenüber einem Franzosen nie über die französische Kultur klagen"
+        ]
+      },
+      es: {
+        region_name: "Francia",
+        core_value: "Rigor intelectual, orgullo cultural y el arte de vivir con gracia",
+        biggest_taboo: "No hablar nada de francés, unido a un comportamiento ruidoso o transaccional — señala falta de educación y respeto",
+        dining_etiquette: "Los platos son separados y se sirven sin prisa. Mantener ambas manos visibles sobre la mesa. El pan acompaña la comida, sin mantequilla. El vino se comenta con verdadero conocimiento.",
+        language_notes: "El francés es un punto de orgullo nacional. Comenzar en francés, por titubeante que sea — el intento es lo que importa. El debate intelectual es compromiso, no conflicto.",
+        gift_protocol: "Vino de calidad, champán o chocolates específicos. No traer una botella de vino si usted es el anfitrión. Evite los crisantemos (fúnebres). El vino sin envolver es aceptable.",
+        dress_code: "Elegancia discreta. Materiales de calidad y elecciones consideradas. La ropa deportiva es solo para deporte. El estilo parisino es sobrio pero siempre preciso.",
+        dos: [
+          "Comenzar cada interacción con 'Bonjour' — no saludar se considera grosero",
+          "Participar con libertad y confianza en debates intelectuales",
+          "Elogiar la comida de manera específica — la identidad culinaria de Francia es fuente de orgullo genuino",
+          "Respetar el ritmo pausado de las comidas y reuniones",
+          "Vestirse con cuidado incluso en lo que parece una ocasión informal"
+        ],
+        donts: [
+          "No lanzarse al inglés sin intentar primero el francés",
+          "Evitar hablar de dinero, salario o precios en cualquier contexto social",
+          "No apresurarse — la impaciencia se considera tosca y provinciana",
+          "Evitar la alegría excesiva con desconocidos — la calidez debe ganarse poco a poco",
+          "Nunca quejarse de la cultura francesa a un francés"
+        ]
+      },
+      pt: {
+        region_name: "França",
+        core_value: "Rigor intelectual, orgulho cultural e a arte de viver com graça",
+        biggest_taboo: "Não falar nenhum francês, aliado a um comportamento ruidoso ou transacional — sinaliza falta de educação e respeito",
+        dining_etiquette: "Os pratos são separados e servidos sem pressa. Mantenha ambas as mãos visíveis sobre a mesa. O pão acompanha a refeição, sem manteiga. O vinho é discutido com verdadeiro conhecimento.",
+        language_notes: "O francês é um ponto de orgulho nacional. Comece em francês, por mais hesitante que seja — a tentativa é o que importa. O debate intelectual é envolvimento, não conflito.",
+        gift_protocol: "Vinho de qualidade, champanhe ou chocolates específicos. Não traga uma garrafa de vinho se for o anfitrião. Evite crisântemos (fúnebres). Vinho sem embrulho é aceitável.",
+        dress_code: "Elegância discreta. Materiais de qualidade e escolhas ponderadas. Roupa desportiva é apenas para desporto. O estilo parisiense é discreto mas sempre preciso.",
+        dos: [
+          "Comece cada interação com 'Bonjour' — não cumprimentar é considerado indelicado",
+          "Participe livremente e com genuína confiança em debates intelectuais",
+          "Elogie a comida de forma específica — a identidade culinária da França é uma fonte de orgulho genuíno",
+          "Respeite o ritmo pausado das refeições e reuniões",
+          "Vista-se com cuidado, mesmo para uma ocasião aparentemente informal"
+        ],
+        donts: [
+          "Não comece diretamente em inglês sem tentar primeiro o francês",
+          "Evite falar de dinheiro, salário ou preços em qualquer contexto social",
+          "Não se apresse — a impaciência é considerada grosseira e provinciana",
+          "Evite uma alegria excessiva com desconhecidos — a cordialidade deve ser conquistada gradualmente",
+          "Nunca se queixe da cultura francesa a um francês"
+        ]
+      },
+      it: {
+        region_name: "Francia",
+        core_value: "Rigore intellettuale, orgoglio culturale e l'arte di vivere con grazia",
+        biggest_taboo: "Non parlare per niente il francese, unito a un comportamento rumoroso o transazionale — segnala mancanza di educazione e rispetto",
+        dining_etiquette: "I piatti sono separati e serviti senza fretta. Tenere entrambe le mani visibili sul tavolo. Il pane accompagna il pasto, senza burro. Il vino si discute con vera competenza.",
+        language_notes: "Il francese è un punto di orgoglio nazionale. Iniziare in francese, per quanto incerto — è il tentativo che conta. Il dibattito intellettuale è coinvolgimento, non conflitto.",
+        gift_protocol: "Vino di qualità, champagne o cioccolati specifici. Non portare una bottiglia di vino se si è i padroni di casa. Evitare i crisantemi (funebri). Il vino non incartato è accettabile.",
+        dress_code: "Eleganza discreta. Materiali di qualità e scelte ponderate. L'abbigliamento sportivo è solo per lo sport. Lo stile parigino è sobrio ma sempre preciso.",
+        dos: [
+          "Iniziare ogni interazione con 'Bonjour' — non salutare è considerato scortese",
+          "Partecipare liberamente e con genuina sicurezza alle discussioni intellettuali",
+          "Complimentarsi specificamente per il cibo — l'identità culinaria della Francia è fonte di autentico orgoglio",
+          "Rispettare il ritmo tranquillo dei pasti e delle riunioni",
+          "Vestirsi con cura anche per quella che sembra un'occasione informale"
+        ],
+        donts: [
+          "Non passare direttamente all'inglese senza prima tentare il francese",
+          "Evitare di parlare di denaro, stipendio o prezzi in qualsiasi contesto sociale",
+          "Non affrettarsi — l'impazienza è considerata rozza e provinciale",
+          "Evitare un'eccessiva allegria con gli sconosciuti — il calore va guadagnato gradualmente",
+          "Non lamentarsi mai della cultura francese con un francese"
+        ]
+      },
+      ar: {
+        region_name: "فرنسا",
+        core_value: "الصرامة الفكرية والفخر الثقافي وفن الحياة الرشيقة",
+        biggest_taboo: "عدم التحدث بالفرنسية مطلقًا مع سلوك صاخب أو تجاري — يدل على نقص في التعليم والاحترام",
+        dining_etiquette: "الأطباق منفصلة وتُقدَّم بدون استعجال. ضع كلتا يديك على الطاولة دائمًا. يرافق الخبز الوجبة بدون زبدة. يُناقَش النبيذ بمعرفة حقيقية.",
+        language_notes: "الفرنسية نقطة فخر وطني. ابدأ بالفرنسية، مهما تعثّر نطقك — المحاولة هي ما يهم. النقاش الفكري مشاركة وليس صراعًا.",
+        gift_protocol: "نبيذ راقٍ أو شمبانيا أو شوكولاتة محددة. لا تحضر زجاجة نبيذ إن كنت المضيف. تجنّب أزهار الأقحوان (جنائزية). النبيذ غير المغلّف مقبول.",
+        dress_code: "أناقة هادئة. مواد عالية الجودة وخيارات متأنية. ملابس الرياضة للرياضة فقط. الأسلوب الباريسي متحفظ لكن دقيق دائمًا.",
+        dos: [
+          "ابدأ كل تفاعل بـ 'Bonjour' — عدم التحية يُعدّ وقاحة",
+          "شارك بحرية وثقة في النقاش الفكري",
+          "أثنِ على الطعام تحديدًا — الهوية الطهوية الفرنسية مصدر فخر حقيقي",
+          "التزم بالإيقاع غير المتسرّع في الوجبات والاجتماعات",
+          "ارتدِ ملابس مناسبة حتى في المناسبات التي تبدو غير رسمية"
+        ],
+        donts: [
+          "لا تنتقل إلى الإنجليزية مباشرةً دون محاولة الفرنسية أولاً",
+          "تجنّب الحديث عن المال أو الرواتب أو الأسعار في أي سياق اجتماعي",
+          "لا تتسرّع — التسرّع يُعدّ خشنًا ومتحيّزًا",
+          "تجنّب البشاشة المفرطة مع الغرباء — تكتسب الدفء تدريجيًا",
+          "لا تنتقد أبدًا الثقافة الفرنسية أمام شخص فرنسي"
+        ]
+      },
+      ja: {
+        region_name: "フランス",
+        core_value: "知的な厳格さ、文化的な誇り、そして優雅な生活の芸術",
+        biggest_taboo: "まったくフランス語を話さないこと、加えて声高または取引的な振る舞い——教養と敬意の欠如を示す",
+        dining_etiquette: "コースは別々でゆっくりと。両手は常にテーブルの上に見えるようにする。パンは食事に添えるが、バターはつけない。ワインは本物の知識をもって語る。",
+        language_notes: "フランス語は国民的誇りの象徴。たどたどしくてもフランス語で始める——試みること自体が重要。知的な議論は対立ではなく参加。",
+        gift_protocol: "良質なワイン、シャンパン、特定のチョコレート。あなたがホストの場合はワインを持参しない。菊（葬儀的）は避ける。包装なしのワインも許容される。",
+        dress_code: "静かな上品さ。上質な素材と考え抜かれた選択。スポーツウェアはスポーツの場だけ。パリのスタイルは控えめだが常に精確。",
+        dos: [
+          "すべての交流を「ボンジュール」で始める——挨拶しないことは無礼とされる",
+          "知的な議論に自由かつ自信を持って加わる",
+          "食事を具体的に褒める——フランスの料理的アイデンティティは本物の誇りの源",
+          "食事と会議の急がないペースを守る",
+          "一見カジュアルな場であっても服装に気を配る"
+        ],
+        donts: [
+          "フランス語を試みずにいきなり英語を使わない",
+          "どんな社交の場でもお金、給与、値段の話は避ける",
+          "急がない——焦りは粗野で田舎くさいと見なされる",
+          "見知らぬ人への過度な陽気さは避ける——温かさは徐々に築くもの",
+          "フランス人にフランスの文化について不満を言わない"
+        ]
       }
     }
   },
@@ -179,6 +1099,190 @@ const PRIORITY_SEED = [
           "Avoid overly familiar behaviour on a first meeting",
           "Do not confuse Flemish and Walloon cultural customs",
           "Avoid discussing Belgian politics unless you have genuine knowledge of the context"
+        ]
+      },
+      nl: {
+        region_name: "België",
+        core_value: "Discretie, levenskwaliteit en ingetogen burgerlijke beschaafheid",
+        biggest_taboo: "Arrogantie, vertoon of minachtend spreken over Vlaamse of Waalse cultuur in gemengd gezelschap",
+        dining_etiquette: "De Belgische keuken wordt serieus genomen. Kom op tijd. Beide handen zichtbaar op tafel. Bier wordt behandeld als wijn — met kennis en doordachte waardering.",
+        language_notes: "Taal is een gevoelige kwestie. Vraag welke taal de voorkeur heeft. De Vlaamse (Nederlands) en Waalse (Frans) gemeenschappen hebben een eigen, diep gevoelde identiteit.",
+        gift_protocol: "Chocolade, bloemen of kwaliteitswijn. Breng iets mee als u thuis wordt uitgenodigd. Cadeaus worden meestal direct geopend.",
+        dress_code: "Conservatief, kwaliteitsgericht en ingetogen. Professionele kleding in Brussel is formeel. Vermijd opvallende merken of flitsende logo's.",
+        dos: [
+          "Respecteer de taaldivide — ga nooit uit van iemands voorkeurstaal",
+          "Wees stipt bij alle professionele en sociale afspraken",
+          "Waardeer Belgische chocolade en bier met oprechte interesse en kennis",
+          "Spreek mensen formeel aan totdat duidelijk anders wordt uitgenodigd",
+          "Houd altijd een beheerst en rustig gesprek"
+        ],
+        donts: [
+          "Maak geen grappen over de Belgische identiteit of de taaldivide — ze worden zelden goed ontvangen",
+          "Behandel België niet als slechts een doorvoerland — dit wordt als neerbuigend ervaren",
+          "Vermijd overdreven vertrouwelijk gedrag bij een eerste ontmoeting",
+          "Verwar de Vlaamse en Waalse culturele gewoonten niet",
+          "Bespreek geen Belgische politiek tenzij u echte kennis heeft van de context"
+        ]
+      },
+      fr: {
+        region_name: "Belgique",
+        core_value: "Discrétion, qualité de vie et civilité civique discrète",
+        biggest_taboo: "L'arrogance, l'ostentation ou tenir des propos dédaigneux sur la culture flamande ou wallonne en société mixte",
+        dining_etiquette: "La cuisine belge est prise au sérieux. Arriver à l'heure. Les deux mains visibles sur la table. La bière est traitée comme le vin — avec connaissance et appréciation.",
+        language_notes: "La langue est une question sensible. Demander quelle langue est préférée. Les communautés flamande (néerlandais) et wallonne (français) ont des identités distinctes et profondément ressenties.",
+        gift_protocol: "Chocolats, fleurs ou vin de qualité. Apporter quelque chose quand on est invité chez quelqu'un. Les cadeaux sont généralement ouverts à la réception.",
+        dress_code: "Conservateur, axé sur la qualité et discret. La tenue professionnelle à Bruxelles est formelle. Éviter les marques voyantes ou les logos tape-à-l'œil.",
+        dos: [
+          "Respecter la fracture linguistique — ne jamais supposer la langue préférée de quelqu'un",
+          "Arriver ponctuellement à tous les rendez-vous professionnels et sociaux",
+          "Apprécier le chocolat et la bière belges avec un intérêt et une connaissance authentiques",
+          "S'adresser aux gens formellement jusqu'à invitation expresse",
+          "Maintenir une conversation mesurée et posée en toutes circonstances"
+        ],
+        donts: [
+          "Éviter les plaisanteries sur l'identité belge ou la fracture linguistique — elles sont rarement bien reçues",
+          "Ne pas traiter la Belgique comme une simple étape de transit — cela est perçu comme condescendant",
+          "Éviter un comportement trop familier lors d'une première rencontre",
+          "Ne pas confondre les coutumes culturelles flamandes et wallonnes",
+          "Éviter de discuter de la politique belge sans une vraie connaissance du contexte"
+        ]
+      },
+      de: {
+        region_name: "Belgien",
+        core_value: "Diskretion, Lebensqualität und zurückhaltende bürgerliche Höflichkeit",
+        biggest_taboo: "Arroganz, Zurschaustellung oder abfällige Bemerkungen über flämische oder wallonische Kultur in gemischter Gesellschaft",
+        dining_etiquette: "Die belgische Küche wird ernst genommen. Pünktlich erscheinen. Beide Hände sichtbar auf dem Tisch. Bier wird wie Wein behandelt — mit Wissen und durchdachter Wertschätzung.",
+        language_notes: "Sprache ist ein heikles Thema. Fragen, welche Sprache bevorzugt wird. Die flämische (Niederländisch) und wallonische (Französisch) Gemeinschaft haben ausgeprägte, tiefempfundene Identitäten.",
+        gift_protocol: "Schokolade, Blumen oder hochwertiger Wein. Etwas mitbringen, wenn man zu jemandem nach Hause eingeladen ist. Geschenke werden normalerweise beim Empfang geöffnet.",
+        dress_code: "Konservativ, qualitätsorientiert und dezent. Professionelle Kleidung in Brüssel ist formell. Auffällige Marken oder grelle Logos vermeiden.",
+        dos: [
+          "Die Sprachgrenze respektieren — nie die bevorzugte Sprache einer Person annehmen",
+          "Pünktlich zu allen beruflichen und gesellschaftlichen Terminen erscheinen",
+          "Belgische Schokolade und Bier mit echtem Interesse und Wissen schätzen",
+          "Personen formell ansprechen, bis ausdrücklich anders eingeladen",
+          "Jederzeit eine gemessene, besonnene Unterhaltung führen"
+        ],
+        donts: [
+          "Keine Witze über die belgische Identität oder die Sprachgrenze machen — sie kommen selten gut an",
+          "Belgien nicht als bloße Durchgangsstation behandeln — das wird als herablassend empfunden",
+          "Übermäßig vertrautes Verhalten beim ersten Treffen vermeiden",
+          "Flämische und wallonische Kulturgewohnheiten nicht verwechseln",
+          "Belgische Politik nicht besprechen, ohne echte Kenntnisse des Kontexts zu haben"
+        ]
+      },
+      es: {
+        region_name: "Bélgica",
+        core_value: "Discreción, calidad de vida y civilidad cívica discreta",
+        biggest_taboo: "La arrogancia, la ostentación o hablar con desdén sobre la cultura flamenca o valona en compañía mixta",
+        dining_etiquette: "La cocina belga se toma en serio. Llegue a tiempo. Ambas manos visibles sobre la mesa. La cerveza se trata como el vino — con conocimiento y apreciación.",
+        language_notes: "El idioma es una cuestión delicada. Pregunte qué idioma se prefiere. Las comunidades flamenca (neerlandés) y valona (francés) tienen identidades distintas y profundamente sentidas.",
+        gift_protocol: "Chocolates, flores o vino de calidad. Lleve algo cuando sea invitado a casa de alguien. Los regalos generalmente se abren al recibirlos.",
+        dress_code: "Conservador, orientado a la calidad y discreto. La indumentaria profesional en Bruselas es formal. Evite marcas llamativas o logotipos ostentosos.",
+        dos: [
+          "Respetar la división lingüística — nunca asumir el idioma preferido de alguien",
+          "Llegar puntual a todas las citas profesionales y sociales",
+          "Apreciar el chocolate y la cerveza belgas con genuino interés y conocimiento",
+          "Dirigirse a las personas formalmente hasta ser invitado a hacer lo contrario",
+          "Mantener una conversación medida y serena en todo momento"
+        ],
+        donts: [
+          "Evitar los chistes sobre la identidad belga o la división lingüística — rara vez se reciben bien",
+          "No tratar Bélgica como una mera parada de tránsito — se percibe como condescendiente",
+          "Evitar un comportamiento demasiado familiar en un primer encuentro",
+          "No confundir las costumbres culturales flamencas y valonas",
+          "Evitar hablar de política belga sin tener conocimiento genuino del contexto"
+        ]
+      },
+      pt: {
+        region_name: "Bélgica",
+        core_value: "Discrição, qualidade de vida e civismo urbano discreto",
+        biggest_taboo: "Arrogância, ostentação ou falar de forma depreciativa sobre a cultura flamenga ou valona em companhia mista",
+        dining_etiquette: "A cozinha belga é levada a sério. Chegue a tempo. Ambas as mãos visíveis sobre a mesa. A cerveja é tratada como vinho — com conhecimento e apreciação.",
+        language_notes: "O idioma é um assunto sensível. Pergunte qual língua é preferida. As comunidades flamenga (neerlandês) e valona (francês) têm identidades distintas e profundamente sentidas.",
+        gift_protocol: "Chocolates, flores ou vinho de qualidade. Leve algo quando for convidado a casa de alguém. Os presentes geralmente são abertos quando recebidos.",
+        dress_code: "Conservador, orientado para a qualidade e discreto. A indumentária profissional em Bruxelas é formal. Evite marcas conspícuas ou logótipos berrantes.",
+        dos: [
+          "Respeitar a divisão linguística — nunca assumir o idioma preferido de alguém",
+          "Chegar pontualmente a todos os compromissos profissionais e sociais",
+          "Apreciar o chocolate e a cerveja belgas com genuíno interesse e conhecimento",
+          "Dirigir-se às pessoas formalmente até ser claramente convidado a fazer o contrário",
+          "Manter sempre uma conversa ponderada e serena"
+        ],
+        donts: [
+          "Evitar piadas sobre a identidade belga ou a divisão linguística — raramente são bem recebidas",
+          "Não tratar a Bélgica como mera paragem de trânsito — isso é percebido como condescendente",
+          "Evitar comportamento excessivamente familiar num primeiro encontro",
+          "Não confundir costumes culturais flamengos e valões",
+          "Evitar discutir política belga sem ter conhecimento genuíno do contexto"
+        ]
+      },
+      it: {
+        region_name: "Belgio",
+        core_value: "Discrezione, qualità della vita e civiltà civica sobria",
+        biggest_taboo: "L'arroganza, l'ostentazione o il parlare sprezzantemente della cultura fiamminga o vallone in compagnia mista",
+        dining_etiquette: "La cucina belga viene presa sul serio. Arrivare puntuali. Entrambe le mani visibili sul tavolo. La birra viene trattata come il vino — con conoscenza e apprezzamento ponderato.",
+        language_notes: "La lingua è una questione delicata. Chiedere quale lingua si preferisce. Le comunità fiamminga (olandese) e vallone (francese) hanno identità distinte e profondamente sentite.",
+        gift_protocol: "Cioccolato, fiori o vino di qualità. Portare qualcosa quando si è invitati a casa di qualcuno. I regali vengono di solito aperti al ricevimento.",
+        dress_code: "Conservatore, orientato alla qualità e sobrio. L'abbigliamento professionale a Bruxelles è formale. Evitare marchi vistosi o loghi appariscenti.",
+        dos: [
+          "Rispettare la divisione linguistica — non presumere mai la lingua preferita di qualcuno",
+          "Arrivare puntuali a tutti gli appuntamenti professionali e sociali",
+          "Apprezzare cioccolato e birra belgi con genuino interesse e competenza",
+          "Rivolgersi alle persone formalmente fino a esplicito invito contrario",
+          "Mantenere sempre una conversazione misurata e composta"
+        ],
+        donts: [
+          "Evitare battute sull'identità belga o sulla divisione linguistica — raramente sono ben accolte",
+          "Non trattare il Belgio come una semplice tappa di transito — è percepito come condiscendente",
+          "Evitare un comportamento eccessivamente familiare al primo incontro",
+          "Non confondere le usanze culturali fiamminghe e valloni",
+          "Evitare di discutere di politica belga senza una vera conoscenza del contesto"
+        ]
+      },
+      ar: {
+        region_name: "بلجيكا",
+        core_value: "التكتم وجودة الحياة واللطف المدني المتحفظ",
+        biggest_taboo: "الغطرسة أو الاستعراض أو التقليل من شأن الثقافة الفلمنكية أو الوالونية في المجالس المختلطة",
+        dining_etiquette: "يُؤخذ المطبخ البلجيكي بجدية. احضر في الوقت المحدد. ضع كلتا يديك على الطاولة. تُعامَل البيرة كالنبيذ — بمعرفة وتقدير.",
+        language_notes: "اللغة موضوع حساس. اسأل عن اللغة المفضّلة. المجتمعان الفلمنكي (الهولندي) والوالوني (الفرنسي) لهما هويتان متميزتان عميقتا الجذور.",
+        gift_protocol: "شوكولاتة أو ورود أو نبيذ راقٍ. أحضر شيئًا عند الدعوة لزيارة بيت أحدهم. تُفتح الهدايا عادةً عند تسلّمها.",
+        dress_code: "محافظ وعالي الجودة وهادئ. الملبس المهني في بروكسل رسمي. تجنّب العلامات التجارية اللافتة أو الشعارات البرّاقة.",
+        dos: [
+          "احترم الانقسام اللغوي — لا تفترض أبدًا اللغة المفضّلة لشخص ما",
+          "احضر بدقة في جميع المواعيد المهنية والاجتماعية",
+          "أبدِ اهتمامًا حقيقيًا بالشوكولاتة والبيرة البلجيكية",
+          "خاطب الناس رسميًا حتى تُدعى إلى خلاف ذلك",
+          "حافظ على حوار هادئ ومتزن في جميع الأوقات"
+        ],
+        donts: [
+          "تجنّب الدعابات حول الهوية البلجيكية أو الانقسام اللغوي — نادرًا ما تُقابَل بقبول",
+          "لا تعامل بلجيكا على أنها مجرد محطة عبور — يُعدّ ذلك استهزاءً",
+          "تجنّب الألفة المفرطة في اللقاء الأول",
+          "لا تخلط بين العادات الثقافية الفلمنكية والوالونية",
+          "تجنّب الحديث عن السياسة البلجيكية دون معرفة حقيقية بالسياق"
+        ]
+      },
+      ja: {
+        region_name: "ベルギー",
+        core_value: "慎重さ、生活の質、そして控えめな市民的礼節",
+        biggest_taboo: "傲慢さ、見せびらかし、あるいは混合した場でフラマン語圏やワロン語圏の文化を軽視すること",
+        dining_etiquette: "ベルギー料理は真剣に扱われる。時間通りに到着する。両手はテーブルの上に見えるように。ビールはワインと同様に——知識と考え抜かれた感謝を持って扱う。",
+        language_notes: "言語は繊細な問題。どの言語が好まれるか尋ねる。フラマン語（オランダ語）圏とワロン語（フランス語）圏のコミュニティはそれぞれ独自の深く感じられるアイデンティティを持つ。",
+        gift_protocol: "チョコレート、花、または良質なワイン。家に招かれた際は何か持参する。プレゼントは通常受け取った際に開ける。",
+        dress_code: "保守的で品質重視、かつ控えめ。ブリュッセルのビジネスドレスはフォーマル。目立つブランドや派手なロゴは避ける。",
+        dos: [
+          "言語の境界を尊重する——相手の好む言語を決して決めつけない",
+          "全ての職業的・社会的約束に時間厳守で出席する",
+          "ベルギーのチョコレートとビールを本物の興味と知識を持って評価する",
+          "明確に別の指示があるまでは正式に人に話しかける",
+          "常に穏やかで落ち着いた会話を維持する"
+        ],
+        donts: [
+          "ベルギーのアイデンティティや言語分裂についての冗談は避ける——ほとんど好意的に受け取られない",
+          "ベルギーを単なる通過点として扱わない——軽蔑的と受け取られる",
+          "初めての出会いで過度に馴れ馴れしくしない",
+          "フラマン語圏とワロン語圏の文化的習慣を混同しない",
+          "ベルギーの政治について深い知識なしに議論しない"
         ]
       }
     }
@@ -210,6 +1314,190 @@ const PRIORITY_SEED = [
           "Avoid any loud or disruptive behaviour in public spaces",
           "Never dispose of recyclables incorrectly — recycling compliance is taken seriously"
         ]
+      },
+      nl: {
+        region_name: "Zwitserland",
+        core_value: "Precisie, stiptheid, discretie en vertrouwen dat verdiend moet worden",
+        biggest_taboo: "Te laat komen, lawaai of opvallend gedrag van welke aard dan ook — dit alles duidt op een slecht karakter en gebrek aan respect",
+        dining_etiquette: "Wacht tot iedereen bediend is voordat u begint te eten. Bij een toost is direct oogcontact met elke persoon aan tafel verplicht. Eet alles op uw bord op.",
+        language_notes: "Zwitserland heeft vier officiële talen. Vraag welke de voorkeur heeft in het betreffende kanton. Zwitsers-Duits wijkt aanzienlijk af van standaard Duits. Precisie in spraak is een deugd.",
+        gift_protocol: "Bloemen, kwaliteitschocolade of wijn. Verwijder de verpakking van een wijnfles voor het geven. Cadeaus zijn bescheiden en passend — extravagantie wordt met argwaan bekeken.",
+        dress_code: "Conservatief, verzorgd en kwaliteitsgericht. Persoonlijk vermogen wordt niet getoond. Praktische elegantie is de Zwitserse standaard.",
+        dos: [
+          "Wees punctueel tot de minuut — punctualiteit is een morele deugd",
+          "Begroet elke persoon individueel met een stevige handdruk en direct oogcontact",
+          "Respecteer de stille uren (22:00–07:00) in woonwijken strikt",
+          "Wacht altijd ordelijk en correct in de rij",
+          "Pas uw gespreksstijl aan die van uw gastheer — blijf formeel totdat anders wordt uitgenodigd"
+        ],
+        donts: [
+          "Kom nooit te laat — dit wordt diep respectloos gevonden",
+          "Doe geen aannames over de Zwitserse identiteit of het nationale karakter",
+          "Bespreek geen persoonlijk vermogen, salaris of prijzen in sociale settings",
+          "Vermijd luid of storend gedrag in openbare ruimtes",
+          "Gooi nooit recyclebaar afval fout weg — naleving van recyclingregels wordt serieus genomen"
+        ]
+      },
+      fr: {
+        region_name: "Suisse",
+        core_value: "Précision, ponctualité, discrétion et confiance qui doit se mériter",
+        biggest_taboo: "Le retard, le bruit ou tout comportement ostentatoire — tous signalent un mauvais caractère et un manque d'égard envers autrui",
+        dining_etiquette: "Attendre que tout le monde soit servi avant de manger. Les toasts exigent un contact visuel direct avec chaque personne à table. Finir tout ce qui est dans l'assiette.",
+        language_notes: "La Suisse a quatre langues officielles. Demander laquelle est préférée dans le canton concerné. Le suisse-allemand diffère sensiblement de l'allemand standard. La précision dans le discours est une vertu.",
+        gift_protocol: "Fleurs, chocolats de qualité ou vin. Retirer l'emballage d'une bouteille de vin avant de l'offrir. Les cadeaux sont modestes et appropriés — l'extravagance est perçue avec méfiance.",
+        dress_code: "Conservateur, soigné et axé sur la qualité. La richesse personnelle ne se montre pas. L'élégance pratique est la norme suisse.",
+        dos: [
+          "Être ponctuel à la minute — la ponctualité est considérée comme une vertu morale",
+          "Saluer chaque personne individuellement, avec une poignée de main ferme et un contact visuel direct",
+          "Respecter strictement les heures de silence (22h–7h) dans les zones résidentielles",
+          "Faire la queue correctement et de manière ordonnée en toutes circonstances",
+          "S'adapter au registre de conversation de son hôte — rester formel jusqu'à invitation contraire"
+        ],
+        donts: [
+          "Ne jamais être en retard — c'est profondément irrespectueux et difficilement pardonné",
+          "Éviter de formuler des suppositions sur l'identité suisse ou le caractère national",
+          "Ne pas parler de fortune personnelle, de salaires ou de prix en société",
+          "Éviter tout comportement bruyant ou perturbateur dans les espaces publics",
+          "Ne jamais trier incorrectement les recyclables — le respect du tri est pris très au sérieux"
+        ]
+      },
+      de: {
+        region_name: "Schweiz",
+        core_value: "Präzision, Pünktlichkeit, Diskretion und Vertrauen, das verdient werden muss",
+        biggest_taboo: "Verspätung, Lärm oder auffälliges Verhalten jeder Art — all das signalisiert schlechten Charakter und Rücksichtslosigkeit",
+        dining_etiquette: "Warten, bis alle bedient wurden, bevor man mit dem Essen beginnt. Bei Toasts ist direkter Augenkontakt mit jeder Person am Tisch der Reihe nach erforderlich. Den Teller leer essen.",
+        language_notes: "Die Schweiz hat vier Amtssprachen. Fragen, welche im jeweiligen Kanton bevorzugt wird. Schweizerdeutsch weicht erheblich vom Hochdeutschen ab. Präzision in der Sprache ist eine Tugend.",
+        gift_protocol: "Blumen, hochwertige Schokolade oder Wein. Verpackung einer Weinflasche vor dem Überreichen entfernen. Geschenke sind bescheiden und angemessen — Extravaganz wird mit Argwohn betrachtet.",
+        dress_code: "Konservativ, gepflegt und qualitätsorientiert. Persönlicher Reichtum wird nicht zur Schau gestellt. Praktische Eleganz ist der Schweizer Standard.",
+        dos: [
+          "Auf die Minute pünktlich sein — Pünktlichkeit gilt als moralische Tugend",
+          "Jede Person einzeln mit einem festen Handschlag und direktem Augenkontakt begrüßen",
+          "Ruhezeiten (22–7 Uhr) in Wohngebieten strikt einhalten",
+          "Stets korrekt und geordnet in der Schlange warten",
+          "Den Gesprächston des Gastgebers anpassen — formell bleiben, bis anders eingeladen"
+        ],
+        donts: [
+          "Niemals zu spät kommen — es ist zutiefst respektlos und wird kaum verziehen",
+          "Keine Annahmen über die Schweizer Identität oder den Nationalcharakter machen",
+          "Persönliches Vermögen, Gehälter oder Preise in gesellschaftlichem Rahmen nicht ansprechen",
+          "Jegliches lautes oder störendes Verhalten in öffentlichen Räumen vermeiden",
+          "Recycelbare Abfälle niemals falsch entsorgen — Recycling-Compliance wird ernst genommen"
+        ]
+      },
+      es: {
+        region_name: "Suiza",
+        core_value: "Precisión, puntualidad, discreción y confianza que debe ganarse",
+        biggest_taboo: "La impuntualidad, el ruido o cualquier comportamiento llamativo — todo ello señala mal carácter y falta de consideración hacia los demás",
+        dining_etiquette: "Esperar a que todos sean servidos antes de comer. Los brindis requieren contacto visual directo con cada persona de la mesa. Terminar todo lo que hay en el plato.",
+        language_notes: "Suiza tiene cuatro idiomas oficiales. Pregunte cuál se prefiere en el cantón correspondiente. El alemán suizo difiere significativamente del alemán estándar. La precisión en el habla es una virtud.",
+        gift_protocol: "Flores, chocolates de calidad o vino. Retire el envoltorio de una botella de vino antes de ofrecerla. Los regalos son modestos y apropiados — la extravagancia se ve con recelo.",
+        dress_code: "Conservador, cuidado y orientado a la calidad. La riqueza personal no se exhibe. La elegancia práctica es el estándar suizo.",
+        dos: [
+          "Ser puntual al minuto — la puntualidad se considera una virtud moral",
+          "Saludar a cada persona individualmente, con un apretón de manos firme y contacto visual directo",
+          "Respetar estrictamente las horas de silencio (22:00–7:00) en zonas residenciales",
+          "Hacer cola correctamente y de forma ordenada en todo momento",
+          "Adaptar el registro conversacional al del anfitrión — permanecer formal hasta invitación contraria"
+        ],
+        donts: [
+          "Nunca llegar tarde — es profundamente irrespetuoso y difícilmente perdonado",
+          "Evitar hacer suposiciones sobre la identidad suiza o el carácter nacional",
+          "No hablar de riqueza personal, salarios o precios en entornos sociales",
+          "Evitar cualquier comportamiento ruidoso o perturbador en espacios públicos",
+          "Nunca desechar incorrectamente los reciclables — el cumplimiento del reciclaje se toma muy en serio"
+        ]
+      },
+      pt: {
+        region_name: "Suíça",
+        core_value: "Precisão, pontualidade, discrição e confiança que tem de ser conquistada",
+        biggest_taboo: "Atraso, barulho ou qualquer comportamento conspícuo — tudo sinaliza mau caráter e falta de consideração pelos outros",
+        dining_etiquette: "Aguardar que todos sejam servidos antes de comer. Os brindes requerem contacto visual direto com cada pessoa à mesa, por turnos. Terminar tudo o que está no prato.",
+        language_notes: "A Suíça tem quatro línguas oficiais. Pergunte qual é preferida no cantão relevante. O alemão suíço difere significativamente do alemão padrão. A precisão no discurso é uma virtude.",
+        gift_protocol: "Flores, chocolates de qualidade ou vinho. Retirar o embrulho de uma garrafa de vinho antes de oferecer. Os presentes são modestos e adequados — a extravagância é vista com suspeita.",
+        dress_code: "Conservador, cuidado e orientado para a qualidade. A riqueza pessoal não é exibida. A elegância prática é o padrão suíço.",
+        dos: [
+          "Ser pontual ao minuto — a pontualidade é tratada como uma virtude moral",
+          "Cumprimentar cada pessoa individualmente, com um aperto de mão firme e contacto visual direto",
+          "Respeitar rigorosamente as horas de silêncio (22h–7h) em zonas residenciais",
+          "Fazer fila de forma correta e ordenada em todos os momentos",
+          "Adaptar o registo conversacional ao do anfitrião — manter-se formal até convite contrário"
+        ],
+        donts: [
+          "Nunca chegar atrasado — é profundamente desrespeitoso e dificilmente perdoado",
+          "Evitar fazer suposições sobre a identidade suíça ou o caráter nacional",
+          "Não discutir riqueza pessoal, salários ou preços em contextos sociais",
+          "Evitar qualquer comportamento ruidoso ou perturbador em espaços públicos",
+          "Nunca descartar recicláveis incorretamente — o cumprimento da reciclagem é levado muito a sério"
+        ]
+      },
+      it: {
+        region_name: "Svizzera",
+        core_value: "Precisione, puntualità, discrezione e fiducia che deve essere guadagnata",
+        biggest_taboo: "Il ritardo, il rumore o qualsiasi comportamento vistoso — tutto segnala un cattivo carattere e mancanza di riguardo verso gli altri",
+        dining_etiquette: "Aspettare che tutti siano serviti prima di mangiare. I brindisi richiedono il contatto visivo diretto con ogni persona a tavola a turno. Finire tutto quello che c'è nel piatto.",
+        language_notes: "La Svizzera ha quattro lingue ufficiali. Chiedere quale si preferisce nel cantone di riferimento. Lo svizzero tedesco differisce significativamente dal tedesco standard. La precisione nel linguaggio è una virtù.",
+        gift_protocol: "Fiori, cioccolato di qualità o vino. Rimuovere la confezione da una bottiglia di vino prima di donarla. I regali sono modesti e appropriati — l'estravaganza è vista con sospetto.",
+        dress_code: "Conservatore, curato e orientato alla qualità. La ricchezza personale non si ostenta. L'eleganza pratica è lo standard svizzero.",
+        dos: [
+          "Essere puntuali al minuto — la puntualità è considerata una virtù morale",
+          "Salutare ogni persona individualmente, con una stretta di mano ferma e contatto visivo diretto",
+          "Rispettare rigorosamente le ore di silenzio (22:00–7:00) nelle aree residenziali",
+          "Fare la fila in modo corretto e ordinato in ogni momento",
+          "Adattare il registro conversazionale a quello del padrone di casa — rimanere formali fino a invito contrario"
+        ],
+        donts: [
+          "Non essere mai in ritardo — è profondamente irrispettoso e difficilmente perdonato",
+          "Evitare di fare supposizioni sull'identità svizzera o sul carattere nazionale",
+          "Non discutere di ricchezza personale, stipendi o prezzi in contesti sociali",
+          "Evitare qualsiasi comportamento rumoroso o dirompente negli spazi pubblici",
+          "Non smaltire mai i riciclabili in modo scorretto — il rispetto del riciclo è preso molto sul serio"
+        ]
+      },
+      ar: {
+        region_name: "سويسرا",
+        core_value: "الدقة والانضباط والتكتم والثقة التي يجب كسبها",
+        biggest_taboo: "التأخير أو الضوضاء أو أي سلوك لافت — كل ذلك يدل على سوء الشخصية وانعدام الاحترام للآخرين",
+        dining_etiquette: "انتظر حتى يُخدَّم الجميع قبل الأكل. تستلزم نخبات التحميص التواصل البصري المباشر مع كل شخص على الطاولة بالتسلسل. أنهِ كل ما في طبقك.",
+        language_notes: "تمتلك سويسرا أربع لغات رسمية. اسأل عن اللغة المفضّلة في المقاطعة ذات الصلة. تختلف اللهجة الألمانية السويسرية عن الألمانية المعيارية اختلافًا كبيرًا. الدقة في الكلام فضيلة.",
+        gift_protocol: "ورود أو شوكولاتة عالية الجودة أو نبيذ. أزل غلاف زجاجة النبيذ قبل تقديمها. الهدايا متواضعة ومناسبة — التبذير يُنظر إليه بريبة.",
+        dress_code: "محافظ ونظيف وعالي الجودة. لا يُظهَر الثراء الشخصي. الأناقة العملية هي المعيار السويسري.",
+        dos: [
+          "كن في الموعد بالدقيقة — الانضباط يُعامَل باعتباره فضيلة أخلاقية",
+          "حيِّ كل شخص بمفرده بمصافحة قوية وتواصل بصري مباشر",
+          "التزم صارمًا بساعات الصمت (10 مساءً–7 صباحًا) في المناطق السكنية",
+          "انتظر في الطابور بصورة صحيحة ومنظمة دائمًا",
+          "تكيّف مع أسلوب محادثة مضيفك — ابقَ رسميًا حتى تُدعى إلى غير ذلك"
+        ],
+        donts: [
+          "لا تتأخر أبدًا — إنه عدم احترام عميق ونادرًا ما يُغتفر",
+          "تجنّب الافتراضات حول الهوية السويسرية أو الطابع الوطني",
+          "لا تناقش الثروة الشخصية أو الرواتب أو الأسعار في التجمعات الاجتماعية",
+          "تجنّب أي سلوك صاخب أو مزعج في الأماكن العامة",
+          "لا ترمِ النفايات القابلة لإعادة التدوير بشكل غير صحيح — الالتزام بإعادة التدوير أمر جدي"
+        ]
+      },
+      ja: {
+        region_name: "スイス",
+        core_value: "精確さ、時間厳守、慎重さ、そして勝ち取らなければならない信頼",
+        biggest_taboo: "遅刻、騒音、あらゆる目立つ行動——これら全ては悪い品格と他者への配慮のなさを示す",
+        dining_etiquette: "全員が給仕されるまで待ってから食べ始める。乾杯の際はテーブルの全員と順番に直接アイコンタクトを取る。皿の上のものは全部食べる。",
+        language_notes: "スイスには4つの公用語がある。関連する州でどれが好まれるか尋ねる。スイスドイツ語は標準ドイツ語と大きく異なる。言葉の精確さは美徳。",
+        gift_protocol: "花、高品質のチョコレート、またはワイン。ワインボトルは渡す前に包みを外す。贈り物は控えめで適切に——豪華さは疑いの目で見られる。",
+        dress_code: "保守的で清潔感があり、品質重視。個人の富は誇示しない。実用的な上品さがスイスの基準。",
+        dos: [
+          "1分単位で時間を守る——時間厳守は道徳的美徳として扱われる",
+          "それぞれの人に個別に、しっかりした握手と直接のアイコンタクトで挨拶する",
+          "住宅地の静寂時間（22時〜7時）を厳密に守る",
+          "常に正しく整然と順番を待つ",
+          "ホストの会話のトーンに合わせる——招待されるまで正式な態度を保つ"
+        ],
+        donts: [
+          "絶対に遅刻しない——深く無礼であり、なかなか許されない",
+          "スイスのアイデンティティや国民性について推測しない",
+          "社交の場で個人の財産、給与、価格について話さない",
+          "公共の場での騒がしいまたは迷惑な行動を避ける",
+          "リサイクル品を誤って捨てない——リサイクルの遵守は真剣に扱われる"
+        ]
       }
     }
   },
@@ -239,6 +1527,190 @@ const PRIORITY_SEED = [
           "Avoid jaywalking — fines are real and enforced",
           "Do not comment dismissively on Singapore's regulations — they are genuinely valued by residents",
           "Avoid discussing race or religion in careless or casual terms"
+        ]
+      },
+      nl: {
+        region_name: "Singapore",
+        core_value: "Meritocratie, burgerlijke orde en gecomponeerde meertalige verfijning",
+        biggest_taboo: "Openbare vernedering veroorzaken, zwerfvuil achterlaten of regels overtreden — dit alles zijn echte tekortkomingen in burgerlijk karakter",
+        dining_etiquette: "Hawkercentra zijn cultureel centraal — bezoek ze respectvol. 'Chope' (plaatsen reserveren met een tissuepakje) is standaard. Voedselrestricties variëren sterk — vraag altijd.",
+        language_notes: "Engels is de officiële taal van het bedrijfsleven. Singlish mag niet worden bespot — het is een bron van echte culturele identiteit. Spreek duidelijk maar nooit neerbuigend.",
+        gift_protocol: "Vermijd klokken (geassocieerd met de dood) of sets van vier voor Chinese Singaporezen. Breng iets mee als u thuis wordt uitgenodigd. Cadeaus worden niet altijd direct geopend.",
+        dress_code: "Netjes en praktisch gegeven het tropische klimaat. Zakelijk formeel in bedrijfsomgevingen. Conservatieve kleding voor tempels en moskeeën is niet onderhandelbaar.",
+        dos: [
+          "Respecteer de buitengewone diversiteit van Maleise, Chinese, Indiase en Euraziatische culturen",
+          "Eet alles op uw bord — verspilling wordt als onrespectful beschouwd",
+          "Wacht altijd correct in de rij — dit is een punt van burgerlijke trots",
+          "Erken anciënniteit en wijs respectvol toe waar passend",
+          "Draag altijd een opvouwbare paraplu — het weer verandert snel"
+        ],
+        donts: [
+          "Kauw nooit kauwgum in het openbaar — dit blijft streng beperkt",
+          "Gooi onder geen enkele omstandigheid afval op straat",
+          "Vermijd oversteken op verboden plaatsen — boetes zijn echt en worden gehandhaafd",
+          "Maak geen neerbuigende opmerkingen over de regels van Singapore",
+          "Bespreek ras of religie niet op nonchalante of onnadenkende wijze"
+        ]
+      },
+      fr: {
+        region_name: "Singapour",
+        core_value: "Méritocratie, ordre civique et sophistication multilingue composée",
+        biggest_taboo: "Causer une gêne publique, jeter des déchets ou enfreindre la réglementation — tous sont de véritables manquements au caractère civique",
+        dining_etiquette: "Les hawker centres sont au cœur de la culture — les visiter avec respect. Le 'chope' (réserver une place avec un paquet de mouchoirs) est la norme. Les restrictions alimentaires varient beaucoup — toujours se renseigner.",
+        language_notes: "L'anglais est la langue officielle des affaires. Le singlish ne doit pas être moqué — c'est une source d'identité culturelle authentique. Parler clairement mais jamais avec condescendance.",
+        gift_protocol: "Éviter les horloges (associées à la mort) ou les ensembles de quatre pour les Singapouriens d'origine chinoise. Apporter quelque chose si invité chez quelqu'un. Les cadeaux ne sont pas toujours ouverts immédiatement.",
+        dress_code: "Soigné et pratique compte tenu du climat tropical. Business formel dans les environnements d'entreprise. La tenue conservatrice pour les temples et les mosquées est non négociable.",
+        dos: [
+          "Respecter l'extraordinaire diversité des cultures malaise, chinoise, indienne et eurasienne coexistant",
+          "Finir tout ce qui est dans son assiette — le gaspillage est considéré comme irrespectable",
+          "Faire la queue correctement en toutes circonstances — c'est une question de fierté civique",
+          "Reconnaître l'ancienneté et céder gracieusement le cas échéant",
+          "Toujours porter un parapluie pliable — le temps change rapidement"
+        ],
+        donts: [
+          "Ne jamais mâcher de chewing-gum en public — cela reste fortement restreint",
+          "Ne pas jeter de déchets en aucune circonstance",
+          "Éviter de traverser en dehors des clous — les amendes sont réelles et appliquées",
+          "Ne pas commenter avec dédain les réglementations de Singapour",
+          "Éviter de discuter de race ou de religion de manière désinvolte"
+        ]
+      },
+      de: {
+        region_name: "Singapur",
+        core_value: "Leistungsprinzip, bürgerliche Ordnung und kultivierte Mehrsprachigkeit",
+        biggest_taboo: "Öffentliche Beschämung verursachen, Müll wegwerfen oder Vorschriften missachten — all das sind echte Versagen im staatsbürgerlichen Charakter",
+        dining_etiquette: "Hawker-Zentren sind kulturell zentral — respektvoll besuchen. 'Chope' (Plätze mit einem Taschentuchpaket reservieren) ist Standard. Ernährungseinschränkungen variieren stark — immer nachfragen.",
+        language_notes: "Englisch ist die offizielle Geschäftssprache. Singlish darf nicht verspottet werden — es ist eine Quelle echter kultureller Identität. Klar sprechen, aber nie herablassend.",
+        gift_protocol: "Uhren (mit dem Tod assoziiert) oder Sets von vier für chinesische Singapurer meiden. Etwas mitbringen, wenn man zu jemandem nach Hause eingeladen ist. Geschenke werden nicht immer sofort geöffnet.",
+        dress_code: "Gepflegt und praktisch angesichts des tropischen Klimas. Geschäftsformell in Unternehmensumgebungen. Konservative Kleidung für Tempel und Moscheen ist nicht verhandelbar.",
+        dos: [
+          "Die außergewöhnliche Vielfalt der malaiischen, chinesischen, indischen und eurasischen Kulturen respektieren",
+          "Alles auf dem Teller aufessen — Verschwendung gilt als respektlos",
+          "Stets korrekt in der Schlange warten — es ist eine Frage des bürgerlichen Stolzes",
+          "Seniorität anerkennen und wo angebracht würdevoll zurückstehen",
+          "Immer einen faltbaren Regenschirm dabei haben — das Wetter ändert sich schnell"
+        ],
+        donts: [
+          "Niemals in der Öffentlichkeit Kaugummi kauen — es bleibt stark eingeschränkt",
+          "Unter keinen Umständen Müll wegwerfen",
+          "Wildes Überqueren der Straße vermeiden — Bußgelder sind real und werden durchgesetzt",
+          "Singapurs Vorschriften nicht abfällig kommentieren",
+          "Rasse oder Religion nicht leichtfertig besprechen"
+        ]
+      },
+      es: {
+        region_name: "Singapur",
+        core_value: "Meritocracia, orden cívico y sofisticación multilingüe serena",
+        biggest_taboo: "Causar vergüenza pública, tirar basura o incumplir las normas — todo ello son genuinos fallos de carácter cívico",
+        dining_etiquette: "Los hawker centres son culturalmente centrales — visítelos con respeto. El 'chope' (reservar asientos con un paquete de pañuelos) es estándar. Las restricciones dietéticas varían mucho — pregunte siempre.",
+        language_notes: "El inglés es el idioma oficial de los negocios. El singlish no debe burlarse — es una fuente de genuina identidad cultural. Hable con claridad, pero nunca con condescendencia.",
+        gift_protocol: "Evite relojes (asociados con la muerte) o conjuntos de cuatro para singaporeños de origen chino. Lleve algo si le invitan a casa. Los regalos no siempre se abren de inmediato.",
+        dress_code: "Pulcro y práctico dado el clima tropical. Formal de negocios en entornos corporativos. La vestimenta conservadora en templos y mezquitas es innegociable.",
+        dos: [
+          "Respetar la extraordinaria diversidad de culturas malaya, china, india y euroasiática",
+          "Terminar todo lo del plato — el desperdicio se considera irrespetuoso",
+          "Hacer cola correctamente en todo momento — es una cuestión de orgullo cívico",
+          "Reconocer la antigüedad y ceder con elegancia cuando proceda",
+          "Llevar siempre un paraguas plegable — el tiempo cambia rápidamente"
+        ],
+        donts: [
+          "Nunca masticar chicle en público — sigue estando muy restringido",
+          "No tirar basura bajo ninguna circunstancia",
+          "Evitar cruzar fuera de los pasos de peatones — las multas son reales y se aplican",
+          "No comentar con desdén las normas de Singapur",
+          "Evitar hablar de raza o religión de manera descuidada"
+        ]
+      },
+      pt: {
+        region_name: "Singapura",
+        core_value: "Meritocracia, ordem cívica e sofisticação multilingue serena",
+        biggest_taboo: "Causar embaraço público, deitar lixo para o chão ou desrespeitar regulamentos — tudo são genuínas falhas de caráter cívico",
+        dining_etiquette: "Os hawker centres são culturalmente centrais — visite-os com respeito. O 'chope' (reservar lugares com um pacote de lenços) é padrão. As restrições alimentares variam muito — pergunte sempre.",
+        language_notes: "O inglês é a língua oficial dos negócios. O singlish não deve ser ridicularizado — é uma fonte de genuína identidade cultural. Fale com clareza, mas nunca com condescendência.",
+        gift_protocol: "Evite relógios (associados à morte) ou conjuntos de quatro para singaporeanos de origem chinesa. Leve algo se for convidado a casa. Os presentes nem sempre são abertos imediatamente.",
+        dress_code: "Apresentável e prático dado o clima tropical. Formal nos ambientes corporativos. Traje conservador em templos e mesquitas é inegociável.",
+        dos: [
+          "Respeitar a extraordinária diversidade das culturas malaia, chinesa, indiana e eurasiana",
+          "Terminar tudo o que está no prato — o desperdício é considerado desrespeitoso",
+          "Fazer fila corretamente em todos os momentos — é uma questão de orgulho cívico",
+          "Reconhecer a antiguidade e ceder graciosamente quando apropriado",
+          "Levar sempre um guarda-chuva dobrável — o tempo muda rapidamente"
+        ],
+        donts: [
+          "Nunca mascar pastilha elástica em público — continua fortemente restringido",
+          "Não deitar lixo em circunstância alguma",
+          "Evitar atravessar fora das passadeiras — as multas são reais e aplicadas",
+          "Não comentar com desdém os regulamentos de Singapura",
+          "Evitar discutir raça ou religião de forma descuidada"
+        ]
+      },
+      it: {
+        region_name: "Singapore",
+        core_value: "Meritocrazia, ordine civico e sofisticata compostezza multilingue",
+        biggest_taboo: "Causare imbarazzo pubblico, gettare rifiuti o violare i regolamenti — tutto ciò costituisce un vero fallimento del carattere civico",
+        dining_etiquette: "Gli hawker centres sono culturalmente centrali — visitarli con rispetto. Il 'chope' (riservare i posti con un pacchetto di fazzoletti) è la norma. Le restrizioni dietetiche variano molto — chiedere sempre.",
+        language_notes: "L'inglese è la lingua ufficiale degli affari. Il singlish non va deriso — è una fonte di genuina identità culturale. Parlare chiaramente ma mai con condiscendenza.",
+        gift_protocol: "Evitare orologi (associati alla morte) o set da quattro per i singaporiani di origine cinese. Portare qualcosa se si è invitati a casa. I regali non vengono sempre aperti subito.",
+        dress_code: "Curato e pratico dato il clima tropicale. Business formale negli ambienti aziendali. L'abbigliamento conservatore per templi e moschee è non negoziabile.",
+        dos: [
+          "Rispettare la straordinaria diversità delle culture malese, cinese, indiana ed eurasiatica che convivono",
+          "Finire tutto quello che c'è nel piatto — lo spreco è considerato irrispettoso",
+          "Fare la fila correttamente in ogni momento — è una questione di orgoglio civico",
+          "Riconoscere l'anzianità e cedere con grazia quando appropriato",
+          "Portare sempre un ombrello pieghevole — il tempo cambia rapidamente"
+        ],
+        donts: [
+          "Non masticare mai gomme in pubblico — rimane fortemente limitato",
+          "Non gettare rifiuti in nessuna circostanza",
+          "Evitare di attraversare fuori dagli attraversamenti — le multe sono reali e vengono applicate",
+          "Non commentare con disprezzo i regolamenti di Singapore",
+          "Evitare di discutere di razza o religione in modo superficiale"
+        ]
+      },
+      ar: {
+        region_name: "سنغافورة",
+        core_value: "الجدارة والنظام المدني والتطور المتعدد اللغات",
+        biggest_taboo: "التسبب في إحراج عام أو رمي القمامة أو انتهاك الأنظمة — كل ذلك إخفاق حقيقي في الشخصية المدنية",
+        dining_etiquette: "مراكز الهوكر مركزية ثقافيًا — زرها باحترام. 'التشوب' (حجز المقاعد بعلبة مناديل) هو المعيار. القيود الغذائية تتفاوت — اسأل دائمًا.",
+        language_notes: "الإنجليزية هي لغة الأعمال الرسمية. لا ينبغي السخرية من السينغليش — إنه مصدر هوية ثقافية حقيقية. تحدّث بوضوح ولكن ليس بتعالٍ.",
+        gift_protocol: "تجنّب الساعات (مرتبطة بالموت) أو أي شيء في مجموعات رباعية للسنغافوريين الصينيين. أحضر شيئًا إذا دُعيت إلى المنزل. لا تُفتح الهدايا دائمًا فورًا.",
+        dress_code: "أنيق وعملي في ظل المناخ الاستوائي. رسمي في البيئات المهنية. اللباس المحتشم في المعابد والمساجد غير قابل للتفاوض.",
+        dos: [
+          "احترم التنوع الاستثنائي للثقافات الملايوية والصينية والهندية والأوراسية",
+          "أنهِ كل ما في طبقك — الإسراف يُعدّ قلة احترام",
+          "انتظر في الطابور بصورة صحيحة دائمًا — إنه مصدر فخر مدني",
+          "اعترف بالأقدمية وتنازل بلطف عند الاقتضاء",
+          "احمل مظلة قابلة للطي دائمًا — الطقس يتغير سريعًا"
+        ],
+        donts: [
+          "لا تمضغ العلكة في الأماكن العامة أبدًا — لا تزال مقيّدة بشدة",
+          "لا ترمِ القمامة تحت أي ظرف",
+          "تجنّب العبور خارج الممرات — الغرامات حقيقية ومطبّقة",
+          "لا تُعلّق باستهزاء على أنظمة سنغافورة",
+          "تجنّب مناقشة العرق أو الدين بطريقة متهوّرة أو مستهترة"
+        ]
+      },
+      ja: {
+        region_name: "シンガポール",
+        core_value: "能力主義、市民的秩序、そして落ち着いた多言語的洗練さ",
+        biggest_taboo: "公衆の面前での恥、ポイ捨て、規則の無視——これら全ては市民としての品格の真の失敗",
+        dining_etiquette: "ホーカーセンターは文化的に中心的な存在——敬意を持って訪れる。「チョープ」（ティッシュで席を取ること）は標準的。食事制限は多様——必ず確認する。",
+        language_notes: "英語がビジネスの公式言語。シングリッシュを馬鹿にしない——本物の文化的アイデンティティの源。明確に話すが、絶して見下さない。",
+        gift_protocol: "中国系シンガポール人に時計（死と関連）や4個セットのものは避ける。家に招かれた際は何か持参する。プレゼントはすぐに開けるとは限らない。",
+        dress_code: "熱帯気候を考慮した清潔感があり実用的な服装。企業環境ではビジネスフォーマル。寺院やモスクでの保守的な服装は絶対条件。",
+        dos: [
+          "マレー、中国、インド、ユーラシアの文化が共存する驚くほどの多様性を尊重する",
+          "皿の上のものはすべて食べる——無駄は無礼と見なされる",
+          "常に正しく並ぶ——市民的誇りの問題",
+          "年功を認め、適切な場面では礼儀正しく譲る",
+          "折りたたみ傘を常に携帯する——天気は急に変わる"
+        ],
+        donts: [
+          "人前でガムを噛まない——厳しく規制されている",
+          "いかなる状況でもポイ捨てしない",
+          "信号無視の横断をしない——罰金は本物で執行される",
+          "シンガポールの規制について軽蔑的なコメントをしない",
+          "人種や宗教について軽率に話さない"
         ]
       }
     }
@@ -270,6 +1742,190 @@ const PRIORITY_SEED = [
           "Do not point at people or religious objects with your finger — use an open hand",
           "Avoid making assumptions based on caste, region, or religion"
         ]
+      },
+      nl: {
+        region_name: "India",
+        core_value: "Gastvrijheid, hiërarchie en de voorrang van relaties boven transacties",
+        biggest_taboo: "Oneerbiedigheid tegenover voedselgewoonten, ouderen of religieuze gevoelens — in het bijzonder rond heilige dieren, tempels en dieetobservantie",
+        dining_etiquette: "Eet alleen met de rechterhand. Accepteer al het aangeboden voedsel — weigeren is onbeleefd. Vegetarisch eten is primair voor veel gasten. Schoen uitdoen voor het betreden van huizen.",
+        language_notes: "India heeft 22 officiële talen. Engels is de lingua franca van het bedrijfsleven. Hindi wordt niet universeel gesproken. Pas uw register aan aan context en regio.",
+        gift_protocol: "Breng snoep, fruit of bloemen mee bij een bezoek. Vermijd leren cadeaus. Pak cadeaus in — presentatie telt. Cadeaus kunnen opzij worden gelegd en later worden geopend.",
+        dress_code: "Bescheidenheid is van het grootste belang, vooral voor vrouwen. Het bedekken van schouders en knieën op religieuze plaatsen is verplicht. Traditionele kleding is altijd passend en gewaardeerd.",
+        dos: [
+          "Gebruik beide handen of de rechterhand bij het geven en ontvangen van objecten",
+          "Spreek ouderen aan met respectvolle titels (ji, Sir, Madam)",
+          "Leer een eenvoudige begroeting in de regionale taal — de moeite wordt hartelijk ontvangen",
+          "Wees geduldig met schema's — relaties hebben consequent voorrang boven punctualiteit",
+          "Erken de diversiteit van India's regionale culturen"
+        ],
+        donts: [
+          "Raak niemands hoofd aan — dit wordt als heilig beschouwd",
+          "Gebruik nooit de linkerhand om te eten of objecten door te geven",
+          "Vermijd openbare uitingen van genegenheid",
+          "Wijs niet met uw vinger naar mensen of religieuze objecten — gebruik een open hand",
+          "Vermijd aannames op basis van kaste, regio of religie"
+        ]
+      },
+      fr: {
+        region_name: "Inde",
+        core_value: "Hospitalité, hiérarchie et primauté des relations sur les transactions",
+        biggest_taboo: "Manquer de respect aux coutumes alimentaires, aux anciens ou aux sensibilités religieuses — notamment autour des animaux sacrés, des temples et des pratiques diététiques",
+        dining_etiquette: "Manger uniquement avec la main droite. Accepter toute nourriture offerte — refuser est impoli. La nourriture végétarienne est centrale pour de nombreux invités. Retirer ses chaussures avant d'entrer dans les maisons.",
+        language_notes: "L'Inde a 22 langues officielles. L'anglais est la lingua franca des affaires. L'hindi n'est pas universellement parlé. Adapter son registre au contexte et à la région.",
+        gift_protocol: "Apporter des sucreries, des fruits ou des fleurs lors des visites. Éviter les cadeaux en cuir. Emballer les cadeaux — la présentation compte. Les cadeaux peuvent être mis de côté et ouverts plus tard.",
+        dress_code: "La modestie est primordiale, surtout pour les femmes. Couvrir les épaules et les genoux dans les sites religieux est obligatoire. La tenue traditionnelle est toujours appropriée et appréciée.",
+        dos: [
+          "Utiliser les deux mains ou la main droite pour donner et recevoir des objets",
+          "S'adresser aux anciens avec des titres respectueux (ji, Monsieur, Madame)",
+          "Apprendre une salutation simple dans la langue régionale — l'effort est chaleureusement reçu",
+          "Être patient avec les horaires — les relations priment constamment sur la ponctualité",
+          "Reconnaître la diversité des cultures régionales de l'Inde"
+        ],
+        donts: [
+          "Ne pas toucher la tête de quelqu'un — elle est considérée comme sacrée",
+          "Ne jamais utiliser la main gauche pour manger ou passer des objets",
+          "Éviter les manifestations d'affection en public",
+          "Ne pas pointer les gens ou les objets religieux du doigt — utiliser la main ouverte",
+          "Éviter les suppositions fondées sur la caste, la région ou la religion"
+        ]
+      },
+      de: {
+        region_name: "Indien",
+        core_value: "Gastfreundschaft, Hierarchie und der Vorrang von Beziehungen vor Transaktionen",
+        biggest_taboo: "Missachtung von Essgewohnheiten, Älteren oder religiösen Empfindlichkeiten — insbesondere rund um heilige Tiere, Tempel und Ernährungsvorschriften",
+        dining_etiquette: "Nur mit der rechten Hand essen. Alles angebotene Essen annehmen — Ablehnen ist unhöflich. Vegetarisches Essen ist für viele Gäste primär. Schuhe ausziehen, bevor man ein Haus betritt.",
+        language_notes: "Indien hat 22 Amtssprachen. Englisch ist die Lingua franca im Geschäftsleben. Hindi wird nicht überall gesprochen. Den eigenen Sprachstil an Kontext und Region anpassen.",
+        gift_protocol: "Bei Besuchen Süßigkeiten, Obst oder Blumen mitbringen. Ledergeschenke vermeiden. Geschenke einpacken — Präsentation ist wichtig. Geschenke können beiseitegelegt und später geöffnet werden.",
+        dress_code: "Bescheidenheit hat oberste Priorität, besonders für Frauen. In religiösen Stätten Schultern und Knie zu bedecken ist Pflicht. Traditionelle Kleidung ist stets angemessen und wird geschätzt.",
+        dos: [
+          "Beide Hände oder die rechte Hand beim Geben und Empfangen von Gegenständen benutzen",
+          "Ältere mit respektvollen Titeln ansprechen (ji, Sir, Madam)",
+          "Eine einfache Begrüßung in der Regionalsprache lernen — die Mühe wird herzlich aufgenommen",
+          "Geduld mit Terminen haben — Beziehungen haben konsequent Vorrang vor Pünktlichkeit",
+          "Die Vielfalt der regionalen Kulturen Indiens anerkennen"
+        ],
+        donts: [
+          "Niemandem auf den Kopf fassen — er gilt als heilig",
+          "Niemals die linke Hand zum Essen oder zum Weiterreichen von Gegenständen benutzen",
+          "Öffentliche Zuneigungsbekundungen vermeiden",
+          "Nicht mit dem Finger auf Menschen oder religiöse Objekte zeigen — offene Hand benutzen",
+          "Keine Annahmen aufgrund von Kaste, Region oder Religion machen"
+        ]
+      },
+      es: {
+        region_name: "India",
+        core_value: "Hospitalidad, jerarquía y primacía de las relaciones sobre las transacciones",
+        biggest_taboo: "Falta de respeto a las costumbres alimentarias, a los mayores o a las sensibilidades religiosas — especialmente en torno a animales sagrados, templos y prácticas dietéticas",
+        dining_etiquette: "Comer solo con la mano derecha. Aceptar toda la comida ofrecida — rechazarla es descortés. La comida vegetariana es central para muchos invitados. Quitarse los zapatos antes de entrar en las casas.",
+        language_notes: "India tiene 22 idiomas oficiales. El inglés es la lingua franca de los negocios. El hindi no se habla universalmente. Adapte su registro al contexto y la región.",
+        gift_protocol: "Llevar dulces, frutas o flores al visitar. Evitar regalos de cuero. Envolver los regalos — la presentación importa. Los regalos pueden guardarse y abrirse más tarde.",
+        dress_code: "La modestia es primordial, especialmente para las mujeres. Cubrir hombros y rodillas en lugares religiosos es obligatorio. La vestimenta tradicional siempre es adecuada y apreciada.",
+        dos: [
+          "Usar ambas manos o la mano derecha al dar y recibir objetos",
+          "Dirigirse a los mayores con títulos de respeto (ji, señor, señora)",
+          "Aprender un saludo sencillo en el idioma regional — el esfuerzo se recibe con calidez",
+          "Ser paciente con los horarios — las relaciones tienen constantemente prioridad sobre la puntualidad",
+          "Reconocer la diversidad de las culturas regionales de India"
+        ],
+        donts: [
+          "No tocar la cabeza de nadie — se considera sagrada",
+          "Nunca usar la mano izquierda para comer o pasar objetos",
+          "Evitar las muestras públicas de afecto",
+          "No señalar a personas ni objetos religiosos con el dedo — usar la mano abierta",
+          "Evitar suposiciones basadas en casta, región o religión"
+        ]
+      },
+      pt: {
+        region_name: "Índia",
+        core_value: "Hospitalidade, hierarquia e primazia das relações sobre as transações",
+        biggest_taboo: "Desrespeitar costumes alimentares, idosos ou sensibilidades religiosas — especialmente em torno de animais sagrados, templos e práticas dietéticas",
+        dining_etiquette: "Comer apenas com a mão direita. Aceitar toda a comida oferecida — recusar é indelicado. A comida vegetariana é central para muitos convidados. Tirar os sapatos antes de entrar em casas.",
+        language_notes: "A Índia tem 22 línguas oficiais. O inglês é a língua franca dos negócios. O hindi não é universalmente falado. Adapte o seu registo ao contexto e à região.",
+        gift_protocol: "Leve doces, frutas ou flores ao visitar. Evite presentes de couro. Embale os presentes — a apresentação importa. Os presentes podem ser guardados e abertos mais tarde.",
+        dress_code: "A modéstia é fundamental, especialmente para as mulheres. Cobrir ombros e joelhos em locais religiosos é obrigatório. O traje tradicional é sempre adequado e apreciado.",
+        dos: [
+          "Usar ambas as mãos ou a mão direita ao dar e receber objetos",
+          "Dirigir-se aos mais velhos com títulos respeitosos (ji, Sir, Madam)",
+          "Aprender uma saudação simples no idioma regional — o esforço é bem recebido",
+          "Ser paciente com os horários — as relações têm constantemente prioridade sobre a pontualidade",
+          "Reconhecer a diversidade das culturas regionais da Índia"
+        ],
+        donts: [
+          "Não tocar na cabeça de ninguém — é considerada sagrada",
+          "Nunca usar a mão esquerda para comer ou passar objetos",
+          "Evitar manifestações públicas de afeto",
+          "Não apontar com o dedo para pessoas ou objetos religiosos — use a mão aberta",
+          "Evitar suposições baseadas em casta, região ou religião"
+        ]
+      },
+      it: {
+        region_name: "India",
+        core_value: "Ospitalità, gerarchia e primato delle relazioni sulle transazioni",
+        biggest_taboo: "Mancanza di rispetto per le abitudini alimentari, gli anziani o le sensibilità religiose — in particolare riguardo agli animali sacri, ai templi e alle pratiche dietetiche",
+        dining_etiquette: "Mangiare solo con la mano destra. Accettare tutto il cibo offerto — rifiutare è scortese. Il cibo vegetariano è centrale per molti ospiti. Togliersi le scarpe prima di entrare nelle case.",
+        language_notes: "L'India ha 22 lingue ufficiali. L'inglese è la lingua franca degli affari. L'hindi non è parlato universalmente. Adattare il proprio registro al contesto e alla regione.",
+        gift_protocol: "Portare dolci, frutta o fiori in visita. Evitare regali in pelle. Incartare i regali — la presentazione conta. I regali possono essere messi da parte e aperti in seguito.",
+        dress_code: "La modestia è fondamentale, specialmente per le donne. Coprire spalle e ginocchia nei luoghi religiosi è obbligatorio. Il tradizionale abbigliamento è sempre appropriato e apprezzato.",
+        dos: [
+          "Usare entrambe le mani o la mano destra nel dare e ricevere oggetti",
+          "Rivolgersi agli anziani con titoli rispettosi (ji, Signore, Signora)",
+          "Imparare un semplice saluto nella lingua regionale — lo sforzo è accolto con calore",
+          "Essere pazienti con gli orari — le relazioni hanno costantemente la precedenza sulla puntualità",
+          "Riconoscere la diversità delle culture regionali dell'India"
+        ],
+        donts: [
+          "Non toccare mai la testa di qualcuno — è considerata sacra",
+          "Non usare mai la mano sinistra per mangiare o passare oggetti",
+          "Evitare manifestazioni pubbliche di affetto",
+          "Non indicare persone o oggetti religiosi con il dito — usare la mano aperta",
+          "Evitare supposizioni basate su casta, regione o religione"
+        ]
+      },
+      ar: {
+        region_name: "الهند",
+        core_value: "الضيافة والتراتبية وأولوية العلاقات على المعاملات",
+        biggest_taboo: "عدم احترام عادات الطعام أو كبار السن أو المشاعر الدينية — ولا سيما ما يتعلق بالحيوانات المقدسة والمعابد والممارسات الغذائية",
+        dining_etiquette: "تناول الطعام باليد اليمنى فحسب. اقبل كل طعام يُقدَّم لك — الرفض يُعدّ قلة أدب. الطعام النباتي أساسي لكثير من الضيوف. اخلع حذاءك قبل دخول المنازل.",
+        language_notes: "تمتلك الهند 22 لغة رسمية. الإنجليزية هي لغة التواصل في الأعمال. الهندية ليست لغة عالمية. كيّف أسلوبك مع السياق والمنطقة.",
+        gift_protocol: "أحضر حلويات أو فاكهة أو ورودًا عند الزيارة. تجنّب الهدايا الجلدية. الف الهدايا — يهم الإخراج. قد تُوضع الهدايا جانبًا وتُفتح لاحقًا.",
+        dress_code: "التحشم أمر بالغ الأهمية، خاصةً للنساء. تغطية الكتفين والركبتين في المواقع الدينية إلزامية. اللباس التقليدي دائمًا مناسب ومُقدَّر.",
+        dos: [
+          "استخدم كلتا اليدين أو اليد اليمنى عند تقديم الأشياء أو استلامها",
+          "خاطب كبار السن بألقاب محترمة (جي، سيد، سيدة)",
+          "تعلّم تحية بسيطة باللغة المحلية — الجهد يُقابَل بحفاوة",
+          "كن صبورًا مع المواعيد — العلاقات تسبق الانضباط دائمًا",
+          "اعترف بتنوع الثقافات الإقليمية في الهند"
+        ],
+        donts: [
+          "لا تلمس رأس أي شخص — يُعدّ مقدسًا",
+          "لا تستخدم اليد اليسرى للأكل أو تمرير الأشياء أبدًا",
+          "تجنّب إظهار المودة في الأماكن العامة",
+          "لا تشير بإصبعك إلى الناس أو المقدسات — استخدم راحة اليد المفتوحة",
+          "تجنّب الافتراضات القائمة على الطبقة أو المنطقة أو الدين"
+        ]
+      },
+      ja: {
+        region_name: "インド",
+        core_value: "おもてなし、階層性、そして取引よりも関係を優先する文化",
+        biggest_taboo: "食習慣、目上の人、宗教的感情を軽視すること——特に聖なる動物、寺院、食事の観察に関して",
+        dining_etiquette: "右手だけで食べる。提供された食事はすべて受け入れる——断るのは失礼。多くのゲストにとって菜食が中心。家に入る前に靴を脱ぐ。",
+        language_notes: "インドには22の公用語がある。英語はビジネスの共通語。ヒンディー語は全国的に話されているわけではない。文脈と地域に応じてスタイルを変える。",
+        gift_protocol: "訪問の際は菓子、果物、または花を持参する。革製品の贈り物は避ける。包装する——見た目が大切。プレゼントは脇に置いて後で開けることもある。",
+        dress_code: "慎み深さが最優先、特に女性。宗教的な場所では肩と膝を隠すことが必須。伝統的な衣服は常に適切で高く評価される。",
+        dos: [
+          "物を渡したり受け取ったりする際は両手または右手を使う",
+          "目上の人には敬称（ジー、サー、マダム）で話しかける",
+          "地方の言語で簡単な挨拶を覚える——その努力は温かく受け取られる",
+          "スケジュールには寛容に——関係が常に時間厳守より優先される",
+          "インドの地域文化の多様性を認識し、一枚岩として扱わない"
+        ],
+        donts: [
+          "誰の頭も触れない——神聖とされる",
+          "食事の際や物を渡す際に左手を使わない",
+          "公衆の面前での愛情表現は避ける",
+          "指で人や宗教的なものを指差さない——手のひらを使う",
+          "カースト、地域、宗教に基づく推測をしない"
+        ]
       }
     }
   },
@@ -299,6 +1955,190 @@ const PRIORITY_SEED = [
           "Do not skip small talk — relationship-building is the business",
           "Avoid discussing the border or immigration policies in casual conversation",
           "Do not be brusque or transactional in a first meeting"
+        ]
+      },
+      nl: {
+        region_name: "Mexico",
+        core_value: "Warme persoonlijke verbinding, familietrouw en waardige trots op cultuur en erfgoed",
+        biggest_taboo: "Relaties als louter transactioneel behandelen of oneerbiedigheid tonen tegenover Mexicaans erfgoed, eten of tradities",
+        dining_etiquette: "Maaltijden zijn sociale, ongehaaste gelegenheden. Wacht tot de gastheer zit. Complimenteer het eten met oprechte warmte. Haast de maaltijd nooit.",
+        language_notes: "Spaans is de taal van warmte en trots. Een paar woorden Spaans openen vele deuren. Mexicanen communiceren warm en indirect in gevoelige situaties.",
+        gift_protocol: "Breng snoep, bloemen (vermijd gele goudsbloemen — begrafenis) of kwaliteitsdranken. Cadeaus worden hartelijk ontvangen en direct geopend.",
+        dress_code: "Smart casual in de meeste sociale settings. Zakelijke kleding is formeel in bedrijfscontexten. Kleed u om respect te tonen.",
+        dos: [
+          "Investeer in de relatie voor zakelijke gesprekken — vertrouwen is de basis",
+          "Begroet met een handdruk en warm, aanhoudend oogcontact",
+          "Accepteer eten en gastvrijheid royaal — weigeren wordt als onbeleefd beschouwd",
+          "Complimenteer Mexico's cultuur, eten en kunst met oprechte specificiteit",
+          "Wees geduldig met schema's — persoonlijke verbinding gaat voor punctualiteit"
+        ],
+        donts: [
+          "Verwar de Mexicaanse en andere Latijns-Amerikaanse culturen nooit",
+          "Vermijd stereotypen over Mexico",
+          "Sla geen small talk over — relaties bouwen is het fundament",
+          "Bespreek niet de grenskwestie of immigratiebeleid in informele gesprekken",
+          "Wees niet kortaf of transactioneel bij een eerste ontmoeting"
+        ]
+      },
+      fr: {
+        region_name: "Mexique",
+        core_value: "Connexion personnelle chaleureuse, loyauté familiale et fierté digne de la culture et du patrimoine",
+        biggest_taboo: "Traiter les relations de manière purement transactionnelle ou manquer de respect envers le patrimoine, la nourriture ou les traditions mexicaines",
+        dining_etiquette: "Les repas sont des occasions sociales et non pressées. Attendre que l'hôte s'assoie. Complimenter la nourriture avec une chaleur sincère. Ne jamais précipiter le repas.",
+        language_notes: "L'espagnol est la langue de la chaleur et de la fierté. Quelques mots d'espagnol ouvrent de nombreuses portes. Les Mexicains communiquent chaleureusement et indirectement dans les situations sensibles.",
+        gift_protocol: "Apporter des sucreries, des fleurs (éviter les soucis jaunes — funéraires) ou des spiritueux de qualité. Les cadeaux sont reçus chaleureusement et généralement ouverts immédiatement.",
+        dress_code: "Smart casual dans la plupart des contextes sociaux. Tenue professionnelle formelle dans les contextes d'entreprise. S'habiller pour montrer le respect.",
+        dos: [
+          "Investir dans la relation avant de parler affaires — la confiance est la base",
+          "Saluer avec une poignée de main et un contact visuel chaleureux et soutenu",
+          "Accepter généreusement nourriture et hospitalité — refuser est considéré impoli",
+          "Complimenter la culture, la nourriture et l'art du Mexique avec une spécificité sincère",
+          "Être patient avec les horaires — la connexion personnelle précède la ponctualité"
+        ],
+        donts: [
+          "Ne jamais confondre la culture mexicaine avec d'autres cultures latino-américaines",
+          "Éviter les stéréotypes sur le Mexique",
+          "Ne pas sauter les bavardages — la construction de relations est l'essentiel",
+          "Éviter de parler de la frontière ou des politiques d'immigration en conversation décontractée",
+          "Ne pas être brusque ou transactionnel lors d'une première rencontre"
+        ]
+      },
+      de: {
+        region_name: "Mexiko",
+        core_value: "Herzliche persönliche Verbindung, Familientreue und würdevoller Stolz auf Kultur und Erbe",
+        biggest_taboo: "Beziehungen als rein transaktional behandeln oder mangelnden Respekt gegenüber mexikanischem Erbe, Essen oder Traditionen zeigen",
+        dining_etiquette: "Mahlzeiten sind gesellige, ungeduldige Anlässe. Warten, bis der Gastgeber sitzt. Das Essen aufrichtig loben. Die Mahlzeit nie hetzen.",
+        language_notes: "Spanisch ist die Sprache der Wärme und des Stolzes. Ein paar Worte Spanisch öffnen viele Türen. Mexikaner kommunizieren in sensiblen Situationen warm und indirekt.",
+        gift_protocol: "Süßigkeiten, Blumen (keine gelben Ringelblumen — Trauer) oder hochwertige Spirituosen mitbringen. Geschenke werden herzlich empfangen und normalerweise sofort geöffnet.",
+        dress_code: "Smart Casual in den meisten gesellschaftlichen Umgebungen. Geschäftskleidung in Unternehmenskontexten ist formell. Kleidung sollte Respekt signalisieren.",
+        dos: [
+          "In die Beziehung investieren, bevor Geschäftliches besprochen wird — Vertrauen ist die Grundlage",
+          "Mit einem Handschlag und warmem, anhaltendem Augenkontakt begrüßen",
+          "Essen und Gastfreundschaft großzügig annehmen — Ablehnen gilt als unhöflich",
+          "Mexikos Kultur, Essen und Kunst mit aufrichtiger Spezifität loben",
+          "Geduld mit Terminen haben — persönliche Verbindung geht vor Pünktlichkeit"
+        ],
+        donts: [
+          "Mexikanische und andere lateinamerikanische Kulturen nie gleichsetzen",
+          "Stereotypen über Mexiko vermeiden",
+          "Keine Smalltalk-Pausen überspringen — Beziehungsaufbau ist das Geschäft",
+          "Grenzfragen oder Einwanderungspolitik in lockeren Gesprächen nicht ansprechen",
+          "Beim ersten Treffen nicht kurz angebunden oder transaktional sein"
+        ]
+      },
+      es: {
+        region_name: "México",
+        core_value: "Conexión personal cálida, lealtad familiar y orgullo digno por la cultura y el patrimonio",
+        biggest_taboo: "Tratar las relaciones de forma puramente transaccional o mostrar irrespeto hacia el patrimonio, la comida o las tradiciones mexicanas",
+        dining_etiquette: "Las comidas son ocasiones sociales y tranquilas. Espere a que el anfitrión se siente. Elogie la comida con genuina calidez. Nunca apresure la comida.",
+        language_notes: "El español es el idioma de la calidez y el orgullo. Unas pocas palabras en español abren muchas puertas. Los mexicanos se comunican de forma cálida e indirecta en situaciones delicadas.",
+        gift_protocol: "Lleve dulces, flores (evite los cempasúchiles amarillos — fúnebres) o licores de calidad. Los regalos se reciben con calidez y generalmente se abren de inmediato.",
+        dress_code: "Smart casual en la mayoría de los entornos sociales. Traje formal en contextos corporativos. Vístase para mostrar respeto.",
+        dos: [
+          "Invierta en la relación antes de hablar de negocios — la confianza es la base",
+          "Salude con un apretón de manos y contacto visual cálido y sostenido",
+          "Acepte comida y hospitalidad con generosidad — rechazar se considera descortés",
+          "Elogie la cultura, la comida y el arte de México con genuina especificidad",
+          "Sea paciente con los horarios — la conexión personal precede a la puntualidad"
+        ],
+        donts: [
+          "Nunca confunda la cultura mexicana con otras culturas latinoamericanas",
+          "Evite los estereotipos sobre México",
+          "No omita la conversación informal — construir relaciones es el negocio",
+          "Evite hablar de la frontera o de políticas migratorias en conversaciones casuales",
+          "No sea brusco ni transaccional en un primer encuentro"
+        ]
+      },
+      pt: {
+        region_name: "México",
+        core_value: "Conexão pessoal calorosa, lealdade familiar e orgulho digno pela cultura e herança",
+        biggest_taboo: "Tratar as relações de forma puramente transacional ou mostrar desrespeito pelo património, comida ou tradições mexicanas",
+        dining_etiquette: "As refeições são ocasiões sociais e sem pressa. Aguarde que o anfitrião se sente. Elogie a comida com genuína calidez. Nunca apresse a refeição.",
+        language_notes: "O espanhol é a língua do calor e do orgulho. Algumas palavras em espanhol abrem muitas portas. Os mexicanos comunicam de forma calorosa e indireta em situações sensíveis.",
+        gift_protocol: "Leve doces, flores (evite malmequeres amarelos — fúnebres) ou licores de qualidade. Os presentes são recebidos com calor e geralmente abertos imediatamente.",
+        dress_code: "Smart casual na maioria dos contextos sociais. Traje formal em contextos corporativos. Vista-se para mostrar respeito.",
+        dos: [
+          "Invista na relação antes de falar de negócios — a confiança é a base",
+          "Cumprimente com um aperto de mão e contacto visual caloroso e sustentado",
+          "Aceite comida e hospitalidade com generosidade — recusar é considerado indelicado",
+          "Elogie a cultura, a comida e a arte do México com genuína especificidade",
+          "Seja paciente com os horários — a ligação pessoal precede a pontualidade"
+        ],
+        donts: [
+          "Nunca confunda a cultura mexicana com outras culturas latino-americanas",
+          "Evite estereótipos sobre o México",
+          "Não ignore a conversa informal — construir relações é o negócio",
+          "Evite falar da fronteira ou de políticas de imigração em conversas casuais",
+          "Não seja brusco ou transacional num primeiro encontro"
+        ]
+      },
+      it: {
+        region_name: "Messico",
+        core_value: "Connessione personale calorosa, lealtà familiare e orgoglio dignitoso per la cultura e il patrimonio",
+        biggest_taboo: "Trattare le relazioni in modo puramente transazionale o mostrare mancanza di rispetto verso il patrimonio, il cibo o le tradizioni messicane",
+        dining_etiquette: "I pasti sono occasioni sociali e senza fretta. Attendere che l'ospite si sieda. Complimentarsi per il cibo con genuino calore. Non affrettare mai il pasto.",
+        language_notes: "Lo spagnolo è la lingua del calore e dell'orgoglio. Alcune parole di spagnolo aprono molte porte. I messicani comunicano in modo caloroso e indiretto nelle situazioni delicate.",
+        gift_protocol: "Portare dolci, fiori (evitare le calendule gialle — funebri) o liquori di qualità. I regali vengono ricevuti con calore e generalmente aperti subito.",
+        dress_code: "Smart casual nella maggior parte dei contesti sociali. Abbigliamento formale in contesti aziendali. Vestirsi per mostrare rispetto.",
+        dos: [
+          "Investire nella relazione prima di parlare di affari — la fiducia è il fondamento",
+          "Salutare con una stretta di mano e un caldo e prolungato contatto visivo",
+          "Accettare cibo e ospitalità con generosità — rifiutare è considerato scortese",
+          "Complimentarsi per la cultura, il cibo e l'arte del Messico con genuina specificità",
+          "Essere pazienti con gli orari — la connessione personale precede la puntualità"
+        ],
+        donts: [
+          "Non confondere mai la cultura messicana con altre culture latinoamericane",
+          "Evitare gli stereotipi sul Messico",
+          "Non saltare le chiacchiere — costruire relazioni è il vero affare",
+          "Evitare di parlare di confini o politiche di immigrazione in conversazioni informali",
+          "Non essere bruschi o transazionali al primo incontro"
+        ]
+      },
+      ar: {
+        region_name: "المكسيك",
+        core_value: "الدفء الشخصي والولاء العائلي والفخر الكريم بالثقافة والتراث",
+        biggest_taboo: "التعامل مع العلاقات بشكل معاملاتي بحت، أو إهانة الموروث الثقافي المكسيكي أو طعامه أو تقاليده",
+        dining_etiquette: "الوجبات مناسبات اجتماعية هادئة. انتظر حتى يجلس المضيف. أثنِ على الطعام بدفء حقيقي. لا تستعجل الوجبة أبدًا.",
+        language_notes: "الإسبانية لغة الدفء والفخر. كلمات قليلة بالإسبانية تفتح أبوابًا كثيرة. يتواصل المكسيكيون بدفء وبشكل غير مباشر في المواقف الحساسة.",
+        gift_protocol: "أحضر حلويات أو ورودًا (تجنّب الأزهار الصفراء — جنائزية) أو مشروبات راقية. تُستقبَل الهدايا بحفاوة وتُفتح فورًا عادةً.",
+        dress_code: "أنيق غير رسمي في معظم التجمعات الاجتماعية. رسمي في البيئات المهنية. الملبس يعكس الاحترام.",
+        dos: [
+          "استثمر في العلاقة قبل التحدث عن الأعمال — الثقة هي الأساس",
+          "حيِّ بمصافحة وتواصل بصري دافئ ومستدام",
+          "اقبل الطعام والضيافة بسخاء — الرفض يُعدّ قلة أدب",
+          "أثنِ على ثقافة المكسيك وطعامها وفنها بصدق وتحديد",
+          "كن صبورًا مع المواعيد — الارتباط الشخصي يسبق الانضباط"
+        ],
+        donts: [
+          "لا تخلط أبدًا بين الثقافة المكسيكية والثقافات اللاتينية الأمريكية الأخرى",
+          "تجنّب الصور النمطية عن المكسيك",
+          "لا تُهمل الحديث العابر — بناء العلاقات هو صلب العمل",
+          "تجنّب الحديث عن الحدود أو سياسات الهجرة في المحادثات العابرة",
+          "لا تكن مقتضبًا أو معاملاتيًا في اللقاء الأول"
+        ]
+      },
+      ja: {
+        region_name: "メキシコ",
+        core_value: "温かな個人的つながり、家族への忠誠心、そして文化と遺産への誇りある誇り",
+        biggest_taboo: "関係を純粋に取引的に扱うこと、またはメキシコの文化遺産、食事、伝統への軽視を示すこと",
+        dining_etiquette: "食事は社交的でゆっくりとした場。ホストが座るまで待つ。食事を本物の温かさで褒める。食事を急いだり、会計を急かしたりしない。",
+        language_notes: "スペイン語は温かさと誇りの言語。スペイン語の一言で多くのドアが開く。メキシコ人はデリケートな場面では温かく間接的に伝える。",
+        gift_protocol: "菓子、花（黄色のマリーゴールドは避ける——葬儀的）、または良質なスピリッツを持参する。プレゼントは温かく受け取られ、通常すぐに開ける。",
+        dress_code: "ほとんどの社交の場ではスマートカジュアル。企業環境ではフォーマルなビジネスウェア。服装は敬意を示す——見た目が目的の真剣さを伝える。",
+        dos: [
+          "ビジネスの話をする前に関係に投資する——信頼が基盤",
+          "握手と温かく持続したアイコンタクトで挨拶する",
+          "食事とおもてなしを寛大に受け入れる——断ることは失礼とされる",
+          "メキシコの文化、食、芸術を誠実かつ具体的に褒める",
+          "スケジュールには寛容に——個人的なつながりが時間厳守に優先する"
+        ],
+        donts: [
+          "メキシコ文化と他のラテンアメリカ文化を混同しない",
+          "メキシコについてのステレオタイプを避ける",
+          "雑談を省略しない——関係構築がビジネスの本質",
+          "国境や移民政策についてカジュアルな会話で話さない",
+          "初めての出会いでぶっきらぼうまたは取引的にならない"
         ]
       }
     }
@@ -330,6 +2170,190 @@ const PRIORITY_SEED = [
           "Avoid comparing Brazil unfavourably to Argentina — this is reliably poorly received",
           "Do not be stiff, formal, or emotionally guarded in social settings"
         ]
+      },
+      nl: {
+        region_name: "Brazilië",
+        core_value: "Warmte, inclusiviteit en de vreugde van echte menselijke verbinding",
+        biggest_taboo: "Koud, formeel of transactioneel gedrag — Brazilianen interpreteren emotionele afstand als onbeleefdheid of arrogantie",
+        dining_etiquette: "Maaltijden zijn ontspannen en diep sociaal. Begin niet te eten voor de gastheer. Porties zijn royaal — alles opeten toont waardering. Churrasco-cultuur draait om delen.",
+        language_notes: "Portugees — niet Spaans — is de nationale taal. Brazilianen waarderen elke poging tot Portugees hartelijk. Ga er niet van uit dat Spaans volstaat.",
+        gift_protocol: "Bloemen (niet paars — begrafenis), kwaliteitschocolade of ambachtelijke artikelen. Cadeaus worden direct geopend met warmte.",
+        dress_code: "Stijlvol, expressief en aangepast aan de hitte. Zakelijke kleding is lichter dan Europese equivalenten. Uiterlijk signaleert zelfzorg en cultureel bewustzijn.",
+        dos: [
+          "Omarm de warmte — accepteer knuffels, nabijheid en oogcontact als positieve signalen",
+          "Leer een paar woorden Portugees — dit wordt buitengewoon goed ontvangen",
+          "Wees voorbereid op een flexibel tijdgevoel — relaties staan altijd voorop",
+          "Complimenteer Brazilië's natuur, eten, muziek en diversiteit met oprecht gevoel",
+          "Toon oprechte nieuwsgierigheid naar de persoon, niet alleen naar de agenda"
+        ],
+        donts: [
+          "Maak nooit het 'OK'-gebaar met duim en wijsvinger — dit is beledigend in Brazilië",
+          "Vermijd politiek of economisch commentaar tenzij u diep geïnformeerd bent",
+          "Probeer de relatiebuilding-fase niet te haasten",
+          "Vergelijk Brazilië niet ongunstig met Argentinië",
+          "Wees niet stijf, formeel of emotioneel gereserveerd in sociale settings"
+        ]
+      },
+      fr: {
+        region_name: "Brésil",
+        core_value: "Chaleur, inclusivité et joie de la vraie connexion humaine",
+        biggest_taboo: "Un comportement froid, formel ou transactionnel — les Brésiliens interprètent la distance émotionnelle comme de la grossièreté ou de l'arrogance",
+        dining_etiquette: "Les repas sont décontractés et profondément sociaux. Ne pas commencer à manger avant l'hôte. Les portions sont généreuses — finir son assiette montre l'appréciation. La culture du churrasco est fondée sur le partage.",
+        language_notes: "Le portugais — et non l'espagnol — est la langue nationale. Les Brésiliens apprécient chaleureusement toute tentative de portugais. Ne supposez pas que l'espagnol suffit.",
+        gift_protocol: "Fleurs (pas violettes — funéraires), chocolats de qualité ou articles artisanaux. Les cadeaux sont ouverts immédiatement avec chaleur.",
+        dress_code: "Élégant, expressif et adapté à la chaleur. La tenue de travail est plus légère qu'en Europe. L'apparence signale le soin de soi et la conscience culturelle.",
+        dos: [
+          "Accepter la chaleur — les câlins, la proximité et le contact visuel sont des signaux positifs",
+          "Apprendre quelques mots de portugais — c'est exceptionnellement bien reçu",
+          "Être prêt à une conception flexible du temps — les relations passent toujours en premier",
+          "Complimenter la nature, la nourriture, la musique et la diversité du Brésil avec sincérité",
+          "Montrer une curiosité sincère pour la personne, pas seulement pour l'ordre du jour"
+        ],
+        donts: [
+          "Ne jamais faire le geste 'OK' avec le pouce et l'index — c'est offensant au Brésil",
+          "Éviter tout commentaire politique ou économique sans être très informé",
+          "Ne pas essayer de précipiter la phase de création de relations",
+          "Éviter de comparer défavorablement le Brésil à l'Argentine",
+          "Ne pas être rigide, formel ou émotionnellement réservé en société"
+        ]
+      },
+      de: {
+        region_name: "Brasilien",
+        core_value: "Wärme, Inklusivität und die Freude an echter menschlicher Verbindung",
+        biggest_taboo: "Kaltes, formelles oder transaktionales Verhalten — Brasilianer deuten emotionale Distanz als Unhöflichkeit oder Arroganz",
+        dining_etiquette: "Mahlzeiten sind entspannt und zutiefst gesellig. Nicht vor dem Gastgeber anfangen zu essen. Portionen sind großzügig — alles aufessen zeigt Wertschätzung. Churrasco-Kultur dreht sich um das Teilen.",
+        language_notes: "Portugiesisch — nicht Spanisch — ist die Landessprache. Brasilianer schätzen jeden Versuch, Portugiesisch zu sprechen, herzlich. Nicht davon ausgehen, dass Spanisch ausreicht.",
+        gift_protocol: "Blumen (nicht lila — Trauer), hochwertige Schokolade oder handwerkliche Artikel. Geschenke werden sofort mit Wärme geöffnet.",
+        dress_code: "Stilvoll, ausdrucksstark und der Hitze angemessen. Geschäftskleidung ist leichter als europäische Äquivalente. Äußeres signalisiert Selbstfürsorge und kulturelles Bewusstsein.",
+        dos: [
+          "Die Wärme umarmen — Umarmungen, Nähe und Augenkontakt als positive Signale akzeptieren",
+          "Ein paar Worte Portugiesisch lernen — es kommt außergewöhnlich gut an",
+          "Auf ein flexibles Zeitgefühl vorbereitet sein — Beziehungen haben immer Vorrang",
+          "Brasiliens Natur, Essen, Musik und außergewöhnliche Vielfalt aufrichtig loben",
+          "Aufrichtige Neugier an der Person zeigen, nicht nur an der Agenda"
+        ],
+        donts: [
+          "Niemals das 'OK'-Zeichen mit Daumen und Zeigefinger machen — in Brasilien gilt es als beleidigend",
+          "Politische oder wirtschaftliche Kommentare vermeiden, es sei denn man ist gut informiert",
+          "Die Beziehungsaufbau-Phase nicht zu hetzen versuchen",
+          "Brasilien nicht ungünstig mit Argentinien vergleichen",
+          "In gesellschaftlichen Situationen nicht steif, formell oder emotional verschlossen sein"
+        ]
+      },
+      es: {
+        region_name: "Brasil",
+        core_value: "Calidez, inclusividad y la alegría de la genuina conexión humana",
+        biggest_taboo: "El comportamiento frío, formal o transaccional — los brasileños interpretan la distancia emocional como grosería o arrogancia",
+        dining_etiquette: "Las comidas son relajadas y profundamente sociales. No comience a comer antes que el anfitrión. Las porciones son generosas — terminar el plato muestra aprecio. La cultura del churrasco se basa en compartir.",
+        language_notes: "El portugués — no el español — es el idioma nacional. Los brasileños agradecen calurosamente cualquier intento de hablar portugués. No asuma que el español es suficientemente cercano.",
+        gift_protocol: "Flores (no moradas — fúnebres), chocolates de calidad o artículos artesanales. Los regalos se abren de inmediato con calidez.",
+        dress_code: "Estiloso, expresivo y apropiado para el calor. La ropa de trabajo es más ligera que el equivalente europeo. El aspecto señala el cuidado personal y la conciencia cultural.",
+        dos: [
+          "Abrace la calidez — acepte abrazos, proximidad y contacto visual como señales positivas",
+          "Aprenda algunas palabras de portugués — aterriza excepcionalmente bien",
+          "Esté preparado para una noción flexible del tiempo — las relaciones siempre son lo primero",
+          "Elogie la naturaleza, la comida, la música y la diversidad de Brasil con sentimiento genuino",
+          "Muestre curiosidad sincera por la persona, no solo por la agenda"
+        ],
+        donts: [
+          "Nunca haga el gesto 'OK' con el pulgar y el índice — es ofensivo en Brasil",
+          "Evite comentarios políticos o económicos a menos que esté muy informado",
+          "No intente apresurar la fase de construcción de relaciones",
+          "Evite comparar desfavorablemente a Brasil con Argentina",
+          "No sea rígido, formal o emocionalmente reservado en entornos sociales"
+        ]
+      },
+      pt: {
+        region_name: "Brasil",
+        core_value: "Calor humano, inclusividade e a alegria da genuína conexão humana",
+        biggest_taboo: "Comportamento frio, formal ou transacional — os brasileiros interpretam a distância emocional como grosseria ou arrogância",
+        dining_etiquette: "As refeições são relaxadas e profundamente sociais. Não comece a comer antes do anfitrião. As porções são generosas — terminar mostra apreço. A cultura do churrasco assenta na partilha.",
+        language_notes: "O português — não o espanhol — é a língua nacional. Os brasileiros apreciam calidamente qualquer tentativa de falar português. Não assuma que o espanhol é suficiente.",
+        gift_protocol: "Flores (não roxas — fúnebres), chocolates de qualidade ou artigos artesanais. Os presentes são abertos imediatamente com calor.",
+        dress_code: "Estiloso, expressivo e adequado ao calor. O traje de trabalho é mais leve do que os equivalentes europeus. A aparência sinaliza autocuidado e consciência cultural.",
+        dos: [
+          "Abrace o calor — aceite abraços, proximidade e contacto visual como sinais positivos",
+          "Aprenda algumas palavras em português — tem um impacto excecional",
+          "Esteja preparado para uma noção flexível do tempo — as relações vêm sempre em primeiro lugar",
+          "Elogie a natureza, a comida, a música e a extraordinária diversidade do Brasil com genuíno sentimento",
+          "Mostre curiosidade sincera pela pessoa, não apenas pela agenda"
+        ],
+        donts: [
+          "Nunca faça o gesto 'OK' com o polegar e o indicador — é considerado ofensivo no Brasil",
+          "Evite comentários políticos ou económicos a menos que seja muito bem informado",
+          "Não tente apressar a fase de construção de relações",
+          "Evite comparar desfavoravelmente o Brasil com a Argentina",
+          "Não seja rígido, formal ou emocionalmente reservado em contextos sociais"
+        ]
+      },
+      it: {
+        region_name: "Brasile",
+        core_value: "Calore, inclusività e la gioia della vera connessione umana",
+        biggest_taboo: "Un comportamento freddo, formale o transazionale — i brasiliani interpretano la distanza emotiva come scortesia o arroganza",
+        dining_etiquette: "I pasti sono rilassati e profondamente sociali. Non iniziare a mangiare prima del padrone di casa. Le porzioni sono generose — finire il piatto mostra apprezzamento. La cultura del churrasco è basata sulla condivisione.",
+        language_notes: "Il portoghese — non lo spagnolo — è la lingua nazionale. I brasiliani apprezzano calorosamente qualsiasi tentativo di parlare portoghese. Non presumere che lo spagnolo sia sufficiente.",
+        gift_protocol: "Fiori (non viola — funebri), cioccolato di qualità o articoli artigianali. I regali vengono aperti subito con calore.",
+        dress_code: "Elegante, espressivo e adeguato al caldo. L'abbigliamento professionale è più leggero degli equivalenti europei. L'aspetto segnala cura di sé e consapevolezza culturale.",
+        dos: [
+          "Abbracciare il calore — accettare abbracci, vicinanza e contatto visivo come segnali positivi",
+          "Imparare qualche parola di portoghese — viene recepita eccezionalmente bene",
+          "Essere pronti a una concezione flessibile del tempo — le relazioni vengono sempre prima",
+          "Complimentarsi per la natura, il cibo, la musica e la straordinaria diversità del Brasile con genuino sentimento",
+          "Mostrare sincera curiosità per la persona, non solo per l'agenda"
+        ],
+        donts: [
+          "Non fare mai il gesto 'OK' con pollice e indice — è offensivo in Brasile",
+          "Evitare commenti politici o economici a meno di essere molto informati",
+          "Non cercare di affrettare la fase di costruzione del rapporto",
+          "Evitare di confrontare sfavorevolmente il Brasile con l'Argentina",
+          "Non essere rigidi, formali o emotivamente guardinghi nei contesti sociali"
+        ]
+      },
+      ar: {
+        region_name: "البرازيل",
+        core_value: "الدفء والشمولية وبهجة الاتصال الإنساني الحقيقي",
+        biggest_taboo: "السلوك البارد أو الرسمي أو المعاملاتي — يفسّر البرازيليون البُعد العاطفي على أنه وقاحة أو غطرسة",
+        dining_etiquette: "الوجبات مريحة وعميقة التواصل الاجتماعي. لا تبدأ الأكل قبل المضيف. الحصص كريمة — إنهاؤها يُعبّر عن التقدير. ثقافة الشواء مبنية على المشاركة.",
+        language_notes: "البرتغالية — لا الإسبانية — هي اللغة الوطنية. يُقدّر البرازيليون أي محاولة للتحدث بالبرتغالية. لا تفترض أن الإسبانية كافية.",
+        gift_protocol: "ورود (لا بنفسجية — جنائزية) أو شوكولاتة عالية الجودة أو منتجات حرفية. تُفتح الهدايا فورًا مع الدفء.",
+        dress_code: "أنيق وتعبيري ومناسب للحرارة. الملبس المهني أخف من نظيره الأوروبي. المظهر يعكس الاعتناء بالنفس والوعي الثقافي.",
+        dos: [
+          "استقبل الدفء — تقبّل الأحضان والقرب والتواصل البصري كإشارات إيجابية",
+          "تعلّم بعض الكلمات البرتغالية — يحظى بقبول استثنائي",
+          "كن مستعدًا لمفهوم مرن للوقت — العلاقات دائمًا في المقدمة",
+          "أثنِ على طبيعة البرازيل وطعامها وموسيقاها وتنوعها الاستثنائي بصدق",
+          "أبدِ فضولًا صادقًا تجاه الشخص لا تجاه جدول الأعمال فحسب"
+        ],
+        donts: [
+          "لا تُشكّل إشارة 'موافق' بالإبهام والسبابة أبدًا — تُعدّ مسيئة في البرازيل",
+          "تجنّب التعليق السياسي أو الاقتصادي ما لم تكن مُلمًّا جيدًا",
+          "لا تحاول الإسراع في مرحلة بناء العلاقة",
+          "تجنّب مقارنة البرازيل بالأرجنتين بشكل غير مُنصف",
+          "لا تكن جامدًا أو رسميًا أو محاطًا بحواجز عاطفية في التجمعات الاجتماعية"
+        ]
+      },
+      ja: {
+        region_name: "ブラジル",
+        core_value: "温かさ、包容力、そして本物の人間的つながりの喜び",
+        biggest_taboo: "冷たく、形式的、または取引的な振る舞い——ブラジル人は感情的な距離を無礼や傲慢さと解釈する",
+        dining_etiquette: "食事はリラックスしていて深く社交的。ホストより先に食べ始めない。量は多い——食べ切ることが感謝の表れ。シュラスコ文化は共有で成り立っている。",
+        language_notes: "ポルトガル語——スペイン語ではなく——が国語。ポルトガル語への挑戦はどんな試みも温かく歓迎される。スペイン語で事足りると思わない。",
+        gift_protocol: "花（紫は葬儀的）、高品質のチョコレート、または手工芸品。プレゼントはすぐに温かく開ける。",
+        dress_code: "スタイリッシュで表現豊か、暑さに合った服装。ビジネスウェアはヨーロッパより軽め。外見は自己ケアと文化的意識を示す。",
+        dos: [
+          "温かさを受け入れる——ハグ、近い距離、アイコンタクトをポジティブなシグナルとして受け取る",
+          "ポルトガル語をいくつか覚える——非常に良い印象を与え、本物の敬意を示す",
+          "柔軟な時間感覚に備える——関係が常に優先される",
+          "ブラジルの自然、食、音楽、驚くほどの多様性を本物の感情で褒める",
+          "議題だけでなく、相手への sincereな好奇心を示す"
+        ],
+        donts: [
+          "親指と人差し指で「OK」サインを作らない——ブラジルでは侮辱的とされる",
+          "深く知識がない限り政治的・経済的なコメントは避ける",
+          "関係構築の段階を急かそうとしない",
+          "ブラジルをアルゼンチンと不利に比較しない",
+          "社交の場でこわばった、形式的な、または感情的に構えた態度を取らない"
+        ]
       }
     }
   },
@@ -360,6 +2384,190 @@ const PRIORITY_SEED = [
           "Avoid being ostentatiously loud in public — animated is welcome, aggressive is not",
           "Do not schedule important meetings in August — Spain largely pauses"
         ]
+      },
+      nl: {
+        region_name: "Spanje",
+        core_value: "Levendig leven, trotse regio-identiteit en spirituele menselijke verbinding",
+        biggest_taboo: "Heel Spanje als één behandelen — regionale identiteit (Catalaans, Baskisch, Andalusisch, Galicisch) is diepgaand en onderscheidend",
+        dining_etiquette: "De lunch is de hoofdmaaltijd, doorgaans 14:00–16:00. Diner zelden voor 21:00. Tapas worden royaal gedeeld. Fooi is gewaardeerd maar bescheiden. Ga niet zitten voor u wordt uitgenodigd.",
+        language_notes: "Castiliaans is de officiële taal. Regionale talen (Catalaans, Baskisch, Galicisch) worden diep gekoesterd. Een paar regionale woorden gebruiken toont respect.",
+        gift_protocol: "Goede wijn, kwaliteitsgebak of regionale producten. Breng iets mee als u thuis wordt uitgenodigd. Cadeaus worden gewoonlijk direct geopend.",
+        dress_code: "Stijlvol en verzorgd — Spanjaarden zijn trots op hun uiterlijk. Casual is chic, niet slordig. Vermijd shorts in steden, behalve bij stranden.",
+        dos: [
+          "Omarm het latere schema — lunches om 14:00, diners om 21:00 zijn volkomen normaal",
+          "Begroet hartelijk met een handdruk; goede bekenden wisselen twee zoenen",
+          "Toon oprechte interesse in regionale cultuur, eten, architectuur en taal",
+          "Talm bij maaltijden — ze zijn ongehaast en van nature sociaal",
+          "Accepteer de royaliteit van een gastheer zonder overdreven protest"
+        ],
+        donts: [
+          "Bespreek de Burgeroorlog of het Franco-tijdperk niet tenzij u uw publiek goed kent",
+          "Ga er niet van uit dat Catalanen of Basken zich als 'gewoon Spaans' identificeren",
+          "Haast een maaltijd nooit en laat geen ongeduld blijken",
+          "Wees niet overdreven luid in het openbaar",
+          "Plan geen belangrijke vergaderingen in augustus — Spanje staat dan grotendeels stil"
+        ]
+      },
+      fr: {
+        region_name: "Espagne",
+        core_value: "Vie vivante, régionalisme fier et connexion humaine animée",
+        biggest_taboo: "Traiter toute l'Espagne comme uniforme — l'identité régionale (catalane, basque, andalouse, galicienne) est profonde et distincte",
+        dining_etiquette: "Le déjeuner est le repas principal, généralement entre 14h et 16h. Le dîner rarement avant 21h. Les tapas se partagent généreusement. Le pourboire est apprécié mais modeste. Ne pas s'asseoir avant d'y être invité.",
+        language_notes: "Le castillan est la langue officielle. Les langues régionales (catalan, euskara, galicien) sont profondément chéries. Utiliser même quelques mots régionaux signale le respect.",
+        gift_protocol: "Bon vin, pâtisseries de qualité ou produits régionaux. Apporter quelque chose quand on est invité chez quelqu'un. Les cadeaux sont généralement ouverts à la réception.",
+        dress_code: "Élégant et présentable — les Espagnols sont visiblement fiers de leur apparence. La tenue décontractée est chic, pas négligée. Éviter les shorts en ville sauf près des plages.",
+        dos: [
+          "Adopter le rythme tardif — déjeuners à 14h, dîners à 21h sont tout à fait normaux",
+          "Serrer chaleureusement la main ; les proches peuvent échanger deux bises",
+          "Montrer un intérêt sincère pour la culture, la cuisine, l'architecture et la langue régionales",
+          "Prolonger les repas — ils sont non pressés et intrinsèquement sociaux",
+          "Accepter la générosité de l'hôte sans protestation excessive"
+        ],
+        donts: [
+          "Éviter de parler de la Guerre civile ou de la période franquiste sans bien connaître son auditoire",
+          "Ne pas supposer que les Catalans ou les Basques s'identifient simplement comme 'espagnols'",
+          "Ne jamais précipiter un repas ni signaler l'impatience au personnel de service",
+          "Éviter d'être ostensiblement bruyant en public — animé est bienvenu, agressif ne l'est pas",
+          "Ne pas planifier de réunions importantes en août — l'Espagne marque une grande pause"
+        ]
+      },
+      de: {
+        region_name: "Spanien",
+        core_value: "Lebendiges Leben, stolzer Regionalismus und spritzige menschliche Verbindung",
+        biggest_taboo: "Ganz Spanien als einheitlich zu behandeln — regionale Identität (katalanisch, baskisch, andalusisch, galizisch) ist tiefgreifend und ausgeprägt",
+        dining_etiquette: "Das Mittagessen ist die Hauptmahlzeit, typischerweise 14–16 Uhr. Abendessen selten vor 21 Uhr. Tapas werden großzügig geteilt. Trinkgeld wird geschätzt, aber moderat. Nicht setzen, bevor man eingeladen wird.",
+        language_notes: "Kastilisch ist die Amtssprache. Regionalsprachen (Katalanisch, Baskisch, Galizisch) werden tief geschätzt. Auch nur wenige regionale Worte zu benutzen signalisiert Respekt.",
+        gift_protocol: "Guter Wein, hochwertige Gebäcke oder regionale Produkte. Etwas mitbringen, wenn man jemanden zu Hause besucht. Geschenke werden normalerweise beim Empfang geöffnet.",
+        dress_code: "Stilvoll und präsentabel — Spanier sind sichtbar stolz auf ihr Äußeres. Freizeitkleidung ist schick, nicht schlampig. Kurze Hosen in Städten außer in Strandnähe vermeiden.",
+        dos: [
+          "Den späten Zeitplan umarmen — Mittagessen um 14 Uhr, Abendessen um 21 Uhr sind völlig normal",
+          "Herzlich mit Handschlag begrüßen; enge Bekannte tauschen zwei Küsse",
+          "Echtes Interesse an regionaler Kultur, Essen, Architektur und Sprache zeigen",
+          "Bei Mahlzeiten verweilen — sie sind ungezwungen und von Natur aus gesellig",
+          "Die Großzügigkeit des Gastgebers ohne übermäßigen Protest annehmen"
+        ],
+        donts: [
+          "Den Bürgerkrieg oder die Franco-Zeit nicht ansprechen, außer man kennt sein Publikum gut",
+          "Nicht davon ausgehen, dass Katalanen oder Basken sich als einfach 'Spanier' identifizieren",
+          "Niemals eine Mahlzeit hetzen oder dem Servicepersonal Ungeduld zeigen",
+          "In der Öffentlichkeit nicht ostentativ laut sein",
+          "Wichtige Meetings nicht im August planen — Spanien macht weitgehend Pause"
+        ]
+      },
+      es: {
+        region_name: "España",
+        core_value: "Vida vivida con intensidad, regionalismo orgulloso y conexión humana apasionada",
+        biggest_taboo: "Tratar toda España como uniforme — la identidad regional (catalana, vasca, andaluza, gallega) es profunda y diferenciada",
+        dining_etiquette: "El almuerzo es la comida principal, generalmente entre las 14:00 y las 16:00. La cena rara vez antes de las 21:00. Las tapas se comparten con generosidad. La propina se agradece pero es modesta. No se siente antes de ser invitado.",
+        language_notes: "El castellano es el idioma oficial. Los idiomas regionales (catalán, euskera, gallego) son profundamente queridos. Usar incluso unas pocas palabras regionales señala respeto.",
+        gift_protocol: "Buen vino, repostería de calidad o productos regionales. Lleve algo cuando le inviten a casa. Los regalos generalmente se abren al recibirlos.",
+        dress_code: "Estiloso y presentable — los españoles sienten un orgullo visible por su apariencia. La ropa casual es chic, no descuidada. Evite los pantalones cortos en las ciudades excepto cerca de las playas.",
+        dos: [
+          "Adaptarse al horario tardío — comer a las 14:00 y cenar a las 21:00 es absolutamente normal",
+          "Saludar con un cálido apretón de manos; los conocidos cercanos pueden darse dos besos",
+          "Mostrar genuino interés por la cultura, gastronomía, arquitectura e idioma regionales",
+          "Prolongar las comidas — son tranquilas e inherentemente sociales",
+          "Aceptar la generosidad del anfitrión sin protestar en exceso"
+        ],
+        donts: [
+          "Evitar hablar de la Guerra Civil o del franquismo a menos que conozca bien a su interlocutor",
+          "No asumir que catalanes o vascos se identifican simplemente como 'españoles'",
+          "Nunca apresure una comida ni muestre impaciencia al personal de servicio",
+          "Evitar ser ostentosamente ruidoso en público",
+          "No programar reuniones importantes en agosto — España hace una gran pausa"
+        ]
+      },
+      pt: {
+        region_name: "Espanha",
+        core_value: "Vida vibrante, regionalismo orgulhoso e conexão humana apaixonada",
+        biggest_taboo: "Tratar toda a Espanha como uniforme — a identidade regional (catalã, basca, andaluza, galega) é profunda e distinta",
+        dining_etiquette: "O almoço é a refeição principal, geralmente entre as 14h e as 16h. O jantar raramente antes das 21h. As tapas partilham-se generosamente. A gorjeta é apreciada mas modesta. Não se sente antes de ser convidado.",
+        language_notes: "O castelhano é a língua oficial. As línguas regionais (catalão, euskera, galego) são profundamente queridas. Usar mesmo algumas palavras regionais sinaliza respeito.",
+        gift_protocol: "Bom vinho, pastéis de qualidade ou produtos regionais. Leve algo quando for convidado a casa de alguém. Os presentes geralmente são abertos quando recebidos.",
+        dress_code: "Estiloso e apresentável — os espanhóis têm um orgulho visível na aparência. O casual é chique, não desleixado. Evite calções nas cidades exceto perto das praias.",
+        dos: [
+          "Adaptar-se ao horário tardio — almoços às 14h, jantares às 21h são absolutamente normais",
+          "Cumprimentar com um aperto de mão caloroso; conhecidos próximos podem trocar dois beijos",
+          "Mostrar genuíno interesse pela cultura, gastronomia, arquitetura e língua regionais",
+          "Prolongar as refeições — são descontraídas e inerentemente sociais",
+          "Aceitar a generosidade do anfitrião sem protestar excessivamente"
+        ],
+        donts: [
+          "Evitar falar da Guerra Civil ou do período franquista a não ser que conheça bem o seu interlocutor",
+          "Não assumir que catalães ou bascos se identificam simplesmente como 'espanhóis'",
+          "Nunca apresse uma refeição nem demonstre impaciência ao staff de serviço",
+          "Evitar ser ostensivamente ruidoso em público",
+          "Não marcar reuniões importantes em agosto — Espanha faz uma grande pausa"
+        ]
+      },
+      it: {
+        region_name: "Spagna",
+        core_value: "Vita vivace, regionalismo fiero e vivace connessione umana",
+        biggest_taboo: "Trattare tutta la Spagna come uniforme — l'identità regionale (catalana, basca, andalusa, galiziana) è profonda e distinta",
+        dining_etiquette: "Il pranzo è il pasto principale, tipicamente tra le 14:00 e le 16:00. La cena raramente prima delle 21:00. Le tapas si condividono generosamente. La mancia è apprezzata ma modesta. Non sedersi prima di essere invitati.",
+        language_notes: "Il castigliano è la lingua ufficiale. Le lingue regionali (catalano, euskara, galiziano) sono profondamente amate. Usare anche solo qualche parola regionale segnala rispetto.",
+        gift_protocol: "Vino pregiato, pasticceria di qualità o prodotti regionali. Portare qualcosa quando si è invitati a casa di qualcuno. I regali vengono di solito aperti alla ricezione.",
+        dress_code: "Elegante e presentabile — gli spagnoli hanno un visibile orgoglio per il proprio aspetto. Il casual è chic, non trasandato. Evitare i pantaloncini in città tranne che vicino alle spiagge.",
+        dos: [
+          "Abbracciare il ritmo tardivo — pranzi alle 14:00, cene alle 21:00 sono del tutto normali",
+          "Stringere la mano calorosamente; i conoscenti stretti possono scambiarsi due baci",
+          "Mostrare genuino interesse per la cultura, la cucina, l'architettura e la lingua regionali",
+          "Soffermarsi sui pasti — sono senza fretta e intrinsecamente sociali",
+          "Accettare la generosità dell'ospite senza eccessive proteste"
+        ],
+        donts: [
+          "Evitare di parlare della Guerra Civile o del periodo franchista se non si conosce bene il proprio interlocutore",
+          "Non presumere che catalani o baschi si identifichino semplicemente come 'spagnoli'",
+          "Non affrettare mai un pasto né segnalare impazienza al personale di servizio",
+          "Evitare di essere vistosamente rumorosi in pubblico",
+          "Non programmare riunioni importanti in agosto — la Spagna si ferma largamente"
+        ]
+      },
+      ar: {
+        region_name: "إسبانيا",
+        core_value: "حياة نابضة وإقليمية فخورة وتواصل إنساني متحمس",
+        biggest_taboo: "التعامل مع إسبانيا كلها بوصفها متجانسة — الهوية الإقليمية (الكاتالونية والباسكية والأندلسية والجاليكية) عميقة ومتمايزة",
+        dining_etiquette: "الغداء هو الوجبة الرئيسية، عادةً من الساعة 2 إلى 4 مساءً. العشاء نادرًا قبل الساعة 9 مساءً. تُشارَك التاباس بسخاء. الإكرامية مُقدَّرة لكن معتدلة. لا تجلس قبل أن تُدعى.",
+        language_notes: "القشتالية هي اللغة الرسمية. اللغات الإقليمية (الكاتالونية والباسكية والجاليكية) محبوبة بعمق. استخدام بعض الكلمات الإقليمية يُعبّر عن الاحترام.",
+        gift_protocol: "نبيذ جيد أو حلويات عالية الجودة أو منتجات إقليمية. أحضر شيئًا عند الدعوة لزيارة أحدهم في المنزل. تُفتح الهدايا عادةً عند استلامها.",
+        dress_code: "أنيق ومرتّب — يفخر الإسبان بمظهرهم بشكل واضح. الملبس الغير رسمي أنيق لا مهمل. تجنّب السراويل القصيرة في المدن بعيدًا عن الشواطئ.",
+        dos: [
+          "اعتنِ بالجدول الزمني المتأخر — الغداء في الساعة 2 مساءً والعشاء في 9 مساءً أمر طبيعي",
+          "صافح بدفء عند التحية؛ المعارف المقرّبون يتبادلون قُبلتين",
+          "أبدِ اهتمامًا حقيقيًا بالثقافة والطعام والعمارة واللغة الإقليمية",
+          "اجلس طويلاً عند المائدة — الوجبات هادئة وذات طابع اجتماعي",
+          "اقبل كرم المضيف دون احتجاج مفرط"
+        ],
+        donts: [
+          "تجنّب الحديث عن الحرب الأهلية أو حقبة فرانكو إلا إذا عرفت جمهورك جيدًا",
+          "لا تفترض أن الكاتالونيين أو الباسكيين يعرّفون أنفسهم ببساطة بأنهم 'إسبان'",
+          "لا تستعجل الوجبة ولا تُظهر التذمّر لموظفي الخدمة",
+          "تجنّب الصخب المتعمّد في الأماكن العامة",
+          "لا تجدول اجتماعات مهمة في أغسطس — تتوقف إسبانيا إلى حد بعيد"
+        ]
+      },
+      ja: {
+        region_name: "スペイン",
+        core_value: "鮮やかな生活、誇り高い地域主義、そして活気ある人間的つながり",
+        biggest_taboo: "スペイン全体を均一に扱うこと——地域的アイデンティティ（カタルーニャ、バスク、アンダルシア、ガリシア）は深く独自のもの",
+        dining_etiquette: "昼食がメインの食事で、通常14時〜16時。夕食は21時前はまれ。タパスは寛大に分け合う。チップは感謝されるが控えめ。招待されるまで座らない。",
+        language_notes: "カスティーリャ語が公用語。地域言語（カタルーニャ語、バスク語、ガリシア語）は深く大切にされている。地域の言葉をいくつか使うだけで敬意が伝わる。",
+        gift_protocol: "良質なワイン、上品なお菓子、または地域の産品。家に招かれた際は何か持参する。プレゼントは通常受け取った際に開ける。",
+        dress_code: "スタイリッシュで見栄えが良い——スペイン人は外見への誇りが目に見える。カジュアルはシックであり、だらしなくない。ビーチ付近以外では都市部でショートパンツを避ける。",
+        dos: [
+          "遅い時間帯のスケジュールを受け入れる——14時の昼食、21時の夕食は完全に普通",
+          "挨拶には温かい握手；親しい知人は両頬にキスを交わすこともある",
+          "地域の文化、食、建築、言語に本物の興味を示す",
+          "食事をゆっくり楽しむ——急がず本質的に社交的",
+          "ホストの寛大さを過度な遠慮なしに受け入れる"
+        ],
+        donts: [
+          "聴衆をよく知らない限り内戦やフランコ時代について話さない",
+          "カタルーニャ人やバスク人が単に「スペイン人」だと思わない",
+          "食事を急いだり、サービススタッフへの焦りを示したりしない",
+          "公共の場で大げさに騒がない——活発は歓迎されるが攻撃的はNG",
+          "8月に重要な会議を組まない——スペインはほぼ活動停止"
+        ]
       }
     }
   },
@@ -389,6 +2597,190 @@ const PRIORITY_SEED = [
           "Do not assume the level of formality or informality without reading the room carefully",
           "Avoid discussing politics unless invited and genuinely well-informed",
           "Never decline hospitality without a sincere and specific explanation"
+        ]
+      },
+      nl: {
+        region_name: "Colombia",
+        core_value: "Persoonlijke warmte, veerkracht en oprechte trots op Colombia's cultuur en transformatie",
+        biggest_taboo: "Colombia reduceren tot zijn vroegere problemen — Colombianen zijn terecht trots op hoe ver het land is gekomen",
+        dining_etiquette: "Maaltijden zijn warme, sociale gelegenheden. Wacht tot de gastheer u uitnodigt om te eten. Royale porties signaleren gastvrijheid. Koffie (tinto) wordt altijd aangeboden en dient te worden geaccepteerd.",
+        language_notes: "Colombiaans Spaans geldt als een van de helderste en meest neutrale in Latijns-Amerika. Elke poging tot Spaans wordt diep en oprecht gewaardeerd.",
+        gift_protocol: "Bloemen, snoep of kwaliteitsdranken. Cadeaus worden hartelijk ontvangen en direct geopend. Vermijd zakdoeken — die zijn geassocieerd met rouw.",
+        dress_code: "Altijd netjes en verzorgd. Colombianen zijn zichtbaar trots op hun uiterlijk. Zakelijke kleding is formeel in grote steden zoals Bogotá, relaxter aan de kust.",
+        dos: [
+          "Wees oprecht warm — begroet met handdruk of zoen op de wang naar gelang de sociale context",
+          "Toon oprechte interesse in Colombia's regio's, koffie, cultuur en keuken",
+          "Investeer in de relatie voor zakelijke gesprekken",
+          "Accepteer koffie wanneer die wordt aangeboden — dat zal altijd zo zijn",
+          "Complimenteer de transformatie en vooruitgang van het land"
+        ],
+        donts: [
+          "Verwijs nooit naar cocaïne, Pablo Escobar of kartels als gespreksonderwerp",
+          "Vermijd generalisaties over Colombia met buurlanden of andere Latijns-Amerikaanse landen",
+          "Ga niet uit van de mate van formaliteit zonder de ruimte goed in te schatten",
+          "Vermijd politieke discussies tenzij uitgenodigd en goed geïnformeerd",
+          "Wijs nooit gastvrijheid af zonder een oprechte en specifieke uitleg"
+        ]
+      },
+      fr: {
+        region_name: "Colombie",
+        core_value: "Chaleur personnelle, résilience et fierté authentique pour la culture et la transformation de la Colombie",
+        biggest_taboo: "Réduire la Colombie à ses luttes passées — les Colombiens sont légitimement fiers du chemin parcouru par leur pays",
+        dining_etiquette: "Les repas sont des occasions sociales chaleureuses. Attendre que l'hôte vous invite à manger. Les portions généreuses signalent l'hospitalité. Le café (tinto) est constamment proposé et doit être accepté.",
+        language_notes: "L'espagnol colombien est considéré comme l'un des plus clairs et neutres d'Amérique latine. Tout effort de parler espagnol est profondément apprécié.",
+        gift_protocol: "Fleurs, sucreries ou spiritueux de qualité. Les cadeaux sont reçus chaleureusement et ouverts immédiatement. Éviter les mouchoirs — ils sont associés au deuil.",
+        dress_code: "Soigné et bien habillé en toutes circonstances. Les Colombiens sont visiblement fiers de leur apparence. La tenue de travail est formelle dans les grandes villes comme Bogotá, plus détendue sur la côte.",
+        dos: [
+          "Être sincèrement chaleureux — saluer avec une poignée de main ou une bise selon le contexte social",
+          "Exprimer un intérêt sincère pour les régions, le café, la culture et la cuisine de la Colombie",
+          "Investir dans la relation avant de parler affaires",
+          "Accepter le café quand il est proposé — il le sera toujours",
+          "Complimenter la transformation et le progrès du pays"
+        ],
+        donts: [
+          "Ne jamais évoquer la cocaïne, Pablo Escobar ou les cartels en conversation",
+          "Éviter de généraliser la Colombie avec ses voisins ou d'autres pays d'Amérique latine",
+          "Ne pas présumer du niveau de formalité sans avoir lu l'ambiance",
+          "Éviter de discuter de politique sans invitation et sans être vraiment informé",
+          "Ne jamais décliner l'hospitalité sans une explication sincère et précise"
+        ]
+      },
+      de: {
+        region_name: "Kolumbien",
+        core_value: "Persönliche Wärme, Resilienz und echter Stolz auf Kolumbiens Kultur und Wandel",
+        biggest_taboo: "Kolumbien auf seine vergangenen Probleme zu reduzieren — Kolumbianer sind zu Recht stolz darauf, wie weit das Land gekommen ist",
+        dining_etiquette: "Mahlzeiten sind herzliche, gesellige Anlässe. Warten, bis der Gastgeber zum Essen einlädt. Großzügige Portionen signalisieren Gastfreundschaft. Kaffee (Tinto) wird ständig angeboten und sollte angenommen werden.",
+        language_notes: "Kolumbianisches Spanisch gilt als eines der klarsten und neutralsten in Lateinamerika. Jeder Versuch, Spanisch zu sprechen, wird tief und aufrichtig geschätzt.",
+        gift_protocol: "Blumen, Süßigkeiten oder hochwertige Spirituosen. Geschenke werden herzlich empfangen und sofort geöffnet. Taschentücher meiden — sie sind mit Trauer verbunden.",
+        dress_code: "Stets gepflegt und gut gekleidet. Kolumbianer sind sichtbar stolz auf ihr Äußeres. Geschäftskleidung ist formell in Großstädten wie Bogotá, entspannter an der Küste.",
+        dos: [
+          "Aufrichtig warm sein — mit Handschlag oder Wangenkuss je nach sozialem Kontext begrüßen",
+          "Echtes Interesse an Kolumbiens Regionen, Kaffee, Kultur und Küche zeigen",
+          "In die Beziehung investieren, bevor Geschäftliches besprochen wird",
+          "Kaffee annehmen, wenn er angeboten wird — das wird er immer",
+          "Die Transformation und den Fortschritt des Landes loben"
+        ],
+        donts: [
+          "Niemals Kokain, Pablo Escobar oder Kartelle als Gesprächsthema erwähnen",
+          "Verallgemeinerungen über Kolumbien mit Nachbarländern oder anderen lateinamerikanischen Ländern vermeiden",
+          "Den Grad an Formalität nicht annehmen, ohne die Situation sorgfältig zu lesen",
+          "Politische Diskussionen vermeiden, außer man ist eingeladen und gut informiert",
+          "Gastfreundschaft niemals ohne aufrichtige und spezifische Erklärung ablehnen"
+        ]
+      },
+      es: {
+        region_name: "Colombia",
+        core_value: "Calidez personal, resiliencia y genuino orgullo por la cultura y la transformación de Colombia",
+        biggest_taboo: "Reducir Colombia a sus luchas pasadas — los colombianos están legítimamente orgullosos de lo lejos que ha llegado su país",
+        dining_etiquette: "Las comidas son ocasiones sociales y cálidas. Espere a que el anfitrión le invite a comer. Las porciones generosas señalan hospitalidad. El café (tinto) se ofrece constantemente y debe aceptarse.",
+        language_notes: "El español colombiano se considera uno de los más claros y neutros de América Latina. Cualquier intento de hablar español es profunda y genuinamente apreciado.",
+        gift_protocol: "Flores, dulces o licores de calidad. Los regalos se reciben con calidez y se abren de inmediato. Evite dar pañuelos — están asociados con el luto.",
+        dress_code: "Siempre pulcro y bien arreglado. Los colombianos sienten un visible orgullo por su apariencia. El traje de negocios es formal en ciudades como Bogotá, más relajado en la costa.",
+        dos: [
+          "Ser genuinamente cálido — saludar con apretón de manos o beso en la mejilla según el contexto social",
+          "Expresar genuino interés en las regiones, el café, la cultura y la gastronomía de Colombia",
+          "Invertir en la relación antes de hablar de negocios",
+          "Aceptar el café siempre que se ofrezca — siempre se ofrecerá",
+          "Elogiar la transformación y el progreso del país"
+        ],
+        donts: [
+          "Nunca mencionar la cocaína, Pablo Escobar o los carteles como tema de conversación",
+          "Evitar generalizar Colombia con sus vecinos u otros países de América Latina",
+          "No asumir el nivel de formalidad o informalidad sin leer bien el ambiente",
+          "Evitar discutir de política a menos que sea invitado y esté bien informado",
+          "Nunca rechazar la hospitalidad sin una explicación sincera y específica"
+        ]
+      },
+      pt: {
+        region_name: "Colômbia",
+        core_value: "Calor pessoal, resiliência e genuíno orgulho pela cultura e transformação da Colômbia",
+        biggest_taboo: "Reduzir a Colômbia às suas lutas passadas — os colombianos têm legítimo orgulho do caminho percorrido pelo país",
+        dining_etiquette: "As refeições são ocasiões sociais e calorosas. Aguarde que o anfitrião o convide a comer. Porções generosas sinalizam hospitalidade. O café (tinto) é oferecido constantemente e deve ser aceite.",
+        language_notes: "O espanhol colombiano é considerado um dos mais claros e neutros da América Latina. Qualquer tentativa de falar espanhol é profundamente apreciada.",
+        gift_protocol: "Flores, doces ou licores de qualidade. Os presentes são recebidos com calor e abertos imediatamente. Evite dar lenços — estão associados ao luto.",
+        dress_code: "Sempre bem apresentado e cuidado. Os colombianos têm um visível orgulho na aparência. O traje de negócios é formal em grandes cidades como Bogotá, mais relaxado na costa.",
+        dos: [
+          "Ser genuinamente caloroso — cumprimentar com aperto de mão ou beijo na bochecha consoante o contexto social",
+          "Expressar genuíno interesse nas regiões, café, cultura e gastronomia da Colômbia",
+          "Investir na relação antes de falar de negócios",
+          "Aceitar café sempre que for oferecido — sempre será",
+          "Elogiar a transformação e o progresso do país"
+        ],
+        donts: [
+          "Nunca mencionar cocaína, Pablo Escobar ou cartéis como tema de conversa",
+          "Evitar generalizar a Colômbia com países vizinhos ou outros países da América Latina",
+          "Não assumir o nível de formalidade ou informalidade sem ler bem a situação",
+          "Evitar discutir política a não ser que seja convidado e esteja bem informado",
+          "Nunca recusar hospitalidade sem uma explicação sincera e específica"
+        ]
+      },
+      it: {
+        region_name: "Colombia",
+        core_value: "Calore personale, resilienza e autentico orgoglio per la cultura e la trasformazione della Colombia",
+        biggest_taboo: "Ridurre la Colombia alle sue lotte passate — i colombiani sono giustamente orgogliosi di quanto lontano sia arrivato il paese",
+        dining_etiquette: "I pasti sono occasioni sociali e calorosi. Aspettare che l'ospite inviti a mangiare. Le porzioni generose segnalano ospitalità. Il caffè (tinto) viene offerto continuamente e va accettato.",
+        language_notes: "Lo spagnolo colombiano è considerato tra i più chiari e neutri dell'America Latina. Qualsiasi tentativo di parlare spagnolo è profondamente e genuinamente apprezzato.",
+        gift_protocol: "Fiori, dolci o liquori di qualità. I regali vengono ricevuti calorosamente e aperti subito. Evitare i fazzoletti — sono associati al lutto.",
+        dress_code: "Sempre curati e ben vestiti. I colombiani hanno un visibile orgoglio per il proprio aspetto. L'abbigliamento di lavoro è formale nelle grandi città come Bogotá, più rilassato sulla costa.",
+        dos: [
+          "Essere genuinamente caldi — salutare con una stretta di mano o un bacio sulla guancia a seconda del contesto sociale",
+          "Esprimere genuino interesse per le regioni, il caffè, la cultura e la cucina della Colombia",
+          "Investire nella relazione prima di parlare di affari",
+          "Accettare il caffè ogni volta che viene offerto — verrà sempre offerto",
+          "Complimentarsi per la trasformazione e il progresso del paese"
+        ],
+        donts: [
+          "Non menzionare mai cocaina, Pablo Escobar o cartelli come argomento di conversazione",
+          "Evitare di generalizzare la Colombia con i paesi vicini o altre nazioni latinoamericane",
+          "Non presumere il livello di formalità o informalità senza leggere attentamente il contesto",
+          "Evitare di discutere di politica a meno di essere invitati e ben informati",
+          "Non rifiutare mai l'ospitalità senza una spiegazione sincera e specifica"
+        ]
+      },
+      ar: {
+        region_name: "كولومبيا",
+        core_value: "الدفء الشخصي والمرونة والفخر الحقيقي بثقافة كولومبيا وتحوّلها",
+        biggest_taboo: "اختزال كولومبيا في صراعاتها الماضية — الكولومبيون يفخرون بحق بمسافة التقدم التي قطعها بلدهم",
+        dining_etiquette: "الوجبات مناسبات اجتماعية دافئة. انتظر حتى يدعوك المضيف للأكل. الحصص الكريمة تعبّر عن الضيافة. يُقدَّم القهوة (تينتو) باستمرار ويجب قبولها.",
+        language_notes: "تُعدّ اللغة الإسبانية الكولومبية من أوضح لهجات أمريكا اللاتينية وأكثرها حيادية. أي محاولة للتحدث بالإسبانية تُقدَّر بعمق وصدق.",
+        gift_protocol: "ورود أو حلويات أو مشروبات روحية عالية الجودة. تُستقبَل الهدايا بحفاوة وتُفتح فورًا. تجنّب تقديم المناديل — مرتبطة بالحزن.",
+        dress_code: "أنيق ومرتّب دائمًا. يفخر الكولومبيون بمظهرهم. الملبس المهني رسمي في المدن الكبرى كبوغوتا، وأكثر مرونة على الساحل.",
+        dos: [
+          "كن دافئًا بصدق — حيِّ بمصافحة أو قبلة على الخد حسب السياق الاجتماعي",
+          "أبدِ اهتمامًا حقيقيًا بمناطق كولومبيا وقهوتها وثقافتها ومطبخها",
+          "استثمر في العلاقة قبل الانتقال إلى الأعمال",
+          "اقبل القهوة متى قُدِّمت — ستُقدَّم دائمًا",
+          "أثنِ على تحوّل البلاد وتقدّمها — يعني ذلك الكثير لمن عاشه"
+        ],
+        donts: [
+          "لا تُشر أبدًا إلى الكوكايين أو بابلو إسكوبار أو الكارتلات في أي حديث",
+          "تجنّب التعميم بشأن كولومبيا مع الدول المجاورة أو دول أمريكا اللاتينية الأخرى",
+          "لا تفترض مستوى الرسمية أو غيرها دون قراءة جيدة للموقف",
+          "تجنّب مناقشة السياسة ما لم تُدعَ إليها وتكن مُلمًّا جيدًا",
+          "لا ترفض الضيافة أبدًا دون تفسير صادق ومحدد"
+        ]
+      },
+      ja: {
+        region_name: "コロンビア",
+        core_value: "個人的な温かさ、レジリエンス、そしてコロンビアの文化と変革への本物の誇り",
+        biggest_taboo: "コロンビアを過去の苦難に矮小化すること——コロンビア人は国がいかに遠くまで来たかを正当に誇りにしている",
+        dining_etiquette: "食事は温かく社交的な場。ホストが食事を勧めるまで待つ。豊かな量はおもてなしの証——食べ切れる分だけ取る。コーヒー（ティント）は常に提供され、受け入れるべき。",
+        language_notes: "コロンビアのスペイン語はラテンアメリカで最も明確で中立的なものの一つと考えられている。スペイン語のどんな試みも深く誠実に評価される。",
+        gift_protocol: "花、お菓子、または良質なスピリッツ。プレゼントは温かく受け取られ、すぐに開ける。ハンカチは避ける——喪に関連している。",
+        dress_code: "常に清潔感があり身だしなみが整っている。コロンビア人は外見への誇りが目に見える。ビジネスウェアはボゴタなど大都市では正式、海岸ではより気軽。",
+        dos: [
+          "本物の温かさを持つ——社会的文脈に応じて握手またはほほえみで挨拶する",
+          "コロンビアの地域、コーヒー、文化、料理に本物の興味を示す",
+          "ビジネスの話の前に関係に投資する",
+          "コーヒーが出されたら必ず受け取る——常に出される",
+          "国の変革と進歩を褒める——それを生きた人々にとって大きな意味がある"
+        ],
+        donts: [
+          "コカイン、パブロ・エスコバル、カルテルを会話のトピックとして持ち出さない",
+          "コロンビアを隣国や他のラテンアメリカ諸国と一般化しない",
+          "場の雰囲気をよく読まずに形式・非形式のレベルを決めつけない",
+          "招待されておらず十分な知識もなければ政治の話は避ける",
+          "誠実かつ具体的な説明なしにおもてなしを断らない"
         ]
       }
     }
@@ -1275,6 +3667,190 @@ const PRIORITY_SEED = [
           "Do not consume alcohol, eat, or drink in public during Ramadan daylight hours",
           "Avoid public displays of affection — they are illegal in public spaces",
           "Do not point at people or holy sites with a single finger — use an open hand"
+        ]
+      },
+      nl: {
+        region_name: "Verenigde Arabische Emiraten",
+        core_value: "Waardige gastvrijheid, respect voor islamitische tradities en visionair ambitie",
+        biggest_taboo: "Islamitische gewoonten, religieuze praktijken of wetten niet respecteren — inclusief kleding, gedrag tijdens de Ramadan en openbaar gedrag",
+        dining_etiquette: "Accepteer dadels en Arabische koffie wanneer ze worden aangeboden — dit is een eerbetoon en mag niet worden geweigerd. Eet alleen met de rechterhand. Alcohol is beschikbaar in erkende gelegenheden maar nooit vanzelfsprekend.",
+        language_notes: "Arabisch is de officiële taal; Engels wordt veel gebruikt in het bedrijfsleven. Een paar Arabische zinnen leren (Marhaba, Shukran, Inshallah) wordt hartelijk gewaardeerd.",
+        gift_protocol: "Dadels, fijne snoepwaren of kwaliteitsparfum. Vermijd alcohol of varkensproducten als cadeaus. Geef altijd met de rechterhand.",
+        dress_code: "Bescheiden kleding is verplicht in het openbaar en wettelijk vereist in sommige omgevingen. Vrouwen dienen schouders en knieën te bedekken. Mannen vermijden shorts in formele settings.",
+        dos: [
+          "Sta op wanneer een senior of belangrijk persoon de kamer binnenkomt",
+          "Accepteer gastvrijheid zonder overdreven weigering — gastheer zijn is een eer",
+          "Gebruik de rechterhand voor al het doorgeven van objecten en voedsel",
+          "Respecteer gebedstijden — zakelijke en andere afspraken pauzeren dienovereenkomstig",
+          "Leer over islamitische tradities en gewoonten voor een bezoek tijdens de Ramadan"
+        ],
+        donts: [
+          "Bekritiseer nooit openbaar de islam, de overheid of leden van de heersende familie",
+          "Vermijd lichamelijk contact met vreemden van het andere geslacht",
+          "Consumeer geen alcohol, eten of drinken in het openbaar tijdens de Ramadan",
+          "Vermijd openbare uitingen van genegenheid — dit is illegaal",
+          "Wijs niet met één vinger naar mensen of heilige plaatsen — gebruik een open hand"
+        ]
+      },
+      fr: {
+        region_name: "Émirats arabes unis",
+        core_value: "Hospitalité digne, respect de la tradition islamique et ambition visionnaire",
+        biggest_taboo: "Manquer de respect aux coutumes islamiques, à la pratique religieuse ou à la loi — y compris la tenue vestimentaire, la conduite pendant le Ramadan et le comportement en public",
+        dining_etiquette: "Accepter les dattes et le café arabe proposés — c'est un geste d'honneur qui ne doit pas être refusé. Manger uniquement de la main droite. L'alcool est disponible dans les établissements agréés mais n'est jamais présumé.",
+        language_notes: "L'arabe est la langue officielle ; l'anglais est largement utilisé en affaires. Apprendre quelques phrases en arabe (Marhaba, Shukran, Inshallah) est chaleureusement apprécié.",
+        gift_protocol: "Dattes, confiseries fines ou parfum de qualité. Éviter l'alcool ou les produits à base de porc. Donner uniquement de la main droite.",
+        dress_code: "Une tenue modeste est obligatoire en public et légalement exigée dans certains contextes. Les femmes doivent couvrir épaules et genoux. Les hommes doivent éviter les shorts dans les contextes formels.",
+        dos: [
+          "Se lever lorsqu'une personne senior ou importante entre dans la pièce",
+          "Accepter l'hospitalité sans refus excessif — être reçu est un honneur",
+          "Utiliser la main droite pour tous les échanges d'objets et de nourriture",
+          "Respecter les heures de prière — les affaires et réunions font une pause en conséquence",
+          "S'informer sur les traditions islamiques avant de visiter pendant le Ramadan"
+        ],
+        donts: [
+          "Ne jamais critiquer publiquement l'islam, le gouvernement ou des membres de la famille régnante",
+          "Éviter tout contact physique avec des inconnus de l'autre sexe",
+          "Ne pas consommer d'alcool, de nourriture ou de boisson en public pendant le Ramadan",
+          "Éviter les manifestations publiques d'affection — elles sont illégales",
+          "Ne pas pointer des personnes ou des sites sacrés avec un seul doigt — utiliser la main ouverte"
+        ]
+      },
+      de: {
+        region_name: "Vereinigte Arabische Emirate",
+        core_value: "Würdevolle Gastfreundschaft, Respekt vor islamischer Tradition und visionärer Ehrgeiz",
+        biggest_taboo: "Islamische Gebräuche, religiöse Praktiken oder Gesetze missachten — einschließlich Kleidung, Verhalten während des Ramadan und öffentliches Verhalten",
+        dining_etiquette: "Datteln und arabischen Kaffee annehmen, wenn sie angeboten werden — es ist eine Ehrengeste und darf nicht abgelehnt werden. Nur mit der rechten Hand essen. Alkohol ist in lizenzierten Lokalen erhältlich, aber nie selbstverständlich.",
+        language_notes: "Arabisch ist die Amtssprache; Englisch wird im Geschäftsleben weit verbreitet eingesetzt. Ein paar arabische Sätze zu lernen (Marhaba, Shukran, Inshallah) wird herzlich geschätzt.",
+        gift_protocol: "Datteln, feine Süßwaren oder Qualitätsparfüm. Alkohol oder Produkte mit Schweinefleisch als Geschenke vermeiden. Immer mit der rechten Hand geben.",
+        dress_code: "Bescheidene Kleidung ist in der Öffentlichkeit obligatorisch und in bestimmten Umgebungen gesetzlich vorgeschrieben. Frauen sollten Schultern und Knie bedecken.",
+        dos: [
+          "Aufstehen, wenn eine ranghöhere oder wichtige Person den Raum betritt",
+          "Gastfreundschaft ohne übermäßige Ablehnung annehmen",
+          "Die rechte Hand für alle physischen Übergaben von Gegenständen und Speisen verwenden",
+          "Gebetszeiten respektieren — Geschäftliches und Besprechungen halten inne",
+          "Über islamische Traditionen informieren, bevor man während des Ramadan besucht"
+        ],
+        donts: [
+          "Niemals öffentlich den Islam, die Regierung oder Mitglieder der Herrscherfamilie kritisieren",
+          "Jeglichen körperlichen Kontakt mit Fremden des anderen Geschlechts vermeiden",
+          "Keinen Alkohol konsumieren und in der Öffentlichkeit während des Ramadan weder essen noch trinken",
+          "Öffentliche Zuneigungsbekundungen vermeiden — sie sind im öffentlichen Raum illegal",
+          "Nicht mit einem einzelnen Finger auf Menschen oder heilige Stätten zeigen"
+        ]
+      },
+      es: {
+        region_name: "Emiratos Árabes Unidos",
+        core_value: "Hospitalidad digna, respeto por la tradición islámica y ambición visionaria",
+        biggest_taboo: "Faltar al respeto a las costumbres islámicas, la práctica religiosa o la ley — incluida la vestimenta, el comportamiento durante el Ramadán y la conducta en público",
+        dining_etiquette: "Aceptar los dátiles y el café árabe cuando se ofrezcan — es un gesto de honor que no debe rechazarse. Comer solo con la mano derecha. El alcohol está disponible en locales autorizados pero nunca se da por supuesto.",
+        language_notes: "El árabe es el idioma oficial; el inglés se usa ampliamente en los negocios. Aprender algunas frases en árabe (Marhaba, Shukran, Inshallah) es cálidamente apreciado.",
+        gift_protocol: "Dátiles, confitería fina o perfume de calidad. Evite alcohol o productos relacionados con el cerdo. Dar siempre con la mano derecha.",
+        dress_code: "La vestimenta modesta es obligatoria en público y legalmente requerida en algunos contextos. Las mujeres deben cubrir hombros y rodillas. Los hombres deben evitar los pantalones cortos en entornos formales.",
+        dos: [
+          "Ponerse en pie cuando una persona de mayor rango o importancia entre en la sala",
+          "Aceptar la hospitalidad sin rechazo excesivo — ser anfitrión es un honor",
+          "Usar la mano derecha para todo intercambio físico de objetos y comida",
+          "Respetar los horarios de oración — los negocios y reuniones hacen una pausa",
+          "Informarse sobre las tradiciones islámicas antes de visitar durante el Ramadán"
+        ],
+        donts: [
+          "Nunca criticar públicamente el Islam, el gobierno o miembros de la familia gobernante",
+          "Evitar cualquier contacto físico con desconocidos del sexo opuesto",
+          "No consumir alcohol, comer ni beber en público durante las horas diurnas del Ramadán",
+          "Evitar las muestras públicas de afecto — son ilegales en espacios públicos",
+          "No señalar a personas o lugares sagrados con un solo dedo — usar la mano abierta"
+        ]
+      },
+      pt: {
+        region_name: "Emirados Árabes Unidos",
+        core_value: "Hospitalidade digna, respeito pela tradição islâmica e ambição visionária",
+        biggest_taboo: "Desrespeitar costumes islâmicos, práticas religiosas ou leis — incluindo vestuário, conduta durante o Ramadão e comportamento em público",
+        dining_etiquette: "Aceitar tâmaras e café árabe quando oferecidos — é um gesto de honra que não deve ser recusado. Comer apenas com a mão direita. O álcool está disponível em estabelecimentos licenciados mas nunca é assumido.",
+        language_notes: "O árabe é a língua oficial; o inglês é amplamente usado nos negócios. Aprender algumas frases em árabe (Marhaba, Shukran, Inshallah) é calorosamente apreciado.",
+        gift_protocol: "Tâmaras, confeitaria fina ou perfume de qualidade. Evite álcool ou produtos de porco como presentes. Dar sempre com a mão direita.",
+        dress_code: "Vestuário modesto é obrigatório em público e legalmente exigido em alguns contextos. As mulheres devem cobrir ombros e joelhos. Os homens devem evitar calções em contextos formais.",
+        dos: [
+          "Levantar-se quando uma pessoa sénior ou importante entra na sala",
+          "Aceitar hospitalidade sem recusa excessiva — ser recebido é uma honra",
+          "Usar a mão direita para toda a troca física de objetos e alimentos",
+          "Respeitar os horários de oração — negócios e reuniões fazem uma pausa",
+          "Informar-se sobre as tradições islâmicas antes de visitar durante o Ramadão"
+        ],
+        donts: [
+          "Nunca criticar publicamente o Islão, o governo ou membros da família governante",
+          "Evitar qualquer contacto físico com desconhecidos do sexo oposto",
+          "Não consumir álcool, comer ou beber em público durante as horas diurnas do Ramadão",
+          "Evitar manifestações públicas de afeto — são ilegais em espaços públicos",
+          "Não apontar com um único dedo para pessoas ou locais sagrados — usar a mão aberta"
+        ]
+      },
+      it: {
+        region_name: "Emirati Arabi Uniti",
+        core_value: "Ospitalità dignitosa, rispetto per la tradizione islamica e ambizione visionaria",
+        biggest_taboo: "Mancare di rispetto ai costumi islamici, alla pratica religiosa o alla legge — incluso l'abbigliamento, la condotta durante il Ramadan e il comportamento in pubblico",
+        dining_etiquette: "Accettare datteri e caffè arabo quando offerti — è un gesto d'onore che non deve essere rifiutato. Mangiare solo con la mano destra. L'alcol è disponibile nei locali autorizzati ma non è mai dato per scontato.",
+        language_notes: "L'arabo è la lingua ufficiale; l'inglese è ampiamente usato negli affari. Imparare qualche frase in arabo (Marhaba, Shukran, Inshallah) è calorosamente apprezzato.",
+        gift_protocol: "Datteri, confetteria pregiata o profumo di qualità. Evitare alcol o prodotti a base di maiale come regali. Dare sempre con la mano destra.",
+        dress_code: "L'abbigliamento modesto è obbligatorio in pubblico e legalmente richiesto in alcuni contesti. Le donne devono coprire spalle e ginocchia. Gli uomini devono evitare i pantaloncini in contesti formali.",
+        dos: [
+          "Alzarsi quando una persona anziana o importante entra nella stanza",
+          "Accettare l'ospitalità senza eccessive resistenze — essere ospitati è un onore",
+          "Usare la mano destra per tutti gli scambi fisici di oggetti e cibo",
+          "Rispettare gli orari di preghiera — affari e riunioni si fermano di conseguenza",
+          "Informarsi sulle tradizioni islamiche prima di visitare durante il Ramadan"
+        ],
+        donts: [
+          "Non criticare mai pubblicamente l'Islam, il governo o i membri della famiglia regnante",
+          "Evitare qualsiasi contatto fisico con sconosciuti di sesso opposto",
+          "Non consumare alcol, mangiare o bere in pubblico durante le ore diurne del Ramadan",
+          "Evitare manifestazioni pubbliche di affetto — sono illegali negli spazi pubblici",
+          "Non indicare persone o luoghi sacri con un solo dito — usare la mano aperta"
+        ]
+      },
+      ar: {
+        region_name: "الإمارات العربية المتحدة",
+        core_value: "الضيافة الكريمة واحترام التقاليد الإسلامية والطموح الريادي",
+        biggest_taboo: "عدم احترام الأعراف الإسلامية أو الممارسة الدينية أو القانون — بما يشمل اللباس والسلوك خلال رمضان والتصرف في الأماكن العامة",
+        dining_etiquette: "اقبل التمر والقهوة العربية حين تُقدَّم — إنها لفتة تكريم لا ينبغي رفضها. تناول الطعام باليد اليمنى فقط. الكحول متاح في الأماكن المرخصة لكنه غير مفترض أبدًا.",
+        language_notes: "العربية هي اللغة الرسمية؛ الإنجليزية مستخدمة على نطاق واسع في الأعمال. تعلّم بعض العبارات العربية (مرحبا، شكرًا، إن شاء الله) يُقدَّر بحرارة.",
+        gift_protocol: "تمر أو حلويات راقية أو عطر عالي الجودة. تجنّب الكحول أو المنتجات المشتقة من لحم الخنزير كهدايا. أعطِ باليد اليمنى دائمًا.",
+        dress_code: "اللباس المحتشم إلزامي في الأماكن العامة ومطلوب قانونيًا في بعض البيئات. ينبغي على المرأة تغطية الكتفين والركبتين. على الرجال تجنّب السراويل القصيرة في البيئات الرسمية.",
+        dos: [
+          "قم عند دخول شخص كبير أو مهم إلى الغرفة",
+          "اقبل الضيافة دون رفض مفرط — أن تُستضاف شرف",
+          "استخدم اليد اليمنى لتبادل الأشياء والطعام",
+          "احترم أوقات الصلاة — تتوقف الأعمال والاجتماعات وفقًا لذلك",
+          "اطّلع على التقاليد الإسلامية قبل الزيارة في رمضان"
+        ],
+        donts: [
+          "لا تنتقد علنًا الإسلام أو الحكومة أو أفراد الأسرة الحاكمة أبدًا",
+          "تجنّب أي تواصل جسدي مع الغرباء من الجنس الآخر",
+          "لا تتناول الكحول أو الطعام أو الشراب علنًا خلال ساعات النهار في رمضان",
+          "تجنّب إظهار المودة في الأماكن العامة — مخالف للقانون",
+          "لا تشير بإصبع واحد إلى الناس أو المواقع المقدسة — استخدم راحة اليد المفتوحة"
+        ]
+      },
+      ja: {
+        region_name: "アラブ首長国連邦",
+        core_value: "品格あるおもてなし、イスラムの伝統への敬意、そして先見的な野心",
+        biggest_taboo: "イスラムの慣習、宗教的慣行、または法律を軽視すること——服装、ラマダン中の行動、公共での行動を含む",
+        dining_etiquette: "提供されたナツメヤシとアラビアコーヒーは受け入れる——それは名誉のしぐさであり断ってはならない。右手だけで食べる。アルコールは認可を受けた場所で入手可能だが当然とは思わない。",
+        language_notes: "アラビア語が公用語；英語はビジネスで広く使われる。いくつかのアラビア語フレーズを覚えること（マルハバ、シュクラン、インシャーアッラー）は温かく評価される。",
+        gift_protocol: "ナツメヤシ、上質な菓子、または良質な香水。アルコールや豚肉関連製品は贈り物として避ける。常に右手で渡す。",
+        dress_code: "控えめな服装は公共の場で必須であり、一部の環境では法的に義務付けられている。女性は肩と膝を覆う。男性はフォーマルや伝統的な場でショートパンツを避ける。",
+        dos: [
+          "年長者や重要な人物が部屋に入ったら立ち上がる",
+          "過度な辞退なしにおもてなしを受け入れる——もてなされることは名誉",
+          "物と食べ物の交換には必ず右手を使う",
+          "礼拝の時間を尊重する——ビジネスや会議はそれに合わせて停止する",
+          "ラマダン中に訪問する前にイスラムの伝統と慣習について学ぶ"
+        ],
+        donts: [
+          "公衆の場でイスラム、政府、または支配家族のメンバーを批判しない",
+          "異性の見知らぬ人との身体的接触を避ける",
+          "ラマダンの昼間の時間帯に公共の場でアルコールを飲んだり、食事や飲み物を摂らない",
+          "公衆の場での愛情表現を避ける——公共の場では違法",
+          "人や聖地を一本の指で指差さない——手のひらを使う"
         ]
       }
     }

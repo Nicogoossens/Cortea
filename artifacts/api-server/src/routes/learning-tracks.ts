@@ -537,12 +537,37 @@ const RegionCodeSchema = z.object({
 router.get("/users/country-interests", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
-    const rows = await db.select()
+    let rows = await db.select()
       .from(userCountryInterestsTable)
       .where(and(
         eq(userCountryInterestsTable.user_id, userId),
         isNull(userCountryInterestsTable.hidden_at),
       ));
+
+    // Auto-backfill for legacy users: if the user has no interests yet but
+    // already has an active_region, seed it as their first interest so the
+    // UI and the active-region constraint behave correctly without needing
+    // a manual data migration.
+    if (rows.length === 0) {
+      const [u] = await db.select({ active_region: usersTable.active_region })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1);
+      if (u?.active_region) {
+        await db.insert(userCountryInterestsTable).values({
+          user_id: userId,
+          region_code: u.active_region,
+          hidden_at: null,
+        }).onConflictDoNothing();
+        rows = await db.select()
+          .from(userCountryInterestsTable)
+          .where(and(
+            eq(userCountryInterestsTable.user_id, userId),
+            isNull(userCountryInterestsTable.hidden_at),
+          ));
+      }
+    }
+
     return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch country interests");

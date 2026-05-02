@@ -107,6 +107,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   } | null>(null);
   /** True once the user clicks "Show context" on a repetition question. */
   const [studyExpanded, setStudyExpanded] = useState(false);
+  // Repetition gate: when a question is a repeat, the user MUST explicitly
+  // acknowledge the study_context before the answer options become tappable.
+  // Resets every time a new question is shown.
+  const [studyAcknowledged, setStudyAcknowledged] = useState(false);
 
   const sessionParams = {
     register,
@@ -226,12 +230,14 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     setFeedback(null);
     setCurrentQuestionIdx(0);
     setStudyExpanded(false);
+    setStudyAcknowledged(false);
   }
 
   // Repetition UX: a freshly opened question that is_repetition starts with the
   // study_context collapsed/highlighted; the user must click through to attempt.
   useEffect(() => {
     setStudyExpanded(false);
+    setStudyAcknowledged(false);
   }, [currentQuestionIdx, session?.session_id]);
 
   function handleConfirm() {
@@ -618,7 +624,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                         replacing the small subtle line. The user can still
                         proceed without expanding, but the affordance is loud. */}
                     {(currentQuestion as { is_repetition?: boolean; study_context?: string | null }).is_repetition && (currentQuestion as { study_context?: string | null }).study_context && !answered ? (
-                      <div className="mt-2 p-3 rounded-sm border border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20 space-y-1.5">
+                      <div className="mt-2 p-3 rounded-sm border border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20 space-y-2">
                         <p className="text-[10px] font-mono uppercase tracking-widest text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                           <BookOpen className="w-3 h-3" aria-hidden="true" />
                           {t("atelier.track.study_first")}
@@ -634,6 +640,17 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                             {t("atelier.track.study_show_more")}
                           </button>
                         )}
+                        {!studyAcknowledged && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setStudyAcknowledged(true)}
+                            className="mt-1 h-7 text-[11px] font-mono uppercase tracking-wider border-amber-400/60 text-amber-800 hover:bg-amber-100/50 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                          >
+                            {t("atelier.track.study_acknowledge")}
+                          </Button>
+                        )}
                       </div>
                     ) : currentQuestion.historical_context && !answered && (
                       <p className="text-xs text-muted-foreground/60 font-light italic mt-1 leading-relaxed">
@@ -642,9 +659,23 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     )}
                   </CardHeader>
                   <CardContent className="space-y-2.5">
+                    {(() => {
+                      const isRepeat = (currentQuestion as { is_repetition?: boolean }).is_repetition === true;
+                      const hasContext = !!(currentQuestion as { study_context?: string | null }).study_context;
+                      const gateOpen = !isRepeat || !hasContext || studyAcknowledged || answered;
+                      if (gateOpen) return null;
+                      return (
+                        <p className="text-xs text-muted-foreground italic">
+                          {t("atelier.track.study_gate_hint")}
+                        </p>
+                      );
+                    })()}
                     {currentQuestion.options.map((opt, idx) => {
                       const isSelected = selectedOptionIdx === idx;
                       const isAnswered = answered;
+                      const isRepeat = (currentQuestion as { is_repetition?: boolean }).is_repetition === true;
+                      const hasContext = !!(currentQuestion as { study_context?: string | null }).study_context;
+                      const gateLocked = isRepeat && hasContext && !studyAcknowledged && !isAnswered;
                       const isCorrectAnswer = isAnswered && feedback && idx === selectedOptionIdx && feedback.answer_tier === 1;
                       const isWrongAnswer = isAnswered && feedback && idx === selectedOptionIdx && feedback.answer_tier === 3;
                       const isAcceptable = isAnswered && feedback && idx === selectedOptionIdx && feedback.answer_tier === 2;
@@ -652,8 +683,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                       return (
                         <button
                           key={idx}
-                          disabled={isAnswered}
-                          onClick={() => !isAnswered && setSelectedOptionIdx(idx)}
+                          disabled={isAnswered || gateLocked}
+                          aria-disabled={gateLocked}
+                          onClick={() => !isAnswered && !gateLocked && setSelectedOptionIdx(idx)}
                           className={`w-full text-left px-4 py-3 rounded-sm border text-sm transition-all duration-200 flex items-start gap-3 ${
                             isCorrectAnswer
                               ? "border-green-400/60 bg-green-50/50 dark:bg-green-950/20 text-foreground"

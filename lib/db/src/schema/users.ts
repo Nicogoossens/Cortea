@@ -68,6 +68,10 @@ export const usersTable = pgTable("users", {
   session_token: text("session_token"),
   // Onboarding & profile enrichment
   country_of_origin: text("country_of_origin"),
+  // Once set the first time, country_of_origin becomes server-side immutable
+  // (only support can override). The client surfaces it as read-only when this
+  // timestamp is non-null.
+  country_of_origin_locked_at: timestamp("country_of_origin_locked_at"),
   objectives: json("objectives").$type<string[]>().notNull().default([]),
   interests_sports: json("interests_sports").$type<string[]>().notNull().default([]),
   interests_cuisine: json("interests_cuisine").$type<string[]>().notNull().default([]),

@@ -92,7 +92,21 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     mastered: boolean;
     repeat: boolean;
     new_badges: Array<{ id: number; slug: string; title: string; description: string; badge_type: string }>;
+    /** Set on the final answer of the session — drives the summary screen. */
+    session_complete?: boolean;
+    session_score_pct?: number | null;
+    session_passed?: boolean | null;
+    next_action?: "level_up" | "continue" | "remediation" | "mastered";
   } | null>(null);
+  /** When the server returns 429 (daily cap or cooldown) we surface a banner. */
+  const [limitInfo, setLimitInfo] = useState<{
+    reason: "daily_limit" | "cooldown";
+    retryAfterSeconds: number;
+    sessionsToday: number;
+    dailyLimit: number;
+  } | null>(null);
+  /** True once the user clicks "Show context" on a repetition question. */
+  const [studyExpanded, setStudyExpanded] = useState(false);
 
   const sessionParams = {
     register,
@@ -102,9 +116,36 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     ...(register === "middle_class" ? { research_pillar: researchPillar } : {}),
   };
 
-  const { data: session, isLoading: sessionLoading } = useGetLearningTrackSession(sessionParams, {
-    query: { queryKey: [...getGetLearningTrackSessionQueryKey(sessionParams)], staleTime: 0 },
+  const { data: session, isLoading: sessionLoading, error: sessionError } = useGetLearningTrackSession(sessionParams, {
+    query: {
+      queryKey: [...getGetLearningTrackSessionQueryKey(sessionParams)],
+      staleTime: 0,
+      retry: (count, err: unknown) => {
+        // Don't retry on 429 — the limit needs to actually expire first.
+        const status = (err as { status?: number } | null)?.status;
+        return status !== 429 && count < 2;
+      },
+    },
   });
+
+  // Surface 429 limit responses (sessionError carries the parsed body via custom-fetch)
+  useEffect(() => {
+    if (!sessionError) {
+      setLimitInfo(null);
+      return;
+    }
+    const e = sessionError as { status?: number; body?: { reason?: string; retry_after_seconds?: number; sessions_today?: number; daily_limit?: number } };
+    if (e?.status === 429 && (e.body?.reason === "daily_limit" || e.body?.reason === "cooldown")) {
+      setLimitInfo({
+        reason: e.body.reason,
+        retryAfterSeconds: e.body.retry_after_seconds ?? 0,
+        sessionsToday: e.body.sessions_today ?? 0,
+        dailyLimit: e.body.daily_limit ?? 0,
+      });
+    } else {
+      setLimitInfo(null);
+    }
+  }, [sessionError]);
 
   const { data: progressData } = useGetLearningTrackProgress();
 
@@ -128,19 +169,29 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const { mutate: submitAnswer, isPending: submitting } = usePostLearningTrackAnswer({
     mutation: {
       onSuccess: (result) => {
+        const r = result as typeof result & {
+          session_complete?: boolean;
+          session_score_pct?: number | null;
+          session_passed?: boolean | null;
+          next_action?: "level_up" | "continue" | "remediation" | "mastered";
+        };
         setFeedback({
-          correct: result.correct,
-          answer_tier: result.answer_tier,
-          motivation: result.motivation,
-          historical_context: result.historical_context ?? null,
-          level_up: result.level_up,
-          mastered: result.mastered,
-          repeat: result.repeat,
-          new_badges: result.new_badges ?? [],
+          correct: r.correct,
+          answer_tier: r.answer_tier,
+          motivation: r.motivation,
+          historical_context: r.historical_context ?? null,
+          level_up: r.level_up,
+          mastered: r.mastered,
+          repeat: r.repeat,
+          new_badges: r.new_badges ?? [],
+          session_complete: r.session_complete,
+          session_score_pct: r.session_score_pct ?? null,
+          session_passed: r.session_passed ?? null,
+          next_action: r.next_action,
         });
         setAnswered(true);
         queryClient.invalidateQueries({ queryKey: getGetLearningTrackProgressQueryKey() });
-        if (result.mastered && (result.new_badges ?? []).length > 0) {
+        if (r.mastered && (r.new_badges ?? []).length > 0) {
           queryClient.invalidateQueries({ queryKey: getGetLearningTrackBadgesQueryKey() });
         }
       },
@@ -174,10 +225,18 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     setAnswered(false);
     setFeedback(null);
     setCurrentQuestionIdx(0);
+    setStudyExpanded(false);
   }
+
+  // Repetition UX: a freshly opened question that is_repetition starts with the
+  // study_context collapsed/highlighted; the user must click through to attempt.
+  useEffect(() => {
+    setStudyExpanded(false);
+  }, [currentQuestionIdx, session?.session_id]);
 
   function handleConfirm() {
     if (selectedOptionIdx === null || !currentQuestion) return;
+    const sessionId = (session as { session_id?: number } | undefined)?.session_id;
     submitAnswer({
       data: {
         question_id: currentQuestion.id,
@@ -185,6 +244,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         register,
         research_pillar: register === "middle_class" ? researchPillar : null,
         phase,
+        ...(sessionId ? { session_id: sessionId } : {}),
       },
     });
   }
@@ -376,6 +436,23 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
               <Skeleton className="h-12 rounded-sm" />
               <Skeleton className="h-12 rounded-sm" />
             </div>
+          ) : limitInfo ? (
+            // ── 429 daily-cap or cooldown banner ─────────────────────────────
+            <Card className="border-amber-300/50 bg-amber-50/30 dark:bg-amber-950/10">
+              <CardContent className="py-8 text-center space-y-3">
+                <AlertCircle className="w-8 h-8 mx-auto text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                <h3 className="font-serif text-lg text-foreground">
+                  {limitInfo.reason === "daily_limit"
+                    ? t("atelier.track.daily_limit_title")
+                    : t("atelier.track.cooldown_title")}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  {limitInfo.reason === "daily_limit"
+                    ? t("atelier.track.daily_limit_desc", { sessions: limitInfo.sessionsToday, limit: limitInfo.dailyLimit })
+                    : t("atelier.track.cooldown_desc", { minutes: Math.max(1, Math.ceil(limitInfo.retryAfterSeconds / 60)) })}
+                </p>
+              </CardContent>
+            </Card>
           ) : !session?.has_questions ? (
             <Card className="border-dashed border-border/50 bg-card/40">
               <CardContent className="py-10 space-y-5">
@@ -528,7 +605,30 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     <CardTitle className="font-serif text-lg leading-snug font-normal">
                       {currentQuestion.question_text}
                     </CardTitle>
-                    {currentQuestion.historical_context && !answered && (
+                    {/* Repetition study panel: when the question is a repeat, the
+                        study_context (the historical_context tied to the missed
+                        rule) is shown prominently as a "review this first" block,
+                        replacing the small subtle line. The user can still
+                        proceed without expanding, but the affordance is loud. */}
+                    {(currentQuestion as { is_repetition?: boolean; study_context?: string | null }).is_repetition && (currentQuestion as { study_context?: string | null }).study_context && !answered ? (
+                      <div className="mt-2 p-3 rounded-sm border border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20 space-y-1.5">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                          <BookOpen className="w-3 h-3" aria-hidden="true" />
+                          {t("atelier.track.study_first")}
+                        </p>
+                        <p className={`text-xs text-foreground/80 leading-relaxed ${studyExpanded ? "" : "line-clamp-3"}`}>
+                          {(currentQuestion as { study_context?: string | null }).study_context}
+                        </p>
+                        {!studyExpanded && (
+                          <button
+                            onClick={() => setStudyExpanded(true)}
+                            className="text-[10px] font-mono uppercase tracking-widest text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-800 dark:hover:text-amber-300"
+                          >
+                            {t("atelier.track.study_show_more")}
+                          </button>
+                        )}
+                      </div>
+                    ) : currentQuestion.historical_context && !answered && (
                       <p className="text-xs text-muted-foreground/60 font-light italic mt-1 leading-relaxed">
                         {currentQuestion.historical_context}
                       </p>
@@ -606,7 +706,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           {submitting ? t("atelier.track.processing") : t("atelier.track.confirm_answer")}
                           {!submitting && <ChevronRight className="w-4 h-4" aria-hidden="true" />}
                         </Button>
-                      ) : !feedback?.mastered ? (
+                      ) : feedback?.session_complete ? null /* summary card below */ : !feedback?.mastered ? (
                         <Button
                           onClick={handleNext}
                           className="font-serif gap-2 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -617,6 +717,63 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           <ArrowRight className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       ) : null}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ── Session-end summary ───────────────────────────────────────
+                  Shown the moment the last answer comes back with
+                  session_complete = true. Surfaces the percentage, pass/fail
+                  and the engine's chosen next_action so the user knows
+                  whether they're levelling up, repeating, or done. */}
+              {feedback?.session_complete && !feedback.mastered && (
+                <Card className={`border-2 ${
+                  feedback.session_passed
+                    ? "border-green-400/50 bg-green-50/30 dark:bg-green-950/10"
+                    : "border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10"
+                }`}>
+                  <CardContent className="py-7 text-center space-y-4">
+                    {feedback.session_passed ? (
+                      <CheckCircle2 className="w-10 h-10 mx-auto text-green-600 dark:text-green-400" aria-hidden="true" />
+                    ) : (
+                      <RotateCcw className="w-10 h-10 mx-auto text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                    )}
+                    <div className="space-y-1">
+                      <h3 className="font-serif text-xl text-foreground">
+                        {feedback.next_action === "level_up"
+                          ? t("atelier.track.session_passed_level_up", { level: feedback.session_passed ? (currentProgress?.current_level ?? 1) + 1 : (currentProgress?.current_level ?? 1) })
+                          : feedback.session_passed
+                            ? t("atelier.track.session_passed")
+                            : feedback.next_action === "remediation"
+                              ? t("atelier.track.session_remediation_title")
+                              : t("atelier.track.session_failed")}
+                      </h3>
+                      <p className="font-mono text-3xl text-foreground/90">
+                        {feedback.session_score_pct ?? 0}<span className="text-base text-muted-foreground">%</span>
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                      {feedback.next_action === "level_up"
+                        ? t("atelier.track.session_next_level_up")
+                        : feedback.next_action === "remediation"
+                          ? t("atelier.track.session_next_remediation")
+                          : t("atelier.track.session_next_continue")}
+                    </p>
+                    <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
+                      <Button
+                        onClick={() => {
+                          // Force-fetch a new session
+                          queryClient.invalidateQueries({ queryKey: getGetLearningTrackSessionQueryKey(sessionParams) });
+                          resetQuestion();
+                        }}
+                        className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+                      >
+                        {feedback.next_action === "remediation"
+                          ? t("atelier.track.start_remediation")
+                          : t("atelier.track.start_next_session")}
+                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

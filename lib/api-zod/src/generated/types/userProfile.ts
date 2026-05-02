@@ -31,6 +31,8 @@ export interface UserProfile {
   suspended_at?: Date | null;
   onboarding_completed: boolean;
   country_of_origin?: string | null;
+  country_of_origin_locked_at?: Date | null;
+  situational_interests?: string[];
   objectives: string[];
   interests_sports: string[];
   interests_cuisine: string[];

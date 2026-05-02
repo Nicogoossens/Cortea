@@ -100,6 +100,7 @@ interface UserProfileData {
   created_at: string;
   is_admin?: boolean;
   country_of_origin?: string | null;
+  country_of_origin_locked_at?: string | null;
   objectives?: string[] | null;
   interests_sports?: string[] | null;
   interests_cuisine?: string[] | null;
@@ -638,6 +639,48 @@ export default function Profile() {
     await patchProfile({ situational_interests: next }, setSpheresSave);
   }
 
+  // ── Multi-country progress (Task #209) ──────────────────────────────────
+  // Users can pursue several countries in parallel. We keep the active region
+  // (the one being shown right now) and the persisted list separate; toggling
+  // a country here adds/removes it from the user's pool without changing the
+  // currently-viewed track.
+  const [interestsList, setInterestsList] = useState<{ region_code: string }[]>([]);
+  const [interestsBusy, setInterestsBusy] = useState(false);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch(`${API_BASE}/api/users/country-interests`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : [])
+      .then((rows: { region_code: string }[]) => setInterestsList(rows))
+      .catch(() => setInterestsList([]));
+  }, [isAuthenticated, profileData?.id]);
+
+  async function toggleInterestRegion(code: string) {
+    if (interestsBusy) return;
+    setInterestsBusy(true);
+    try {
+      const has = interestsList.some((r) => r.region_code === code);
+      if (has) {
+        await fetch(`${API_BASE}/api/users/country-interests/${encodeURIComponent(code)}`, {
+          method: "DELETE", credentials: "include",
+        });
+        setInterestsList((prev) => prev.filter((r) => r.region_code !== code));
+      } else {
+        const res = await fetch(`${API_BASE}/api/users/country-interests`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ region_code: code }),
+        });
+        if (res.ok) {
+          const row = await res.json();
+          setInterestsList((prev) => [...prev.filter((r) => r.region_code !== code), row]);
+        }
+      }
+    } finally {
+      setInterestsBusy(false);
+    }
+  }
+
   async function handleDeleteAccount() {
     if (!userId || deleteInput !== "DELETE") return;
     setDeleting(true);
@@ -941,7 +984,13 @@ export default function Profile() {
                 <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
                 <SaveIndicator state={countrySave} t={t} />
               </div>
-              {editingCountry ? (
+              {profileData?.country_of_origin_locked_at ? (
+                // Permanent lock — origin can only be set once.
+                <div className="flex items-center gap-1.5 text-sm text-foreground/80 font-light">
+                  {profileData.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
+                  <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
+                </div>
+              ) : editingCountry ? (
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Input
@@ -1211,7 +1260,13 @@ export default function Profile() {
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.country_origin_label")}</label>
               <SaveIndicator state={countrySave} t={t} />
             </div>
-            {editingCountryCourse ? (
+            {profileData?.country_of_origin_locked_at ? (
+              // Permanent lock — same display in the Course panel.
+              <div className="flex items-center gap-1.5 text-sm text-foreground/80 font-light">
+                {profileData.country_of_origin ?? <span className="italic text-muted-foreground/50 font-light">{t("profile.country_not_specified")}</span>}
+                <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
+              </div>
+            ) : editingCountryCourse ? (
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Input
@@ -1420,6 +1475,45 @@ export default function Profile() {
               </span>
             )}
           </div>
+        </CardContent>
+      </CollapsibleSection>
+
+      {/* ── Countries of Interest (multi-track progress) ──
+          Lets the user keep more than one cultural track active in parallel.
+          Adding/removing here doesn't change the country currently being
+          rendered — that's still controlled by the Compass Region above. */}
+      <CollapsibleSection
+        title={t("profile.countries_interest_title", "Countries you're learning")}
+        icon={<Globe className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.countries_interest_subtitle", "Track several cultures in parallel — each one keeps its own progress.")}
+      >
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {COMPASS_REGIONS.map((region) => {
+              const isActive = interestsList.some((r) => r.region_code === region.code);
+              return (
+                <button
+                  key={region.code}
+                  onClick={() => toggleInterestRegion(region.code)}
+                  disabled={interestsBusy}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-sm border text-sm transition-all ${
+                    isActive
+                      ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                  }`}
+                >
+                  <FlagEmoji code={region.flag} size="sm" />
+                  {getRegionName(region.code)}
+                  {isActive ? <Check className="w-3.5 h-3.5 ml-1" aria-hidden="true" /> : null}
+                </button>
+              );
+            })}
+          </div>
+          {interestsList.length === 0 && (
+            <p className="text-xs text-muted-foreground/60 italic font-light mt-3">
+              {t("profile.countries_interest_empty", "Pick at least one country above to start tracking it.")}
+            </p>
+          )}
         </CardContent>
       </CollapsibleSection>
 

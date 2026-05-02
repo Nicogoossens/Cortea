@@ -5,6 +5,8 @@
  * SOWISO Etiquette API
  * OpenAPI spec version: 0.1.0
  */
+import type { LearningTrackAnswerResultNextAction } from "./learningTrackAnswerResultNextAction";
+import type { LearningTrackAnswerResultSessionProgress } from "./learningTrackAnswerResultSessionProgress";
 import type { UserBadge } from "./userBadge";
 
 export interface LearningTrackAnswerResult {
@@ -18,4 +20,10 @@ export interface LearningTrackAnswerResult {
   correct_streak: number;
   current_level: number;
   new_badges: UserBadge[];
+  session_id?: number;
+  session_progress?: LearningTrackAnswerResultSessionProgress;
+  session_complete?: boolean;
+  session_score_pct?: number | null;
+  session_passed?: boolean | null;
+  next_action?: LearningTrackAnswerResultNextAction;
 }

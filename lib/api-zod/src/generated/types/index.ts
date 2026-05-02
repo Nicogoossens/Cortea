@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./addCountryInterestBody";
 export * from "./answerResult";
 export * from "./createProfileBody";
 export * from "./createProfileBodyAmbitionLevel";
@@ -38,25 +39,33 @@ export * from "./healthStatus";
 export * from "./learningTrackAnswerBody";
 export * from "./learningTrackAnswerBodyRegister";
 export * from "./learningTrackAnswerResult";
+export * from "./learningTrackAnswerResultNextAction";
+export * from "./learningTrackAnswerResultSessionProgress";
+export * from "./learningTrackLimits";
 export * from "./learningTrackProgress";
 export * from "./learningTrackQuestion";
 export * from "./learningTrackQuestionOptionsItem";
 export * from "./learningTrackSession";
+export * from "./learningTrackSessionQuestion";
+export * from "./learningTrackSessionQuestionOptionsItem";
 export * from "./messageResponse";
 export * from "./nobleScoreData";
 export * from "./patchProfilePreferencesBody";
 export * from "./patchProfilePreferencesParams";
 export * from "./pillarProgress";
+export * from "./removeCountryInterest200";
 export * from "./scenario";
 export * from "./scenarioContent";
 export * from "./scenarioOption";
 export * from "./scoreLogEntry";
+export * from "./sessionLimitStatus";
 export * from "./submitAnswerBody";
 export * from "./updateProfileBody";
 export * from "./updateProfileBodyAmbitionLevel";
 export * from "./updateProfileBodySubscriptionTier";
 export * from "./updateRegionBody";
 export * from "./userBadge";
+export * from "./userCountryInterest";
 export * from "./userProfile";
 export * from "./userProfileAmbitionLevel";
 export * from "./userProfileSubscriptionTier";

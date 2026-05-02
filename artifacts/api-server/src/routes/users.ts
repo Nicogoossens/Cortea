@@ -158,6 +158,31 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
       if (taken) return res.status(409).json({ code: "FULL_NAME_TAKEN", message: "This display name is already in use by another member." });
     }
 
+    // ── country_of_origin permanent lock ─────────────────────────────────────
+    // The user may set country_of_origin once. Subsequent attempts to change
+    // it (when `country_of_origin_locked_at` is non-null) are silently ignored
+    // so the rest of the patch can still go through (e.g. updating sports
+    // interests should not 409 just because the user also re-sent their
+    // unchanged origin field). Setting an origin for the first time also
+    // stamps the lock timestamp.
+    let originUpdate: { country_of_origin?: string | null; country_of_origin_locked_at?: Date } = {};
+    if (data.country_of_origin !== undefined) {
+      const incoming = (data.country_of_origin ?? "").trim() || null;
+      if (existing.country_of_origin_locked_at) {
+        if (incoming && incoming !== existing.country_of_origin) {
+          return res.status(409).json({
+            code: "ORIGIN_LOCKED",
+            message: "Your country of origin is permanent. Please contact support if a correction is required.",
+          });
+        }
+        // No-op: skip writing the field at all
+      } else if (incoming) {
+        originUpdate = { country_of_origin: incoming, country_of_origin_locked_at: new Date() };
+      } else {
+        originUpdate = { country_of_origin: null };
+      }
+    }
+
     const [updated] = await db.update(usersTable)
       .set({
         ...(data.birth_year !== undefined && { birth_year: data.birth_year }),
@@ -167,7 +192,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
         ...(data.language_code !== undefined && { language_code: data.language_code }),
         ...(data.active_region !== undefined && { active_region: data.active_region }),
         ...(data.subscription_tier !== undefined && { subscription_tier: data.subscription_tier }),
-        ...(data.country_of_origin !== undefined && { country_of_origin: data.country_of_origin }),
+        ...originUpdate,
         ...(data.username !== undefined && { username: data.username }),
         ...(data.full_name !== undefined && { full_name: data.full_name }),
         ...(data.avatar_url !== undefined && { avatar_url: data.avatar_url }),
@@ -204,66 +229,14 @@ const PatchPreferencesBodySchema = z.object({
   { message: "At least one of language_code or active_region must be provided." },
 );
 
-/**
- * PATCH /users/profile?user_id=...
- *
- * Lightweight preference update. Accepts only `language_code` and/or
- * `active_region` so the Profile page can persist the user's chosen
- * language and etiquette region without touching any other field.
- *
- * Authentication: requires a valid bearer session token. The `user_id`
- * supplied as a query parameter is additionally validated to match the
- * authenticated user, preventing cross-account writes even if a token
- * is somehow shared.
- */
-router.patch("/users/profile", requireAuthUser, async (req, res) => {
-  try {
-    const authedUserId = getResolvedUserId(req);
-
-    const queryParsed = PatchPreferencesQuerySchema.safeParse(req.query);
-    if (!queryParsed.success) {
-      return res.status(400).json({ message: "A user identifier is required to update preferences." });
-    }
-    if (queryParsed.data.user_id !== authedUserId) {
-      return res.status(403).json({ message: "You may only update your own preferences." });
-    }
-
-    const bodyParsed = PatchPreferencesBodySchema.safeParse(req.body);
-    if (!bodyParsed.success) {
-      return res.status(400).json({ message: "The preferences provided are not valid." });
-    }
-
-    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, authedUserId)).limit(1);
-    if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
-    }
-
-    const data = bodyParsed.data;
-    const updateFields: Partial<typeof usersTable.$inferInsert> = {};
-    if (data.language_code !== undefined) updateFields.language_code = data.language_code;
-    if (data.active_region !== undefined) {
-      updateFields.active_region = data.active_region;
-      updateFields.region_history = Array.from(
-        new Set([...existing.region_history, data.active_region]),
-      );
-    }
-
-    const [updated] = await db.update(usersTable)
-      .set(updateFields)
-      .where(eq(usersTable.id, authedUserId))
-      .returning();
-
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
-    return res.json({
-      ...safeUser,
-      age_group: computeAgeGroup(updated.birth_year, updated.noble_score),
-      gender: updated.gender_identity ?? null,
-    });
-  } catch (err) {
-    req.log.error({ err }, "Failed to patch profile preferences");
-    return res.status(500).json({ message: "A difficulty arose while updating your preferences." });
-  }
-});
+// NOTE: A second `PATCH /users/profile` handler used to be defined here that
+// only accepted language_code/active_region with a `?user_id=` query check.
+// Express resolves the first matching route, so it was dead code. The unified
+// `handleUpdateProfile` above already accepts both fields and uses the
+// authenticated user as the authority — no `user_id` query param needed.
+//
+// Removed in Task #209 to eliminate the duplicate registration confusion that
+// previously made it ambiguous which validation rules were in effect.
 
 const UpdateRegionBodySchema = z.object({
   region_code: z.string().min(1),

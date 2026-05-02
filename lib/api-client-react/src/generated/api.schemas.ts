@@ -54,6 +54,8 @@ export interface UserProfile {
   suspended_at?: string | null;
   onboarding_completed: boolean;
   country_of_origin?: string | null;
+  country_of_origin_locked_at?: string | null;
+  situational_interests?: string[];
   objectives: string[];
   interests_sports: string[];
   interests_cuisine: string[];
@@ -205,8 +207,6 @@ export interface CultureCompassEntry {
   flag_emoji: string;
   /** True when this region has at least one locale of compass content ready. */
   has_content: boolean;
-  /** Sphere keys that match this region when situational_interests are provided. Empty when no match or no interests set. */
-  sphere_highlights?: string[];
 }
 
 export type CultureCompassDetailMehrabianWeight = {
@@ -318,8 +318,34 @@ export interface LearningTrackQuestion {
   options: LearningTrackQuestionOptionsItem[];
 }
 
+export type LearningTrackSessionQuestionOptionsItem = {
+  text: string;
+};
+
+export interface LearningTrackSessionQuestion {
+  id: number;
+  question_text: string;
+  historical_context?: string | null;
+  options: LearningTrackSessionQuestionOptionsItem[];
+  is_repetition?: boolean;
+  study_context?: string | null;
+  source?: string;
+}
+
+export interface SessionLimitStatus {
+  allowed: boolean;
+  reason?: string | null;
+  retry_after_seconds?: number | null;
+  sessions_today: number;
+  daily_limit: number;
+  cooldown_minutes: number;
+  last_completed_at?: string | null;
+}
+
 export interface LearningTrackSession {
-  questions: LearningTrackQuestion[];
+  session_id?: number;
+  is_remediation?: boolean;
+  questions: LearningTrackSessionQuestion[];
   current_level: number;
   questions_done: number;
   correct_streak: number;
@@ -327,6 +353,8 @@ export interface LearningTrackSession {
   demographic: string;
   repeat: boolean;
   has_questions: boolean;
+  total_questions?: number;
+  limits?: SessionLimitStatus;
 }
 
 export type LearningTrackAnswerBodyRegister =
@@ -343,7 +371,23 @@ export interface LearningTrackAnswerBody {
   register: LearningTrackAnswerBodyRegister;
   research_pillar?: string | null;
   phase: number;
+  session_id?: number;
 }
+
+export type LearningTrackAnswerResultSessionProgress = {
+  answered?: number;
+  total?: number;
+};
+
+export type LearningTrackAnswerResultNextAction =
+  (typeof LearningTrackAnswerResultNextAction)[keyof typeof LearningTrackAnswerResultNextAction];
+
+export const LearningTrackAnswerResultNextAction = {
+  level_up: "level_up",
+  continue: "continue",
+  remediation: "remediation",
+  mastered: "mastered",
+} as const;
 
 export interface UserBadge {
   id: number;
@@ -368,6 +412,25 @@ export interface LearningTrackAnswerResult {
   correct_streak: number;
   current_level: number;
   new_badges: UserBadge[];
+  session_id?: number;
+  session_progress?: LearningTrackAnswerResultSessionProgress;
+  session_complete?: boolean;
+  session_score_pct?: number | null;
+  session_passed?: boolean | null;
+  next_action?: LearningTrackAnswerResultNextAction;
+}
+
+export interface LearningTrackLimits {
+  middle_class: SessionLimitStatus;
+  elite: SessionLimitStatus;
+}
+
+export interface UserCountryInterest {
+  id: number;
+  user_id: string;
+  region_code: string;
+  added_at: string;
+  hidden_at?: string | null;
 }
 
 export interface LearningTrackProgress {
@@ -474,10 +537,6 @@ export type GetCultureCompassParams = {
    * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
    */
   locale?: string;
-  /**
-   * Comma-separated sphere keys (e.g. business,gastronomy) used to populate sphere_highlights on each entry.
-   */
-  situational_interests?: string;
 };
 
 export type GetCultureCompassRegionParams = {
@@ -544,6 +603,15 @@ export const GetLearningTrackSessionRegister = {
   middle_class: "middle_class",
   elite: "elite",
 } as const;
+
+export type AddCountryInterestBody = {
+  region_code: string;
+};
+
+export type RemoveCountryInterest200 = {
+  region_code: string;
+  hidden_at: string;
+};
 
 export type GetTranslationsParams = {
   /**

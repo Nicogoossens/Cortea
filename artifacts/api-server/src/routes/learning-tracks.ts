@@ -3,36 +3,29 @@ import { db } from "@workspace/db";
 import {
   learningTrackQuestionsTable,
   learningTrackProgressTable,
+  learningTrackAttemptsTable,
+  learningTrackSessionsTable,
+  userCountryInterestsTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import { checkAndAwardBadges, getUserBadges, getAllBadges } from "../lib/badge-service";
+import {
+  REGISTER_CONFIG,
+  computeSessionLimits,
+  deriveDemographic,
+  evaluatePassWindow,
+  findOpenSession,
+  getRegisterConfig,
+  lastFailedSession,
+  repetitionCount,
+  selectQuestions,
+  type Register,
+} from "../lib/learning-engine";
 
 const router = Router();
-
-const CURRENT_YEAR = new Date().getFullYear();
-
-function deriveDemographic(birthYear: number | null | undefined, genderIdentity: string | null | undefined): string {
-  let gender: "men" | "women" | null = null;
-  if (genderIdentity) {
-    const g = genderIdentity.toLowerCase();
-    if (g.includes("male") || g.includes("man") || g === "m") gender = "men";
-    else if (g.includes("female") || g.includes("woman") || g === "f") gender = "women";
-  }
-
-  let ageGroup: "19_30" | "30_50" | "50plus" | null = null;
-  if (birthYear) {
-    const age = CURRENT_YEAR - birthYear;
-    if (age >= 19 && age <= 30) ageGroup = "19_30";
-    else if (age >= 31 && age <= 50) ageGroup = "30_50";
-    else if (age > 50) ageGroup = "50plus";
-  }
-
-  if (gender && ageGroup) return `${gender}_${ageGroup}`;
-  return "common";
-}
 
 const SessionQuerySchema = z.object({
   register: z.enum(["middle_class", "elite"]),
@@ -48,8 +41,32 @@ const AnswerBodySchema = z.object({
   register: z.enum(["middle_class", "elite"]),
   research_pillar: z.string().optional().nullable(),
   phase: z.number().int().min(1).max(5),
+  /** Optional in v1; required once the new flow is fully rolled out. */
+  session_id: z.number().int().positive().optional(),
 });
 
+function tierAllows(register: Register, tier: string): boolean {
+  if (tier !== "traveller" && tier !== "ambassador") return false;
+  if (register === "elite" && tier !== "ambassador") return false;
+  return true;
+}
+
+// ─── GET /learning-tracks/limits ─────────────────────────────────────────────
+router.get("/learning-tracks/limits", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const [mc, el] = await Promise.all([
+      computeSessionLimits(userId, "middle_class"),
+      computeSessionLimits(userId, "elite"),
+    ]);
+    return res.json({ middle_class: mc, elite: el });
+  } catch (err) {
+    req.log.error({ err }, "Failed to compute limits");
+    return res.status(500).json({ message: "Limit data is momentarily unavailable." });
+  }
+});
+
+// ─── GET /learning-tracks/session ────────────────────────────────────────────
 router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
@@ -58,112 +75,174 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid session parameters.", errors: parsed.error.issues });
     }
-
     const { register, research_pillar, phase, region_code, lang } = parsed.data;
+    const regionCode = region_code.toUpperCase();
 
     if (register === "middle_class" && !research_pillar) {
       return res.status(400).json({ message: "research_pillar is required for middle_class register." });
     }
+    const pillar = research_pillar ?? null;
 
-    const [userRow] = await db.select({
+    const [user] = await db.select({
       birth_year: usersTable.birth_year,
       gender_identity: usersTable.gender_identity,
       subscription_tier: usersTable.subscription_tier,
+      country_of_origin: usersTable.country_of_origin,
+      situational_interests: usersTable.situational_interests,
     }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
-    // Tier authorisation: learning tracks require Traveller (middle_class) or Ambassador (elite)
-    const tier = userRow?.subscription_tier ?? "guest";
-    if (tier !== "traveller" && tier !== "ambassador") {
-      return res.status(403).json({ message: "Learning tracks require a Traveller or Ambassador subscription." });
+    if (!user) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
     }
-    if (register === "elite" && tier !== "ambassador") {
-      return res.status(403).json({ message: "The elite learning track requires an Ambassador subscription." });
-    }
-
-    const demographic = userRow
-      ? deriveDemographic(userRow.birth_year, userRow.gender_identity)
-      : "common";
-
-    const pillarKey = research_pillar ?? null;
-
-    const [progressRow] = await db.select()
-      .from(learningTrackProgressTable)
-      .where(and(
-        eq(learningTrackProgressTable.user_id, userId),
-        eq(learningTrackProgressTable.register, register),
-        eq(learningTrackProgressTable.phase, phase),
-        eq(learningTrackProgressTable.region_code, region_code.toUpperCase()),
-        pillarKey
-          ? eq(learningTrackProgressTable.research_pillar, pillarKey)
-          : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
-      ))
-      .limit(1);
-
-    const currentLevel = progressRow?.current_level ?? 1;
-    const correctStreak = progressRow?.correct_streak ?? 0;
-    const repeat = correctStreak <= -2;
-
-    // When in repeat mode, serve questions at the *current* level (not lower).
-    // The repeat flag signals the UI to show a "let's retry" banner, not a level regression.
-    const lookupLevel = currentLevel;
-
-    const baseConditions = [
-      eq(learningTrackQuestionsTable.region_code, region_code.toUpperCase()),
-      eq(learningTrackQuestionsTable.register, register),
-      eq(learningTrackQuestionsTable.phase, phase),
-      eq(learningTrackQuestionsTable.level, lookupLevel),
-      eq(learningTrackQuestionsTable.lang, lang),
-    ];
-
-    if (pillarKey) {
-      baseConditions.push(eq(learningTrackQuestionsTable.research_pillar, pillarKey));
+    if (!tierAllows(register, user.subscription_tier ?? "guest")) {
+      return res.status(403).json({
+        message: register === "elite"
+          ? "The elite learning track requires an Ambassador subscription."
+          : "Learning tracks require a Traveller or Ambassador subscription.",
+      });
     }
 
-    const demographicQuestions = await db.select({
+    // Reuse an open (un-completed) session for the same track if one exists,
+    // so a page reload does not double-count toward the daily limit.
+    let session = await findOpenSession(userId, register, regionCode, pillar, phase);
+
+    if (!session) {
+      const limits = await computeSessionLimits(userId, register);
+      if (!limits.allowed) {
+        return res.status(429).json({
+          message: limits.reason === "daily_limit"
+            ? "You have reached today's session limit for this track. Return tomorrow."
+            : "A short reflection cooldown is in effect. Please try again shortly.",
+          reason: limits.reason,
+          retry_after_seconds: limits.retryAfterSeconds,
+          sessions_today: limits.sessionsToday,
+          daily_limit: limits.dailyLimit,
+          cooldown_minutes: limits.cooldownMinutes,
+          last_completed_at: limits.lastCompletedAt,
+        });
+      }
+
+      // Pick up unresolved wrong answers from the most recently failed session
+      const failed = await lastFailedSession(userId, register, regionCode, pillar, phase);
+      const remediationIds = failed?.repeat_question_ids ?? [];
+
+      const [progressRow] = await db.select()
+        .from(learningTrackProgressTable)
+        .where(and(
+          eq(learningTrackProgressTable.user_id, userId),
+          eq(learningTrackProgressTable.register, register),
+          eq(learningTrackProgressTable.phase, phase),
+          eq(learningTrackProgressTable.region_code, regionCode),
+          pillar
+            ? eq(learningTrackProgressTable.research_pillar, pillar)
+            : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
+        ))
+        .limit(1);
+
+      const cfg = getRegisterConfig(register);
+      const currentLevel = Math.min(progressRow?.current_level ?? 1, cfg.maxLevel);
+      const demographic = deriveDemographic(user.birth_year, user.gender_identity);
+      const isRemediation = remediationIds.length > 0;
+
+      // Filter remediation list against the "max 2 retries" rule
+      const filteredForced: number[] = [];
+      for (const qid of remediationIds) {
+        const n = await repetitionCount(userId, qid);
+        if (n < 2) filteredForced.push(qid);
+      }
+
+      const questions = await selectQuestions({
+        userId,
+        register,
+        regionCode,
+        countryOfOrigin: user.country_of_origin ?? null,
+        situationalInterests: user.situational_interests ?? [],
+        demographic,
+        pillar,
+        phase,
+        level: currentLevel,
+        lang,
+        size: cfg.sessionSize,
+        forcedIds: filteredForced,
+      });
+
+      const [created] = await db.insert(learningTrackSessionsTable).values({
+        user_id: userId,
+        register,
+        region_code: regionCode,
+        research_pillar: pillar,
+        phase,
+        level: currentLevel,
+        is_remediation: isRemediation,
+        served_question_ids: questions.map((q) => q.id),
+        repeat_question_ids: [],
+        total_questions: questions.length,
+      }).returning();
+
+      session = created;
+
+      // Cache the questions on the row so subsequent /session calls (page reload)
+      // return the same set, but preserving the per-question metadata requires
+      // a re-select. Instead, we re-emit the same questions inline below by
+      // reusing the in-memory `questions` array.
+      return res.json({
+        session_id: session.id,
+        is_remediation: isRemediation,
+        current_level: currentLevel,
+        mastered: progressRow?.mastered ?? false,
+        questions_done: progressRow?.questions_done ?? 0,
+        correct_streak: progressRow?.correct_streak ?? 0,
+        demographic,
+        repeat: isRemediation,           // back-compat alias
+        has_questions: questions.length > 0,
+        total_questions: questions.length,
+        questions,
+        limits: await computeSessionLimits(userId, register),
+      });
+    }
+
+    // Existing open session — re-hydrate questions from the served_question_ids
+    const ids = (session.served_question_ids ?? []) as number[];
+    const rows = ids.length === 0 ? [] : await db.select({
       id: learningTrackQuestionsTable.id,
       question_text: learningTrackQuestionsTable.question_text,
       historical_context: learningTrackQuestionsTable.historical_context,
       options: learningTrackQuestionsTable.options,
     })
       .from(learningTrackQuestionsTable)
-      .where(and(...baseConditions, eq(learningTrackQuestionsTable.demographic, demographic)))
-      .limit(6);
+      .where(sql`${learningTrackQuestionsTable.id} IN (${sql.join(ids.map((i) => sql`${i}`), sql`, `)})`);
 
-    let questions = demographicQuestions;
-
-    if (questions.length < 4) {
-      const commonQuestions = await db.select({
-        id: learningTrackQuestionsTable.id,
-        question_text: learningTrackQuestionsTable.question_text,
-        historical_context: learningTrackQuestionsTable.historical_context,
-        options: learningTrackQuestionsTable.options,
-      })
-        .from(learningTrackQuestionsTable)
-        .where(and(...baseConditions, eq(learningTrackQuestionsTable.demographic, "common")))
-        .limit(6);
-
-      const existingIds = new Set(questions.map((q) => q.id));
-      questions = [...questions, ...commonQuestions.filter((q) => !existingIds.has(q.id))].slice(0, 6);
-    }
-
-    const sanitizedQuestions = questions.map((q) => ({
-      id: q.id,
-      question_text: q.question_text,
-      historical_context: q.historical_context ?? null,
-      options: (q.options as { text: string; answer_tier: number; motivation: string }[]).map((o) => ({
-        text: o.text,
-      })),
-    }));
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const repeatSet = new Set((session.repeat_question_ids ?? []) as number[]);
+    const orderedQuestions = ids.flatMap((id) => {
+      const r = byId.get(id);
+      if (!r) return [];
+      const opts = Array.isArray(r.options) ? r.options as { text?: unknown }[] : [];
+      const isRepetition = session.is_remediation || repeatSet.has(id);
+      return [{
+        id: r.id,
+        question_text: r.question_text,
+        historical_context: r.historical_context ?? null,
+        options: opts.map((o) => ({ text: String(o?.text ?? "") })),
+        source: "match" as const,
+        is_repetition: isRepetition,
+        study_context: isRepetition ? (r.historical_context ?? null) : null,
+      }];
+    });
 
     return res.json({
-      questions: sanitizedQuestions,
-      current_level: currentLevel,
-      questions_done: progressRow?.questions_done ?? 0,
-      correct_streak: correctStreak,
-      mastered: progressRow?.mastered ?? false,
-      demographic,
-      repeat,
-      has_questions: sanitizedQuestions.length > 0,
+      session_id: session.id,
+      is_remediation: session.is_remediation,
+      current_level: session.level,
+      mastered: false,
+      questions_done: session.answers_given,
+      correct_streak: 0,
+      demographic: deriveDemographic(user.birth_year, user.gender_identity),
+      repeat: session.is_remediation,
+      has_questions: orderedQuestions.length > 0,
+      total_questions: session.total_questions,
+      questions: orderedQuestions,
+      limits: await computeSessionLimits(userId, register),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track session");
@@ -171,6 +250,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
   }
 });
 
+// ─── POST /learning-tracks/answer ────────────────────────────────────────────
 router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
@@ -179,91 +259,155 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid answer data.", errors: parsed.error.issues });
     }
+    const { question_id, selected_option_index, register, research_pillar, phase, session_id } = parsed.data;
+    const pillar = research_pillar ?? null;
 
-    const { question_id, selected_option_index, register, research_pillar, phase } = parsed.data;
-
-    // Verify tier authorisation
-    const [userTierRow] = await db.select({ subscription_tier: usersTable.subscription_tier })
+    const [userTier] = await db.select({ subscription_tier: usersTable.subscription_tier })
       .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    const answerTier = userTierRow?.subscription_tier ?? "guest";
-    if (answerTier !== "traveller" && answerTier !== "ambassador") {
-      return res.status(403).json({ message: "Learning tracks require a Traveller or Ambassador subscription." });
+    if (!tierAllows(register, userTier?.subscription_tier ?? "guest")) {
+      return res.status(403).json({
+        message: register === "elite"
+          ? "The elite learning track requires an Ambassador subscription."
+          : "Learning tracks require a Traveller or Ambassador subscription.",
+      });
     }
-    if (register === "elite" && answerTier !== "ambassador") {
-      return res.status(403).json({ message: "The elite learning track requires an Ambassador subscription." });
-    }
-    const pillarKey = research_pillar ?? null;
 
     const [question] = await db.select()
       .from(learningTrackQuestionsTable)
       .where(eq(learningTrackQuestionsTable.id, question_id))
       .limit(1);
-
-    if (!question) {
-      return res.status(404).json({ message: "Question not found." });
-    }
-
-    // Validate that the submitted track context matches the question's actual track.
-    // This prevents a user from incrementing progress on a different track than the question belongs to.
+    if (!question) return res.status(404).json({ message: "Question not found." });
     if (
       question.register !== register ||
       question.phase !== phase ||
-      (question.research_pillar ?? null) !== pillarKey
+      (question.research_pillar ?? null) !== pillar
     ) {
       return res.status(400).json({ message: "Question does not belong to the specified register/phase/pillar." });
     }
 
     const options = question.options as { text: string; answer_tier: 1 | 2 | 3; motivation: string }[];
     const selected = options[selected_option_index];
-    if (!selected) {
-      return res.status(400).json({ message: "Invalid option index." });
-    }
-
+    if (!selected) return res.status(400).json({ message: "Invalid option index." });
     const { answer_tier, motivation } = selected;
     const isCorrect = answer_tier === 1;
 
+    // Resolve the active session: either by id, or fall back to most recent open
+    let session = session_id
+      ? (await db.select().from(learningTrackSessionsTable).where(and(
+          eq(learningTrackSessionsTable.id, session_id),
+          eq(learningTrackSessionsTable.user_id, userId),
+        )).limit(1))[0] ?? null
+      : await findOpenSession(userId, register, question.region_code, pillar, phase);
+
+    if (!session) {
+      return res.status(400).json({
+        message: "No active session for this answer. Please start a new session.",
+      });
+    }
+    if (session.completed_at) {
+      return res.status(409).json({ message: "This session has already been completed." });
+    }
+    const served = (session.served_question_ids ?? []) as number[];
+    if (!served.includes(question_id)) {
+      return res.status(400).json({ message: "Question is not part of the active session." });
+    }
+
+    // Record the attempt
+    await db.insert(learningTrackAttemptsTable).values({
+      user_id: userId,
+      question_id: question.id,
+      register,
+      region_code: question.region_code,
+      research_pillar: pillar,
+      phase,
+      level: session.level,
+      answer_tier,
+      is_correct: isCorrect,
+      is_repetition: session.is_remediation,
+      session_id: session.id,
+    });
+
+    // Update session counters; track wrong answers for next-session remediation
+    const newAnswered = session.answers_given + 1;
+    const newCorrect = session.correct_answers + (isCorrect ? 1 : 0);
+    const repeatList = (session.repeat_question_ids ?? []) as number[];
+    if (!isCorrect && !repeatList.includes(question.id)) repeatList.push(question.id);
+
+    const sessionComplete = newAnswered >= session.total_questions;
+    let scorePct: number | null = null;
+    let passed: boolean | null = null;
+    let nextAction: "level_up" | "continue" | "remediation" | "mastered" = "continue";
+
+    if (sessionComplete) {
+      scorePct = session.total_questions === 0
+        ? 0
+        : Math.round((newCorrect / session.total_questions) * 100);
+      const cfg = getRegisterConfig(register);
+      const [winSize, requiredPct] = cfg.passThresholds[Math.min(Math.max(session.level, 1), 5) as 1 | 2 | 3 | 4 | 5];
+      // Per-session pass: same percentage threshold as the rolling window
+      passed = scorePct >= requiredPct;
+      // If the user passed this session, they get a clean slate for repetition
+      if (passed) repeatList.length = 0;
+    }
+
+    await db.update(learningTrackSessionsTable).set({
+      answers_given: newAnswered,
+      correct_answers: newCorrect,
+      repeat_question_ids: repeatList,
+      ...(sessionComplete && {
+        completed_at: new Date(),
+        score_pct: scorePct,
+        passed,
+      }),
+    }).where(eq(learningTrackSessionsTable.id, session.id));
+
+    // Update progress (rolling correct_streak + questions_done preserved for UI)
     const progressWhere = and(
       eq(learningTrackProgressTable.user_id, userId),
       eq(learningTrackProgressTable.register, register),
       eq(learningTrackProgressTable.phase, phase),
       eq(learningTrackProgressTable.region_code, question.region_code),
-      pillarKey
-        ? eq(learningTrackProgressTable.research_pillar, pillarKey)
+      pillar
+        ? eq(learningTrackProgressTable.research_pillar, pillar)
         : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
     );
-
     const [existing] = await db.select().from(learningTrackProgressTable).where(progressWhere).limit(1);
 
-    let currentLevel = existing?.current_level ?? 1;
+    let currentLevel = existing?.current_level ?? session.level;
     let correctStreak = existing?.correct_streak ?? 0;
     let questionsDone = existing?.questions_done ?? 0;
     let mastered = existing?.mastered ?? false;
 
-    if (answer_tier === 1) {
-      correctStreak = Math.max(0, correctStreak) + 1;
+    // Don't double-count remediation attempts in `questions_done` — the user
+    // isn't progressing, they're rehabilitating.
+    if (!session.is_remediation) {
       questionsDone += 1;
-    } else if (answer_tier === 2) {
-      correctStreak = Math.max(0, correctStreak - 1);
-      questionsDone += 1;
-    } else {
-      correctStreak = Math.min(0, correctStreak) - 1;
+      if (isCorrect) correctStreak = Math.max(0, correctStreak) + 1;
+      else if (answer_tier === 2) correctStreak = Math.max(0, correctStreak - 1);
+      else correctStreak = Math.min(0, correctStreak) - 1;
     }
 
+    // Pass-engine: only evaluate at session end and only for non-remediation
     let levelUp = false;
-    let repeat = false;
-
-    if (!mastered && correctStreak >= 4 && questionsDone >= 4) {
-      currentLevel += 1;
-      correctStreak = 0;
-      levelUp = true;
-      if (currentLevel > 5) {
-        mastered = true;
-        currentLevel = 5;
+    if (sessionComplete && !session.is_remediation && !mastered) {
+      const win = await evaluatePassWindow(userId, register, question.region_code, pillar, phase, currentLevel);
+      if (win.shouldLevelUp) {
+        currentLevel = Math.min(currentLevel + 1, REGISTER_CONFIG[register].maxLevel + 1);
+        levelUp = true;
+        correctStreak = 0;
+        if (currentLevel > REGISTER_CONFIG[register].maxLevel) {
+          mastered = true;
+          currentLevel = REGISTER_CONFIG[register].maxLevel;
+          nextAction = "mastered";
+        } else {
+          nextAction = "level_up";
+        }
+      } else if (passed === false) {
+        nextAction = "remediation";
       }
-    }
-
-    if (correctStreak <= -2) {
-      repeat = true;
+    } else if (sessionComplete && session.is_remediation) {
+      // After remediation, decide whether the user can return to progression
+      nextAction = passed ? "continue" : "remediation";
     }
 
     if (existing) {
@@ -280,7 +424,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       await db.insert(learningTrackProgressTable).values({
         user_id: userId,
         register,
-        research_pillar: pillarKey,
+        research_pillar: pillar,
         phase,
         region_code: question.region_code,
         current_level: currentLevel,
@@ -290,17 +434,10 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       });
     }
 
-    // Award badges when a pillar is newly mastered
     let newBadges: Awaited<ReturnType<typeof checkAndAwardBadges>> = [];
     if (mastered && !existing?.mastered) {
       try {
-        newBadges = await checkAndAwardBadges(
-          userId,
-          register,
-          pillarKey,
-          phase,
-          question.region_code,
-        );
+        newBadges = await checkAndAwardBadges(userId, register, pillar, phase, question.region_code);
       } catch (badgeErr) {
         req.log.warn({ badgeErr }, "Badge award check failed (non-fatal)");
       }
@@ -313,10 +450,16 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       historical_context: question.historical_context ?? null,
       level_up: levelUp,
       mastered,
-      repeat,
+      repeat: session.is_remediation,
       correct_streak: correctStreak,
       current_level: currentLevel,
       new_badges: newBadges,
+      session_id: session.id,
+      session_progress: { answered: newAnswered, total: session.total_questions },
+      session_complete: sessionComplete,
+      session_score_pct: scorePct,
+      session_passed: passed,
+      next_action: nextAction,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to process learning track answer");
@@ -324,14 +467,13 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
   }
 });
 
+// ─── GET /learning-tracks/progress ───────────────────────────────────────────
 router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
-
     const rows = await db.select()
       .from(learningTrackProgressTable)
       .where(eq(learningTrackProgressTable.user_id, userId));
-
     return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track progress");
@@ -339,14 +481,9 @@ router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
   }
 });
 
-/**
- * GET /api/learning-tracks/badges
- * Returns all badges currently held by the authenticated user.
- */
 router.get("/learning-tracks/badges", requireAuthUser, async (req, res) => {
   try {
-    const userId = getResolvedUserId(req);
-    const badges = await getUserBadges(userId);
+    const badges = await getUserBadges(getResolvedUserId(req));
     return res.json(badges);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user badges");
@@ -354,11 +491,6 @@ router.get("/learning-tracks/badges", requireAuthUser, async (req, res) => {
   }
 });
 
-/**
- * GET /api/learning-tracks/badges/available
- * Returns the full badge catalogue.
- * Optionally filter by register, region_code, or phase via query params.
- */
 router.get("/learning-tracks/badges/available", async (req, res) => {
   try {
     const badges = await getAllBadges();
@@ -366,6 +498,79 @@ router.get("/learning-tracks/badges/available", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch badge catalogue");
     return res.status(500).json({ message: "Badge catalogue is momentarily unavailable." });
+  }
+});
+
+// ─── Country-of-interest endpoints (multi-country parallel progress) ─────────
+
+const RegionCodeSchema = z.object({
+  region_code: z.string().min(2).max(10),
+});
+
+router.get("/users/country-interests", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const rows = await db.select()
+      .from(userCountryInterestsTable)
+      .where(and(
+        eq(userCountryInterestsTable.user_id, userId),
+        isNull(userCountryInterestsTable.hidden_at),
+      ));
+    return res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch country interests");
+    return res.status(500).json({ message: "Interest data is momentarily unavailable." });
+  }
+});
+
+router.post("/users/country-interests", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const parsed = RegionCodeSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "A valid region_code is required." });
+    const region = parsed.data.region_code.toUpperCase();
+
+    // Re-activate (clear hidden_at) if it existed; otherwise insert.
+    await db.insert(userCountryInterestsTable).values({
+      user_id: userId,
+      region_code: region,
+      hidden_at: null,
+    }).onConflictDoUpdate({
+      target: [userCountryInterestsTable.user_id, userCountryInterestsTable.region_code],
+      set: { hidden_at: null, added_at: new Date() },
+    });
+
+    const [row] = await db.select().from(userCountryInterestsTable).where(and(
+      eq(userCountryInterestsTable.user_id, userId),
+      eq(userCountryInterestsTable.region_code, region),
+    )).limit(1);
+
+    return res.status(201).json(row);
+  } catch (err) {
+    req.log.error({ err }, "Failed to add country interest");
+    return res.status(500).json({ message: "Unable to add this country at the moment." });
+  }
+});
+
+router.delete("/users/country-interests/:region_code", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const region = String(req.params.region_code ?? "").toUpperCase();
+    if (region.length < 2 || region.length > 10) {
+      return res.status(400).json({ message: "A valid region_code is required." });
+    }
+    // Soft-hide so per-region progress is preserved (the user may re-add later
+    // and resume mid-track).
+    await db.update(userCountryInterestsTable)
+      .set({ hidden_at: new Date() })
+      .where(and(
+        eq(userCountryInterestsTable.user_id, userId),
+        eq(userCountryInterestsTable.region_code, region),
+      ));
+    return res.json({ region_code: region, hidden_at: new Date().toISOString() });
+  } catch (err) {
+    req.log.error({ err }, "Failed to hide country interest");
+    return res.status(500).json({ message: "Unable to remove this country at the moment." });
   }
 });
 

@@ -898,7 +898,6 @@ export default function Counsel() {
           )}
         </>
       )}
-      </>)}
 
       {/* ── Response ── */}
       {response && (

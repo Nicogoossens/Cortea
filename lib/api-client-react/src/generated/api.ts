@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AddCountryInterestBody,
   AnswerResult,
   CreateProfileBody,
   CulturalOrigin,
@@ -38,6 +39,7 @@ import type {
   HealthStatus,
   LearningTrackAnswerBody,
   LearningTrackAnswerResult,
+  LearningTrackLimits,
   LearningTrackProgress,
   LearningTrackSession,
   MessageResponse,
@@ -45,12 +47,14 @@ import type {
   PatchProfilePreferencesBody,
   PatchProfilePreferencesParams,
   PillarProgress,
+  RemoveCountryInterest200,
   Scenario,
   ScoreLogEntry,
   SubmitAnswerBody,
   UpdateProfileBody,
   UpdateRegionBody,
   UserBadge,
+  UserCountryInterest,
   UserProfile,
 } from "./api.schemas";
 
@@ -1987,6 +1991,330 @@ export function useGetLearningTrackBadges<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Daily limit and cooldown status for both registers
+ */
+export const getGetLearningTrackLimitsUrl = () => {
+  return `/api/learning-tracks/limits`;
+};
+
+export const getLearningTrackLimits = async (
+  options?: RequestInit,
+): Promise<LearningTrackLimits> => {
+  return customFetch<LearningTrackLimits>(getGetLearningTrackLimitsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLearningTrackLimitsQueryKey = () => {
+  return [`/api/learning-tracks/limits`] as const;
+};
+
+export const getGetLearningTrackLimitsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLearningTrackLimits>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackLimits>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetLearningTrackLimitsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getLearningTrackLimits>>
+  > = ({ signal }) => getLearningTrackLimits({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackLimits>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetLearningTrackLimitsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getLearningTrackLimits>>
+>;
+export type GetLearningTrackLimitsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Daily limit and cooldown status for both registers
+ */
+
+export function useGetLearningTrackLimits<
+  TData = Awaited<ReturnType<typeof getLearningTrackLimits>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackLimits>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLearningTrackLimitsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List the current user's active country-of-interest entries
+ */
+export const getGetCountryInterestsUrl = () => {
+  return `/api/users/country-interests`;
+};
+
+export const getCountryInterests = async (
+  options?: RequestInit,
+): Promise<UserCountryInterest[]> => {
+  return customFetch<UserCountryInterest[]>(getGetCountryInterestsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCountryInterestsQueryKey = () => {
+  return [`/api/users/country-interests`] as const;
+};
+
+export const getGetCountryInterestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCountryInterests>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCountryInterests>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCountryInterestsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCountryInterests>>
+  > = ({ signal }) => getCountryInterests({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCountryInterests>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCountryInterestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCountryInterests>>
+>;
+export type GetCountryInterestsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List the current user's active country-of-interest entries
+ */
+
+export function useGetCountryInterests<
+  TData = Awaited<ReturnType<typeof getCountryInterests>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCountryInterests>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCountryInterestsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add or re-activate a country of interest
+ */
+export const getAddCountryInterestUrl = () => {
+  return `/api/users/country-interests`;
+};
+
+export const addCountryInterest = async (
+  addCountryInterestBody: AddCountryInterestBody,
+  options?: RequestInit,
+): Promise<UserCountryInterest> => {
+  return customFetch<UserCountryInterest>(getAddCountryInterestUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addCountryInterestBody),
+  });
+};
+
+export const getAddCountryInterestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addCountryInterest>>,
+    TError,
+    { data: BodyType<AddCountryInterestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addCountryInterest>>,
+  TError,
+  { data: BodyType<AddCountryInterestBody> },
+  TContext
+> => {
+  const mutationKey = ["addCountryInterest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addCountryInterest>>,
+    { data: BodyType<AddCountryInterestBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return addCountryInterest(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddCountryInterestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addCountryInterest>>
+>;
+export type AddCountryInterestMutationBody = BodyType<AddCountryInterestBody>;
+export type AddCountryInterestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add or re-activate a country of interest
+ */
+export const useAddCountryInterest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addCountryInterest>>,
+    TError,
+    { data: BodyType<AddCountryInterestBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addCountryInterest>>,
+  TError,
+  { data: BodyType<AddCountryInterestBody> },
+  TContext
+> => {
+  return useMutation(getAddCountryInterestMutationOptions(options));
+};
+
+/**
+ * @summary Soft-hide a country of interest (per-region progress is preserved)
+ */
+export const getRemoveCountryInterestUrl = (regionCode: string) => {
+  return `/api/users/country-interests/${regionCode}`;
+};
+
+export const removeCountryInterest = async (
+  regionCode: string,
+  options?: RequestInit,
+): Promise<RemoveCountryInterest200> => {
+  return customFetch<RemoveCountryInterest200>(
+    getRemoveCountryInterestUrl(regionCode),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getRemoveCountryInterestMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeCountryInterest>>,
+    TError,
+    { regionCode: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeCountryInterest>>,
+  TError,
+  { regionCode: string },
+  TContext
+> => {
+  const mutationKey = ["removeCountryInterest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeCountryInterest>>,
+    { regionCode: string }
+  > = (props) => {
+    const { regionCode } = props ?? {};
+
+    return removeCountryInterest(regionCode, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveCountryInterestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeCountryInterest>>
+>;
+
+export type RemoveCountryInterestMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Soft-hide a country of interest (per-region progress is preserved)
+ */
+export const useRemoveCountryInterest = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeCountryInterest>>,
+    TError,
+    { regionCode: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof removeCountryInterest>>,
+  TError,
+  { regionCode: string },
+  TContext
+> => {
+  return useMutation(getRemoveCountryInterestMutationOptions(options));
+};
 
 /**
  * @summary Get all available badges in the catalogue

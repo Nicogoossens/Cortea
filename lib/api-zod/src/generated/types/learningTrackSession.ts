@@ -5,10 +5,13 @@
  * SOWISO Etiquette API
  * OpenAPI spec version: 0.1.0
  */
-import type { LearningTrackQuestion } from "./learningTrackQuestion";
+import type { LearningTrackSessionQuestion } from "./learningTrackSessionQuestion";
+import type { SessionLimitStatus } from "./sessionLimitStatus";
 
 export interface LearningTrackSession {
-  questions: LearningTrackQuestion[];
+  session_id?: number;
+  is_remediation?: boolean;
+  questions: LearningTrackSessionQuestion[];
   current_level: number;
   questions_done: number;
   correct_streak: number;
@@ -16,4 +19,6 @@ export interface LearningTrackSession {
   demographic: string;
   repeat: boolean;
   has_questions: boolean;
+  total_questions?: number;
+  limits?: SessionLimitStatus;
 }

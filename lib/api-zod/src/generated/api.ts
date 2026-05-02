@@ -49,6 +49,8 @@ export const GetProfileResponse = zod.object({
   suspended_at: zod.coerce.date().nullish(),
   onboarding_completed: zod.boolean(),
   country_of_origin: zod.string().nullish(),
+  country_of_origin_locked_at: zod.coerce.date().nullish(),
+  situational_interests: zod.array(zod.string()).optional(),
   objectives: zod.array(zod.string()),
   interests_sports: zod.array(zod.string()),
   interests_cuisine: zod.array(zod.string()),
@@ -94,6 +96,8 @@ export const CreateProfileResponse = zod.object({
   suspended_at: zod.coerce.date().nullish(),
   onboarding_completed: zod.boolean(),
   country_of_origin: zod.string().nullish(),
+  country_of_origin_locked_at: zod.coerce.date().nullish(),
+  situational_interests: zod.array(zod.string()).optional(),
   objectives: zod.array(zod.string()),
   interests_sports: zod.array(zod.string()),
   interests_cuisine: zod.array(zod.string()),
@@ -140,6 +144,8 @@ export const UpdateProfileResponse = zod.object({
   suspended_at: zod.coerce.date().nullish(),
   onboarding_completed: zod.boolean(),
   country_of_origin: zod.string().nullish(),
+  country_of_origin_locked_at: zod.coerce.date().nullish(),
+  situational_interests: zod.array(zod.string()).optional(),
   objectives: zod.array(zod.string()),
   interests_sports: zod.array(zod.string()),
   interests_cuisine: zod.array(zod.string()),
@@ -193,6 +199,8 @@ export const PatchProfilePreferencesResponse = zod.object({
   suspended_at: zod.coerce.date().nullish(),
   onboarding_completed: zod.boolean(),
   country_of_origin: zod.string().nullish(),
+  country_of_origin_locked_at: zod.coerce.date().nullish(),
+  situational_interests: zod.array(zod.string()).optional(),
   objectives: zod.array(zod.string()),
   interests_sports: zod.array(zod.string()),
   interests_cuisine: zod.array(zod.string()),
@@ -240,6 +248,8 @@ export const UpdateActiveRegionResponse = zod.object({
   suspended_at: zod.coerce.date().nullish(),
   onboarding_completed: zod.boolean(),
   country_of_origin: zod.string().nullish(),
+  country_of_origin_locked_at: zod.coerce.date().nullish(),
+  situational_interests: zod.array(zod.string()).optional(),
   objectives: zod.array(zod.string()),
   interests_sports: zod.array(zod.string()),
   interests_cuisine: zod.array(zod.string()),
@@ -619,6 +629,8 @@ export const GetLearningTrackSessionQueryParams = zod.object({
 });
 
 export const GetLearningTrackSessionResponse = zod.object({
+  session_id: zod.number().optional(),
+  is_remediation: zod.boolean().optional(),
   questions: zod.array(
     zod.object({
       id: zod.number(),
@@ -629,6 +641,9 @@ export const GetLearningTrackSessionResponse = zod.object({
           text: zod.string(),
         }),
       ),
+      is_repetition: zod.boolean().optional(),
+      study_context: zod.string().nullish(),
+      source: zod.string().optional(),
     }),
   ),
   current_level: zod.number(),
@@ -638,6 +653,18 @@ export const GetLearningTrackSessionResponse = zod.object({
   demographic: zod.string(),
   repeat: zod.boolean(),
   has_questions: zod.boolean(),
+  total_questions: zod.number().optional(),
+  limits: zod
+    .object({
+      allowed: zod.boolean(),
+      reason: zod.string().nullish(),
+      retry_after_seconds: zod.number().nullish(),
+      sessions_today: zod.number(),
+      daily_limit: zod.number(),
+      cooldown_minutes: zod.number(),
+      last_completed_at: zod.coerce.date().nullish(),
+    })
+    .optional(),
 });
 
 /**
@@ -649,6 +676,7 @@ export const PostLearningTrackAnswerBody = zod.object({
   register: zod.enum(["middle_class", "elite"]),
   research_pillar: zod.string().nullish(),
   phase: zod.number(),
+  session_id: zod.number().optional(),
 });
 
 export const PostLearningTrackAnswerResponse = zod.object({
@@ -674,6 +702,19 @@ export const PostLearningTrackAnswerResponse = zod.object({
       research_pillar: zod.string().nullish(),
     }),
   ),
+  session_id: zod.number().optional(),
+  session_progress: zod
+    .object({
+      answered: zod.number().optional(),
+      total: zod.number().optional(),
+    })
+    .optional(),
+  session_complete: zod.boolean().optional(),
+  session_score_pct: zod.number().nullish(),
+  session_passed: zod.boolean().nullish(),
+  next_action: zod
+    .enum(["level_up", "continue", "remediation", "mastered"])
+    .optional(),
 });
 
 /**
@@ -712,6 +753,63 @@ export const GetLearningTrackBadgesResponseItem = zod.object({
 export const GetLearningTrackBadgesResponse = zod.array(
   GetLearningTrackBadgesResponseItem,
 );
+
+/**
+ * @summary Daily limit and cooldown status for both registers
+ */
+export const GetLearningTrackLimitsResponse = zod.object({
+  middle_class: zod.object({
+    allowed: zod.boolean(),
+    reason: zod.string().nullish(),
+    retry_after_seconds: zod.number().nullish(),
+    sessions_today: zod.number(),
+    daily_limit: zod.number(),
+    cooldown_minutes: zod.number(),
+    last_completed_at: zod.coerce.date().nullish(),
+  }),
+  elite: zod.object({
+    allowed: zod.boolean(),
+    reason: zod.string().nullish(),
+    retry_after_seconds: zod.number().nullish(),
+    sessions_today: zod.number(),
+    daily_limit: zod.number(),
+    cooldown_minutes: zod.number(),
+    last_completed_at: zod.coerce.date().nullish(),
+  }),
+});
+
+/**
+ * @summary List the current user's active country-of-interest entries
+ */
+export const GetCountryInterestsResponseItem = zod.object({
+  id: zod.number(),
+  user_id: zod.string(),
+  region_code: zod.string(),
+  added_at: zod.coerce.date(),
+  hidden_at: zod.coerce.date().nullish(),
+});
+export const GetCountryInterestsResponse = zod.array(
+  GetCountryInterestsResponseItem,
+);
+
+/**
+ * @summary Add or re-activate a country of interest
+ */
+export const AddCountryInterestBody = zod.object({
+  region_code: zod.string(),
+});
+
+/**
+ * @summary Soft-hide a country of interest (per-region progress is preserved)
+ */
+export const RemoveCountryInterestParams = zod.object({
+  region_code: zod.coerce.string(),
+});
+
+export const RemoveCountryInterestResponse = zod.object({
+  region_code: zod.string(),
+  hidden_at: zod.coerce.date(),
+});
 
 /**
  * @summary Get all available badges in the catalogue

@@ -567,6 +567,81 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserBadge"
 
+  /learning-tracks/limits:
+    get:
+      operationId: getLearningTrackLimits
+      tags: [culture]
+      summary: Daily limit and cooldown status for both registers
+      responses:
+        "200":
+          description: Limit status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningTrackLimits"
+
+  /users/country-interests:
+    get:
+      operationId: getCountryInterests
+      tags: [users]
+      summary: List the current user's active country-of-interest entries
+      responses:
+        "200":
+          description: Active country interests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserCountryInterest"
+    post:
+      operationId: addCountryInterest
+      tags: [users]
+      summary: Add or re-activate a country of interest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                region_code:
+                  type: string
+              required: [region_code]
+      responses:
+        "201":
+          description: Country interest added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCountryInterest"
+
+  /users/country-interests/{region_code}:
+    delete:
+      operationId: removeCountryInterest
+      tags: [users]
+      summary: Soft-hide a country of interest (per-region progress is preserved)
+      parameters:
+        - name: region_code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Country interest hidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  region_code:
+                    type: string
+                  hidden_at:
+                    type: string
+                    format: date-time
+                required: [region_code, hidden_at]
+
   /learning-tracks/badges/available:
     get:
       operationId: getLearningTrackBadgesAvailable
@@ -681,6 +756,14 @@ components:
         country_of_origin:
           type: string
           nullable: true
+        country_of_origin_locked_at:
+          type: string
+          format: date-time
+          nullable: true
+        situational_interests:
+          type: array
+          items:
+            type: string
         objectives:
           type: array
           items:
@@ -1172,13 +1255,70 @@ components:
         - question_text
         - options
 
+    LearningTrackSessionQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        question_text:
+          type: string
+        historical_context:
+          type: string
+          nullable: true
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+            required: [text]
+        is_repetition:
+          type: boolean
+        study_context:
+          type: string
+          nullable: true
+        source:
+          type: string
+      required:
+        - id
+        - question_text
+        - options
+
+    SessionLimitStatus:
+      type: object
+      properties:
+        allowed:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+        retry_after_seconds:
+          type: integer
+          nullable: true
+        sessions_today:
+          type: integer
+        daily_limit:
+          type: integer
+        cooldown_minutes:
+          type: integer
+        last_completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [allowed, sessions_today, daily_limit, cooldown_minutes]
+
     LearningTrackSession:
       type: object
       properties:
+        session_id:
+          type: integer
+        is_remediation:
+          type: boolean
         questions:
           type: array
           items:
-            $ref: "#/components/schemas/LearningTrackQuestion"
+            $ref: "#/components/schemas/LearningTrackSessionQuestion"
         current_level:
           type: integer
         questions_done:
@@ -1193,6 +1333,10 @@ components:
           type: boolean
         has_questions:
           type: boolean
+        total_questions:
+          type: integer
+        limits:
+          $ref: "#/components/schemas/SessionLimitStatus"
       required:
         - questions
         - current_level
@@ -1217,6 +1361,8 @@ components:
           type: string
           nullable: true
         phase:
+          type: integer
+        session_id:
           type: integer
       required:
         - question_id
@@ -1250,6 +1396,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserBadge"
+        session_id:
+          type: integer
+        session_progress:
+          type: object
+          properties:
+            answered:
+              type: integer
+            total:
+              type: integer
+        session_complete:
+          type: boolean
+        session_score_pct:
+          type: integer
+          nullable: true
+        session_passed:
+          type: boolean
+          nullable: true
+        next_action:
+          type: string
+          enum: [level_up, continue, remediation, mastered]
       required:
         - correct
         - answer_tier
@@ -1260,6 +1426,33 @@ components:
         - correct_streak
         - current_level
         - new_badges
+
+    LearningTrackLimits:
+      type: object
+      properties:
+        middle_class:
+          $ref: "#/components/schemas/SessionLimitStatus"
+        elite:
+          $ref: "#/components/schemas/SessionLimitStatus"
+      required: [middle_class, elite]
+
+    UserCountryInterest:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: string
+        region_code:
+          type: string
+        added_at:
+          type: string
+          format: date-time
+        hidden_at:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, user_id, region_code, added_at]
 
     LearningTrackProgress:
       type: object

@@ -15,6 +15,11 @@ import { getUncachableStripeClient } from "./stripeClient";
 
 const app: Express = express();
 
+// Replit's preview proxy adds X-Forwarded-For; trust the immediate hop so
+// express-rate-limit can reliably key on the real client IP and stop
+// emitting ERR_ERL_UNEXPECTED_X_FORWARDED_FOR validation errors.
+app.set("trust proxy", 1);
+
 const REPLIT_DEV_DOMAIN = (process.env.REPLIT_DEV_DOMAIN ?? "").toLowerCase().trim();
 
 function buildAllowedOrigins(): Set<string> {

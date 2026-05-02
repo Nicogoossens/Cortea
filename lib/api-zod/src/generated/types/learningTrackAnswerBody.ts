@@ -13,4 +13,5 @@ export interface LearningTrackAnswerBody {
   register: LearningTrackAnswerBodyRegister;
   research_pillar?: string | null;
   phase: number;
+  session_id?: number;
 }

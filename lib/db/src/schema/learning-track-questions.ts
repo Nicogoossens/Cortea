@@ -23,6 +23,12 @@ export const learningTrackQuestionsTable = pgTable(
     historical_context: text("historical_context"),
     options:            jsonb("options").$type<LearningTrackOption[]>().notNull().default([]),
     lang:               text("lang").notNull().default("en"),
+    /**
+     * Optional `situational_interests` codes that this question is most
+     * relevant to (e.g. ["business", "gastronomy"]). The selection cascade
+     * uses these to re-rank within the matching pool.
+     */
+    interest_tags:      jsonb("interest_tags").$type<string[]>().notNull().default([]),
     created_at:         timestamp("created_at").defaultNow(),
     /**
      * Computed hash for idempotent imports.

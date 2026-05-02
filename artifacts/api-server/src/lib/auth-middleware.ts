@@ -62,12 +62,16 @@ export async function requireAuthUser(
       return;
     }
     const [user] = await db
-      .select({ id: usersTable.id })
+      .select({ id: usersTable.id, suspended_at: usersTable.suspended_at })
       .from(usersTable)
       .where(eq(usersTable.session_token, token))
       .limit(1);
     if (!user) {
       res.status(401).json({ error: "The authorisation token provided is not recognised." });
+      return;
+    }
+    if (user.suspended_at !== null) {
+      res.status(403).json({ error: "Your account has been suspended. Please contact support." });
       return;
     }
     (req as AuthenticatedRequest).resolvedUserId = user.id;

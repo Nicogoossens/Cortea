@@ -92,6 +92,9 @@ export const usersTable = pgTable("users", {
   situational_interests: json("situational_interests").$type<string[]>().notNull().default([]),
   // Privacy & device permissions — synced across devices
   privacy_settings: jsonb("privacy_settings").$type<PrivacySettings>(),
+  // GDPR Art. 21 — right to object to behavioural profiling.
+  // When false, Bolton/EQ/Mehrabian writes are suppressed for this user.
+  profiling_consent: boolean("profiling_consent").notNull().default(true),
   // Password-based authentication
   password_hash: text("password_hash"),
   // Gamification layer — streak, avatar, wardrobe

@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
 import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
-import { eq, and, ne, isNull } from "drizzle-orm";
+import { eq, and, ne, desc, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
@@ -392,6 +392,130 @@ router.patch("/users/profile/privacy", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to update privacy settings");
     return res.status(500).json({ message: "A difficulty arose while saving your privacy settings." });
+  }
+});
+
+/**
+ * GET /me/export — compatibility alias for /users/me/export (GDPR Art. 20).
+ * Kept to match the task spec which named the route /api/me/export.
+ */
+router.get("/me/export", requireAuthUser, (req, res, next) => {
+  req.url = "/users/me/export";
+  next("router");
+});
+
+/**
+ * GET /users/me/export — GDPR Art. 20 Right to Data Portability.
+ * Returns a structured JSON export of all personal data held for the user.
+ */
+router.get("/users/me/export", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    const nobleScoreLogs = await db.select()
+      .from(nobleScoreLogTable)
+      .where(eq(nobleScoreLogTable.user_id, userId))
+      .orderBy(desc(nobleScoreLogTable.timestamp));
+
+    const pillarProgress = await db.select()
+      .from(zuil_voortgangTable)
+      .where(eq(zuil_voortgangTable.user_id, userId));
+
+    const exportPayload = {
+      exported_at: new Date().toISOString(),
+      gdpr_basis: "Art. 20 GDPR — Right to Data Portability",
+      account: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        username: user.username,
+        birth_year: user.birth_year,
+        gender_identity: user.gender_identity,
+        gender_expression: user.gender_expression,
+        language_code: user.language_code,
+        active_region: user.active_region,
+        region_history: user.region_history,
+        country_of_origin: user.country_of_origin,
+        ambition_level: user.ambition_level,
+        subscription_tier: user.subscription_tier,
+        objectives: user.objectives,
+        interests_sports: user.interests_sports,
+        interests_cuisine: user.interests_cuisine,
+        interests_dress_code: user.interests_dress_code,
+        situational_interests: user.situational_interests,
+        onboarding_completed: user.onboarding_completed,
+        daily_streak: user.daily_streak,
+        last_activity_date: user.last_activity_date,
+        created_at: user.created_at,
+        profiling_consent: user.profiling_consent,
+      },
+      noble_score: {
+        current: user.noble_score,
+        log: nobleScoreLogs.map((l) => ({
+          id: l.id,
+          scenario_id: l.scenario_id,
+          score_delta: l.score_delta,
+          trigger: l.trigger,
+          level_name_after: l.level_name_after,
+          timestamp: l.timestamp,
+        })),
+      },
+      behavioral_profile: user.behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE,
+      pillar_progress: pillarProgress.map((p) => ({
+        pillar: p.pillar,
+        score: p.score,
+        current_title: p.current_title,
+        updated_at: p.updated_at,
+      })),
+    };
+
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="cortea-data-export-${userId.slice(0, 8)}-${new Date().toISOString().split("T")[0]}.json"`,
+    );
+    return res.json(exportPayload);
+  } catch (err) {
+    req.log.error({ err }, "Failed to generate data export");
+    return res.status(500).json({ message: "We encountered a difficulty generating your data export." });
+  }
+});
+
+/**
+ * PATCH /users/profile/profiling-consent — GDPR Art. 21 Right to Object.
+ * Toggles behavioural profiling on or off for the authenticated user.
+ */
+const ProfilingConsentSchema = z.object({
+  profiling_consent: z.boolean(),
+});
+
+router.patch("/users/profile/profiling-consent", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const parsed = ProfilingConsentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Expected { profiling_consent: boolean }." });
+    }
+
+    const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ message: "Your profile has not yet been established." });
+    }
+
+    await db.update(usersTable)
+      .set({ profiling_consent: parsed.data.profiling_consent })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ profiling_consent: parsed.data.profiling_consent });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update profiling consent");
+    return res.status(500).json({ message: "A difficulty arose while saving your profiling preference." });
   }
 });
 

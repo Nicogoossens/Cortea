@@ -321,15 +321,18 @@ router.post("/noble-score/submit", async (req, res) => {
       newLevelName = levelUp ? newLevel.name : null;
 
       if (user) {
+        const profilingEnabled = (user as { profiling_consent?: boolean | null }).profiling_consent !== false;
         const currentProfile: BehaviorProfile = (user as { behavior_profile?: BehaviorProfile | null }).behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE;
         const scenarioContent = scenario.content_json as ScenarioContent | null;
         const behaviorSignal = scenarioContent?.options?.[selected_option_index]?.behavior_signal ?? null;
-        const updatedProfile = updateBehaviorProfile(
-          currentProfile,
-          (scenario as { bolton_cluster?: number | null }).bolton_cluster,
-          isCorrect,
-          behaviorSignal,
-        );
+        const updatedProfile = profilingEnabled
+          ? updateBehaviorProfile(
+              currentProfile,
+              (scenario as { bolton_cluster?: number | null }).bolton_cluster,
+              isCorrect,
+              behaviorSignal,
+            )
+          : currentProfile;
 
         // Streak logic
         const today = new Date().toISOString().split("T")[0];
@@ -379,7 +382,7 @@ router.post("/noble-score/submit", async (req, res) => {
         await db.update(usersTable)
           .set({
             noble_score: newTotalScore,
-            behavior_profile: updatedProfile,
+            ...(profilingEnabled && { behavior_profile: updatedProfile }),
             daily_streak: newStreak,
             last_activity_date: today,
             wardrobe_unlocks: newWardrobe,

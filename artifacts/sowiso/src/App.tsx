@@ -14,6 +14,7 @@ import { PrivacyProvider } from "@/lib/privacy";
 import { useEffect, useRef } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import PaymentFailedBanner from "@/components/PaymentFailedBanner";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Welcome from "@/pages/Welcome";
@@ -265,6 +266,7 @@ function App() {
                 </WouterRouter>
                 <RegionDetectionBanner />
                 <PaymentFailedBanner />
+                <CookieConsentBanner />
                 <Toaster />
               </TooltipProvider>
             </AppWithRegion>

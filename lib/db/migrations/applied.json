@@ -146,6 +146,19 @@
         "note": "cc_protocol_removals table created to permanently record audit info for every hard-deleted CC protocol record (actor id, timestamp, and key snapshot fields)."
       },
       "status": "applied"
+    },
+    {
+      "id": "0011_gdpr_profiling_consent",
+      "file": "lib/db/migrations/0011_gdpr_profiling_consent.sql",
+      "appliedAt": "2026-05-02",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='profiling_consent'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "column_name": "profiling_consent" }],
+        "note": "profiling_consent boolean NOT NULL DEFAULT true added to users table. GDPR Art. 21 opt-out — when false, Bolton/EQ/Mehrabian profile writes are suppressed in noble_score submit route. Default true preserves existing behaviour for all existing users."
+      },
+      "status": "applied"
     }
   ]
 }

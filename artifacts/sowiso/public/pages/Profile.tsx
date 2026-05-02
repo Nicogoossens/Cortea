@@ -16,11 +16,11 @@ import {
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
   Layers, MapPin, ArrowRight, UtensilsCrossed,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
-  Trophy, Medal, Shield,
+  Trophy, Medal, Shield, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
-import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
+import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja, zhCN } from "date-fns/locale";
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
@@ -42,6 +42,7 @@ const DATE_FNS_LOCALE: Record<SupportedLocale, Locale> = {
   "it-IT": it,
   "ar-SA": ar,
   "ja-JP": ja,
+  "zh-CN": zhCN,
 };
 
 const COUNTRIES = [
@@ -107,6 +108,7 @@ interface UserProfileData {
   interests_dress_code?: string[] | null;
   onboarding_completed?: boolean | null;
   situational_interests?: string[] | null;
+  profiling_consent?: boolean | null;
 }
 
 interface EnrichedLogEntry {
@@ -1990,6 +1992,14 @@ export default function Profile() {
       {/* ── Password ── */}
       <PasswordSection />
 
+      {/* ── GDPR / My Data ── */}
+      <GdprSection
+        profileData={profileData}
+        setProfileData={setProfileData}
+        apiBase={API_BASE}
+        t={t}
+      />
+
       {/* ── Legal ── */}
       <Card className="border-border/40 bg-card shadow-sm">
         <CardHeader className="pb-3">
@@ -2315,6 +2325,173 @@ function CompanionInviteSection() {
             <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
           </Link>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function GdprSection({
+  profileData,
+  setProfileData,
+  apiBase,
+  t,
+}: {
+  profileData: UserProfileData | null;
+  setProfileData: React.Dispatch<React.SetStateAction<UserProfileData | null>>;
+  apiBase: string;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const [exportState, setExportState] = useState<"idle" | "loading" | "error">("idle");
+  const [profilingSaving, setProfilingSaving] = useState(false);
+
+  const profilingEnabled = profileData?.profiling_consent !== false;
+
+  async function handleExport() {
+    setExportState("loading");
+    try {
+      const res = await fetch(`${apiBase}/api/users/me/export`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("Content-Disposition") ?? "";
+      const fnMatch = cd.match(/filename="([^"]+)"/);
+      a.download = fnMatch?.[1] ?? "cortea-data-export.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setExportState("idle");
+    } catch {
+      setExportState("error");
+      setTimeout(() => setExportState("idle"), 4000);
+    }
+  }
+
+  async function handleProfilingToggle() {
+    if (profilingSaving) return;
+    const newValue = !profilingEnabled;
+    setProfilingSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/users/profile/profiling-consent`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profiling_consent: newValue }),
+      });
+      if (res.ok) {
+        setProfileData((prev) => prev ? { ...prev, profiling_consent: newValue } : prev);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setProfilingSaving(false);
+    }
+  }
+
+  const RIGHTS = [
+    "gdpr.right_access",
+    "gdpr.right_rectification",
+    "gdpr.right_erasure",
+    "gdpr.right_restriction",
+    "gdpr.right_portability",
+    "gdpr.right_objection",
+  ] as const;
+
+  return (
+    <Card className="border-border/40 bg-card shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+          <Shield className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          {t("gdpr.section_title", "My Data")}
+        </CardTitle>
+        <CardDescription className="text-xs text-muted-foreground font-light">
+          {t("gdpr.section_desc", "Manage your personal data and exercise your privacy rights.")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+
+        {/* Data Export */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-border/40">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Download className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" />
+              <p className="text-sm font-medium text-foreground">{t("gdpr.export_title", "Export my data")}</p>
+            </div>
+            <p className="text-xs text-muted-foreground font-light max-w-sm">{t("gdpr.export_desc", "Download a JSON file of your personal data (Art. 20 GDPR).")}</p>
+            {exportState === "error" && (
+              <p className="text-xs text-destructive mt-1">{t("gdpr.export_error", "Export failed. Please try again.")}</p>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={exportState === "loading"}
+            className="border-border/50 text-muted-foreground hover:text-foreground font-mono shrink-0 flex items-center gap-2"
+          >
+            {exportState === "loading" ? (
+              <><Loader2Icon className="w-3.5 h-3.5 animate-spin" />{t("gdpr.export_loading", "Preparing…")}</>
+            ) : (
+              <><Download className="w-3.5 h-3.5" aria-hidden="true" />{t("gdpr.export_button", "Download data")}</>
+            )}
+          </Button>
+        </div>
+
+        {/* Profiling Consent Toggle */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-border/40">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              {profilingEnabled ? (
+                <ToggleRight className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
+              ) : (
+                <ToggleLeft className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" />
+              )}
+              <p className="text-sm font-medium text-foreground">{t("gdpr.profiling_title", "Behavioural profiling")}</p>
+              <span className={`text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-sm ${profilingEnabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                {profilingEnabled ? t("gdpr.profiling_active", "Active") : t("gdpr.profiling_paused", "Paused")}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground font-light max-w-sm">{t("gdpr.profiling_desc", "Cortéa analyses your scenario responses to build your Refinement Compass. You may object at any time (Art. 21 GDPR).")}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleProfilingToggle}
+            disabled={profilingSaving}
+            className="border-border/50 text-muted-foreground hover:text-foreground font-mono shrink-0"
+          >
+            {profilingSaving
+              ? t("gdpr.profiling_saving", "Saving…")
+              : profilingEnabled
+              ? t("gdpr.profiling_pause", "Pause profiling")
+              : t("gdpr.profiling_resume", "Resume profiling")}
+          </Button>
+        </div>
+
+        {/* Privacy Rights Info */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">{t("gdpr.rights_title", "Your privacy rights")}</p>
+          </div>
+          <p className="text-xs text-muted-foreground font-light mb-3">{t("gdpr.rights_intro", "Under GDPR (Art. 15–21) you hold the following rights:")}</p>
+          <ul className="space-y-1.5">
+            {RIGHTS.map((key) => (
+              <li key={key} className="flex items-start gap-2 text-xs text-muted-foreground font-light">
+                <CheckCircle2 className="w-3 h-3 text-muted-foreground/40 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>{t(key)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground/70 font-light mt-3 pt-3 border-t border-border/40">
+            {t("gdpr.contact", "For any data request e-mail privacy@cortea.app — we respond within 30 calendar days.")}
+          </p>
+        </div>
+
       </CardContent>
     </Card>
   );

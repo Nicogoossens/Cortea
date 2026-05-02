@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FlagEmoji, useActiveRegion, COMPASS_REGIONS, ACTIVE_REGIONS } from "@/lib/active-region";
+import { FlagEmoji, useActiveRegion, COMPASS_REGIONS } from "@/lib/active-region";
 import { useLanguage } from "@/lib/i18n";
 import { SOCIAL_CLASS_CONFIG } from "@/lib/social-class-config";
 import {
@@ -74,6 +74,23 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const [showStartCard, setShowStartCard] = useState<boolean>(
     () => !localStorage.getItem(START_CARD_KEY)
   );
+
+  // ── Switchable focus list MUST come from the user's active interests,
+  // never from the broad COMPASS_REGIONS catalogue. Picking an unsupported
+  // country here would just hit a backend rejection on session start.
+  const [interestCodes, setInterestCodes] = useState<RegionCode[] | null>(null);
+  useEffect(() => {
+    const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+    fetch(`${apiBase}/api/users/country-interests`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: Array<{ region_code: string; hidden?: boolean | null }>) => {
+        const codes = (rows ?? [])
+          .filter((r) => !r.hidden)
+          .map((r) => r.region_code as RegionCode);
+        setInterestCodes(codes);
+      })
+      .catch(() => setInterestCodes([]));
+  }, []);
 
   function dismissStartCard() {
     localStorage.setItem(START_CARD_KEY, "1");
@@ -307,7 +324,13 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     ? (MIDDLE_CLASS_PHASES.find((p) => p.phase === phase)?.domainName ?? `Fase ${phase}`)
     : (ELITE_PILLARS.find((p) => p.pillar === phase)?.domainName ?? `Pillar ${phase}`);
 
-  const activeRegionsList = COMPASS_REGIONS.filter((r) => ACTIVE_REGIONS.has(r.code) && r.code !== activeRegion);
+  // Only show countries the user has actively opted into (excluding the one
+  // currently in focus). Falls back to empty list while interests are loading
+  // — the empty-state copy in the panel handles that gracefully.
+  const interestSet = new Set(interestCodes ?? []);
+  const activeRegionsList = COMPASS_REGIONS.filter(
+    (r) => interestSet.has(r.code) && r.code !== activeRegion,
+  );
 
   return (
     <div className="space-y-6">

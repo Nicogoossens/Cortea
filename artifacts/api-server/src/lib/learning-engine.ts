@@ -14,6 +14,15 @@
 
 import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable } from "@workspace/db";
 import { and, eq, sql, desc, gte, ne, isNull, inArray, notInArray } from "drizzle-orm";
+
+/**
+ * Executor type — either the global Drizzle `db` handle or a transaction
+ * handle (`tx`) opened via `db.transaction(async (tx) => …)`. Helpers that
+ * participate in the session-creation advisory-locked transaction must run on
+ * `tx` so reads/writes share the same snapshot and the lock actually protects
+ * the question assembly. Defaults to `db` for callers outside a transaction.
+ */
+type Executor = typeof db;
 import {
   shouldLevelUp as pureShouldLevelUp,
   computeReserve as pureComputeReserve,
@@ -267,14 +276,14 @@ function reRankByInterestAndContrast(
  * Forced/remediation IDs (from the previous failed session) are slotted at the
  * front of the list and tagged `source: "remediation"`.
  */
-export async function selectQuestions(ctx: SelectionContext): Promise<SelectedQuestion[]> {
+export async function selectQuestions(ctx: SelectionContext, executor: Executor = db): Promise<SelectedQuestion[]> {
   const cfg = getRegisterConfig(ctx.register);
   const exclude = new Set(ctx.excludeIds ?? []);
   const result: SelectedQuestion[] = [];
 
   // ─── Remediation slot first ────────────────────────────────────────────────
   if (ctx.forcedIds && ctx.forcedIds.length > 0) {
-    const forced = await db.select({
+    const forced = await executor.select({
       id: learningTrackQuestionsTable.id,
       question_text: learningTrackQuestionsTable.question_text,
       historical_context: learningTrackQuestionsTable.historical_context,
@@ -318,7 +327,7 @@ export async function selectQuestions(ctx: SelectionContext): Promise<SelectedQu
     if (exclude.size > 0) {
       conds.push(notInArray(learningTrackQuestionsTable.id, Array.from(exclude)));
     }
-    return db.select({
+    return executor.select({
       id: learningTrackQuestionsTable.id,
       question_text: learningTrackQuestionsTable.question_text,
       historical_context: learningTrackQuestionsTable.historical_context,
@@ -472,8 +481,8 @@ export async function evaluatePassWindow(
  * specific question. The route uses this to enforce the "after 2 retries on
  * the same question, swap with a similar one" rule.
  */
-export async function repetitionCount(userId: string, questionId: number): Promise<number> {
-  const [row] = await db.select({
+export async function repetitionCount(userId: string, questionId: number, executor: Executor = db): Promise<number> {
+  const [row] = await executor.select({
     n: sql<number>`count(*)::int`,
   })
     .from(learningTrackAttemptsTable)

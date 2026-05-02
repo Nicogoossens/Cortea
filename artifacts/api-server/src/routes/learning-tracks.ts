@@ -214,7 +214,9 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         const filteredForced: number[] = [];
         const exhaustedIds: number[] = [];
         for (const qid of remediationIds) {
-          const n = await repetitionCount(userId, qid);
+          // Run inside the same advisory-locked tx so the count we read is
+          // consistent with the snapshot used to assemble the session.
+          const n = await repetitionCount(userId, qid, tx);
           if (n < 2) filteredForced.push(qid);
           else exhaustedIds.push(qid);
         }
@@ -233,7 +235,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           size: cfg.sessionSize,
           forcedIds: filteredForced,
           excludeIds: exhaustedIds,
-        });
+        }, tx);
 
         const [created] = await tx.insert(learningTrackSessionsTable).values({
           user_id: userId,

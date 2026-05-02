@@ -31,9 +31,12 @@ export default function Compass() {
   const isVisitor = !isAuthenticated;
   const allUnlocked = tierHasFullAccess(tier);
 
+  const spheres = profile?.situational_interests ?? [];
+  const spheresParam = spheres.join(",") || undefined;
+
   const { data: regions, isLoading } = useGetCultureCompass(
-    { locale },
-    { query: { queryKey: [...getGetCultureCompassQueryKey(), locale] } }
+    { locale, ...(spheresParam ? { situational_interests: spheresParam } : {}) },
+    { query: { queryKey: [...getGetCultureCompassQueryKey(), locale, spheresParam ?? ""] } }
   );
 
   const activeClusterId = CULTURE_CLUSTERS.find((c) =>
@@ -260,6 +263,8 @@ export default function Compass() {
                   );
                 }
 
+                const hasSphereHighlight = (region.sphere_highlights?.length ?? 0) > 0;
+
                 return (
                   <Link key={region.region_code} href={`/compass/${region.region_code}`} aria-label={`${t("compass.explore")} ${region.region_name}`}>
                     <Card className={`h-full border-border bg-card transition-all duration-300 hover:shadow-md cursor-pointer overflow-hidden group ${
@@ -274,6 +279,12 @@ export default function Compass() {
                               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-md ring-2 ring-primary/20">
                                 <FlagEmoji code={region.region_code} className="text-sm leading-none" />
                                 {t("compass.your_region")}
+                              </span>
+                            )}
+                            {!isUserRegion && hasSphereHighlight && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium tracking-wide text-muted-foreground/80 bg-muted/60 border border-border/60 px-2 py-0.5 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary/50 flex-shrink-0" aria-hidden="true" />
+                                {t("compass.sphere_match")}
                               </span>
                             )}
                             <span className="text-xs font-mono tracking-widest uppercase text-muted-foreground">{region.region_code}</span>

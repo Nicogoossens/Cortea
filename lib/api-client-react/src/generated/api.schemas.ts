@@ -205,6 +205,8 @@ export interface CultureCompassEntry {
   flag_emoji: string;
   /** True when this region has at least one locale of compass content ready. */
   has_content: boolean;
+  /** Sphere keys that match this region when situational_interests are provided. Empty when no match or no interests set. */
+  sphere_highlights?: string[];
 }
 
 export type CultureCompassDetailMehrabianWeight = {
@@ -472,6 +474,10 @@ export type GetCultureCompassParams = {
    * BCP 47 locale code (e.g. en-GB, en-US, nl-NL, fr-FR). Defaults to en-GB.
    */
   locale?: string;
+  /**
+   * Comma-separated sphere keys (e.g. business,gastronomy) used to populate sphere_highlights on each entry.
+   */
+  situational_interests?: string;
 };
 
 export type GetCultureCompassRegionParams = {

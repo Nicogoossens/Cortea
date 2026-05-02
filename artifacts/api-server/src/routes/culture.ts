@@ -182,15 +182,34 @@ router.get("/culture/compass", async (req, res) => {
   try {
     const queryParsed = CompassQuerySchema.safeParse(req.query);
     const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
+    const rawSpheres = queryParsed.success ? (queryParsed.data.situational_interests ?? "") : "";
+
+    const matchedSpheres = rawSpheres
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => (VALID_SPHERES_CULTURE as readonly string[]).includes(s));
 
     const rows = await db.select()
       .from(compassRegionsTable)
       .where(eq(compassRegionsTable.is_published, true));
 
     const entries = rows.map((row) => {
-      const content = (row.content as unknown as Record<string, Record<string, string>>);
+      const content = (row.content as unknown as Record<string, Record<string, unknown>>);
       const has_content = Object.keys(content).length > 0;
-      const localeContent = content[locale] ?? content[DEFAULT_LOCALE] ?? {};
+      const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
+
+      // Determine which sphere keys actually have matching content in this specific region.
+      // A sphere matches only when at least one of its mapped content fields is non-empty.
+      const sphere_highlights: string[] = [];
+      for (const sphere of matchedSpheres) {
+        const fields = SPHERE_TO_COMPASS_FIELDS[sphere] ?? [];
+        const hasContent = fields.some((field) => {
+          const value = localeContent[field];
+          if (Array.isArray(value)) return value.length > 0;
+          return typeof value === "string" && value.length > 0;
+        });
+        if (hasContent) sphere_highlights.push(sphere);
+      }
 
       return {
         region_code: row.region_code,
@@ -199,6 +218,7 @@ router.get("/culture/compass", async (req, res) => {
         core_value: localeContent.core_value ?? "",
         biggest_taboo: localeContent.biggest_taboo ?? "",
         has_content,
+        sphere_highlights,
       };
     });
 

@@ -924,6 +924,8 @@ export default function Counsel() {
         </div>
       )}
 
+      </>)}
+
       {/* ── Behavior Skills Carousel ── */}
       <div className="pt-6 border-t border-border/30">
         <BehaviorSkillsCarousel hasFullAccess={hasFullAccess} />

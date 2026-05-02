@@ -12,3 +12,4 @@ export * from "./learning-track-questions";
 export * from "./learning-track-progress";
 export * from "./badges";
 export * from "./user-badges";
+export * from "./guides";

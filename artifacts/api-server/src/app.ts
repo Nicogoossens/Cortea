@@ -8,8 +8,9 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
+import { usersTable, purchasedGuidesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { randomUUID } from "crypto";
 import { getUncachableStripeClient } from "./stripeClient";
 
 const app: Express = express();
@@ -129,6 +130,24 @@ app.post(
                 })
                 .where(eq(usersTable.id, userId));
             }
+          }
+        }
+      }
+
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        if (session.mode === "payment" && session.metadata?.type === "guide_purchase") {
+          const userId = session.metadata?.userId;
+          const guideId = session.metadata?.guideId;
+          const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
+          if (userId && guideId) {
+            await db.insert(purchasedGuidesTable).values({
+              id: randomUUID(),
+              user_id: userId,
+              guide_id: guideId,
+              purchased_at: new Date(),
+              stripe_payment_intent_id: paymentIntentId,
+            }).onConflictDoNothing();
           }
         }
       }

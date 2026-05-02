@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-type SubscriptionTier = "guest" | "traveller" | "ambassador";
+type SubscriptionTier = "guest" | "student" | "traveller" | "ambassador";
 
 interface Plan {
   productId: string;
@@ -38,6 +38,17 @@ const TIER_META: Record<SubscriptionTier, {
       "membership.guest.feature1",
       "membership.guest.feature2",
       "membership.guest.feature3",
+    ],
+  },
+  student: {
+    taglineKey: "membership.student.tagline",
+    icon: Globe,
+    accent: "#4a7c9b",
+    featureKeys: [
+      "membership.student.feature1",
+      "membership.student.feature2",
+      "membership.student.feature3",
+      "membership.student.feature4",
     ],
   },
   traveller: {
@@ -136,7 +147,7 @@ export default function Membership() {
     }
   };
 
-  const tierOrder: SubscriptionTier[] = ["guest", "traveller", "ambassador"];
+  const tierOrder: SubscriptionTier[] = ["guest", "student", "traveller", "ambassador"];
 
   const getPriceId = (plan: Plan): string | null =>
     billing === "monthly" ? plan.monthlyPriceId : plan.yearlyPriceId;
@@ -189,16 +200,17 @@ export default function Membership() {
       </div>
 
       {plansLoading || profileLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-96 rounded-sm" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-96 rounded-sm" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {tierOrder.map((tier) => {
             const meta = TIER_META[tier];
             const plan = plans.find((p) => p.tier === tier);
             const isCurrentTier = tier === currentTier;
             const isAmbassador = tier === "ambassador";
+            const isStudent = tier === "student";
             const Icon = meta.icon;
             const priceId = plan ? getPriceId(plan) : null;
             const amount = plan ? getAmount(plan) : null;
@@ -209,6 +221,8 @@ export default function Membership() {
                 className={`relative overflow-hidden transition-all duration-300 ${
                   isAmbassador
                     ? "border-[#9b7c4a]/30 bg-gradient-to-b from-card to-[#9b7c4a]/5"
+                    : isStudent
+                    ? "border-[#4a7c9b]/30 bg-gradient-to-b from-card to-[#4a7c9b]/5"
                     : isCurrentTier
                     ? "border-primary/30 bg-card"
                     : "border-border bg-card hover:border-border/80"
@@ -306,7 +320,11 @@ export default function Membership() {
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            {tier === "traveller" ? t("membership.cta_traveller") : t("membership.cta_ambassador")}
+                            {tier === "traveller"
+                              ? t("membership.cta_traveller")
+                              : tier === "student"
+                              ? t("membership.cta_student")
+                              : t("membership.cta_ambassador")}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                           </>
                         )}

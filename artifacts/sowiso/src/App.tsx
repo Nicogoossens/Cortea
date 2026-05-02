@@ -38,6 +38,7 @@ import InnerCircle from "@/pages/InnerCircle";
 import Privacy from "@/pages/Privacy";
 import UseCases from "@/pages/UseCases";
 import BehaviorSkillDetail from "@/pages/BehaviorSkillDetail";
+import Guides from "@/pages/Guides";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -185,6 +186,7 @@ function AppRouter() {
                   <Route path="/inner-circle" component={InnerCircle} />
                   <Route path="/privacy" component={Privacy} />
                   <Route path="/membership" component={Membership} />
+                  <Route path="/guides" component={Guides} />
                   <Route component={NotFound} />
                 </Switch>
               </Shell>
@@ -211,6 +213,7 @@ function AppRouter() {
               <Route path="/navigator" component={Navigator} />
               <Route path="/inner-circle" component={InnerCircle} />
               <Route path="/privacy" component={Privacy} />
+              <Route path="/guides" component={Guides} />
               <Route component={NotFound} />
             </Switch>
           </Shell>

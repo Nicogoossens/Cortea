@@ -1,4 +1,4 @@
-export type SubscriptionTier = "guest" | "traveller" | "ambassador";
+export type SubscriptionTier = "guest" | "traveller" | "ambassador" | "student";
 
 export interface TierFeatures {
   tier: SubscriptionTier;
@@ -11,6 +11,7 @@ export interface TierFeatures {
   mirrorAccess: boolean;
   innerCircleAccess: boolean;
   sensoryAwarenessAccess: boolean;
+  studentPillarAccess: boolean;
 }
 
 export const TIER_FEATURES: Record<SubscriptionTier, TierFeatures> = {
@@ -25,6 +26,20 @@ export const TIER_FEATURES: Record<SubscriptionTier, TierFeatures> = {
     mirrorAccess: false,
     innerCircleAccess: false,
     sensoryAwarenessAccess: false,
+    studentPillarAccess: false,
+  },
+  student: {
+    tier: "student",
+    displayName: "The Student",
+    maxRegions: null,
+    allRegionsUnlocked: true,
+    fullCulturalCompass: true,
+    aiCounselUnlimited: false,
+    scenarioDifficultyMax: 3,
+    mirrorAccess: false,
+    innerCircleAccess: false,
+    sensoryAwarenessAccess: false,
+    studentPillarAccess: true,
   },
   traveller: {
     tier: "traveller",
@@ -37,6 +52,7 @@ export const TIER_FEATURES: Record<SubscriptionTier, TierFeatures> = {
     mirrorAccess: false,
     innerCircleAccess: false,
     sensoryAwarenessAccess: false,
+    studentPillarAccess: true,
   },
   ambassador: {
     tier: "ambassador",
@@ -49,6 +65,7 @@ export const TIER_FEATURES: Record<SubscriptionTier, TierFeatures> = {
     mirrorAccess: true,
     innerCircleAccess: true,
     sensoryAwarenessAccess: true,
+    studentPillarAccess: true,
   },
 };
 

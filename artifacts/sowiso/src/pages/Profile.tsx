@@ -303,6 +303,13 @@ export default function Profile() {
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [behaviorProfile, setBehaviorProfile] = useState<BehaviorProfile | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    tier: string;
+    status: string;
+    renewalDate: string | null;
+    paymentFailed: boolean;
+    hasStripeCustomer: boolean;
+  } | null>(null);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [courseRegionDropdownOpen, setCourseRegionDropdownOpen] = useState(false);
@@ -353,8 +360,9 @@ export default function Profile() {
     Promise.all([
       fetch(`${API_BASE}/api/users/profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
       fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+      fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
     ])
-      .then(([data, bp]) => {
+      .then(([data, bp, subStatus]) => {
         setProfileData(data);
         setUsernameInput(data?.username ?? "");
         setFullNameInput(data?.full_name ?? "");
@@ -362,6 +370,7 @@ export default function Profile() {
         setCountryInputCourse(data?.country_of_origin ?? "");
         setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
+        if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -792,6 +801,46 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* ── Subscription Status ── */}
+      {subscriptionStatus && subscriptionStatus.tier !== "guest" && (
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm ${
+          subscriptionStatus.paymentFailed
+            ? "border-amber-500/30 bg-amber-500/5"
+            : "border-border/40 bg-card"
+        }`}>
+          <div className="flex items-center gap-3">
+            {subscriptionStatus.paymentFailed ? (
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+            ) : (
+              <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden="true" />
+            )}
+            <div>
+              {subscriptionStatus.paymentFailed ? (
+                <p className="text-amber-500 font-light">
+                  {t("subscription.profile_payment_failed")}
+                </p>
+              ) : subscriptionStatus.renewalDate ? (
+                <p className="text-muted-foreground font-light">
+                  {t("subscription.profile_renews")}{" "}
+                  <span className="text-foreground">
+                    {format(new Date(subscriptionStatus.renewalDate), "d LLLL yyyy", { locale: dateFnsLocale })}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground font-light">{t("subscription.profile_active")}</p>
+              )}
+            </div>
+          </div>
+          <Link
+            href="/membership"
+            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            {t("subscription.profile_manage")}
+            <ExternalLink className="w-3 h-3" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
 
       {/* ── Personal Details + Preferences ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

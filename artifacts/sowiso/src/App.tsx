@@ -13,6 +13,7 @@ import { AccessibilityProvider, useAccessibility } from "@/lib/accessibility";
 import { PrivacyProvider } from "@/lib/privacy";
 import { useEffect, useRef } from "react";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
+import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Welcome from "@/pages/Welcome";
@@ -237,6 +238,7 @@ function App() {
                   <Router />
                 </WouterRouter>
                 <RegionDetectionBanner />
+                <PaymentFailedBanner />
                 <Toaster />
               </TooltipProvider>
             </AppWithRegion>

@@ -152,4 +152,45 @@ router.get("/subscription/features", requireAuthUser, async (req, res) => {
   }
 });
 
+/**
+ * GET /subscription/status — returns the current subscription state for the authenticated user.
+ * Includes tier, billing status, renewal date, and whether a payment has recently failed.
+ */
+router.get("/subscription/status", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const [user] = await db
+      .select({
+        subscription_tier: usersTable.subscription_tier,
+        subscription_status: usersTable.subscription_status,
+        subscription_current_period_end: usersTable.subscription_current_period_end,
+        payment_failed_at: usersTable.payment_failed_at,
+        stripe_customer_id: usersTable.stripe_customer_id,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return res.json({
+        tier: "guest",
+        status: "active",
+        renewalDate: null,
+        paymentFailed: false,
+        hasStripeCustomer: false,
+      });
+    }
+
+    return res.json({
+      tier: user.subscription_tier,
+      status: user.subscription_status,
+      renewalDate: user.subscription_current_period_end?.toISOString() ?? null,
+      paymentFailed: user.subscription_status === "past_due" || user.payment_failed_at !== null,
+      hasStripeCustomer: !!user.stripe_customer_id,
+    });
+  } catch {
+    return res.status(500).json({ message: "Unable to retrieve subscription status." });
+  }
+});
+
 export default router;

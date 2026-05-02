@@ -115,9 +115,18 @@ app.post(
             const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
             const product = price.product as import("stripe").Stripe.Product;
             const tier = product.metadata?.tier as "traveller" | "ambassador" | undefined;
+            const periodEnd = subscription.current_period_end
+              ? new Date(subscription.current_period_end * 1000)
+              : null;
+            const subStatus = subscription.status ?? "active";
             if (tier) {
               await db.update(usersTable)
-                .set({ subscription_tier: tier })
+                .set({
+                  subscription_tier: tier,
+                  subscription_status: subStatus,
+                  subscription_current_period_end: periodEnd,
+                  payment_failed_at: subStatus === "active" ? null : undefined,
+                })
                 .where(eq(usersTable.id, userId));
             }
           }
@@ -129,8 +138,32 @@ app.post(
         const userId = subscription.metadata?.userId;
         if (userId) {
           await db.update(usersTable)
-            .set({ subscription_tier: "guest" })
+            .set({
+              subscription_tier: "guest",
+              subscription_status: "canceled",
+              subscription_current_period_end: null,
+            })
             .where(eq(usersTable.id, userId));
+        }
+      }
+
+      if (event.type === "invoice.payment_failed") {
+        const invoice = event.data.object;
+        const customerId = invoice.customer as string | undefined;
+        if (customerId) {
+          const [user] = await db
+            .select({ id: usersTable.id })
+            .from(usersTable)
+            .where(eq(usersTable.stripe_customer_id, customerId))
+            .limit(1);
+          if (user) {
+            await db.update(usersTable)
+              .set({
+                subscription_status: "past_due",
+                payment_failed_at: new Date(),
+              })
+              .where(eq(usersTable.id, user.id));
+          }
         }
       }
 

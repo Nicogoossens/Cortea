@@ -836,5 +836,13 @@
   "mentor.incorrect.mature.0": "An understandable approach — though the convention here is perhaps more particular than it first appears. Let me offer the refinement.",
   "mentor.incorrect.mature.1": "The preferred choice carries a subtlety that is easy to miss. Even in experienced hands, these distinctions reward attention.",
   "mentor.incorrect.mature.2": "Not the conventional path, though one appreciates the reasoning. Here is where the accepted approach differs.",
-  "mentor.incorrect.mature.3": "A slight deviation from the established form. These finer points are precisely where the truly cultivated distinguish themselves."
+  "mentor.incorrect.mature.3": "A slight deviation from the established form. These finer points are precisely where the truly cultivated distinguish themselves.",
+  "subscription.payment_failed_notice": "A recent payment could not be processed. Your access continues for now — please update your billing details at your earliest convenience.",
+  "subscription.payment_failed_cta": "Review your membership",
+  "subscription.payment_failed_dismiss": "Dismiss",
+  "subscription.profile_renews": "Membership renews",
+  "subscription.profile_active": "Membership active",
+  "subscription.profile_payment_failed": "A payment issue has been noted. Please review your membership.",
+  "subscription.profile_manage": "Manage membership",
+  "membership.upgrade_success": "Your membership has been updated. Welcome to your new standing."
 }

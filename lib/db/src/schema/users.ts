@@ -66,6 +66,8 @@ export const usersTable = pgTable("users", {
   // Stripe-ready payment fields
   payment_customer_id: text("payment_customer_id"),
   subscription_status: text("subscription_status").notNull().default("active"),
+  subscription_current_period_end: timestamp("subscription_current_period_end"),
+  payment_failed_at: timestamp("payment_failed_at"),
   trial_ends_at: timestamp("trial_ends_at"),
   // Behavioral psychology layer (Bolton + Goleman + Mehrabian)
   behavior_profile: jsonb("behavior_profile").$type<BehaviorProfile>(),

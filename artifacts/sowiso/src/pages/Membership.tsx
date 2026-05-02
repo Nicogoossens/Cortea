@@ -4,8 +4,9 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, ArrowRight, Crown, Globe, Sparkles, Loader2 } from "lucide-react";
+import { Check, ArrowRight, Crown, Globe, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -77,16 +78,19 @@ type BillingInterval = "monthly" | "yearly";
 export default function Membership() {
   usePageTitle("Membership");
   const { t } = useLanguage();
+  const { getAuthHeaders } = useAuth();
   const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [billing, setBilling] = useState<BillingInterval>("monthly");
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [managingBilling, setManagingBilling] = useState(false);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("upgrade") === "success") {
+      setUpgradeSuccess(true);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -108,7 +112,7 @@ export default function Membership() {
     try {
       const res = await fetch(`${API_BASE}/api/subscription/checkout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ priceId }),
       });
       const { url } = await res.json();
@@ -121,7 +125,10 @@ export default function Membership() {
   const handleManageBilling = async () => {
     setManagingBilling(true);
     try {
-      const res = await fetch(`${API_BASE}/api/subscription/portal`, { method: "POST" });
+      const res = await fetch(`${API_BASE}/api/subscription/portal`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
       const { url } = await res.json();
       if (url) window.location.href = url;
     } catch {
@@ -139,6 +146,13 @@ export default function Membership() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
+
+      {upgradeSuccess && (
+        <div className="flex items-center gap-3 px-5 py-4 bg-primary/5 border border-primary/20 rounded-sm" role="status">
+          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+          <p className="text-sm text-foreground font-light">{t("membership.upgrade_success")}</p>
+        </div>
+      )}
 
       <div className="space-y-4">
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{t("membership.eyebrow")}</p>

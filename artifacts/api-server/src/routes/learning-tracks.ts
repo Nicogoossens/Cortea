@@ -341,13 +341,29 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       }];
     });
 
+    // Pull the live progress row so a resumed session reflects real
+    // mastered / correct_streak / questions_done values rather than zeros
+    // that would silently regress badges and progress UI on reload.
+    const [resumeProgress] = await db.select()
+      .from(learningTrackProgressTable)
+      .where(and(
+        eq(learningTrackProgressTable.user_id, userId),
+        eq(learningTrackProgressTable.register, register),
+        eq(learningTrackProgressTable.phase, phase),
+        eq(learningTrackProgressTable.region_code, session.region_code),
+        pillar
+          ? eq(learningTrackProgressTable.research_pillar, pillar)
+          : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
+      ))
+      .limit(1);
+
     return res.json({
       session_id: session.id,
       is_remediation: session.is_remediation,
-      current_level: session.level,
-      mastered: false,
-      questions_done: session.answers_given,
-      correct_streak: 0,
+      current_level: resumeProgress?.current_level ?? session.level,
+      mastered: resumeProgress?.mastered ?? false,
+      questions_done: resumeProgress?.questions_done ?? session.answers_given,
+      correct_streak: resumeProgress?.correct_streak ?? 0,
       demographic: deriveDemographic(user.birth_year, user.gender_identity),
       repeat: session.is_remediation,
       has_questions: orderedQuestions.length > 0,

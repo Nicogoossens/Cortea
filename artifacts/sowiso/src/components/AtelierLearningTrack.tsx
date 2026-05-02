@@ -790,14 +790,22 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                   and the engine's chosen next_action so the user knows
                   whether they're levelling up, repeating, or done. */}
               {feedback?.session_complete && !feedback.mastered && (
+                // Three visual states (not two): pass, fail/remediation, and
+                // "window not yet complete" — the engine has insufficient
+                // attempts at this level to make any pass/fail call yet, so
+                // we must not paint this as a failure.
                 <Card className={`border-2 ${
                   feedback.session_passed
                     ? "border-green-400/50 bg-green-50/30 dark:bg-green-950/10"
-                    : "border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10"
+                    : feedback.session_passed === null
+                      ? "border-border/40 bg-muted/10"
+                      : "border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10"
                 }`}>
                   <CardContent className="py-7 text-center space-y-4">
                     {feedback.session_passed ? (
                       <CheckCircle2 className="w-10 h-10 mx-auto text-green-600 dark:text-green-400" aria-hidden="true" />
+                    ) : feedback.session_passed === null ? (
+                      <ArrowRight className="w-10 h-10 mx-auto text-muted-foreground" aria-hidden="true" />
                     ) : (
                       <RotateCcw className="w-10 h-10 mx-auto text-amber-600 dark:text-amber-400" aria-hidden="true" />
                     )}
@@ -807,9 +815,11 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           ? t("atelier.track.session_passed_level_up", { level: feedback.session_passed ? (currentProgress?.current_level ?? 1) + 1 : (currentProgress?.current_level ?? 1) })
                           : feedback.session_passed
                             ? t("atelier.track.session_passed")
-                            : feedback.next_action === "remediation"
-                              ? t("atelier.track.session_remediation_title")
-                              : t("atelier.track.session_failed")}
+                            : feedback.session_passed === null
+                              ? t("atelier.track.session_in_progress")
+                              : feedback.next_action === "remediation"
+                                ? t("atelier.track.session_remediation_title")
+                                : t("atelier.track.session_failed")}
                       </h3>
                       <p className="font-mono text-3xl text-foreground/90">
                         {feedback.session_score_pct ?? 0}<span className="text-base text-muted-foreground">%</span>
@@ -818,9 +828,11 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
                       {feedback.next_action === "level_up"
                         ? t("atelier.track.session_next_level_up")
-                        : feedback.next_action === "remediation"
-                          ? t("atelier.track.session_next_remediation")
-                          : t("atelier.track.session_next_continue")}
+                        : feedback.session_passed === null
+                          ? t("atelier.track.session_next_keep_going")
+                          : feedback.next_action === "remediation"
+                            ? t("atelier.track.session_next_remediation")
+                            : t("atelier.track.session_next_continue")}
                     </p>
                     <div className="flex items-center justify-center gap-3 flex-wrap pt-1">
                       <Button

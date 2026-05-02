@@ -13,6 +13,7 @@ import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 
 const NAVIGATOR_KEY = "sowiso_navigator_trips";
+const TRIP_ALERT_DISMISS_PREFIX = "trip_alert_dismissed";
 
 interface NavigatorTrip {
   id: string;
@@ -128,6 +129,7 @@ export default function Home() {
 
   const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
   const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
+  const [tripAlertDismissed, setTripAlertDismissed] = useState(false);
   const [atelierProgress, setAtelierProgress] = useState<LearningTrackProgressRow[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
   const [streak, setStreak] = useState(0);
@@ -152,6 +154,14 @@ export default function Home() {
             return days <= 7 && days > -14;
           });
           setAlertTrips(active);
+          if (active.length > 0) {
+            const today = new Date().toISOString().slice(0, 10);
+            const ids = active.map((t) => t.id).sort().join(",");
+            const dismissKey = `${TRIP_ALERT_DISMISS_PREFIX}_${ids}_${today}`;
+            if (sessionStorage.getItem(dismissKey)) {
+              setTripAlertDismissed(true);
+            }
+          }
         }
       } else {
         setAlertTrips([]);
@@ -210,6 +220,16 @@ export default function Home() {
     if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
     setWelcomeVisible(false);
     dismissFadeRef.current = setTimeout(() => setShowWelcome(false), 400);
+  };
+
+  const handleDismissTripAlert = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = alertTrips.map((t) => t.id).sort().join(",");
+    const dismissKey = `${TRIP_ALERT_DISMISS_PREFIX}_${ids}_${today}`;
+    sessionStorage.setItem(dismissKey, "1");
+    setTripAlertDismissed(true);
   };
 
   useEffect(() => {
@@ -361,35 +381,44 @@ export default function Home() {
         </div>
       )}
 
-      {isAuthenticated && isAmbassador && alertTrips.length > 0 && (
-        <Link href="/navigator" className="block group">
-          <div className="rounded-sm border border-amber-400/30 bg-amber-500/5 px-5 py-4 transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-500/8 cursor-pointer">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-amber-700/70 mb-3">
-              <Bell className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("home.navigator_alert_heading")}
-            </div>
-            <div className="space-y-2">
-              {alertTrips.map((trip) => {
-                const days = daysUntilDate(trip.departureDate);
-                const region = COMPASS_REGIONS.find((r) => r.code === trip.regionCode);
-                return (
-                  <div key={trip.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 font-light text-sm text-foreground">
-                      {region && <FlagEmoji code={region.code} />}
-                      <span>{region?.names.en ?? trip.regionCode}</span>
+      {isAuthenticated && isAmbassador && alertTrips.length > 0 && !tripAlertDismissed && (
+        <div className="relative group">
+          <Link href="/navigator" className="block">
+            <div className="rounded-sm border border-amber-400/30 bg-amber-500/5 px-5 py-4 transition-all duration-300 hover:border-amber-400/50 hover:bg-amber-500/8 cursor-pointer pr-12">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-semibold text-amber-700/70 mb-3">
+                <Bell className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("home.navigator_alert_heading")}
+              </div>
+              <div className="space-y-2">
+                {alertTrips.map((trip) => {
+                  const days = daysUntilDate(trip.departureDate);
+                  const region = COMPASS_REGIONS.find((r) => r.code === trip.regionCode);
+                  return (
+                    <div key={trip.id} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 font-light text-sm text-foreground">
+                        {region && <FlagEmoji code={region.code} />}
+                        <span>{region?.names.en ?? trip.regionCode}</span>
+                      </div>
+                      <Badge variant="outline" className="font-mono text-xs border-amber-400/40 text-amber-600 shrink-0">
+                        {days < 0 ? t("navigator.arrived") : days === 0 ? t("navigator.departure_today") : t("navigator.d_minus", { count: days })}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="font-mono text-xs border-amber-400/40 text-amber-600 shrink-0">
-                      {days < 0 ? t("navigator.arrived") : days === 0 ? t("navigator.departure_today") : t("navigator.d_minus", { count: days })}
-                    </Badge>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-xs text-amber-700/60 group-hover:text-amber-700/80 transition-colors">
+                {t("home.navigator_alert_cta")} →
+              </p>
             </div>
-            <p className="mt-3 text-xs text-amber-700/60 group-hover:text-amber-700/80 transition-colors">
-              {t("home.navigator_alert_cta")} →
-            </p>
-          </div>
-        </Link>
+          </Link>
+          <button
+            onClick={handleDismissTripAlert}
+            aria-label={t("home.navigator_alert_dismiss")}
+            className="absolute top-3 right-3 text-amber-700/40 hover:text-amber-700/80 transition-colors p-1"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       <div className="space-y-2">

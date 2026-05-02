@@ -98,8 +98,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <Link href="/">
           <span className="flex items-center gap-2 font-serif text-xl tracking-wide text-sidebar-primary cursor-pointer" aria-label={t("app.name")}>
             {t("app.name")}
-            <span className="text-base leading-none opacity-70" aria-hidden="true">
-              <FlagEmoji code={activeRegion} />
+            <span className="opacity-70" aria-hidden="true">
+              <FlagEmoji code={activeRegion} size="sm" />
             </span>
           </span>
         </Link>

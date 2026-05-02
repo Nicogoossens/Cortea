@@ -373,7 +373,7 @@ export default function Counsel() {
             <div className="flex flex-col gap-0.5 min-w-0">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">{t("counsel.context_strip.region")}</span>
               <div className="flex items-center gap-1">
-                <FlagEmoji code={effectiveRegion} className="text-sm" />
+                <FlagEmoji code={effectiveRegion} size="sm" />
                 <span className="font-medium text-foreground/80 truncate">{getRegionName(effectiveRegion)}</span>
                 {isOverriding && (
                   <span className="text-[9px] text-primary border border-primary/30 rounded-[2px] px-1 py-0.5 ml-1 flex-shrink-0">{t("counsel.context_strip.differs")}</span>
@@ -448,7 +448,7 @@ export default function Counsel() {
                     : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
                 }`}
               >
-                <FlagEmoji code={region.flag} />
+                <FlagEmoji code={region.flag} size="sm" />
                 {getRegionName(region.code)}
               </button>
             );
@@ -753,7 +753,7 @@ export default function Counsel() {
                 <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
                   {isOverriding ? t("counsel.session_override_label") : t("counsel.region_context")}
                 </span>
-                <FlagEmoji code={effectiveRegion} />
+                <FlagEmoji code={effectiveRegion} size="sm" />
                 <span className="font-medium text-foreground/80">{getRegionName(effectiveRegion)}</span>
                 {isOverriding && (
                   <button
@@ -791,7 +791,7 @@ export default function Counsel() {
                             : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
                         }`}
                       >
-                        <FlagEmoji code={region.flag} />
+                        <FlagEmoji code={region.flag} size="sm" />
                         {getRegionName(region.code)}
                       </button>
                     );
@@ -811,7 +811,7 @@ export default function Counsel() {
             <Card className="border-border/50 bg-muted/20 shadow-sm">
               <CardContent className="p-8 flex flex-col items-center text-center gap-4">
                 <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground border border-muted-foreground/20 rounded-[2px] px-2.5 py-1.5">
-                  <FlagEmoji code={activeRegion} />
+                  <FlagEmoji code={activeRegion} size="sm" />
                   <span>{getRegionName(activeRegion)}</span>
                   <span className="border-l border-current/20 pl-2 ml-0.5">{t("region.in_preparation")}</span>
                 </div>

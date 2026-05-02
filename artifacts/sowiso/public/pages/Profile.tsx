@@ -1064,7 +1064,7 @@ export default function Profile() {
                   className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
                 >
                   <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <FlagEmoji code={activeRegion} />
+                  <FlagEmoji code={activeRegion} size="sm" />
                   <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
                   <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
@@ -1084,7 +1084,7 @@ export default function Profile() {
                               : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                           }`}
                         >
-                          <FlagEmoji code={region.flag} />
+                          <FlagEmoji code={region.flag} size="sm" />
                           {getRegionName(region.code)}
                         </button>
                       );
@@ -1175,7 +1175,7 @@ export default function Profile() {
                 className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
               >
                 <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                <FlagEmoji code={activeRegion} />
+                <FlagEmoji code={activeRegion} size="sm" />
                 <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${courseRegionDropdownOpen ? "rotate-180" : ""}`} aria-hidden="true" />
               </button>
@@ -1195,7 +1195,7 @@ export default function Profile() {
                             : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                         }`}
                       >
-                        <FlagEmoji code={region.flag} />
+                        <FlagEmoji code={region.flag} size="sm" />
                         {getRegionName(region.code)}
                       </button>
                     );

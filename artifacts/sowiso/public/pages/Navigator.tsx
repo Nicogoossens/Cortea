@@ -114,7 +114,7 @@ export default function Navigator() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      {region && <FlagEmoji code={region.code} />}
+                      {region && <FlagEmoji code={region.code} size="sm" />}
                       <CardTitle className="font-serif text-lg">{region?.names.en ?? trip.regionCode}</CardTitle>
                     </div>
                     <Badge variant="outline" className="font-mono text-xs border-amber-400/40 text-amber-600">
@@ -212,7 +212,7 @@ export default function Navigator() {
               return (
                 <div key={trip.id} className="flex items-center justify-between px-4 py-3 rounded-sm border border-border/40 bg-muted/10 hover:bg-muted/20 transition-colors">
                   <div className="flex items-center gap-3">
-                    {region && <FlagEmoji code={region.code} />}
+                    {region && <FlagEmoji code={region.code} size="sm" />}
                     <div>
                       <p className="text-sm font-medium text-foreground">{region?.names.en ?? trip.regionCode}</p>
                       <p className="text-xs text-muted-foreground font-light">

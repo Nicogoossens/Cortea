@@ -10,7 +10,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
-import { LockOverlay } from "@/components/LockOverlay";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 
 const NAVIGATOR_KEY = "sowiso_navigator_trips";

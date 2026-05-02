@@ -816,6 +816,9 @@ components:
           type: integer
         time_taken_seconds:
           type: integer
+        lang:
+          type: string
+          description: BCP-47 language tag (e.g. "nl", "fr"). Used to return mentor feedback in the correct language.
       required:
         - scenario_id
         - selected_option_index

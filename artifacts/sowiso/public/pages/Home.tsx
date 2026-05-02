@@ -12,22 +12,9 @@ import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 
-const NAVIGATOR_KEY = "sowiso_navigator_trips";
+import { NAVIGATOR_KEY, NavigatorTrip, daysUntil } from "@/lib/navigator-utils";
+
 const TRIP_ALERT_DISMISS_PREFIX = "trip_alert_dismissed";
-
-interface NavigatorTrip {
-  id: string;
-  regionCode: string;
-  departureDate: string;
-}
-
-function daysUntilDate(dateStr: string): number {
-  const target = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 const WELCOME_DURATION_MS = 7000;
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -150,7 +137,7 @@ export default function Home() {
         setAllTrips(trips);
         if (profile?.subscription_tier === "ambassador") {
           const active = trips.filter((trip) => {
-            const days = daysUntilDate(trip.departureDate);
+            const days = daysUntil(trip.departureDate);
             return days <= 7 && days > -14;
           });
           setAlertTrips(active);
@@ -391,7 +378,7 @@ export default function Home() {
               </div>
               <div className="space-y-2">
                 {alertTrips.map((trip) => {
-                  const days = daysUntilDate(trip.departureDate);
+                  const days = daysUntil(trip.departureDate);
                   const region = COMPASS_REGIONS.find((r) => r.code === trip.regionCode);
                   return (
                     <div key={trip.id} className="flex items-center justify-between gap-3">
@@ -763,7 +750,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {allTrips.map((trip) => {
               const region = COMPASS_REGIONS.find(r => r.code === trip.regionCode);
-              const days = daysUntilDate(trip.departureDate);
+              const days = daysUntil(trip.departureDate);
               const departureLabel = days < 0
                 ? t("navigator.arrived")
                 : days === 0

@@ -194,4 +194,69 @@ router.post("/counsel/log-quality", async (req, res) => {
   }
 });
 
+router.post("/counsel/apology", async (req, res) => {
+  const { situation, region_code } = req.body as {
+    situation?: string;
+    region_code?: string;
+  };
+
+  if (!situation || !situation.trim()) {
+    res.status(400).json({ error: "A description of the situation is required." });
+    return;
+  }
+
+  const region = (region_code || "GB").toUpperCase();
+  const regionContext = REGION_CONTEXT[region] ?? REGION_CONTEXT["GB"];
+
+  const systemPrompt = `You are a discreet and highly cultured etiquette mentor specialising in the art of graceful recovery from social missteps. Your register is composed, warm, and quietly witty — never self-flagellating, never over-apologetic.
+
+Regional context: ${regionContext}
+
+When given a description of a social misstep, you will craft a culturally precise, charming apology that the person can deliver. The apology must:
+- Be appropriate to the specific region's customs regarding apology and face-saving
+- Sound natural and sincere, not rehearsed or excessive
+- Be brief — no more than 2-3 sentences that can be spoken aloud
+- Include a small, graceful gesture or follow-up action where appropriate
+- Never begin with the word "I'm sorry" — find a more distinguished opening
+
+After the apology text, on a new paragraph, offer a single sentence of gentle counsel on what this reveals about the local customs — written with calm authority, not judgment.
+
+Respond in this format:
+[The apology to deliver]
+
+[One sentence of cultural counsel]`;
+
+  const TIMEOUT_MS = 20_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const message = await anthropic.messages.create(
+      {
+        model: "claude-sonnet-4-5",
+        max_tokens: 200,
+        system: systemPrompt,
+        messages: [{ role: "user", content: `Situation: ${situation.trim()}` }],
+      },
+      { signal: controller.signal },
+    );
+    clearTimeout(timer);
+
+    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    const parts = text.split("\n\n");
+    const apology = parts[0]?.trim() ?? text;
+    const counsel = parts[1]?.trim() ?? "";
+
+    res.json({ apology, counsel });
+  } catch (err) {
+    clearTimeout(timer);
+    if (err instanceof Error && err.name === "AbortError") {
+      res.status(504).json({ error: "The counsel timed out. Please try again shortly." });
+      return;
+    }
+    console.error("Apology AI error:", err);
+    res.status(500).json({ error: "The mentor is unavailable. Please try again shortly." });
+  }
+});
+
 export default router;

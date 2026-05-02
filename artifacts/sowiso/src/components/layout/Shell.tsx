@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ContextBar } from "@/components/context-bar";
@@ -34,6 +34,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.sensory",      href: "/sensory",      icon: Ear,         adminOnly: true       },
     { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
     { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
+    { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   authOnly: true        },
     { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true        },
     { key: "nav.profile",      href: "/profile",      icon: User,        authOnly: true        },
     { key: "nav.membership",  href: "/membership",  icon: Crown    },

@@ -18,6 +18,7 @@ import googleOAuthRouter from "./google-oauth";
 import learningTracksRouter from "./learning-tracks";
 import venuesRouter from "./venues";
 import guidesRouter from "./guides";
+import questsRouter from "./quests";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(mirrorLogRouter);
 router.use(learningTracksRouter);
 router.use(venuesRouter);
 router.use(guidesRouter);
+router.use(questsRouter);
 
 export default router;

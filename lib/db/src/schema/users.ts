@@ -17,6 +17,19 @@ export interface BehaviorProfile {
   nonverbal_awareness: number;
 }
 
+export interface WardrobeItem {
+  id: string;
+  name: string;
+  region: string;
+  pillar: number;
+  unlocked_at: string;
+}
+
+export interface AvatarState {
+  rank_badge: string;
+  style_tier: number;
+}
+
 export const DEFAULT_BEHAVIOR_PROFILE: BehaviorProfile = {
   listening_score: 50,
   assertiveness_style: "assertive",
@@ -77,6 +90,11 @@ export const usersTable = pgTable("users", {
   privacy_settings: jsonb("privacy_settings").$type<PrivacySettings>(),
   // Password-based authentication
   password_hash: text("password_hash"),
+  // Gamification layer — streak, avatar, wardrobe
+  daily_streak: integer("daily_streak").notNull().default(0),
+  last_activity_date: text("last_activity_date"),
+  avatar_state: json("avatar_state").$type<AvatarState>(),
+  wardrobe_unlocks: json("wardrobe_unlocks").$type<WardrobeItem[]>().notNull().default([]),
 });
 
 export interface PrivacySettings {

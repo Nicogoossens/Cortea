@@ -39,6 +39,7 @@ import Privacy from "@/pages/Privacy";
 import UseCases from "@/pages/UseCases";
 import BehaviorSkillDetail from "@/pages/BehaviorSkillDetail";
 import Guides from "@/pages/Guides";
+import Wardrobe from "@/pages/Wardrobe";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -187,6 +188,7 @@ function AppRouter() {
                   <Route path="/privacy" component={Privacy} />
                   <Route path="/membership" component={Membership} />
                   <Route path="/guides" component={Guides} />
+                  <Route path="/wardrobe" component={Wardrobe} />
                   <Route component={NotFound} />
                 </Switch>
               </Shell>
@@ -206,6 +208,7 @@ function AppRouter() {
               <Route path="/situations" component={SituationsRedirect} />
               <Route path="/use-cases" component={UseCases} />
               <Route path="/profile" component={Profile} />
+              <Route path="/wardrobe" component={Wardrobe} />
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />
               <Route path="/mirror" component={Mirror} />

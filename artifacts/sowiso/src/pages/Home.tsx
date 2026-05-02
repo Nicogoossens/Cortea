@@ -4,8 +4,8 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, X, MapPin, Bell } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { BookOpen, Compass, Shield, ArrowRight, X, MapPin, Bell, Scan, Crown, Flame, ShirtIcon, Check } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -29,8 +29,38 @@ function daysUntilDate(dateStr: string): number {
 }
 
 const WELCOME_DURATION_MS = 7000;
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+interface DailyQuest {
+  id: number;
+  title: string;
+  title_nl?: string | null;
+  title_fr?: string | null;
+  title_de?: string | null;
+  description: string;
+  description_nl?: string | null;
+  description_fr?: string | null;
+  description_de?: string | null;
+  pillar?: number | null;
+  noble_score_reward: number;
+  completed: boolean;
+}
+
+function StreakWidget({ streak }: { streak: number }) {
+  const { t } = useLanguage();
+  if (streak === 0) return null;
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground border-b border-border/40 pb-3 mb-1">
+      <Flame className={`h-4 w-4 ${streak >= 7 ? "text-amber-500" : streak >= 3 ? "text-orange-400" : "text-muted-foreground/60"}`} aria-hidden="true" />
+      <span className="font-mono uppercase tracking-widest text-xs">
+        {t("home.streak")}
+      </span>
+      <span className={`text-xs font-semibold ${streak >= 7 ? "text-amber-600" : streak >= 3 ? "text-orange-500" : "text-foreground/60"}`}>
+        {streak} {streak === 1 ? "day" : "days"}
+      </span>
+    </div>
+  );
+}
 
 interface MiniUseCase {
   id: number;
@@ -68,7 +98,7 @@ interface EarnedBadge {
 export default function Home() {
   usePageTitle("Home");
   const { t, language } = useLanguage();
-  const { userId, isAuthenticated } = useAuth();
+  const { userId, isAuthenticated, getAuthHeaders } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
@@ -100,6 +130,10 @@ export default function Home() {
   const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
   const [atelierProgress, setAtelierProgress] = useState<LearningTrackProgressRow[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
+  const [streak, setStreak] = useState(0);
+  const [dailyQuests, setDailyQuests] = useState<DailyQuest[] | null>(null);
+  const [questsLoading, setQuestsLoading] = useState(false);
+  const [completingQuest, setCompletingQuest] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -178,6 +212,58 @@ export default function Home() {
     dismissFadeRef.current = setTimeout(() => setShowWelcome(false), 400);
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch(`${API_BASE}/api/streak`, { headers: getAuthHeaders() })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { streak?: number } | null) => {
+        if (data?.streak !== undefined) setStreak(data.streak);
+      })
+      .catch(() => null);
+  }, [isAuthenticated, getAuthHeaders]);
+
+  useEffect(() => {
+    setQuestsLoading(true);
+    fetch(`${API_BASE}/api/quests/daily`, {
+      headers: isAuthenticated ? getAuthHeaders() : {},
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: DailyQuest[] | null) => {
+        if (data) setDailyQuests(data);
+      })
+      .catch(() => null)
+      .finally(() => setQuestsLoading(false));
+  }, [isAuthenticated, getAuthHeaders]);
+
+  const handleCompleteQuest = useCallback(async (questId: number) => {
+    if (!isAuthenticated || completingQuest !== null) return;
+    setCompletingQuest(questId);
+    try {
+      const res = await fetch(`${API_BASE}/api/quests/complete`, {
+        method: "POST",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ quest_id: questId }),
+      });
+      if (res.ok) {
+        setDailyQuests((prev) =>
+          prev?.map((q) => q.id === questId ? { ...q, completed: true } : q) ?? null
+        );
+      }
+    } catch {
+      // silent
+    } finally {
+      setCompletingQuest(null);
+    }
+  }, [isAuthenticated, getAuthHeaders, completingQuest]);
+
+  const lang = (language ?? "en").split("-")[0];
+  const getQuestTitle = (q: DailyQuest) => {
+    if (lang === "nl" && q.title_nl) return q.title_nl;
+    if (lang === "fr" && q.title_fr) return q.title_fr;
+    if (lang === "de" && q.title_de) return q.title_de;
+    return q.title;
+  };
+
   const isLoading = isProfileLoading || isScoreLoading || isPillarsLoading;
 
   const totalQuestionsDone = atelierProgress.reduce((sum, r) => sum + r.questions_done, 0);
@@ -202,6 +288,9 @@ export default function Home() {
   const isAmbassador = profile?.subscription_tier === "ambassador";
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
   const levelLabel = t(levelKey(nobleScore?.level_name));
+
+  const wardrobeCount = ((profile as { wardrobe_unlocks?: unknown[] } | undefined)?.wardrobe_unlocks ?? []).length;
+  const avatarTier = ((profile as { avatar_state?: { style_tier?: number } } | undefined)?.avatar_state?.style_tier) ?? 1;
 
   if (isLoading) {
     return (
@@ -312,6 +401,11 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Streak widget — subtle, above the grid */}
+      {isAuthenticated && streak > 0 && (
+        <StreakWidget streak={streak} />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <Card className="bg-card border-border shadow-sm overflow-hidden relative group" aria-label={t("home.standing")}>
@@ -389,6 +483,18 @@ export default function Home() {
                   )}
                 </div>
               )}
+
+              {isAuthenticated && (
+                <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <ShirtIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span className="font-mono uppercase tracking-wider">{t("home.avatar_rank")}</span>
+                  </div>
+                  <Link href="/wardrobe" className="text-xs text-primary/70 hover:text-primary font-mono uppercase tracking-widest transition-colors">
+                    {wardrobeCount > 0 ? `${wardrobeCount} items` : t("home.avatar_wardrobe")}
+                  </Link>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -457,6 +563,59 @@ export default function Home() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Daily Quests */}
+      {(dailyQuests !== null && dailyQuests.length > 0) && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-xl border-b border-border pb-2 flex-1">{t("home.daily_quests")}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {questsLoading
+              ? [1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-sm" />)
+              : dailyQuests.map((quest) => (
+                <div
+                  key={quest.id}
+                  className={`p-4 rounded-sm border transition-all ${
+                    quest.completed
+                      ? "border-primary/20 bg-primary/5"
+                      : "border-border/60 bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className={`text-sm font-medium leading-snug ${quest.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                      {getQuestTitle(quest)}
+                    </p>
+                    {quest.completed ? (
+                      <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-label={t("home.quest_complete")} />
+                    ) : (
+                      isAuthenticated && (
+                        <button
+                          onClick={() => handleCompleteQuest(quest.id)}
+                          disabled={completingQuest === quest.id}
+                          className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-primary/70 border border-primary/20 rounded-[2px] px-1.5 py-0.5 hover:bg-primary/5 transition-colors disabled:opacity-50"
+                        >
+                          {completingQuest === quest.id ? "…" : t("home.quest_mark_done")}
+                        </button>
+                      )
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-auto">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-primary/60">
+                      {t("home.quest_reward", { points: quest.noble_score_reward })}
+                    </span>
+                    {quest.pillar && (
+                      <span className="text-[10px] font-mono text-muted-foreground/50">
+                        · {t("home.quest_pillar", { num: quest.pillar })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
         </div>
       )}
 

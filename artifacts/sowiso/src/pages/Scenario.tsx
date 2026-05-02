@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Check, X, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Check, X, ShieldAlert, BookOpen, FileText } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n";
 import { levelKey } from "@/lib/content-labels";
+
+type ScenarioMode = "classic" | "story";
 
 function scoreDeltaKey(delta: number): string {
   if (delta > 0) return "profile.log.refined";
@@ -37,7 +39,15 @@ export default function Scenario() {
     level_up: boolean;
     new_level_name?: string | null;
   } | null>(null);
+  const [mode, setMode] = useState<ScenarioMode>(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("scenario_mode") : null;
+    return (stored === "story" || stored === "classic") ? stored : "classic";
+  });
   const startTime = useRef(Date.now());
+
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("scenario_mode", mode);
+  }, [mode]);
 
   useEffect(() => {
     startTime.current = Date.now();
@@ -97,10 +107,37 @@ export default function Scenario() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-      <Link href="/atelier" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4">
-        <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-        {t("scenario.return_atelier")}
-      </Link>
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <Link href="/atelier" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+          {t("scenario.return_atelier")}
+        </Link>
+
+        <div className="inline-flex items-center rounded-sm border border-border/60 p-0.5 bg-muted/20" role="tablist" aria-label={t("scenario.story_mode")}>
+          <button
+            onClick={() => setMode("classic")}
+            role="tab"
+            aria-selected={mode === "classic"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest rounded-[2px] transition-all ${
+              mode === "classic" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="w-3 h-3" aria-hidden="true" />
+            {t("scenario.classic_mode")}
+          </button>
+          <button
+            onClick={() => setMode("story")}
+            role="tab"
+            aria-selected={mode === "story"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest rounded-[2px] transition-all ${
+              mode === "story" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="w-3 h-3" aria-hidden="true" />
+            {t("scenario.story_mode")}
+          </button>
+        </div>
+      </div>
 
       <div className="space-y-6">
         <div className="flex items-center gap-3 text-sm text-primary font-mono tracking-widest uppercase">
@@ -111,11 +148,33 @@ export default function Scenario() {
 
         <h1 className="text-3xl md:text-4xl font-serif text-foreground">{scenario.title}</h1>
 
-        <div className="prose prose-stone dark:prose-invert max-w-none text-lg font-light leading-relaxed bg-card p-6 md:p-8 rounded-sm border border-border shadow-sm">
-          {scenario.content_json.situation}
-        </div>
+        {mode === "story" ? (
+          <div className="relative space-y-6 animate-in fade-in duration-500">
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent" aria-hidden="true" />
+            <div className="pl-6 md:pl-8">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-primary/60 mb-2">
+                {t("scenario.pillar")} {scenario.pillar} · {scenario.region_code}
+              </div>
+              <p className="font-serif text-xl md:text-2xl leading-relaxed text-foreground/90 italic first-letter:text-5xl first-letter:float-left first-letter:font-serif first-letter:mr-2 first-letter:leading-none first-letter:text-primary">
+                {scenario.content_json.situation}
+              </p>
+            </div>
+            <div className="pl-6 md:pl-8 pt-2">
+              <p className="font-serif text-lg text-foreground/80">
+                {scenario.content_json.question}
+              </p>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mt-3">
+                {t("scenario.story_choose")}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="prose prose-stone dark:prose-invert max-w-none text-lg font-light leading-relaxed bg-card p-6 md:p-8 rounded-sm border border-border shadow-sm">
+            {scenario.content_json.situation}
+          </div>
+        )}
 
-        <h2 className="text-xl font-serif mt-8 mb-6">{scenario.content_json.question}</h2>
+        {mode === "classic" && <h2 className="text-xl font-serif mt-8 mb-6">{scenario.content_json.question}</h2>}
 
         <div className="space-y-4" role="radiogroup" aria-label={scenario.content_json.question}>
           {scenario.content_json.options.map((option, index) => {

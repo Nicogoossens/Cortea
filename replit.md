@@ -63,6 +63,18 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   - **Profile.tsx**: Refinement Compass card with SVG pentagon radar chart (5 etiquette-language dimensions: Attentiveness, Composure, Discernment, Diplomacy, Presence). Fetches `GET /api/users/behavior-profile` in parallel with profile fetch. Card only appears for authenticated users with a behavior profile.
   - All user-facing labels are in etiquette language — no psychological labels shown to the user
 
+- **Task #21 — Youth Gamification & Social Avatar Layer**: Streak engine, daily quest system, wardrobe unlocks, Oeps-Knop emergency guide, and Story Mode. Key implementation:
+  - **DB**: `daily_streak`, `last_activity_date`, `avatar_state` (JSON), `wardrobe_unlocks` (JSON array) columns on `users`. New tables: `quests` (seeded with 7 daily quests, one per `day_of_week`) and `quest_completions` (tracks per-user/per-day completion).
+  - **Streak logic**: `noble_score.ts` submit endpoint updates `daily_streak` (+1 if consecutive day, reset to 1 if gap, no change if same day). Pillar 2 mastery thresholds (20/40/60/80) auto-unlock garments: Italian Suit, Arabic Thobe, Japanese Hakama, Scottish Tartan. Avatar `style_tier` updates from 1→4.
+  - **Quests**: `routes/quests.ts` — `GET /api/quests/daily` (returns today's quest, locale-aware via `title_nl/fr/de`), `POST /api/quests/complete` (marks done, awards `noble_score_reward`, advances streak), `GET /api/streak` (current streak count).
+  - **Oeps-Knop (Emergency Guide)**: `POST /api/counsel/apology` — body `{ situation, language, region }`, returns AI-generated apology + cultural counsel via Claude. Counsel.tsx has mode toggle between standard counsel and emergency apology.
+  - **Frontend**:
+    - `Home.tsx` — Sophistication Streak widget (Flame icon above grid), Daily Quests grid (3-column), Avatar mini-view in Standing card with link to Wardrobe.
+    - `Wardrobe.tsx` — locked/unlocked garment cards, Pillar 2 mastery hints.
+    - `Scenario.tsx` — Classic/Story Mode toggle (top-right, persisted in localStorage). Story mode renders narrative with drop-cap first letter and vertical accent line.
+    - `Shell.tsx` — Wardrobe nav item (ShirtIcon, authOnly).
+  - **i18n**: All new keys translated in EN/NL/FR/DE: `home.streak`, `home.daily_quests`, `home.quest_*`, `home.avatar_*`, `wardrobe.*`, `counsel.oeps.*`, `scenario.story_mode`, `scenario.classic_mode`, `nav.wardrobe`.
+
 - **CC Screening Worker (Task #24)**: Admin tool for extracting etiquette rules from book fragments. Key implementation:
   - **Routes**: `POST /api/admin/cc-screen` (AI extraction) + `POST /api/admin/cc-save` (persist)
   - **Multilingual**: `cc-save` automatically translates `rule_cc` into 8 languages (nl/fr/de/es/pt/it/ar/ja) via single Claude call after insert, stored in `rule_cc_i18n jsonb` column on `culture_protocols`

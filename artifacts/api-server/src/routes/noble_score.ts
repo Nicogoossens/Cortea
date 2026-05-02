@@ -1,6 +1,6 @@
 import { Router, type Request } from "express";
 import { db } from "@workspace/db";
-import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent, getPillarName } from "@workspace/db";
+import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type ScenarioContent, type WardrobeItem, getPillarName } from "@workspace/db";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
@@ -330,8 +330,61 @@ router.post("/noble-score/submit", async (req, res) => {
           isCorrect,
           behaviorSignal,
         );
+
+        // Streak logic
+        const today = new Date().toISOString().split("T")[0];
+        const lastActivity = (user as { last_activity_date?: string | null }).last_activity_date;
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+        const currentStreak = (user as { daily_streak?: number }).daily_streak ?? 0;
+        let newStreak = currentStreak;
+        if (lastActivity === today) {
+          newStreak = currentStreak;
+        } else if (lastActivity === yesterday) {
+          newStreak = currentStreak + 1;
+        } else {
+          newStreak = 1;
+        }
+
+        // Wardrobe unlock logic — Pillar 2 (Appearance)
+        const currentWardrobe: WardrobeItem[] = (user as { wardrobe_unlocks?: WardrobeItem[] | null }).wardrobe_unlocks ?? [];
+        let newWardrobe = currentWardrobe;
+        if (scenario.pillar === 2 && isCorrect) {
+          const WARDROBE_THRESHOLDS = [
+            { minScore: 20, id: "italian_suit", name: "Italian Suit", region: "IT" },
+            { minScore: 40, id: "arabic_thobe", name: "Arabic Thobe", region: "SA" },
+            { minScore: 60, id: "japanese_hakama", name: "Japanese Hakama", region: "JP" },
+            { minScore: 80, id: "scottish_tartan", name: "Scottish Tartan", region: "GB" },
+          ];
+          const alreadyUnlocked = new Set(currentWardrobe.map((w) => w.id));
+          for (const threshold of WARDROBE_THRESHOLDS) {
+            if (newPillarScore >= threshold.minScore && !alreadyUnlocked.has(threshold.id)) {
+              newWardrobe = [...newWardrobe, {
+                id: threshold.id,
+                name: threshold.name,
+                region: threshold.region,
+                pillar: 2,
+                unlocked_at: today,
+              }];
+              alreadyUnlocked.add(threshold.id);
+            }
+          }
+        }
+
+        // Avatar state — update based on noble score level
+        const newAvatarState = {
+          rank_badge: getLevelFromScore(newTotalScore).name,
+          style_tier: getLevelFromScore(newTotalScore).level,
+        };
+
         await db.update(usersTable)
-          .set({ noble_score: newTotalScore, behavior_profile: updatedProfile })
+          .set({
+            noble_score: newTotalScore,
+            behavior_profile: updatedProfile,
+            daily_streak: newStreak,
+            last_activity_date: today,
+            wardrobe_unlocks: newWardrobe,
+            avatar_state: newAvatarState,
+          })
           .where(eq(usersTable.id, userId));
       }
 

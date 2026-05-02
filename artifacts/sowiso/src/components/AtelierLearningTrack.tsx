@@ -263,15 +263,18 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     }
   }
 
+  // Per-country progression isolation (Task #209): every progress lookup
+  // MUST be scoped by region_code so progress on IT does not bleed into UK.
   const getProgressForCurrentTrack = useCallback(() => {
     if (!progressData) return null;
     return progressData.find(
       (p) =>
         p.register === register &&
         p.phase === phase &&
+        p.region_code === activeRegion &&
         (register === "middle_class" ? p.research_pillar === researchPillar : !p.research_pillar),
     );
-  }, [progressData, register, phase, researchPillar]);
+  }, [progressData, register, phase, researchPillar, activeRegion]);
 
   const currentProgress = getProgressForCurrentTrack();
 
@@ -286,7 +289,11 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   function getPillarProgress(pillar: string) {
     if (!progressData) return null;
     return progressData.find(
-      (p) => p.register === "middle_class" && p.phase === phase && p.research_pillar === pillar,
+      (p) =>
+        p.register === "middle_class" &&
+        p.phase === phase &&
+        p.region_code === activeRegion &&
+        p.research_pillar === pillar,
     );
   }
 

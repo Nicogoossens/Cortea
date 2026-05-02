@@ -40,40 +40,46 @@ export interface RegisterConfig {
 }
 
 /**
- * Numbers below come straight from the Task #209 spec.
- * They live here as constants so they're trivially overridable in tests
- * (e.g. via vi.spyOn) and easy to expose as a future config-table read.
+ * Spec defaults for the Task #209 engine. Each numeric knob can be overridden
+ * at boot via env so ops can tune limits without a redeploy
+ * (LEARNING_<REGISTER>_<KEY>, e.g. LEARNING_MIDDLE_CLASS_DAILY_LIMIT=4).
+ *
+ * Long-term these will move to a config table; the indirection through
+ * `loadRegisterConfig` keeps that future swap a one-liner.
  */
-export const REGISTER_CONFIG: Record<Register, RegisterConfig> = {
-  middle_class: {
-    sessionSize: 8,
-    dailyLimit: 3,
-    cooldownMinutes: 30,
-    crossDemographicFromLevel: 3,
-    passThresholds: {
-      1: [10, 70],
-      2: [10, 70],
-      3: [12, 75],
-      4: [12, 75],
-      5: [15, 75],
+function envInt(key: string, fallback: number): number {
+  const raw = process.env[key];
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function loadRegisterConfig(): Record<Register, RegisterConfig> {
+  return {
+    middle_class: {
+      sessionSize: envInt("LEARNING_MIDDLE_CLASS_SESSION_SIZE", 8),
+      dailyLimit: envInt("LEARNING_MIDDLE_CLASS_DAILY_LIMIT", 3),
+      cooldownMinutes: envInt("LEARNING_MIDDLE_CLASS_COOLDOWN_MINUTES", 30),
+      crossDemographicFromLevel: envInt("LEARNING_MIDDLE_CLASS_CROSS_FROM_LEVEL", 3),
+      passThresholds: {
+        1: [10, 70], 2: [10, 70], 3: [12, 75], 4: [12, 75], 5: [15, 75],
+      },
+      maxLevel: 5,
     },
-    maxLevel: 5,
-  },
-  elite: {
-    sessionSize: 5,
-    dailyLimit: 2,
-    cooldownMinutes: 60,
-    crossDemographicFromLevel: 2,
-    passThresholds: {
-      1: [10, 75],
-      2: [10, 75],
-      3: [15, 80],
-      4: [18, 80],
-      5: [20, 80],
+    elite: {
+      sessionSize: envInt("LEARNING_ELITE_SESSION_SIZE", 5),
+      dailyLimit: envInt("LEARNING_ELITE_DAILY_LIMIT", 2),
+      cooldownMinutes: envInt("LEARNING_ELITE_COOLDOWN_MINUTES", 60),
+      crossDemographicFromLevel: envInt("LEARNING_ELITE_CROSS_FROM_LEVEL", 2),
+      passThresholds: {
+        1: [10, 75], 2: [10, 75], 3: [15, 80], 4: [18, 80], 5: [20, 80],
+      },
+      maxLevel: 5,
     },
-    maxLevel: 5,
-  },
-};
+  };
+}
+
+export const REGISTER_CONFIG: Record<Register, RegisterConfig> = loadRegisterConfig();
 
 export function getRegisterConfig(register: Register): RegisterConfig {
   return REGISTER_CONFIG[register];
@@ -309,27 +315,35 @@ export async function selectQuestions(ctx: SelectionContext): Promise<SelectedQu
     }
   }
 
+  // Reserve a guaranteed slot count for cross-demographic at level ≥ threshold
+  // so the requirement is honoured even when the primary pool is large.
+  const mustCross =
+    ctx.level >= cfg.crossDemographicFromLevel && ctx.demographic !== "common";
+  const crossReserve = mustCross ? Math.max(1, Math.floor(ctx.size / 4)) : 0;
+  const primaryBudget = Math.max(1, ctx.size - crossReserve - result.length);
+
   const primaryPool = await fetchPool(ctx.level, [ctx.demographic]);
   const ranked = reRankByInterestAndContrast(primaryPool as RawQuestion[], ctx);
 
-  // Tier 3: if we don't have at least 60% from the primary pool, pull common
-  const sixtyPctTarget = Math.ceil(ctx.size * 0.6);
-  if (ranked.length < sixtyPctTarget) {
+  // Tier 3: if we don't have at least 60% of the primary budget from the
+  // primary pool, pull common fillers — but never let primary+common exceed
+  // the budget so the reserved cross slots are preserved.
+  const sixtyPctTarget = Math.ceil(primaryBudget * 0.6);
+  const primaryCapped = ranked.slice(0, primaryBudget);
+  if (primaryCapped.length < sixtyPctTarget) {
     const commonPool = await fetchPool(ctx.level, ["common"]);
     const rankedCommon = reRankByInterestAndContrast(commonPool as RawQuestion[], ctx)
-      .map(({ question }) => ({ question, source: "common_fill" as const }));
-    pushAll([...ranked, ...rankedCommon]);
+      .map(({ question }) => ({ question, source: "common_fill" as const }))
+      .slice(0, primaryBudget - primaryCapped.length);
+    pushAll([...primaryCapped, ...rankedCommon]);
   } else {
-    pushAll(ranked);
+    pushAll(primaryCapped);
   }
 
-  // Tier 4: cross-demographic mandatory mix-in once level >= threshold
-  if (
-    result.length < ctx.size &&
-    ctx.level >= cfg.crossDemographicFromLevel &&
-    ctx.demographic !== "common"
-  ) {
-    const crossCap = Math.max(1, Math.floor(ctx.size / 4));
+  // Tier 4: cross-demographic mandatory mix-in once level >= threshold.
+  // Now using the reserved slot count (not "leftover space").
+  if (mustCross) {
+    const crossCap = crossReserve;
     const crossPool = await fetchPool(ctx.level, siblingDemographics(ctx.demographic));
     const rankedCross = reRankByInterestAndContrast(crossPool as RawQuestion[], ctx)
       .slice(0, crossCap)

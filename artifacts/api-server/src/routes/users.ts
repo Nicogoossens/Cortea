@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
-import { eq, and, ne } from "drizzle-orm";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
+import { eq, and, ne, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
@@ -170,7 +170,9 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
       const incoming = (data.country_of_origin ?? "").trim() || null;
       if (existing.country_of_origin_locked_at) {
         if (incoming && incoming !== existing.country_of_origin) {
-          return res.status(409).json({
+          // 403 (per spec) — the resource exists; the caller is not
+          // authorised to mutate it. Origin is set-once.
+          return res.status(403).json({
             code: "ORIGIN_LOCKED",
             message: "Your country of origin is permanent. Please contact support if a correction is required.",
           });
@@ -256,11 +258,38 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
       return res.status(404).json({ message: "Your profile has not yet been established." });
     }
 
-    const newHistory = Array.from(new Set([...existing.region_history, bodyParsed.data.region_code]));
+    const incomingRegion = bodyParsed.data.region_code.toUpperCase();
+
+    // Once the user has any active country interests, the active focus must
+    // be one of them — arbitrary regions are not allowed. Users with zero
+    // interests yet (fresh accounts) are allowed to set anything; that first
+    // active region is also auto-added to interests below.
+    const interests = await db.select({ region_code: userCountryInterestsTable.region_code })
+      .from(userCountryInterestsTable)
+      .where(and(
+        eq(userCountryInterestsTable.user_id, userId),
+        isNull(userCountryInterestsTable.hidden_at),
+      ));
+    if (interests.length > 0 && !interests.some((r) => r.region_code === incomingRegion)) {
+      return res.status(403).json({
+        code: "REGION_NOT_IN_INTERESTS",
+        message: "Add this country to your interests before setting it as your active focus.",
+      });
+    }
+    if (interests.length === 0) {
+      // Auto-track the first focus as an interest so subsequent calls enforce.
+      await db.insert(userCountryInterestsTable).values({
+        user_id: userId,
+        region_code: incomingRegion,
+        hidden_at: null,
+      }).onConflictDoNothing();
+    }
+
+    const newHistory = Array.from(new Set([...existing.region_history, incomingRegion]));
 
     const [updated] = await db.update(usersTable)
       .set({
-        active_region: bodyParsed.data.region_code,
+        active_region: incomingRegion,
         region_history: newHistory,
       })
       .where(eq(usersTable.id, userId))

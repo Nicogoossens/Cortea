@@ -14,6 +14,11 @@
 
 import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable } from "@workspace/db";
 import { and, eq, sql, desc, gte, ne, isNull, inArray, notInArray } from "drizzle-orm";
+import {
+  shouldLevelUp as pureShouldLevelUp,
+  computeReserve as pureComputeReserve,
+  isSessionAllowed as pureIsSessionAllowed,
+} from "./learning-engine-pure";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Configuration
@@ -317,9 +322,14 @@ export async function selectQuestions(ctx: SelectionContext): Promise<SelectedQu
 
   // Reserve a guaranteed slot count for cross-demographic at level ≥ threshold
   // so the requirement is honoured even when the primary pool is large.
-  const mustCross =
-    ctx.level >= cfg.crossDemographicFromLevel && ctx.demographic !== "common";
-  const crossReserve = mustCross ? Math.max(1, Math.floor(ctx.size / 4)) : 0;
+  // Source of truth for the reservation count is the pure helper exercised
+  // by the cross-package test suite.
+  const crossReserve = pureComputeReserve(
+    ctx.size,
+    ctx.level,
+    cfg.crossDemographicFromLevel,
+    ctx.demographic,
+  );
   const primaryBudget = Math.max(1, ctx.size - crossReserve - result.length);
 
   const primaryPool = await fetchPool(ctx.level, [ctx.demographic]);
@@ -422,12 +432,16 @@ export async function evaluatePassWindow(
   const correct = recent.filter((r) => r.is_correct).length;
   const pct = recent.length === 0 ? 0 : Math.round((correct / recent.length) * 100);
 
+  // Delegate the actual decision to the pure helper so the cross-package
+  // vitest suite exercises the same code path the route handler relies on.
+  const window: Array<0 | 1> = recent.map((r) => (r.is_correct ? 1 : 0));
+
   return {
     windowFilled: recent.length,
     windowRequired: windowSize,
     correctInWindow: correct,
     requiredPct,
-    shouldLevelUp: recent.length >= windowSize && pct >= requiredPct,
+    shouldLevelUp: pureShouldLevelUp(window, [windowSize, requiredPct]),
   };
 }
 
@@ -511,7 +525,18 @@ export async function computeSessionLimits(
     cooldownMinutes: cfg.cooldownMinutes,
   };
 
-  if (sessionsToday >= cfg.dailyLimit) {
+  // Delegate the daily/cooldown decision to the pure helper (same code path
+  // the cross-package vitest suite exercises).
+  const minutesSinceLast = lastCompletedAt
+    ? (Date.now() - new Date(lastCompletedAt).getTime()) / 60000
+    : Number.POSITIVE_INFINITY;
+  const decision = pureIsSessionAllowed(
+    { sessionSize: cfg.sessionSize, dailyLimit: cfg.dailyLimit, cooldownMinutes: cfg.cooldownMinutes, crossDemographicFromLevel: cfg.crossDemographicFromLevel, maxLevel: cfg.maxLevel },
+    sessionsToday,
+    minutesSinceLast,
+  );
+
+  if (!decision.allowed && decision.reason === "daily_limit") {
     const tomorrowUtc = new Date(utcDayStart.getTime() + 24 * 60 * 60 * 1000);
     status.allowed = false;
     status.reason = "daily_limit";
@@ -519,14 +544,12 @@ export async function computeSessionLimits(
     return status;
   }
 
-  if (lastCompletedAt) {
+  if (!decision.allowed && decision.reason === "cooldown" && lastCompletedAt) {
     const elapsed = Date.now() - new Date(lastCompletedAt).getTime();
     const required = cfg.cooldownMinutes * 60 * 1000;
-    if (elapsed < required) {
-      status.allowed = false;
-      status.reason = "cooldown";
-      status.retryAfterSeconds = Math.ceil((required - elapsed) / 1000);
-    }
+    status.allowed = false;
+    status.reason = "cooldown";
+    status.retryAfterSeconds = Math.ceil((required - elapsed) / 1000);
   }
 
   return status;

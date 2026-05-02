@@ -8,7 +8,7 @@ import {
   userCountryInterestsTable,
   usersTable,
 } from "@workspace/db";
-import { eq, and, sql, isNull } from "drizzle-orm";
+import { eq, and, sql, isNull, desc, ne } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import { checkAndAwardBadges, getUserBadges, getAllBadges } from "../lib/badge-service";
@@ -106,20 +106,43 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     // so a page reload does not double-count toward the daily limit.
     let session = await findOpenSession(userId, register, regionCode, pillar, phase);
 
+    // ── Race-safe session creation ─────────────────────────────────────────
+    // We wrap the (lock → re-check open → check limits → INSERT) sequence in
+    // a real DB transaction so that:
+    //   - pg_advisory_xact_lock is held on the SAME connection as the INSERT
+    //     and is auto-released only when the txn commits/rolls back, and
+    //   - any second concurrent request blocks on SELECT pg_advisory_xact_lock
+    //     until the first transaction completes, then sees the freshly
+    //     inserted session via the inside-the-lock re-check.
+    // This makes "4th session of the day" enforcement and the
+    // "no duplicate open sessions" invariant strictly serialized per
+    // (user, register).
     if (!session) {
-      // Serialize concurrent /session calls per (user, register) using a
-      // postgres advisory lock so two near-simultaneous requests can't both
-      // pass the daily-limit check and create a second session.
-      // pg_advisory_xact_lock auto-releases at transaction end.
       const lockKey1 = Math.abs(
         userId.split("").reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)
       );
       const lockKey2 = register === "elite" ? 2 : 1;
-      await db.execute(sql`SELECT pg_advisory_xact_lock(${lockKey1}::int, ${lockKey2}::int)`);
 
-      // Re-check inside the lock — another request may have already created
-      // an open session while we were waiting.
-      session = await findOpenSession(userId, register, regionCode, pillar, phase);
+      session = await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey1}::int, ${lockKey2}::int)`);
+
+        // Re-check inside the lock — another request may have already created
+        // an open session while we were waiting on the lock.
+        const [reuse] = await tx.select().from(learningTrackSessionsTable)
+          .where(and(
+            eq(learningTrackSessionsTable.user_id, userId),
+            eq(learningTrackSessionsTable.register, register),
+            eq(learningTrackSessionsTable.region_code, regionCode),
+            eq(learningTrackSessionsTable.phase, phase),
+            pillar
+              ? eq(learningTrackSessionsTable.research_pillar, pillar)
+              : sql`${learningTrackSessionsTable.research_pillar} IS NULL`,
+            isNull(learningTrackSessionsTable.completed_at),
+          ))
+          .orderBy(desc(learningTrackSessionsTable.id))
+          .limit(1);
+        return reuse ?? null;
+      });
     }
 
     if (!session) {
@@ -611,6 +634,34 @@ router.delete("/users/country-interests/:region_code", requireAuthUser, async (r
     if (region.length < 2 || region.length > 10) {
       return res.status(400).json({ message: "A valid region_code is required." });
     }
+
+    // Invariant: active_region must always be in the user's interests. If the
+    // caller is removing the region they're currently studying, atomically
+    // switch active_region to another active interest first; if they have no
+    // other interests, refuse the deletion with 409 so the client can prompt
+    // them to pick a replacement.
+    const [u] = await db.select({ active_region: usersTable.active_region })
+      .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+    if (u?.active_region === region) {
+      const others = await db.select({ region_code: userCountryInterestsTable.region_code })
+        .from(userCountryInterestsTable)
+        .where(and(
+          eq(userCountryInterestsTable.user_id, userId),
+          isNull(userCountryInterestsTable.hidden_at),
+          ne(userCountryInterestsTable.region_code, region),
+        ));
+      if (others.length === 0) {
+        return res.status(409).json({
+          code: "ACTIVE_REGION_LAST",
+          message: "Add another country to your interests before removing your active focus.",
+        });
+      }
+      await db.update(usersTable)
+        .set({ active_region: others[0].region_code })
+        .where(eq(usersTable.id, userId));
+    }
+
     // Soft-hide so per-region progress is preserved (the user may re-add later
     // and resume mid-track).
     await db.update(userCountryInterestsTable)

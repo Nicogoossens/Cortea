@@ -407,6 +407,7 @@
   "profile.dress_code_prefs_label": "着装偏好",
   "profile.spheres_title": "您的社交圈子",
   "profile.spheres_subtitle": "选择您最常涉足的场合。您的内容将悄然反映您的世界。",
+  "profile.spheres_onboarding_hint": "您的世界已个性化 — 在引导设置时已完成配置。",
   "profile.sphere.business": "商务与会议室",
   "profile.sphere.gastronomy": "精致餐饮与美食",
   "profile.sphere.arts_culture": "艺术与文化生活",

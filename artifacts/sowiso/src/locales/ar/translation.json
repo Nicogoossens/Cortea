@@ -407,6 +407,7 @@
   "profile.culinary_interests_label": "الاهتمامات الطهوية",
   "profile.spheres_title": "مجالاتك الاجتماعية",
   "profile.spheres_subtitle": "اختر البيئات التي تتحرك فيها أكثر تكراراً. سيعكس محتواك عالمك بهدوء.",
+  "profile.spheres_onboarding_hint": "عالمك مُخصَّص بالفعل — تم ضبطه أثناء الإعداد.",
   "profile.sphere.business": "الأعمال وقاعة المجلس",
   "profile.sphere.gastronomy": "المطبخ الراقي والغاسترونومي",
   "profile.sphere.arts_culture": "الفنون والحياة الثقافية",

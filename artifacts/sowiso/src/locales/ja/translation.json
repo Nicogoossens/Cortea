@@ -407,6 +407,7 @@
   "profile.culinary_interests_label": "食文化への関心",
   "profile.spheres_title": "あなたの社交圏",
   "profile.spheres_subtitle": "最もよく活動する環境をお選びください。コンテンツがひっそりとあなたの世界を映し出します。",
+  "profile.spheres_onboarding_hint": "あなたの世界はすでにパーソナライズされています — オンボーディング時に設定済みです。",
   "profile.sphere.business": "ビジネス＆役員室",
   "profile.sphere.gastronomy": "美食＆ガストロノミー",
   "profile.sphere.arts_culture": "芸術＆文化生活",

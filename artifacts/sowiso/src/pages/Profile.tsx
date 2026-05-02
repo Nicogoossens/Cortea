@@ -1413,6 +1413,12 @@ export default function Profile() {
           </div>
           <div className="mt-3 flex items-center gap-2 h-4">
             <SaveIndicator state={spheresSave} t={t} />
+            {spheresSave === "idle" && (profileData?.situational_interests ?? []).length > 0 && (
+              <span className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40" aria-hidden="true" />
+                {t("profile.spheres_onboarding_hint")}
+              </span>
+            )}
           </div>
         </CardContent>
       </CollapsibleSection>

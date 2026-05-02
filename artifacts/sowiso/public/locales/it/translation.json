@@ -403,6 +403,7 @@
   "profile.culinary_interests_label": "Interessi Culinari",
   "profile.spheres_title": "Le Sue Sfere Sociali",
   "profile.spheres_subtitle": "Selezioni gli ambienti in cui si muove più spesso. Il suo contenuto rifletterà discretamente il suo mondo.",
+  "profile.spheres_onboarding_hint": "Il suo mondo è già personalizzato — impostato durante l'onboarding.",
   "profile.sphere.business": "Affari & Sala del Consiglio",
   "profile.sphere.gastronomy": "Alta Cucina & Gastronomia",
   "profile.sphere.arts_culture": "Arte & Vita Culturale",

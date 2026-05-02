@@ -422,6 +422,7 @@
   "profile.dress_code_prefs_label": "Dress Code Preferences",
   "profile.spheres_title": "Your Social Spheres",
   "profile.spheres_subtitle": "Select the settings in which you most often move. Your content will quietly reflect your world.",
+  "profile.spheres_onboarding_hint": "Your world is already personalised — set during onboarding.",
   "profile.sphere.business": "Business & Boardroom",
   "profile.sphere.gastronomy": "Fine Dining & Gastronomy",
   "profile.sphere.arts_culture": "Arts & Cultural Life",

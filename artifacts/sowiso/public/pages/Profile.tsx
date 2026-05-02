@@ -1894,6 +1894,34 @@ export default function Profile() {
       {/* ── Password ── */}
       <PasswordSection />
 
+      {/* ── Legal ── */}
+      <Card className="border-border/40 bg-card shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+            <Shield className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            {t("profile.legal_section")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">{t("legal.privacy_policy")}</p>
+              <p className="text-xs text-muted-foreground font-light mt-1 max-w-sm">{t("profile.legal_privacy_desc")}</p>
+            </div>
+            <Link href="/privacy-policy">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border/50 text-muted-foreground hover:text-foreground font-mono shrink-0 flex items-center gap-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                {t("profile.legal_read")}
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── Danger Zone ── */}
       <Card className="border-destructive/20 bg-card shadow-sm">
         <CardHeader className="pb-3">

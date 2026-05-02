@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon } from "lucide-react";, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -296,6 +296,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </Link>
             </>
           )}
+          <Link href="/privacy-policy" className="block">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-sm text-sidebar-foreground/30 hover:text-sidebar-foreground/60 hover:bg-sidebar-accent/20 transition-colors cursor-pointer">
+              <FileText className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+              <span className="font-mono text-[10px] tracking-wide uppercase">{t("legal.privacy_policy")}</span>
+            </div>
+          </Link>
           <div className="text-xs text-sidebar-foreground/40 text-center font-mono uppercase tracking-widest pt-1">
             {t("app.established")}
           </div>

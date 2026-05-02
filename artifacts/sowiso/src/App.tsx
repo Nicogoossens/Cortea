@@ -36,6 +36,7 @@ import Sensory from "@/pages/Sensory";
 import Navigator from "@/pages/Navigator";
 import InnerCircle from "@/pages/InnerCircle";
 import Privacy from "@/pages/Privacy";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import UseCases from "@/pages/UseCases";
 import BehaviorSkillDetail from "@/pages/BehaviorSkillDetail";
 import Guides from "@/pages/Guides";
@@ -201,6 +202,7 @@ function AppRouter() {
                   <Route path="/navigator" component={Navigator} />
                   <Route path="/inner-circle" component={InnerCircle} />
                   <Route path="/privacy" component={Privacy} />
+                  <Route path="/privacy-policy" component={PrivacyPolicyPage} />
                   <Route path="/membership" component={Membership} />
                   <Route path="/guides" component={Guides} />
                   <Route path="/wardrobe" component={Wardrobe} />
@@ -234,6 +236,7 @@ function AppRouter() {
               <Route path="/inner-circle" component={InnerCircle} />
               <Route path="/privacy" component={Privacy} />
               <Route path="/guides" component={Guides} />
+              <Route path="/privacy-policy" component={PrivacyPolicyPage} />
               <Route component={NotFound} />
             </Switch>
           </Shell>

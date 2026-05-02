@@ -897,5 +897,9 @@
   "scenario.story_mode": "Story-Modus",
   "scenario.classic_mode": "Klassischer Modus",
   "scenario.story_choose": "Wählen Sie Ihre Antwort",
-  "scenario.story_tap": "Tippen zum Auswählen"
+  "scenario.story_tap": "Tippen zum Auswählen",
+  "legal.privacy_policy": "Datenschutzerklärung",
+  "profile.legal_section": "Rechtliches",
+  "profile.legal_privacy_desc": "Lesen Sie unsere vollständige Datenschutzerklärung zu DSGVO, Datenverarbeitung, Ihren Rechten und Verhaltensanalyse.",
+  "profile.legal_read": "Erklärung lesen"
 }

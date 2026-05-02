@@ -993,5 +993,9 @@
   "compass.origins_empty": "Historical context for this region is being curated.",
   "scenario.go_deeper": "Verdiep je verder",
   "scenario.go_deeper_desc": "Read the historical background in The Compass",
-  "scenario.go_deeper_cta": "Open The Compass for {{region}}"
+  "scenario.go_deeper_cta": "Open The Compass for {{region}}",
+  "legal.privacy_policy": "Privacy Policy",
+  "profile.legal_section": "Legal",
+  "profile.legal_privacy_desc": "Read our full privacy policy covering GDPR, data processing, your rights, and behavioural intelligence disclosures.",
+  "profile.legal_read": "Read policy"
 }

@@ -856,5 +856,9 @@
   "mentor.incorrect.mature.0": "理解できるアプローチですが、ここでの慣習は一見よりも特定的かもしれません。修正をご提案させてください。",
   "mentor.incorrect.mature.1": "好ましい選択には見逃しやすい微妙さがあります。経験豊富な手においても、これらの区別は注目に値します。",
   "mentor.incorrect.mature.2": "慣習的な道ではありませんでしたが、その考え方は理解できます。受け入れられたアプローチとの違いを説明します。",
-  "mentor.incorrect.mature.3": "確立された形式からわずかに外れています。これらの細かい点こそ、真に教養ある方が際立つところです。"
+  "mentor.incorrect.mature.3": "確立された形式からわずかに外れています。これらの細かい点こそ、真に教養ある方が際立つところです。",
+  "legal.privacy_policy": "プライバシーポリシー",
+  "profile.legal_section": "法的情報",
+  "profile.legal_privacy_desc": "GDPR、データ処理、あなたの権利、行動インテリジェンスの開示に関する完全なプライバシーポリシーをお読みください。",
+  "profile.legal_read": "ポリシーを読む"
 }

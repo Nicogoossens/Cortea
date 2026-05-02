@@ -143,9 +143,17 @@ export function LandingLayout({
       </main>
 
       <footer className="px-6 md:px-12 py-4 border-t border-border/20">
-        <p className="text-center text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40">
-          {t("app.established")}
-        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40">
+            {t("app.established")}
+          </p>
+          <span className="hidden sm:inline text-muted-foreground/20 text-[10px]">·</span>
+          <Link href="/privacy-policy">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors cursor-pointer">
+              {t("legal.privacy_policy")}
+            </span>
+          </Link>
+        </div>
       </footer>
     </div>
   );

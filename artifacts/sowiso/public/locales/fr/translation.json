@@ -897,5 +897,9 @@
   "scenario.story_mode": "Mode Histoire",
   "scenario.classic_mode": "Mode Classique",
   "scenario.story_choose": "Choisissez votre réponse",
-  "scenario.story_tap": "Appuyez pour sélectionner"
+  "scenario.story_tap": "Appuyez pour sélectionner",
+  "legal.privacy_policy": "Politique de confidentialité",
+  "profile.legal_section": "Mentions légales",
+  "profile.legal_privacy_desc": "Lisez notre politique de confidentialité complète couvrant le RGPD, le traitement des données, vos droits et les divulgations d'intelligence comportementale.",
+  "profile.legal_read": "Lire la politique"
 }

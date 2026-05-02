@@ -856,5 +856,9 @@
   "mentor.incorrect.mature.0": "Un enfoque comprensible — aunque la convención aquí es quizás más particular de lo que parece. Permítame ofrecer el refinamiento.",
   "mentor.incorrect.mature.1": "La elección preferida lleva una sutileza fácil de pasar por alto. Incluso en manos experimentadas, estas distinciones merecen atención.",
   "mentor.incorrect.mature.2": "No el camino convencional, aunque se aprecia el razonamiento. Aquí es donde el enfoque aceptado difiere.",
-  "mentor.incorrect.mature.3": "Una leve desviación de la forma establecida. Estos son precisamente los puntos más finos donde los verdaderamente cultivados se distinguen."
+  "mentor.incorrect.mature.3": "Una leve desviación de la forma establecida. Estos son precisamente los puntos más finos donde los verdaderamente cultivados se distinguen.",
+  "legal.privacy_policy": "Política de privacidad",
+  "profile.legal_section": "Legal",
+  "profile.legal_privacy_desc": "Lea nuestra política de privacidad completa sobre el RGPD, el tratamiento de datos, sus derechos y las divulgaciones de inteligencia conductual.",
+  "profile.legal_read": "Leer política"
 }

@@ -186,6 +186,19 @@ export default function Home() {
     ? Math.round((tracksMastered / atelierProgress.length) * 100)
     : 0;
 
+  const regionBreakdown = Object.entries(
+    atelierProgress
+      .filter(r => r.region_code && r.questions_done > 0)
+      .reduce<Record<string, { questions: number; mastered: number; total: number }>>((acc, r) => {
+        const code = r.region_code!;
+        if (!acc[code]) acc[code] = { questions: 0, mastered: 0, total: 0 };
+        acc[code].questions += r.questions_done;
+        acc[code].mastered += r.mastered ? 1 : 0;
+        acc[code].total += 1;
+        return acc;
+      }, {})
+  ).sort((a, b) => b[1].questions - a[1].questions);
+
   const isAmbassador = profile?.subscription_tier === "ambassador";
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
   const levelLabel = t(levelKey(nobleScore?.level_name));
@@ -333,15 +346,47 @@ export default function Home() {
                 </p>
               )}
               {isAuthenticated && (
-                <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.questions_answered")}</p>
-                    <p className="text-xl font-serif mt-0.5">{totalQuestionsDone}</p>
+                <div className="pt-2 border-t border-border/60 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.questions_answered")}</p>
+                      <p className="text-xl font-serif mt-0.5">{totalQuestionsDone}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.atelier_progress")}</p>
+                      <p className="text-xl font-serif mt-0.5">{completionPct}%</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.atelier_progress")}</p>
-                    <p className="text-xl font-serif mt-0.5">{completionPct}%</p>
-                  </div>
+                  {regionBreakdown.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{t("home.region_breakdown")}</p>
+                      {regionBreakdown.slice(0, 3).map(([code, stats]) => {
+                        const region = COMPASS_REGIONS.find(r => r.code === code);
+                        const allMastered = stats.mastered === stats.total && stats.total > 0;
+                        return (
+                          <div key={code} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <FlagEmoji code={code} className="text-sm shrink-0" />
+                              <span className="text-xs font-light truncate">
+                                {region?.names[language] ?? code}
+                              </span>
+                              {allMastered && (
+                                <span className="text-[10px] text-primary shrink-0" aria-label={t("home.region_all_mastered")}>✓</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0">
+                              {t("home.region_tracks", { mastered: stats.mastered, total: stats.total })}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      {regionBreakdown.length > 3 && (
+                        <Link href="/atelier" className="block text-[10px] text-muted-foreground/60 hover:text-primary transition-colors mt-0.5">
+                          {t("home.region_more", { count: regionBreakdown.length - 3 })}
+                        </Link>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

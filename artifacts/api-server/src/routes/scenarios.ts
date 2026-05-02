@@ -68,6 +68,20 @@ function normalizeContent(raw: ScenarioContent | null | undefined): ScenarioCont
   };
 }
 
+/**
+ * Derive the preferred language from the `lang` query param or the
+ * Accept-Language request header (first subtag only). Returns undefined when
+ * neither is present, meaning the route will serve the canonical English fields.
+ */
+function pickLang(queryLang?: string, acceptLanguage?: string): string | undefined {
+  if (queryLang) return queryLang;
+  if (acceptLanguage) {
+    const first = acceptLanguage.split(",")[0]?.split(";")[0]?.trim();
+    if (first && first !== "*") return first.split("-")[0];
+  }
+  return undefined;
+}
+
 /** Resolve a single scenario's title and content to the requested language.
  *  Falls back to the canonical English fields when no translation is available.
  *  Also normalises options so that `correct` is always present (backwards compat). */
@@ -94,7 +108,8 @@ router.get("/scenarios", async (req, res) => {
       return res.status(400).json({ message: "The query parameters provided are not valid. Please review and resubmit." });
     }
 
-    const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang, situational_interests } = parsed.data;
+    const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang: queryLang, situational_interests } = parsed.data;
+    const lang = pickLang(queryLang, req.headers["accept-language"]);
     const conditions = [];
 
     if (region_code !== undefined) {
@@ -195,7 +210,10 @@ router.get("/scenarios/:scenarioId", async (req, res) => {
     }
 
     const parsedQuery = ScenarioIdQuerySchema.safeParse(req.query);
-    const lang = parsedQuery.success ? parsedQuery.data.lang : undefined;
+    const lang = pickLang(
+      parsedQuery.success ? parsedQuery.data.lang : undefined,
+      req.headers["accept-language"]
+    );
 
     const [scenario] = await db.select()
       .from(scenariosTable)

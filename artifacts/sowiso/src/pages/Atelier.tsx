@@ -74,7 +74,10 @@ export default function Atelier() {
   };
 
   const { data: allScenarios, isLoading } = useGetScenarios(queryParams, {
-    query: { queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang, spheresParam] }
+    query: {
+      queryKey: [...getGetScenariosQueryKey(), activeRegion, isVisitor ? 0 : selectedPillar, lang, spheresParam],
+      staleTime: 0,
+    }
   });
 
   const PILLAR_DOMAIN_NAMES: Record<number, string> = {

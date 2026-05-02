@@ -25,7 +25,7 @@ export default function Scenario() {
   const lang = locale.split("-")[0];
 
   const { data: scenario, isLoading } = useGetScenario(scenarioId, { lang }, {
-    query: { enabled: !!scenarioId, queryKey: getGetScenarioQueryKey(scenarioId, { lang }) }
+    query: { enabled: !!scenarioId, queryKey: getGetScenarioQueryKey(scenarioId, { lang }), staleTime: 0 }
   });
 
   const submitAnswer = useSubmitScenarioAnswer();

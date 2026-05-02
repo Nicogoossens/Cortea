@@ -190,7 +190,7 @@ export default function Scenario() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-lg leading-relaxed font-serif italic text-foreground/90">
-              "{result.mentor_feedback}"
+              "{t(result.mentor_feedback)}"
             </p>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 border-t border-border/50 gap-4">

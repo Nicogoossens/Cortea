@@ -182,46 +182,17 @@ function getAgeBand(birthYear: number | null | undefined): AgeBand {
   return "mature";
 }
 
+/** i18n key pools — the frontend translates these via t(key). */
 const MENTOR_FEEDBACK_CORRECT: Record<AgeBand, string[]> = {
-  young: [
-    "Excellent instinct — you caught something many overlook entirely. Keep that sharpness.",
-    "Spot on. You read the situation with real clarity — that kind of awareness will serve you well.",
-    "Precisely right. There is something quietly impressive about choosing well under uncertainty.",
-    "Well chosen. Your judgement here shows more polish than most at your stage.",
-  ],
-  adult: [
-    "An elegant choice — one that demonstrates discernment beyond the ordinary.",
-    "Precisely as a person of your standing would respond. Your instincts serve you well.",
-    "Your selection reflects a cultivated understanding. One would expect no less.",
-    "A commendable choice. The subtlety of your judgement does not go unnoticed.",
-  ],
-  mature: [
-    "Your selection is entirely correct — and, one suspects, informed by the kind of experience that cannot be taught.",
-    "Precisely right. There is a settled assurance in your choice that speaks well of your understanding.",
-    "Correct in every respect. The refined mind recognises what the untrained eye misses.",
-    "A distinguished choice. Your judgement reflects the quiet confidence that comes with real cultivation.",
-  ],
+  young:  ["mentor.correct.young.0", "mentor.correct.young.1", "mentor.correct.young.2", "mentor.correct.young.3"],
+  adult:  ["mentor.correct.adult.0", "mentor.correct.adult.1", "mentor.correct.adult.2", "mentor.correct.adult.3"],
+  mature: ["mentor.correct.mature.0", "mentor.correct.mature.1", "mentor.correct.mature.2", "mentor.correct.mature.3"],
 };
 
 const MENTOR_FEEDBACK_INCORRECT: Record<AgeBand, string[]> = {
-  young: [
-    "Not quite — but this is exactly the kind of situation worth understanding early. Here is the thinking behind the better approach.",
-    "The preferred choice was a step away. At your stage, refining these instincts is precisely the work.",
-    "Close — the distinction is subtle but important. Let me show you where the difference lies.",
-    "Not the ideal path here, but recognising why matters more than the slip. Here is what to carry forward.",
-  ],
-  adult: [
-    "Allow me to offer a gentle refinement — the more elegant path was perhaps not immediately apparent.",
-    "In circles where such situations arise, the preferred approach is slightly different. Let us refine this together.",
-    "A thoughtful attempt. The nuance here lies in the detail — permit me to illuminate it.",
-    "Even the most accomplished individuals encounter situations that invite further reflection. Here is how one might approach it.",
-  ],
-  mature: [
-    "An understandable approach — though the convention here is perhaps more particular than it first appears. Let me offer the refinement.",
-    "The preferred choice carries a subtlety that is easy to miss. Even in experienced hands, these distinctions reward attention.",
-    "Not the conventional path, though one appreciates the reasoning. Here is where the accepted approach differs.",
-    "A slight deviation from the established form. These finer points are precisely where the truly cultivated distinguish themselves.",
-  ],
+  young:  ["mentor.incorrect.young.0", "mentor.incorrect.young.1", "mentor.incorrect.young.2", "mentor.incorrect.young.3"],
+  adult:  ["mentor.incorrect.adult.0", "mentor.incorrect.adult.1", "mentor.incorrect.adult.2", "mentor.incorrect.adult.3"],
+  mature: ["mentor.incorrect.mature.0", "mentor.incorrect.mature.1", "mentor.incorrect.mature.2", "mentor.incorrect.mature.3"],
 };
 
 function clamp(n: number, min = 0, max = 100): number {

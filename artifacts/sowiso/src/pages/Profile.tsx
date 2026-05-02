@@ -17,6 +17,7 @@ import {
   Layers, MapPin, ArrowRight, UtensilsCrossed,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield,
+  Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja } from "date-fns/locale";
@@ -1787,6 +1788,9 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* ── Companion & Invitation ── */}
+      <CompanionInviteSection />
+
       {/* ── Password ── */}
       <PasswordSection />
 
@@ -1985,6 +1989,110 @@ function DetailRow({ label, value, locked }: { label: string; value: string; loc
         {locked && <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0 flex-none" aria-hidden="true" />}
       </span>
     </div>
+  );
+}
+
+function CompanionInviteSection() {
+  const { t } = useLanguage();
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteState, setInviteState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [copied, setCopied] = useState(false);
+
+  async function handleGenerate() {
+    setInviteState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/generate`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json() as { token: string };
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}invite/${data.token}`;
+      setInviteLink(url);
+      setInviteState("done");
+    } catch {
+      setInviteState("error");
+    }
+  }
+
+  async function handleCopy() {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // fallback: select the text
+    }
+  }
+
+  return (
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2">
+          <Users2Icon className="w-4 h-4 text-primary/60" aria-hidden="true" />
+          Companion & Uitnodiging
+        </CardTitle>
+        <CardDescription className="font-light">
+          Nodig een vertrouwde kennis uit om samen uw etiquette-reis te doorlopen. Bekijk wederzijdse voortgang en wissel reflecties uit na rollenspel-scenario's.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!inviteLink ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={inviteState === "loading"}
+            className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider"
+          >
+            {inviteState === "loading" ? (
+              <Loader2Icon className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <LinkIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
+            Uitnodigingslink aanmaken
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Uw persoonlijke uitnodigingslink</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-xs bg-muted/40 border border-border/40 rounded-sm px-3 py-2 truncate select-all text-foreground/80">
+                {inviteLink}
+              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopy}
+                className="shrink-0 font-mono text-xs"
+              >
+                {copied ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
+                ) : (
+                  <CopyIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground/60 font-light">
+              Geldig voor 7 dagen. Wanneer uw genodigde zich registreert via deze link, worden jullie automatisch als companions gekoppeld.
+            </p>
+          </div>
+        )}
+        {inviteState === "error" && (
+          <p className="text-xs text-destructive font-mono">Kon geen uitnodigingslink aanmaken. Probeer het opnieuw.</p>
+        )}
+        <div className="pt-2 border-t border-border/40">
+          <Link
+            href="/companion"
+            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+          >
+            <Users2Icon className="w-3.5 h-3.5" aria-hidden="true" />
+            Companion Dashboard bekijken
+            <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

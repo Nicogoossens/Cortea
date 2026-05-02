@@ -138,6 +138,17 @@ export default function Register() {
           name: data.full_name ?? undefined,
           isAdmin: data.is_admin,
         });
+        // Redeem pending invite token if user arrived via an invitation link
+        const pendingToken = sessionStorage.getItem("pending_invite_token");
+        if (pendingToken) {
+          sessionStorage.removeItem("pending_invite_token");
+          fetch(`${API_BASE}/api/invitations/redeem`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: pendingToken }),
+          }).catch(() => {});
+        }
         navigate("/onboarding");
         return;
       }

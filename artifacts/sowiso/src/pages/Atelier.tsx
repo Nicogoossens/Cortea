@@ -9,15 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList } from "lucide-react";
+import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList, Users2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { TierGate } from "@/components/TierGate";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useAuth } from "@/lib/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { AtelierLearningTrack } from "@/components/AtelierLearningTrack";
+
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const PILLARS = [0, 1, 2, 3, 4, 5] as const;
 
@@ -32,7 +34,17 @@ function scoreToDifficultyMax(score: number): number {
   return 1;
 }
 
-type AtelierView = "scenarios" | "tracks";
+interface RoleplayScenarioSummary {
+  id: number;
+  title: string;
+  context: string;
+  situation: string;
+  pillar: number;
+  difficulty_level: number;
+  estimated_minutes: number;
+}
+
+type AtelierView = "scenarios" | "tracks" | "roleplay";
 
 export default function Atelier() {
   usePageTitle("The Atelier");
@@ -41,9 +53,21 @@ export default function Atelier() {
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
   const [view, setView] = useState<AtelierView>("scenarios");
+  const [roleplayScenarios, setRoleplayScenarios] = useState<RoleplayScenarioSummary[]>([]);
+  const [roleplayLoading, setRoleplayLoading] = useState(false);
 
   const { data: nobleScore } = useGetNobleScore();
   const { data: profile } = useGetProfile();
+
+  useEffect(() => {
+    if (view !== "roleplay") return;
+    setRoleplayLoading(true);
+    fetch(`${API_BASE}/api/roleplay/scenarios`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setRoleplayScenarios(data))
+      .catch(() => setRoleplayScenarios([]))
+      .finally(() => setRoleplayLoading(false));
+  }, [view]);
 
   const tier = profile?.subscription_tier ?? "guest";
   const isVisitor = !isAuthenticated;
@@ -144,9 +168,9 @@ export default function Atelier() {
         </div>
       )}
 
-      {/* View toggle: Learning Tracks vs Scenarios (Traveller / Ambassador only) */}
-      {hasFullAccess && (
-        <div className="flex items-center gap-1 border border-border/40 rounded-sm p-0.5 w-fit" role="tablist" aria-label="Atelier view">
+      {/* View toggle: Scenarios / Learning Tracks / Roleplay */}
+      {!isVisitor && (
+        <div className="flex items-center gap-1 border border-border/40 rounded-sm p-0.5 w-fit flex-wrap" role="tablist" aria-label="Atelier view">
           <button
             role="tab"
             aria-selected={view === "scenarios"}
@@ -160,18 +184,33 @@ export default function Atelier() {
             <LayoutList className="w-3.5 h-3.5" aria-hidden="true" />
             {t("atelier.tab_scenarios", "Scenario's")}
           </button>
+          {hasFullAccess && (
+            <button
+              role="tab"
+              aria-selected={view === "tracks"}
+              onClick={() => setView("tracks")}
+              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
+                view === "tracks"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
+              {t("atelier.tab_learning_tracks", "Leertrajecten")}
+            </button>
+          )}
           <button
             role="tab"
-            aria-selected={view === "tracks"}
-            onClick={() => setView("tracks")}
+            aria-selected={view === "roleplay"}
+            onClick={() => setView("roleplay")}
             className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
-              view === "tracks"
+              view === "roleplay"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
-            {t("atelier.tab_learning_tracks", "Leertrajecten")}
+            <Users2 className="w-3.5 h-3.5" aria-hidden="true" />
+            Rollenspel
           </button>
         </div>
       )}
@@ -186,6 +225,67 @@ export default function Atelier() {
           gender={profile?.gender}
           ageGroup={profile?.age_group}
         />
+      )}
+
+      {/* Roleplay panel */}
+      {view === "roleplay" && (
+        <div className="space-y-6">
+          <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-border/40 bg-muted/20 text-sm">
+            <Users2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">Professioneel Rollenspel</p>
+              <p className="text-foreground/70 leading-relaxed">
+                Elk scenario kent twee afzonderlijke rollen. Doorloop uw eigen rol onafhankelijk en laat achteraf een reflectie achter voor uw companion.
+                Beide partijen kunnen elkaars voortgang inzien via het{" "}
+                <Link href="/companion" className="text-primary underline underline-offset-2">Companion Dashboard</Link>.
+              </p>
+            </div>
+          </div>
+
+          {roleplayLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => <Skeleton key={i} className="h-52 rounded-sm" />)}
+            </div>
+          ) : roleplayScenarios.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/10 space-y-3">
+              <Users2 className="w-12 h-12 mx-auto opacity-20" aria-hidden="true" />
+              <p className="font-serif text-xl">No roleplay scenarios yet</p>
+              <p className="text-sm max-w-sm mx-auto">Roleplay scenarios will appear here as they are added.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {roleplayScenarios.map((s) => (
+                <Link key={s.id} href={`/atelier/roleplay/${s.id}`}>
+                  <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/40 cursor-pointer flex flex-col">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-xs rounded-sm px-2">
+                          Pillar {s.pillar}
+                        </Badge>
+                        <span className="text-xs font-mono text-primary/60">{"·".repeat(s.difficulty_level)}</span>
+                      </div>
+                      <CardTitle className="font-serif text-xl line-clamp-2">{s.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">{s.context}</p>
+                      <p className="text-muted-foreground text-sm line-clamp-3">{s.situation}</p>
+                    </CardContent>
+                    <CardFooter className="pt-4 border-t border-border/50 text-xs text-muted-foreground flex justify-between items-center bg-muted/20">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>~{s.estimated_minutes} min</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-primary">
+                        <Users2 className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span className="font-serif italic text-xs">2 rollen</span>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Pillar filter tabs — hidden for unauthenticated visitors and when showing tracks */}

@@ -19,6 +19,9 @@ import learningTracksRouter from "./learning-tracks";
 import venuesRouter from "./venues";
 import guidesRouter from "./guides";
 import questsRouter from "./quests";
+import invitationsRouter from "./invitations";
+import companionRouter from "./companion";
+import roleplayRouter from "./roleplay";
 
 const router: IRouter = Router();
 
@@ -42,5 +45,8 @@ router.use(learningTracksRouter);
 router.use(venuesRouter);
 router.use(guidesRouter);
 router.use(questsRouter);
+router.use(invitationsRouter);
+router.use(companionRouter);
+router.use(roleplayRouter);
 
 export default router;

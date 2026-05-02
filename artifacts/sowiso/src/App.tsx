@@ -40,6 +40,9 @@ import UseCases from "@/pages/UseCases";
 import BehaviorSkillDetail from "@/pages/BehaviorSkillDetail";
 import Guides from "@/pages/Guides";
 import Wardrobe from "@/pages/Wardrobe";
+import InviteLanding from "@/pages/InviteLanding";
+import Companion from "@/pages/Companion";
+import RoleplayScenario from "@/pages/RoleplayScenario";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -164,6 +167,11 @@ function AppRouter() {
         </LandingLayout>
       </Route>
 
+      {/* Invite landing — accessible without auth */}
+      <Route path="/invite/:token">
+        <InviteLanding />
+      </Route>
+
       {/* Auth-conditional routing */}
       <Route>
         {!isAuthenticated ? (
@@ -174,6 +182,7 @@ function AppRouter() {
                 <Switch>
                   <Route path="/atelier" component={Atelier} />
                   <Route path="/atelier/:id" component={Scenario} />
+                  <Route path="/atelier/roleplay/:id" component={RoleplayScenario} />
                   <Route path="/compass" component={Compass} />
                   <Route path="/compass/cluster/:id" component={CompassCluster} />
                   <Route path="/compass/:code" component={CompassRegion} />
@@ -199,6 +208,7 @@ function AppRouter() {
             <Switch>
               <Route path="/" component={Home} />
               <Route path="/atelier" component={Atelier} />
+              <Route path="/atelier/roleplay/:id" component={RoleplayScenario} />
               <Route path="/atelier/:id" component={Scenario} />
               <Route path="/counsel" component={Counsel} />
               <Route path="/counsel/skills/:id" component={BehaviorSkillDetail} />
@@ -209,6 +219,7 @@ function AppRouter() {
               <Route path="/use-cases" component={UseCases} />
               <Route path="/profile" component={Profile} />
               <Route path="/wardrobe" component={Wardrobe} />
+              <Route path="/companion" component={Companion} />
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />
               <Route path="/mirror" component={Mirror} />

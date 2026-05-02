@@ -248,6 +248,12 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
     const [scenarios] = await db.select({ total: count() }).from(scenariosTable);
     const [protocols] = await db.select({ total: count() }).from(cultureProtocolsTable);
     const [regions] = await db.select({ total: count() }).from(compassRegionsTable);
+    const [ltqTotal] = await db.select({ total: count() }).from(learningTrackQuestionsTable);
+    const ltqByRegion = await db
+      .select({ region_code: learningTrackQuestionsTable.region_code, total: count() })
+      .from(learningTrackQuestionsTable)
+      .groupBy(learningTrackQuestionsTable.region_code)
+      .orderBy(learningTrackQuestionsTable.region_code);
 
     const translationsByLang = await db
       .select({ lang: translationsTable.language_code, total: count() })
@@ -271,6 +277,11 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
       scenarios: scenarios.total,
       culture_protocols: protocols.total,
       compass_regions: regions.total,
+      learning_track_questions: ltqTotal.total,
+      learning_track_questions_by_region: ltqByRegion.reduce((acc, r) => {
+        acc[r.region_code] = r.total;
+        return acc;
+      }, {} as Record<string, number>),
       translations: translationsByLang.reduce((acc, r) => {
         acc[r.lang] = r.total;
         return acc;

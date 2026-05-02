@@ -46,6 +46,8 @@ interface ContentStatus {
   scenarios: number;
   culture_protocols: number;
   compass_regions: number;
+  learning_track_questions: number;
+  learning_track_questions_by_region: Record<string, number>;
   translations: Record<string, number>;
   scenario_translation_coverage: Record<string, number>;
   total_scenarios: number;
@@ -567,6 +569,19 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
                   </CardContent>
                 </Card>
               ))}
+              <Card className="bg-card border-border col-span-2 md:col-span-3">
+                <CardContent className="pt-4 pb-3">
+                  <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Learning Track Questions</p>
+                  <p className="text-2xl font-serif text-foreground mt-1">{status.learning_track_questions.toLocaleString()}</p>
+                  {Object.keys(status.learning_track_questions_by_region).length > 0 && (
+                    <p className="text-xs font-mono text-muted-foreground mt-1.5">
+                      {Object.entries(status.learning_track_questions_by_region)
+                        .map(([region, n]) => `${region}: ${n.toLocaleString()}`)
+                        .join(" · ")}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
             {/* Scenario translation coverage */}

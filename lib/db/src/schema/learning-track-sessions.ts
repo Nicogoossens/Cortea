@@ -33,6 +33,11 @@ export const learningTrackSessionsTable = pgTable(
     passed:               boolean("passed"),                              // null until completed
     started_at:           timestamp("started_at").notNull().defaultNow(),
     completed_at:         timestamp("completed_at"),
+    // Remediation lifecycle: when a follow-up remediation session is created
+    // for a failed parent, we stamp `remediated_at` on the parent (so it is
+    // not picked up again) and link the child via `remediates_session_id`.
+    remediated_at:        timestamp("remediated_at"),
+    remediates_session_id: integer("remediates_session_id"),
   },
   (table) => [
     index("lts_user_register_started_idx").on(table.user_id, table.register, table.started_at),

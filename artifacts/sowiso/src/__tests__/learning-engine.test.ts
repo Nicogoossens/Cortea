@@ -280,3 +280,48 @@ describe("delete-active-region invariant", () => {
       .toEqual({ status: 409, code: "ACTIVE_REGION_LAST" });
   });
 });
+
+// ── Remediation lifecycle: failed -> single remediation -> normal session ─
+// Mirrors the SQL guard in lastFailedSession (passed=false AND
+// is_remediation!=true AND remediated_at IS NULL).
+type LifecycleRow = {
+  id: number;
+  passed: boolean | null;
+  is_remediation: boolean;
+  remediated_at: Date | null;
+  completed_at: Date | null;
+};
+function pickRemediationCandidate(rows: LifecycleRow[]): LifecycleRow | null {
+  const sorted = [...rows]
+    .filter((r) => r.passed === false && !r.is_remediation && r.remediated_at === null && r.completed_at !== null)
+    .sort((a, b) => (b.completed_at!.getTime() - a.completed_at!.getTime()));
+  return sorted[0] ?? null;
+}
+describe("remediation lifecycle", () => {
+  it("returns the failed parent only until it is remediated, then stops", () => {
+    const failed: LifecycleRow = {
+      id: 1, passed: false, is_remediation: false,
+      remediated_at: null, completed_at: new Date("2026-04-30T10:00:00Z"),
+    };
+    const rows: LifecycleRow[] = [failed];
+
+    expect(pickRemediationCandidate(rows)?.id).toBe(1);
+
+    // Simulate creation of a remediation child consuming the parent.
+    failed.remediated_at = new Date("2026-04-30T10:05:00Z");
+    rows.push({
+      id: 2, passed: null, is_remediation: true,
+      remediated_at: null, completed_at: null,
+    });
+
+    expect(pickRemediationCandidate(rows)).toBe(null);
+  });
+
+  it("does not pick remediation rows themselves as future parents", () => {
+    const remRow: LifecycleRow = {
+      id: 7, passed: false, is_remediation: true,
+      remediated_at: null, completed_at: new Date("2026-04-30T11:00:00Z"),
+    };
+    expect(pickRemediationCandidate([remRow])).toBe(null);
+  });
+});

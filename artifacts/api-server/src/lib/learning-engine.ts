@@ -614,6 +614,7 @@ export async function lastFailedSession(
     eq(learningTrackSessionsTable.phase, phase),
     eq(learningTrackSessionsTable.passed, false),
     ne(learningTrackSessionsTable.is_remediation, true),
+    isNull(learningTrackSessionsTable.remediated_at),
   ];
   if (pillar) {
     conds.push(eq(learningTrackSessionsTable.research_pillar, pillar));

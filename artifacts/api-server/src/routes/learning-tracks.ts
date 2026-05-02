@@ -246,7 +246,16 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           served_question_ids: questions.map((q) => q.id),
           repeat_question_ids: [],
           total_questions: questions.length,
+          remediates_session_id: isRemediation && failed ? failed.id : null,
         }).returning();
+
+        // Consume the parent failure so it is not picked up again on the
+        // next /session call (otherwise the user is trapped in remediation).
+        if (isRemediation && failed) {
+          await tx.update(learningTrackSessionsTable)
+            .set({ remediated_at: new Date() })
+            .where(eq(learningTrackSessionsTable.id, failed.id));
+        }
 
         inlineQuestions = questions;
         inlineProgressRow = progressRow ?? null;

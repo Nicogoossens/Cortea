@@ -421,20 +421,46 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       return res.status(400).json({ message: "Question is not part of the active session." });
     }
 
-    // Record the attempt
-    await db.insert(learningTrackAttemptsTable).values({
-      user_id: userId,
-      question_id: question.id,
-      register,
-      region_code: question.region_code,
-      research_pillar: pillar,
-      phase,
-      level: session.level,
-      answer_tier,
-      is_correct: isCorrect,
-      is_repetition: session.is_remediation,
-      session_id: session.id,
-    });
+    // Idempotency: reject duplicate submissions of the same (session, question).
+    const [existing] = await db.select({ id: learningTrackAttemptsTable.id })
+      .from(learningTrackAttemptsTable)
+      .where(and(
+        eq(learningTrackAttemptsTable.session_id, session.id),
+        eq(learningTrackAttemptsTable.question_id, question.id),
+      ))
+      .limit(1);
+    if (existing) {
+      return res.status(409).json({
+        message: "This question has already been answered in this session.",
+        code: "ANSWER_ALREADY_RECORDED",
+      });
+    }
+
+    // Record the attempt — DB unique index also enforces idempotency under races.
+    try {
+      await db.insert(learningTrackAttemptsTable).values({
+        user_id: userId,
+        question_id: question.id,
+        register,
+        region_code: question.region_code,
+        research_pillar: pillar,
+        phase,
+        level: session.level,
+        answer_tier,
+        is_correct: isCorrect,
+        is_repetition: session.is_remediation,
+        session_id: session.id,
+      });
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code;
+      if (code === "23505") {
+        return res.status(409).json({
+          message: "This question has already been answered in this session.",
+          code: "ANSWER_ALREADY_RECORDED",
+        });
+      }
+      throw e;
+    }
 
     // Update session counters; track wrong answers for next-session remediation
     const newAnswered = session.answers_given + 1;
@@ -480,12 +506,12 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
         ? eq(learningTrackProgressTable.research_pillar, pillar)
         : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
     );
-    const [existing] = await db.select().from(learningTrackProgressTable).where(progressWhere).limit(1);
+    const [progressExisting] = await db.select().from(learningTrackProgressTable).where(progressWhere).limit(1);
 
-    let currentLevel = existing?.current_level ?? session.level;
-    let correctStreak = existing?.correct_streak ?? 0;
-    let questionsDone = existing?.questions_done ?? 0;
-    let mastered = existing?.mastered ?? false;
+    let currentLevel = progressExisting?.current_level ?? session.level;
+    let correctStreak = progressExisting?.correct_streak ?? 0;
+    let questionsDone = progressExisting?.questions_done ?? 0;
+    let mastered = progressExisting?.mastered ?? false;
 
     // Don't double-count remediation attempts in `questions_done` — the user
     // isn't progressing, they're rehabilitating.
@@ -522,7 +548,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       nextAction = passed ? "continue" : "remediation";
     }
 
-    if (existing) {
+    if (progressExisting) {
       await db.update(learningTrackProgressTable)
         .set({
           current_level: currentLevel,
@@ -531,7 +557,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
           mastered,
           last_updated: new Date(),
         })
-        .where(eq(learningTrackProgressTable.id, existing.id));
+        .where(eq(learningTrackProgressTable.id, progressExisting.id));
     } else {
       await db.insert(learningTrackProgressTable).values({
         user_id: userId,
@@ -547,7 +573,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     }
 
     let newBadges: Awaited<ReturnType<typeof checkAndAwardBadges>> = [];
-    if (mastered && !existing?.mastered) {
+    if (mastered && !progressExisting?.mastered) {
       try {
         newBadges = await checkAndAwardBadges(userId, register, pillar, phase, question.region_code);
       } catch (badgeErr) {

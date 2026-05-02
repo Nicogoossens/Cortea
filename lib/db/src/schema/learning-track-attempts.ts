@@ -1,4 +1,5 @@
-import { pgTable, serial, text, integer, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { usersTable } from "./users";
 import { learningTrackQuestionsTable } from "./learning-track-questions";
 
@@ -38,6 +39,11 @@ export const learningTrackAttemptsTable = pgTable(
       table.attempted_at,
     ),
     index("lta_user_question_idx").on(table.user_id, table.question_id),
+    // Idempotency guard: at most one attempt per (session, question). Stops
+    // clients from resubmitting the same question to inflate counters.
+    uniqueIndex("lta_session_question_unique_idx")
+      .on(table.session_id, table.question_id)
+      .where(sql`${table.session_id} IS NOT NULL`),
   ],
 );
 

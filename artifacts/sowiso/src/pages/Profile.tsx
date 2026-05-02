@@ -678,9 +678,20 @@ export default function Profile() {
     try {
       const has = interestsList.some((r) => r.region_code === code);
       if (has) {
-        await fetch(`${API_BASE}/api/users/country-interests/${encodeURIComponent(code)}`, {
+        const res = await fetch(`${API_BASE}/api/users/country-interests/${encodeURIComponent(code)}`, {
           method: "DELETE", credentials: "include",
         });
+        if (!res.ok) {
+          // 409 ACTIVE_REGION_LAST or other server-side rejection: surface
+          // the message and leave local state untouched so the UI matches DB.
+          let msg = t("profile.country_remove_failed", "Could not remove this country.");
+          try {
+            const body = await res.json();
+            if (body?.message) msg = body.message;
+          } catch { /* ignore */ }
+          alert(msg);
+          return;
+        }
         setInterestsList((prev) => prev.filter((r) => r.region_code !== code));
       } else {
         const res = await fetch(`${API_BASE}/api/users/country-interests`, {

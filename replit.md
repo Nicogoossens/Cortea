@@ -69,6 +69,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
   - **Culture protocols API**: `GET /api/culture/protocols?locale=nl-NL` resolves locale-aware `display_rule` field per record (`rule_cc_i18n[lang]` → `rule_cc` → `rule_description` fallback chain)
   - **Admin UI**: After save, translations panel shows all 8 language versions of `rule_cc` immediately
 
+- **The Local — Curated Venues (Task #10)**: Venue data layer + Compass integration + Counsel context.
+  - **Data**: `artifacts/api-server/src/data/venues.ts` — 14 regions (GB, US, AE, CN, JP, FR, DE, NL, AU, CA, IT, IN, ES, PT), 5 categories (shops, dining, activities, accommodations, transport), 3–5 venues per category (~160 total). Pure in-memory static data — curated, no external APIs.
+  - **API**: `GET /api/venues?region=XX&category=YYY` in `artifacts/api-server/src/routes/venues.ts`. Optional query params filter by region and/or category.
+  - **VenueCard**: `artifacts/sowiso/src/components/VenueCard.tsx` — renders name, subcategory badge, tier badge (★), description, occasion tags, and a collapsible etiquette tip. Occasion tags use colour-coded pills (business=blue, romantic=rose, family=amber, social=emerald).
+  - **Compass "The Local" section**: Added at the bottom of `CompassRegion.tsx`. Tab-based (Winkels / Dinen / Activiteiten / Verblijven / Transport). Dining tab includes occasion filter pills (Zakelijk / Romantisch / Familiair / Vriendschappelijk). Fetches `/api/venues?region=XX` on mount.
+  - **Counsel context**: `artifacts/api-server/src/routes/counsel.ts` now calls `getVenuesForCounsel(region)` and injects all curated venues as structured context into the AI system prompt. The AI is instructed to mention venue names naturally when answering shopping, dining, accommodation, activities, or transport questions.
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
 
 ## Coding Standards

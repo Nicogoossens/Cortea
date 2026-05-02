@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db, counselQualityLogTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { extractToken } from "../lib/auth-middleware";
+import { getVenuesForCounsel } from "../data/venues";
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
@@ -101,10 +102,12 @@ router.post("/counsel", async (req, res) => {
     ? `\nPersonal objective: ${OBJECTIVE_CONTEXT[objective]}`
     : "";
 
+  const venueContext = getVenuesForCounsel(region);
+
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
-${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}${venueContext ? `\n\nCurated venues for ${region} (use these to give specific, concrete recommendations when the question concerns shopping, dining, accommodation, activities or transport — mention venue names naturally, never in a list):\n${venueContext}` : ""}
 Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
 First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 

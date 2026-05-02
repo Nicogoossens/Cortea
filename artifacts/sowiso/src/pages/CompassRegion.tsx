@@ -8,14 +8,176 @@ import {
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
 import { FlagEmoji } from "@/lib/active-region";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useState, useEffect } from "react";
+import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
+
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type VenueCategoryTab = {
+  id: VenueCategory;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+const CATEGORY_TABS: VenueCategoryTab[] = [
+  { id: "shops", label: "Winkels", icon: ShoppingBag },
+  { id: "dining", label: "Dinen", icon: Utensils },
+  { id: "activities", label: "Activiteiten", icon: Dumbbell },
+  { id: "accommodations", label: "Verblijven", icon: Hotel },
+  { id: "transport", label: "Transport", icon: Car },
+];
+
+const OCCASION_LABELS: Record<OccasionTag, string> = {
+  business: "Zakelijk",
+  romantic: "Romantisch",
+  family: "Familiair",
+  social: "Vriendschappelijk",
+};
+
+function TheLocalSection({ regionCode }: { regionCode: string }) {
+  const [activeTab, setActiveTab] = useState<VenueCategory>("shops");
+  const [occasionFilter, setOccasionFilter] = useState<OccasionTag | null>(null);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`${API_BASE}/api/venues?region=${encodeURIComponent(regionCode)}`)
+      .then((r) => r.ok ? r.json() : { venues: [] })
+      .then((data: { venues: Venue[] }) => {
+        setVenues(data.venues ?? []);
+      })
+      .catch(() => setVenues([]))
+      .finally(() => setLoading(false));
+  }, [regionCode]);
+
+  const tabVenues = venues.filter((v) => v.category === activeTab);
+  const filteredVenues = activeTab === "dining" && occasionFilter
+    ? tabVenues.filter((v) => v.occasionTags.includes(occasionFilter))
+    : tabVenues;
+
+  const occasionTags: OccasionTag[] = ["business", "romantic", "family", "social"];
+
+  return (
+    <section aria-labelledby="the-local-heading" className="space-y-6 pt-4 border-t border-border/40">
+      <div className="flex items-center gap-3">
+        <MapPin className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
+        <div>
+          <h2 id="the-local-heading" className="font-serif text-2xl text-foreground">
+            The Local
+          </h2>
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60 mt-0.5">
+            Gecureerde venues & aanbevelingen
+          </p>
+        </div>
+      </div>
+
+      {/* Category tabs */}
+      <div
+        className="flex overflow-x-auto gap-0 rounded-sm border border-border/50 divide-x divide-border/50 bg-muted/10"
+        role="tablist"
+        aria-label="Venue categorieën"
+      >
+        {CATEGORY_TABS.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
+          const count = venues.filter((v) => v.category === id).length;
+          return (
+            <button
+              key={id}
+              id={`tab-${id}`}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`tabpanel-${id}`}
+              onClick={() => {
+                setActiveTab(id);
+                setOccasionFilter(null);
+              }}
+              className={`flex-1 min-w-[90px] flex flex-col items-center gap-1 px-3 py-3 text-xs font-mono uppercase tracking-widest transition-all whitespace-nowrap ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-primary-foreground" : "text-muted-foreground/70"}`} aria-hidden="true" />
+              <span>{label}</span>
+              {count > 0 && (
+                <span className={`text-[9px] font-mono ${isActive ? "text-primary-foreground/70" : "text-muted-foreground/50"}`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Occasion filter — dining only */}
+      {activeTab === "dining" && (
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter op gelegenheid">
+          <button
+            type="button"
+            onClick={() => setOccasionFilter(null)}
+            className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest border transition-all ${
+              occasionFilter === null
+                ? "bg-primary text-primary-foreground border-primary"
+                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            }`}
+          >
+            Alle
+          </button>
+          {occasionTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => setOccasionFilter(occasionFilter === tag ? null : tag)}
+              className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest border transition-all ${
+                occasionFilter === tag
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {OCCASION_LABELS[tag]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Venue cards */}
+      <div
+        id={`tabpanel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+      >
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-36 w-full" />
+            ))}
+          </div>
+        ) : filteredVenues.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground text-sm">
+            <MapPin className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
+            <p>Geen venues gevonden voor deze selectie.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredVenues.map((venue) => (
+              <VenueCard key={venue.id} venue={venue} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function CompassRegion() {
   const { code } = useParams<{ code: string }>();
@@ -376,6 +538,9 @@ export default function CompassRegion() {
           </ul>
         </div>
       </div>
+
+      {/* The Local — curated venues */}
+      <TheLocalSection regionCode={regionCode} />
     </div>
   );
 }

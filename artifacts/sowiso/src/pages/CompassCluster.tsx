@@ -12,6 +12,7 @@ import { useLocale } from "@/lib/i18n";
 import { getCluster, getClusterBrief } from "@/lib/clusters";
 import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region";
 import { useAuth } from "@/lib/auth";
+import { isCompassRegionDetailLocked, type SubscriptionTier } from "@/lib/tier-access";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -24,7 +25,7 @@ export default function CompassCluster() {
 
   const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();
-  const tier = profile?.subscription_tier ?? "guest";
+  const tier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
   const isVisitor = !isAuthenticated;
   const isAmbassador = tier === "ambassador";
 
@@ -189,7 +190,7 @@ export default function CompassCluster() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {cluster.members.map((code) => {
               const region = clusterRegions.find((r) => r.region_code === code);
-              const isLocked = isVisitor && !GUEST_UNLOCKED_REGIONS.includes(code);
+              const isLocked = isCompassRegionDetailLocked(isAuthenticated, GUEST_UNLOCKED_REGIONS, code);
               const isUserRegion = code === activeRegion;
               const countryName = getCountryName(code);
 

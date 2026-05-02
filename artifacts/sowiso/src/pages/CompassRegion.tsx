@@ -17,6 +17,7 @@ import { FlagEmoji } from "@/lib/active-region";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
+import { isCompassRegionDetailLocked } from "@/lib/tier-access";
 
 type PillarCode = "Z1" | "Z2" | "Z3" | "Z4" | "Z5";
 
@@ -297,7 +298,7 @@ export default function CompassRegion() {
     );
   }
 
-  if (!isAuthenticated && !GUEST_UNLOCKED_REGIONS.includes(regionCode)) {
+  if (isCompassRegionDetailLocked(isAuthenticated, GUEST_UNLOCKED_REGIONS, regionCode)) {
     return (
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
         <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

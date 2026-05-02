@@ -15,6 +15,7 @@ import { LockOverlay } from "@/components/LockOverlay";
 import { useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
+import { hasFullAccess as tierHasFullAccess, isCompassRegionLocked as calcRegionLocked, type SubscriptionTier } from "@/lib/tier-access";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -26,9 +27,9 @@ export default function Compass() {
   const { activeRegion } = useActiveRegion();
   const [view, setView] = useState<"clusters" | "regions">("clusters");
 
-  const tier = profile?.subscription_tier ?? "guest";
+  const tier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
   const isVisitor = !isAuthenticated;
-  const allUnlocked = tier === "traveller" || tier === "ambassador";
+  const allUnlocked = tierHasFullAccess(tier);
 
   const { data: regions, isLoading } = useGetCultureCompass(
     { locale },
@@ -197,7 +198,7 @@ export default function Compass() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               {regions?.map((region) => {
-                const isLocked = !allUnlocked && isVisitor && !GUEST_UNLOCKED_REGIONS.includes(region.region_code);
+                const isLocked = calcRegionLocked(tier, isAuthenticated, GUEST_UNLOCKED_REGIONS, region.region_code);
                 const isUserRegion = region.region_code === activeRegion;
 
                 if (isLocked) {

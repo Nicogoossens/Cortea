@@ -16,6 +16,7 @@ import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { SITUATIONS } from "@/lib/situations";
 import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, getSituationChipsForRegion } from "@/lib/counsel";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
+import { hasFullAccess as tierHasFullAccess, hasBasicAccess as tierHasBasicAccess, isCounselDomainAccessible } from "@/lib/tier-access";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
@@ -44,10 +45,10 @@ export default function Counsel() {
   const search = useSearch();
 
   const regionActive = isRegionActive(activeRegion);
-  const tier = profile?.subscription_tier ?? "guest";
+  const tier = (profile?.subscription_tier ?? "guest") as import("@/lib/tier-access").SubscriptionTier;
   const isRegistered = isAuthenticated && !!userId;
-  const hasFullAccess = tier === "traveller" || tier === "ambassador";
-  const hasBasicAccess = isRegistered && !hasFullAccess;
+  const hasFullAccess = tierHasFullAccess(tier);
+  const hasBasicAccess = tierHasBasicAccess(tier, isAuthenticated);
   const isGuest = !isRegistered;
 
   const [questionCount, setQuestionCount] = useState(0);
@@ -92,9 +93,12 @@ export default function Counsel() {
   const [, navigate] = useLocation();
 
   function isDomainAccessible(key: DomainKey): boolean {
-    if (hasFullAccess) return true;
-    if (hasBasicAccess && !basicLimitReached) return BASIC_FREE_DOMAINS.includes(key);
-    return false;
+    return isCounselDomainAccessible(
+      tier,
+      isAuthenticated,
+      basicLimitReached,
+      BASIC_FREE_DOMAINS.includes(key),
+    );
   }
 
   const handleSubmit = async () => {

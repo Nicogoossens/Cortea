@@ -324,6 +324,14 @@ export default function Home() {
                   />
                 </div>
               </div>
+              {nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0 && (
+                <p className="text-xs text-muted-foreground font-light">
+                  {t("home.welcome_back_next_rank", {
+                    remaining: nobleScore.next_level_threshold - nobleScore.total_score,
+                    next_level: t(levelKey(nobleScore.next_level_name)),
+                  })}
+                </p>
+              )}
               {isAuthenticated && (
                 <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
                   <div>

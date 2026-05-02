@@ -1457,8 +1457,13 @@ export default function Profile() {
                   }}
                 />
               </div>
-              {nobleScore?.next_level_threshold && (
-                <div className="text-xs text-right text-muted-foreground">{t("profile.next_rank")}</div>
+              {nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0 && (
+                <div className="text-xs text-right text-muted-foreground">
+                  {t("home.welcome_back_next_rank", {
+                    remaining: nobleScore.next_level_threshold - nobleScore.total_score,
+                    next_level: t(levelKey(nobleScore.next_level_name)),
+                  })}
+                </div>
               )}
             </div>
           </CardContent>

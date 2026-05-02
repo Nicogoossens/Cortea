@@ -170,6 +170,7 @@ const SubmitAnswerBodySchema = z.object({
   scenario_id: z.number().int().positive(),
   selected_option_index: z.number().int().min(0),
   time_taken_seconds: z.number().int().optional(),
+  lang: z.string().min(2).max(10).optional(),
 });
 
 type AgeBand = "young" | "adult" | "mature";
@@ -243,7 +244,7 @@ router.post("/noble-score/submit", async (req, res) => {
       return res.status(400).json({ message: "The submission does not meet the expected form. Please review and resubmit." });
     }
 
-    const { scenario_id, selected_option_index, time_taken_seconds } = bodyParsed.data;
+    const { scenario_id, selected_option_index, time_taken_seconds, lang } = bodyParsed.data;
 
     const [scenario] = await db.select().from(scenariosTable).where(eq(scenariosTable.id, scenario_id)).limit(1);
 
@@ -346,8 +347,13 @@ router.post("/noble-score/submit", async (req, res) => {
     }
 
     const correctionStyle = (scenario as { correction_style?: string | null }).correction_style;
+    const requestLang = lang ? lang.split("-")[0] : "en";
+    const isEnglish = !lang || requestLang === "en";
+
     let mentorFeedback: string;
-    if (!isCorrect && correctionStyle) {
+    if (!isCorrect && correctionStyle && isEnglish) {
+      // Bespoke English correction tip — only shown to English-locale users.
+      // Non-English users receive a translated i18n key from the pool below.
       mentorFeedback = correctionStyle;
     } else {
       const feedbackPool = isCorrect

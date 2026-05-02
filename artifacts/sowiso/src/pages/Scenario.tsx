@@ -83,7 +83,8 @@ export default function Scenario() {
         data: {
           scenario_id: scenarioId,
           selected_option_index: selectedOption,
-          time_taken_seconds: timeTaken
+          time_taken_seconds: timeTaken,
+          lang,
         }
       },
       {

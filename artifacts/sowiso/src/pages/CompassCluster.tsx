@@ -65,15 +65,15 @@ export default function CompassCluster() {
 
       {/* Header */}
       <div className="pb-6 border-b border-border/60">
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
+        <div className="flex flex-wrap gap-2 md:gap-3 mb-4 items-center">
           {cluster.members.map((code) => (
             <span key={code} className="flex flex-col items-center gap-0.5">
-              <FlagEmoji code={code} className="text-3xl leading-none" />
-              <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-wide">{getCountryName(code)}</span>
+              <FlagEmoji code={code} className="text-xl md:text-3xl leading-none" />
+              <span className="text-[8px] md:text-[9px] font-mono text-muted-foreground/50 uppercase tracking-wide">{getCountryName(code)}</span>
             </span>
           ))}
         </div>
-        <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-3">
+        <h1 className="text-3xl md:text-5xl font-serif text-foreground mb-3">
           {t(cluster.nameKey as Parameters<typeof t>[0])}
         </h1>
         <p className="text-sm font-mono uppercase tracking-widest text-muted-foreground max-w-xl leading-relaxed">

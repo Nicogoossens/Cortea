@@ -122,7 +122,7 @@ router.get("/admin/users/:id", requireAdmin, async (req, res) => {
     const id = String(req.params.id);
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
     if (!user) return res.status(404).json({ error: "User not found." });
-    const { session_token: _st, verification_token: _vt, situational_interests: _si, ...safeUser } = user;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph, situational_interests: _si, ...safeUser } = user;
     return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to get user");
@@ -170,7 +170,7 @@ router.patch("/admin/users/:id", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, situational_interests: _si2, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph2, situational_interests: _si2, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to patch user");
@@ -191,7 +191,7 @@ router.patch("/admin/users/:id/suspend", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, situational_interests: _si3, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph3, situational_interests: _si3, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to suspend user");
@@ -212,7 +212,7 @@ router.patch("/admin/users/:id/unsuspend", requireAdmin, async (req, res) => {
       .where(eq(usersTable.id, id))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, situational_interests: _si4, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph4, situational_interests: _si4, ...safeUser } = updated;
     return res.json(safeUser);
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to unsuspend user");

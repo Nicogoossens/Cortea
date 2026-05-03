@@ -46,7 +46,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
       return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = user;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = user;
     return res.json({
       ...safeUser,
       age_group: computeAgeGroup(user.birth_year, user.noble_score),
@@ -96,7 +96,7 @@ router.post("/users/profile", requireAuthUser, async (req, res) => {
         })
         .where(eq(usersTable.id, userId))
         .returning();
-      const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+      const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = updated;
       return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
     }
 
@@ -233,7 +233,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
       .where(eq(usersTable.id, userId))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = updated;
     return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
   } catch (err) {
     req.log.error({ err }, "Failed to update user profile");
@@ -309,7 +309,7 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
       .where(eq(usersTable.id, userId))
       .returning();
 
-    const { session_token: _st, verification_token: _vt, ...safeUser } = updated;
+    const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = updated;
     return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
   } catch (err) {
     req.log.error({ err }, "Failed to update region");

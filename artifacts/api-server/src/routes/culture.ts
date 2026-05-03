@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { cultureProtocolsTable, compassRegionsTable, culturalOriginsTable } from "@workspace/db";
+import { cultureProtocolsTable, compassRegionsTable, culturalOriginsTable, usersTable } from "@workspace/db";
 import { eq, and, or, isNull, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
-import { requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
-import { hasFeatureAccess, canAccessRegion } from "../lib/tier-features";
+import { requireAuthUser, resolveUserTier, getResolvedUserId } from "../lib/auth-middleware";
+import { TIER_FEATURES, type SubscriptionTier, hasFeatureAccess, canAccessRegion } from "../lib/tier-features";
 
 const router = Router();
 
@@ -150,9 +150,9 @@ const CompassQuerySchema = z.object({
 router.get("/culture/protocols", requireAuthUser, async (req, res) => {
   try {
     const userTierRow = await resolveUserTier(req);
-    const tier = userTierRow?.subscription_tier ?? "guest";
-    if (!hasFeatureAccess(tier, "fullCulturalCompass")) {
-      return res.status(403).json({ error: "Access to cultural protocols requires a premium membership." });
+    const tier = (userTierRow?.subscription_tier ?? "guest") as SubscriptionTier;
+    if (!TIER_FEATURES[tier].fullCulturalCompass) {
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "A paid subscription is required to access cultural protocols." });
     }
 
     const parsed = ProtocolsQuerySchema.safeParse(req.query);
@@ -326,9 +326,9 @@ const SPHERE_TO_COMPASS_FIELDS: Record<string, string[]> = {
 router.get("/culture/compass/:regionCode", requireAuthUser, async (req, res) => {
   try {
     const userTierRow = await resolveUserTier(req);
-    const tier = userTierRow?.subscription_tier ?? "guest";
-    if (!hasFeatureAccess(tier, "fullCulturalCompass")) {
-      return res.status(403).json({ error: "Access to the Cultural Compass requires a premium membership." });
+    const tier = (userTierRow?.subscription_tier ?? "guest") as SubscriptionTier;
+    if (!TIER_FEATURES[tier].fullCulturalCompass) {
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "A paid subscription is required to access the Cultural Compass." });
     }
 
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
@@ -397,8 +397,14 @@ const CulturalOriginsQuerySchema = z.object({
   domain: z.string().optional(),
 });
 
-router.get("/culture/origins", async (req, res) => {
+router.get("/culture/origins", requireAuthUser, async (req, res) => {
   try {
+    const userTierRow = await resolveUserTier(req);
+    const tier = (userTierRow?.subscription_tier ?? "guest") as SubscriptionTier;
+    if (!TIER_FEATURES[tier].fullCulturalCompass) {
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "A paid subscription is required to access cultural origins." });
+    }
+
     const parsed = CulturalOriginsQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({ error: "A valid region code must be specified." });

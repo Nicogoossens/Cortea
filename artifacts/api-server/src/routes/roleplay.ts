@@ -10,7 +10,7 @@ import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
 const router = Router();
 
-router.get("/roleplay/scenarios", async (req, res) => {
+router.get("/roleplay/scenarios", requireAuthUser, async (req, res) => {
   try {
     const scenarios = await db.select({
       id: roleplayScenarioTable.id,
@@ -29,7 +29,7 @@ router.get("/roleplay/scenarios", async (req, res) => {
   }
 });
 
-router.get("/roleplay/scenarios/:id", async (req, res) => {
+router.get("/roleplay/scenarios/:id", requireAuthUser, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid scenario ID." });

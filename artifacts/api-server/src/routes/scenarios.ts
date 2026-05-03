@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { scenariosTable, type Scenario, type ScenarioContent } from "@workspace/db";
+import { scenariosTable, usersTable, type Scenario, type ScenarioContent } from "@workspace/db";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { z } from "zod";
-import { requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
-import { TIER_FEATURES } from "../lib/tier-features";
+import { requireAuthUser, resolveUserTier, getResolvedUserId } from "../lib/auth-middleware";
+import { TIER_FEATURES, type SubscriptionTier } from "../lib/tier-features";
 
 const router = Router();
 
@@ -119,18 +119,30 @@ function resolveScenarioLocales(scenarios: Scenario[], lang?: string): Scenario[
 
 router.get("/scenarios", requireAuthUser, async (req, res) => {
   try {
+    // Resolve the caller's subscription tier to enforce difficulty caps server-side.
+    const userTierRow = await resolveUserTier(req);
+    const tier = userTierRow?.subscription_tier ?? "guest";
+    const tierDifficultyMax = TIER_FEATURES[tier].scenarioDifficultyMax;
+
     const parsed = ScenariosQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({ error: "The query parameters provided are not valid. Please review and resubmit." });
     }
 
-    // Resolve the caller's subscription tier to enforce difficulty caps server-side.
-    // Unauthenticated callers are treated as guests and capped at the guest maximum.
-    const userTierRow = await resolveUserTier(req);
-    const tier = userTierRow?.subscription_tier ?? "guest";
-    const tierDifficultyMax = TIER_FEATURES[tier].scenarioDifficultyMax;
+    const { region_code, pillar, difficulty_level, age_group, limit, lang: queryLang, situational_interests } = parsed.data;
 
-    const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang: queryLang, situational_interests } = parsed.data;
+    // Cap difficulty_max to the user's tier entitlement
+    let difficulty_max = parsed.data.difficulty_max;
+    if (tierDifficultyMax !== null) {
+      difficulty_max = difficulty_max !== undefined
+        ? Math.min(difficulty_max, tierDifficultyMax)
+        : tierDifficultyMax;
+    }
+
+    // Also cap difficulty_level if explicitly requested beyond tier
+    if (difficulty_level !== undefined && tierDifficultyMax !== null && difficulty_level > tierDifficultyMax) {
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "Your subscription does not include scenarios at this difficulty level." });
+    }
     const lang = pickLang(queryLang, req.headers["accept-language"]);
     const conditions = [];
 
@@ -254,12 +266,11 @@ router.get("/scenarios/:scenarioId", requireAuthUser, async (req, res) => {
     }
 
     // Enforce tier-based difficulty cap for direct scenario lookups.
-    // Unauthenticated callers are capped at the guest maximum.
     const userTierRow = await resolveUserTier(req);
     const tier = userTierRow?.subscription_tier ?? "guest";
     const tierDifficultyMax = TIER_FEATURES[tier].scenarioDifficultyMax;
     if (tierDifficultyMax !== null && (scenario.difficulty_level ?? 0) > tierDifficultyMax) {
-      return res.status(403).json({ error: "This scenario requires a higher membership tier to access." });
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "Your subscription does not include scenarios at this difficulty level." });
     }
 
     return res.json(resolveScenarioLocale(scenario, lang));

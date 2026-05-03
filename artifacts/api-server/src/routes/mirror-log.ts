@@ -3,7 +3,8 @@ import { z } from "zod";
 import { db } from "@workspace/db";
 import { mirrorScanLogTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { extractToken } from "../lib/auth-middleware";
+import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { TIER_FEATURES, type SubscriptionTier } from "../lib/tier-features";
 
 const router = Router();
 
@@ -12,20 +13,19 @@ const MirrorLogSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
-router.post("/mirror/log-scan", async (req, res) => {
+router.post("/mirror/log-scan", requireAuthUser, async (req, res) => {
   try {
-    const token = extractToken(req);
-    if (!token) {
-      return res.status(401).json({ error: "Authentication required." });
-    }
-    const [user] = await db
-      .select({ id: usersTable.id })
+    const userId = getResolvedUserId(req);
+
+    const [userRecord] = await db
+      .select({ subscription_tier: usersTable.subscription_tier })
       .from(usersTable)
-      .where(eq(usersTable.session_token, token))
+      .where(eq(usersTable.id, userId))
       .limit(1);
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid session." });
+    const tier = ((userRecord?.subscription_tier) ?? "guest") as SubscriptionTier;
+    if (!TIER_FEATURES[tier].mirrorAccess) {
+      return res.status(403).json({ code: "TIER_REQUIRED", error: "Mirror access requires an Ambassador subscription." });
     }
 
     const parsed = MirrorLogSchema.safeParse(req.body);
@@ -36,7 +36,7 @@ router.post("/mirror/log-scan", async (req, res) => {
     const { detected_category, confidence } = parsed.data;
 
     await db.insert(mirrorScanLogTable).values({
-      user_id: user.id,
+      user_id: userId,
       detected_category,
       confidence,
     });

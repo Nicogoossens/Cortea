@@ -3,8 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { db, counselQualityLogTable, usersTable, culturalOriginsTable, counselRegionSeedsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { extractToken, requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
-import { hasFeatureAccess } from "../lib/tier-features";
+import { extractToken, requireAuthUser, resolveUserTier, getResolvedUserId } from "../lib/auth-middleware";
+import { hasFeatureAccess, TIER_FEATURES, type SubscriptionTier } from "../lib/tier-features";
 import { getVenuesForCounsel } from "../data/venues";
 import { resolvePrompt } from "../lib/register-quality-prompts";
 
@@ -145,9 +145,9 @@ router.post("/counsel", requireAuthUser, async (req, res) => {
   // aiCounselUnlimited (traveller and ambassador) may invoke the AI counsel.
   // Guest and student callers receive a 403 rather than consuming Anthropic credits.
   const userTierRow = await resolveUserTier(req);
-  const counselTier = userTierRow?.subscription_tier ?? "guest";
-  if (!hasFeatureAccess(counselTier, "aiCounselUnlimited")) {
-    res.status(403).json({ error: "AI counsel is available to Traveller and Ambassador members. Please upgrade your membership to continue." });
+  const userTier = userTierRow?.subscription_tier ?? "guest";
+  if (!TIER_FEATURES[userTier].aiCounselUnlimited) {
+    res.status(403).json({ code: "TIER_REQUIRED", error: "AI counsel is available to Traveller and Ambassador members. Please upgrade your membership to continue." });
     return;
   }
 
@@ -307,22 +307,11 @@ If a domain is specified, focus your guidance there. If the situation is ambiguo
     const canonicalDomain = domain_key?.trim();
     const queryText = query?.trim();
     if (canonicalDomain && VALID_COUNSEL_DOMAINS.has(canonicalDomain) && queryText) {
-      const token = extractToken(req);
-      if (token) {
-        db.select({ id: usersTable.id })
-          .from(usersTable)
-          .where(eq(usersTable.session_token, token))
-          .limit(1)
-          .then(([user]) => {
-            if (user) {
-              return autoLogCounselQuality(user.id, queryText, locale ?? "en", canonicalDomain);
-            }
-            return Promise.resolve();
-          })
-          .catch((logErr) => {
-            console.error("Failed to auto-log counsel quality:", logErr);
-          });
-      }
+      const userId = getResolvedUserId(req);
+      autoLogCounselQuality(userId, queryText, locale ?? "en", canonicalDomain)
+        .catch((logErr) => {
+          console.error("Failed to auto-log counsel quality:", logErr);
+        });
     }
   } catch (err) {
     clearTimeout(timer);
@@ -340,19 +329,9 @@ const LogQualitySchema = z.object({
   score: z.number().min(1).max(10),
 });
 
-router.post("/counsel/log-quality", async (req, res) => {
-  const token = extractToken(req);
-  if (!token) {
-    return res.status(401).json({ error: "Authentication required." });
-  }
-  const [user] = await db
-    .select({ id: usersTable.id })
-    .from(usersTable)
-    .where(eq(usersTable.session_token, token))
-    .limit(1);
-  if (!user) {
-    return res.status(401).json({ error: "Invalid session." });
-  }
+router.post("/counsel/log-quality", requireAuthUser, async (req, res) => {
+  const userId = getResolvedUserId(req);
+
 
   const parsed = LogQualitySchema.safeParse(req.body);
   if (!parsed.success) {
@@ -362,7 +341,7 @@ router.post("/counsel/log-quality", async (req, res) => {
   const { domain, score } = parsed.data;
   try {
     await db.insert(counselQualityLogTable).values({
-      user_id: user.id,
+      user_id: userId,
       domain,
       score,
     });
@@ -373,7 +352,15 @@ router.post("/counsel/log-quality", async (req, res) => {
   }
 });
 
-router.post("/counsel/apology", async (req, res) => {
+router.post("/counsel/apology", requireAuthUser, async (req, res) => {
+  // Enforce subscription-tier entitlement for AI counsel features.
+  const userTierRow = await resolveUserTier(req);
+  const userTier = userTierRow?.subscription_tier ?? "guest";
+  if (!TIER_FEATURES[userTier].aiCounselUnlimited) {
+    res.status(403).json({ code: "TIER_REQUIRED", error: "AI counsel is available to Traveller and Ambassador members. Please upgrade your membership to continue." });
+    return;
+  }
+
   const { situation, region_code } = req.body as {
     situation?: string;
     region_code?: string;

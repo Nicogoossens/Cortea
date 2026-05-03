@@ -424,6 +424,39 @@ export default function Home() {
         </p>
       </div>
 
+      {(!isAuthenticated || (profile?.subscription_tier ?? "guest") === "guest") && (
+        <Link href="/membership">
+          <div
+            data-testid="link-home-upgrade-cta"
+            className="group relative overflow-hidden rounded-sm border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-card to-card hover:border-amber-500/50 hover:from-amber-500/10 transition-all duration-300 cursor-pointer"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500/40 via-amber-400/60 to-amber-500/40" aria-hidden="true" />
+            <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
+              <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-sm bg-amber-500/10 border border-amber-500/20">
+                <Crown className="h-6 w-6 text-amber-600" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-amber-700/70">
+                  {t("home.upgrade_eyebrow")}
+                </p>
+                <h2 className="font-serif text-xl md:text-2xl text-foreground">
+                  {t("home.upgrade_title")}
+                </h2>
+                <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-2xl">
+                  {t("home.upgrade_description")}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <span className="inline-flex items-center gap-2 px-5 py-3 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-700 text-sm font-medium tracking-wide group-hover:bg-amber-500/20 transition-colors">
+                  {t("home.upgrade_cta")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Streak widget — subtle, above the grid */}
       {isAuthenticated && streak > 0 && (
         <StreakWidget streak={streak} />

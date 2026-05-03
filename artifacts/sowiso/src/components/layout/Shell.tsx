@@ -15,6 +15,7 @@ import {
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useGetProfile } from "@workspace/api-client-react";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 
 const NAVIGATOR_KEY = "sowiso_navigator_trips";
@@ -107,6 +108,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
     if ("authOnly" in item && item.authOnly && !isAuthenticated) return false;
     return true;
   });
+
+  const { data: profile } = useGetProfile();
+  const currentTier = (profile?.subscription_tier ?? "guest") as string;
+  const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador";
+  const showUpgradePill = (href: string) => href === "/membership" && !isPremium;
 
   const MAIN_CONTENT_ID = "main-content";
 
@@ -280,6 +286,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   {showCompanionBadge && (
                     <span className="ml-auto text-[10px] font-mono bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none" aria-label={`${companionUnread} unread notes`}>
                       {companionUnread}
+                    </span>
+                  )}
+                  {showUpgradePill(item.href) && (
+                    <span
+                      data-testid="badge-nav-upgrade"
+                      className="ml-auto text-[9px] font-mono uppercase tracking-widest bg-amber-500/20 text-amber-700 rounded-[2px] border border-amber-500/30 px-1.5 py-0.5 leading-none"
+                    >
+                      {t("nav.upgrade_pill")}
                     </span>
                   )}
                 </div>

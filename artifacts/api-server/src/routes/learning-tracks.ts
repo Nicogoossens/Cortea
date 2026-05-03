@@ -84,21 +84,16 @@ router.get("/learning-tracks/next", requireAuthUser, async (req, res) => {
       });
     }
 
-    // Mirror the region-membership guard used by /session so the two
-    // endpoints can never disagree: /next must not recommend a region
-    // that /session would refuse to serve.
-    const interests = await db.select({ region_code: userCountryInterestsTable.region_code })
-      .from(userCountryInterestsTable)
-      .where(and(
-        eq(userCountryInterestsTable.user_id, userId),
-        isNull(userCountryInterestsTable.hidden_at),
-      ));
-    if (interests.length > 0 && !interests.some((r) => r.region_code === regionCode)) {
-      return res.status(403).json({
-        code: "REGION_NOT_IN_INTERESTS",
-        error: "Add this country to your interests before studying it.",
+    // Auto-add the requested region to the user's interests if missing.
+    // The interests list is a personalization layer (which countries the
+    // user is actively tracking), not an access gate — every region with
+    // published content is freely studiable.
+    await db.insert(userCountryInterestsTable)
+      .values({ user_id: userId, region_code: regionCode })
+      .onConflictDoUpdate({
+        target: [userCountryInterestsTable.user_id, userCountryInterestsTable.region_code],
+        set: { hidden_at: null },
       });
-    }
 
     const slot = await computeNextSlot(userId, register, regionCode);
     return res.json(slot);
@@ -159,23 +154,16 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       });
     }
 
-    // ── Region-membership guard ─────────────────────────────────────────────
-    // The requested region must be one of the user's active country interests.
-    // We allow a single legacy bypass: if the user has NO interests yet, we
-    // fall through (the GET /users/country-interests handler will backfill on
-    // the next read), so existing sessions don't 403 mid-flight.
-    const userInterests = await db.select({ region_code: userCountryInterestsTable.region_code })
-      .from(userCountryInterestsTable)
-      .where(and(
-        eq(userCountryInterestsTable.user_id, userId),
-        isNull(userCountryInterestsTable.hidden_at),
-      ));
-    if (userInterests.length > 0 && !userInterests.some((r) => r.region_code === regionCode)) {
-      return res.status(403).json({
-        code: "REGION_NOT_IN_INTERESTS",
-        error: "Add this country to your interests before studying it.",
+    // Auto-add the requested region to the user's interests if missing.
+    // The interests list is a personalization layer (which countries the
+    // user is actively tracking), not an access gate — every region with
+    // published content is freely studiable.
+    await db.insert(userCountryInterestsTable)
+      .values({ user_id: userId, region_code: regionCode })
+      .onConflictDoUpdate({
+        target: [userCountryInterestsTable.user_id, userCountryInterestsTable.region_code],
+        set: { hidden_at: null },
       });
-    }
 
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.

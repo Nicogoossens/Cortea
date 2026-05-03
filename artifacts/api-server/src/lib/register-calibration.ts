@@ -429,3 +429,74 @@ export async function calibrateTranslationsByIds(
 
   return summary;
 }
+
+// ── In-memory JSONB map calibration ──────────────────────────────────────────
+//
+// Some content tables store translations in a JSONB column (e.g.
+// `culture_protocols.rule_cc_i18n`, `scenarios.content_i18n`) instead of
+// individual rows in `translations`. This helper calibrates such a map in
+// memory without touching the database, so the caller can decide what to do
+// with the result (typically: write the calibrated map back to the JSONB
+// column once it has changed).
+//
+// Locales whose base code is not in SUPPORTED_BASE_CODES are passed through
+// unchanged. All eligible locales are evaluated in parallel.
+
+export interface I18nMapCalibrationResult {
+  calibrated: Record<string, string>;
+  unchanged: number;
+  rewritten: number;
+  skipped: number;
+  errors: number;
+  changed: boolean;
+}
+
+export async function calibrateI18nMap(
+  map: Record<string, string>,
+  module: CalibrationModule
+): Promise<I18nMapCalibrationResult> {
+  const calibrated: Record<string, string> = { ...map };
+  let unchanged = 0;
+  let rewritten = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  const tasks = Object.entries(map).map(async ([code, value]) => {
+    if (typeof value !== "string" || value.length === 0) {
+      skipped++;
+      return;
+    }
+    const baseCode = code.split("-")[0];
+    if (!isSupportedLocale(baseCode)) {
+      skipped++;
+      return;
+    }
+    const regionLink = code.includes("-") ? code : null;
+    try {
+      const result = await evaluateString(value, module, baseCode, regionLink);
+      if (result === null) {
+        errors++;
+        return;
+      }
+      if (result.pass) {
+        unchanged++;
+      } else {
+        calibrated[code] = result.rewritten;
+        rewritten++;
+      }
+    } catch {
+      errors++;
+    }
+  });
+
+  await Promise.all(tasks);
+
+  return {
+    calibrated,
+    unchanged,
+    rewritten,
+    skipped,
+    errors,
+    changed: rewritten > 0,
+  };
+}

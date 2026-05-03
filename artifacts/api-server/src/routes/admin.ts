@@ -9,10 +9,10 @@ import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable,
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
-import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
+import { eq, ilike, or, desc, sql, count, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
-import { calibrateTranslationsByIds, type CalibrationModule } from "../lib/register-calibration";
+import { calibrateTranslationsByIds, calibrateI18nMap, type CalibrationModule } from "../lib/register-calibration";
 
 const execAsync = promisify(exec);
 const __currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -559,13 +559,88 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
       if (newScenarioIds.length > 0) {
         const minId = Math.min(...newScenarioIds);
         const maxId = Math.max(...newScenarioIds);
+        const ids = [...newScenarioIds];
         const child = spawn(
           "node",
           ["scripts/scenario-translate.mjs", "--from", String(minId), "--to", String(maxId)],
-          { cwd: WORKSPACE_ROOT, env: { ...process.env }, detached: true, stdio: "ignore" },
+          { cwd: WORKSPACE_ROOT, env: { ...process.env }, stdio: "ignore" },
         );
-        child.unref();
-        req.log?.info({ newScenarioIds, minId, maxId }, "Admin: scenario translate worker spawned in background");
+        req.log?.info({ newScenarioIds: ids, minId, maxId }, "Admin: scenario translate worker spawned in background");
+
+        // Auto-trigger register calibration once translation has completed.
+        // Each scenario's `social_class` selects the target register
+        // (middle_class → standard, elite → elite, universal → skipped).
+        child.on("exit", async (code) => {
+          if (code !== 0) {
+            req.log?.warn({ code, ids }, "Admin: scenario translate worker exited non-zero; skipping calibration");
+            return;
+          }
+          try {
+            const rows = await db
+              .select({
+                id: scenariosTable.id,
+                social_class: scenariosTable.social_class,
+                content_i18n: scenariosTable.content_i18n,
+              })
+              .from(scenariosTable)
+              .where(inArray(scenariosTable.id, ids));
+
+            for (const row of rows) {
+              if (!row.content_i18n) continue;
+              const module: CalibrationModule | null =
+                row.social_class === "elite"
+                  ? "elite"
+                  : row.social_class === "middle_class"
+                    ? "standard"
+                    : null;
+              if (!module) continue;
+
+              // Calibrate each ScenarioContent field (situation, question,
+              // historical_context) per locale; option text/explanations are
+              // left untouched here to keep the call volume bounded.
+              const calibrated: Record<string, typeof row.content_i18n[string]> = {
+                ...(row.content_i18n as Record<string, NonNullable<typeof row.content_i18n>[string]>),
+              };
+              let anyChanged = false;
+              for (const [locale, content] of Object.entries(calibrated)) {
+                const fieldMap: Record<string, string> = {
+                  situation: content.situation ?? "",
+                  question: content.question ?? "",
+                };
+                if (content.historical_context) fieldMap.historical_context = content.historical_context;
+
+                // Calibrate each field by sending it through the per-locale
+                // calibrator one field at a time, so the locale-specific
+                // system prompt is selected correctly.
+                const perFieldResult: Record<string, string> = {};
+                for (const [field, text] of Object.entries(fieldMap)) {
+                  if (!text) continue;
+                  const r = await calibrateI18nMap({ [locale]: text }, module);
+                  perFieldResult[field] = r.calibrated[locale] ?? text;
+                  if (r.changed) anyChanged = true;
+                }
+                calibrated[locale] = {
+                  ...content,
+                  ...(perFieldResult.situation !== undefined ? { situation: perFieldResult.situation } : {}),
+                  ...(perFieldResult.question !== undefined ? { question: perFieldResult.question } : {}),
+                  ...(perFieldResult.historical_context !== undefined
+                    ? { historical_context: perFieldResult.historical_context }
+                    : {}),
+                };
+              }
+
+              if (anyChanged) {
+                await db
+                  .update(scenariosTable)
+                  .set({ content_i18n: calibrated })
+                  .where(eq(scenariosTable.id, row.id));
+              }
+            }
+            req.log?.info({ ids, count: rows.length }, "Admin: scenario register calibration completed");
+          } catch (calErr) {
+            req.log?.warn({ calErr, ids }, "Admin: scenario register calibration failed");
+          }
+        });
       }
     } else if (type === "compass_regions") {
       for (let i = 0; i < items.length; i++) {
@@ -1112,6 +1187,31 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
       }
     } catch (translErr) {
       req.log?.warn({ translErr, id: inserted.id }, "CC Save: translation step failed — record saved without translations");
+    }
+
+    // ── Auto-trigger register calibration for the freshly translated content ──
+    // CC mentor copy is by design accessible/middle-class, so we calibrate the
+    // JSONB map to the "standard" register. Fire-and-forget so the request
+    // returns immediately; the calibrated values overwrite rule_cc_i18n once
+    // the per-locale evaluations complete.
+    if (Object.keys(translations).length > 0) {
+      const ccId = inserted.id;
+      void calibrateI18nMap(translations, "standard")
+        .then(async (cal) => {
+          if (cal.changed) {
+            await db
+              .update(cultureProtocolsTable)
+              .set({ rule_cc_i18n: cal.calibrated })
+              .where(eq(cultureProtocolsTable.id, ccId));
+          }
+          req.log?.info(
+            { ccId, unchanged: cal.unchanged, rewritten: cal.rewritten, errors: cal.errors },
+            "CC Save: register calibration completed"
+          );
+        })
+        .catch((calErr) => {
+          req.log?.warn({ calErr, ccId }, "CC Save: register calibration failed");
+        });
     }
 
     return res.json({ ok: true, id: inserted.id, translations });

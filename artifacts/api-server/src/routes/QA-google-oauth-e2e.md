@@ -70,6 +70,31 @@ at the bottom). All 7 scenarios passed:
 
 ---
 
+---
+
+## Production Deployment Verification — Task #247
+
+**Task:** #247 — Publiceer de Google OAuth-fix naar productie  
+**Date:** 2026-05-03  
+**Triggered by:** task-agent pre-publish verification (publish must be executed from main agent after merge)
+
+### Production readiness checks
+
+| Check | Result |
+|-------|--------|
+| `GET https://sowiso-01.replit.app/api/auth/google/status` → `{"configured":true}` | ✅ PASS |
+| `APP_PUBLIC_URL=https://sowiso-01.replit.app` set in production env | ✅ PASS |
+| `GOOGLE_CLIENT_ID` secret present | ✅ PASS |
+| `GOOGLE_CLIENT_SECRET` secret present | ✅ PASS |
+| `prompt: "select_account"` in `google-oauth.ts` (account picker) | ✅ PASS |
+| `getOrigin()` uses `APP_PUBLIC_URL` first (correct redirect URI on prod) | ✅ PASS |
+| `isNewUser` flag routes new users → `/onboarding`, existing → home | ✅ PASS |
+| `artifact.toml` production build/run config valid | ✅ PASS |
+
+**Deploy action:** `suggestDeploy()` cannot be called from a task-agent context. The user must press **Publish** in the Replit UI after this task is merged to push the verified code to `https://sowiso-01.replit.app`.
+
+---
+
 ## Note on the Google consent screen step
 
 The one step that cannot be automated without real Google credentials is the

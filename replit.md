@@ -35,7 +35,7 @@ The Cortéa application is structured as a pnpm workspace monorepo.
 **Architectural Patterns & Decisions**:
 - **Monorepo Structure**: Facilitates shared code, consistent tooling, and independent package development.
 - **API Design**: All API routes are prefixed with `/api` and defined in `app.ts`. Route handlers avoid the `/api` prefix internally.
-- **Authentication**: Magic-link email authentication (passwordless, OAuth-less, SMS-less). Session tokens are server-side stored and used as Bearer tokens.
+- **Authentication**: Magic-link email authentication (passwordless) and Google OAuth 2.0 via OpenID Connect (PKCE). Session tokens are server-side stored and used as Bearer tokens. Google sign-in uses `prompt: "select_account"` to force the account picker and routes new users to `/onboarding`; `APP_PUBLIC_URL` is set in production to ensure the correct redirect URI is used (`https://sowiso-01.replit.app/api/auth/google/callback`).
 - **Internationalization (i18n)**: Supports 9 languages with locale-aware content and UI. Content is bundled JSON or fetched via API with upsert capabilities. RTL direction is handled dynamically.
 - **Content Segmentation**: Differentiates `locale` (UI language) from `activeRegion` (etiquette context).
 - **Module Structure**: Emphasizes separation of concerns; routes handle validation and service calls, while services contain business logic and DB queries.

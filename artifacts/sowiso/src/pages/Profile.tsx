@@ -2177,7 +2177,10 @@ function InterestSelector({
 
 /**
  * Collapsible card section — header is always visible; body toggles on click.
- * Starts collapsed (isOpen = false) and resets to collapsed on next page load.
+ * When `storageKey` is provided the open/closed state is persisted in
+ * localStorage under the key `profile_section_<storageKey>` and restored on
+ * mount. Defaults to closed when no stored value exists or storage is
+ * unavailable (e.g. private browsing).
  */
 function CollapsibleSection({
   title, icon, description, className, storageKey, children,

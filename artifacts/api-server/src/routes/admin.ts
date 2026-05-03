@@ -96,6 +96,11 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
         active_region: usersTable.active_region,
         objectives: usersTable.objectives,
         onboarding_completed: usersTable.onboarding_completed,
+        utm_source: usersTable.utm_source,
+        utm_medium: usersTable.utm_medium,
+        utm_campaign: usersTable.utm_campaign,
+        utm_content: usersTable.utm_content,
+        utm_term: usersTable.utm_term,
       })
       .from(usersTable)
       .where(whereClause)
@@ -238,6 +243,96 @@ router.delete("/admin/users/:id", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to delete user");
     return res.status(500).json({ error: "A difficulty arose deleting the user." });
+  }
+});
+
+// ── UTM Attribution Analytics ────────────────────────────────────────────────
+
+/**
+ * GET /admin/utm-attribution — campaign attribution breakdown for marketing.
+ *
+ * Returns counts of registered users grouped by each UTM dimension
+ * (source / medium / campaign / content / term) plus the top combined
+ * source+medium+campaign tuples and overall totals.
+ *
+ * Only users with at least one UTM field populated count as "attributed";
+ * the rest are reported as `unattributed` so the marketing team can gauge
+ * coverage of their tagged links.
+ */
+router.get("/admin/utm-attribution", requireAdmin, async (req, res) => {
+  try {
+    const [{ total }] = await db.select({ total: count() }).from(usersTable);
+
+    const [{ attributed }] = await db
+      .select({ attributed: count() })
+      .from(usersTable)
+      .where(
+        or(
+          sql`${usersTable.utm_source} IS NOT NULL`,
+          sql`${usersTable.utm_medium} IS NOT NULL`,
+          sql`${usersTable.utm_campaign} IS NOT NULL`,
+          sql`${usersTable.utm_content} IS NOT NULL`,
+          sql`${usersTable.utm_term} IS NOT NULL`,
+        ),
+      );
+
+    async function groupBreakdown(col: typeof usersTable.utm_source) {
+      const rows = await db
+        .select({ value: col, total: count() })
+        .from(usersTable)
+        .where(sql`${col} IS NOT NULL`)
+        .groupBy(col)
+        .orderBy(desc(count()))
+        .limit(50);
+      return rows.map((r) => ({ value: r.value ?? "(none)", count: r.total }));
+    }
+
+    const [bySource, byMedium, byCampaign, byContent, byTerm] = await Promise.all([
+      groupBreakdown(usersTable.utm_source),
+      groupBreakdown(usersTable.utm_medium),
+      groupBreakdown(usersTable.utm_campaign),
+      groupBreakdown(usersTable.utm_content),
+      groupBreakdown(usersTable.utm_term),
+    ]);
+
+    const topCombined = await db
+      .select({
+        utm_source: usersTable.utm_source,
+        utm_medium: usersTable.utm_medium,
+        utm_campaign: usersTable.utm_campaign,
+        total: count(),
+      })
+      .from(usersTable)
+      .where(
+        or(
+          sql`${usersTable.utm_source} IS NOT NULL`,
+          sql`${usersTable.utm_medium} IS NOT NULL`,
+          sql`${usersTable.utm_campaign} IS NOT NULL`,
+        ),
+      )
+      .groupBy(usersTable.utm_source, usersTable.utm_medium, usersTable.utm_campaign)
+      .orderBy(desc(count()))
+      .limit(25);
+
+    return res.json({
+      total_users: total,
+      attributed_users: attributed,
+      unattributed_users: total - attributed,
+      by_source: bySource,
+      by_medium: byMedium,
+      by_campaign: byCampaign,
+      by_content: byContent,
+      by_term: byTerm,
+      top_combined: topCombined.map((r) => ({
+        utm_source: r.utm_source,
+        utm_medium: r.utm_medium,
+        utm_campaign: r.utm_campaign,
+        count: r.total,
+      })),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to compute UTM attribution");
+    return res.status(500).json({ error: "A difficulty arose computing UTM attribution." });
   }
 });
 

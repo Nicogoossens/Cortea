@@ -285,30 +285,19 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
 
     const incomingRegion = bodyParsed.data.region_code.toUpperCase();
 
-    // Once the user has any active country interests, the active focus must
-    // be one of them — arbitrary regions are not allowed. Users with zero
-    // interests yet (fresh accounts) are allowed to set anything; that first
-    // active region is also auto-added to interests below.
-    const interests = await db.select({ region_code: userCountryInterestsTable.region_code })
-      .from(userCountryInterestsTable)
-      .where(and(
-        eq(userCountryInterestsTable.user_id, userId),
-        isNull(userCountryInterestsTable.hidden_at),
-      ));
-    if (interests.length > 0 && !interests.some((r) => r.region_code === incomingRegion)) {
-      return res.status(403).json({
-        code: "REGION_NOT_IN_INTERESTS",
-        error: "Add this country to your interests before setting it as your active focus.",
-      });
-    }
-    if (interests.length === 0) {
-      // Auto-track the first focus as an interest so subsequent calls enforce.
-      await db.insert(userCountryInterestsTable).values({
-        user_id: userId,
-        region_code: incomingRegion,
-        hidden_at: null,
-      }).onConflictDoNothing();
-    }
+    // Setting a region as your active focus is itself an explicit signal of
+    // interest — auto-add (or un-hide) the region in the user's interests so
+    // subsequent visits show it in their tracked-countries list. Previously
+    // the API rejected unknown regions with 403, but that produced confusing
+    // "Could not save" errors when picking a country from Course Settings.
+    await db.insert(userCountryInterestsTable).values({
+      user_id: userId,
+      region_code: incomingRegion,
+      hidden_at: null,
+    }).onConflictDoUpdate({
+      target: [userCountryInterestsTable.user_id, userCountryInterestsTable.region_code],
+      set: { hidden_at: null },
+    });
 
     const newHistory = Array.from(new Set([...existing.region_history, incomingRegion]));
 

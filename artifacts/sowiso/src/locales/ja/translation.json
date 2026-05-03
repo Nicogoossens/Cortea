@@ -78,6 +78,8 @@
   "atelier.guest.locked_premium": "プレミアム購読が必要です",
   "atelier.guest.upgrade": "購読をアップグレード",
   "atelier.empty": "利用可能なシナリオはありません。",
+  "atelier.tab_scenarios": "シナリオ",
+  "atelier.tab_learning_tracks": "学習トラック",
   "atelier.empty_region_hint": "現在、以下の地域のトレーニングシナリオはご利用いただけません",
   "atelier.change_region": "アクティブな地域を変更する",
   "atelier.fallback_banner": "{{region}}の地域固有のコンテンツを準備中です。それまでの間、普遍的なエチケットのシナリオを表示しています。",

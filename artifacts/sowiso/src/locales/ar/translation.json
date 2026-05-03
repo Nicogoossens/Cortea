@@ -78,6 +78,8 @@
   "atelier.guest.locked_premium": "يتطلب اشتراكاً متميزاً",
   "atelier.guest.upgrade": "ترقية الاشتراك",
   "atelier.empty": "لا توجد سيناريوهات متاحة.",
+  "atelier.tab_scenarios": "السيناريوهات",
+  "atelier.tab_learning_tracks": "مسارات التعلم",
   "atelier.empty_region_hint": "لا توجد سيناريوهات تدريب متاحة حالياً لـ",
   "atelier.change_region": "غيّر منطقتك النشطة",
   "atelier.fallback_banner": "يتم إعداد محتوى خاص بمنطقة {{region}}. في غضون ذلك، يتم عرض سيناريوهات آداب سلوك عالمية.",

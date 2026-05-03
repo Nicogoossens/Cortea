@@ -77,6 +77,8 @@
   "atelier.duration": "min",
   "atelier.refines": "Affine le rang",
   "atelier.empty": "Aucun scénario disponible.",
+  "atelier.tab_scenarios": "Scénarios",
+  "atelier.tab_learning_tracks": "Parcours d'apprentissage",
   "atelier.empty_region_hint": "Aucun scénario de formation n'est disponible pour",
   "atelier.change_region": "Modifier votre région active",
   "atelier.fallback_banner": "Le contenu spécifique à la région {{region}} est en cours de préparation. Des scénarios de savoir-vivre universels sont affichés en attendant.",

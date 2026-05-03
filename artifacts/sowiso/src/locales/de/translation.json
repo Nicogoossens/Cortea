@@ -77,6 +77,8 @@
   "atelier.duration": "Min.",
   "atelier.refines": "Verfeinert den Rang",
   "atelier.empty": "Keine Szenarien verfügbar.",
+  "atelier.tab_scenarios": "Szenarien",
+  "atelier.tab_learning_tracks": "Lernpfade",
   "atelier.empty_region_hint": "Für diese Region sind derzeit keine Trainingsszenarien verfügbar:",
   "atelier.change_region": "Ihre aktive Region ändern",
   "atelier.fallback_banner": "Regionspezifische Inhalte für {{region}} werden vorbereitet. In der Zwischenzeit werden universelle Etikette-Szenarien angezeigt.",

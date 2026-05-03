@@ -80,6 +80,8 @@
   "atelier.duration": "min",
   "atelier.refines": "Verfijnt de rang",
   "atelier.empty": "Geen scenario's beschikbaar.",
+  "atelier.tab_scenarios": "Scenario's",
+  "atelier.tab_learning_tracks": "Leertrajecten",
   "atelier.empty_region_hint": "Er zijn momenteel geen trainingsscenario's beschikbaar voor",
   "atelier.change_region": "Wijzig uw actieve regio",
   "atelier.fallback_banner": "Regiospecifieke inhoud voor {{region}} wordt voorbereid. In de tussentijd worden universele etiquettescenario's weergegeven.",

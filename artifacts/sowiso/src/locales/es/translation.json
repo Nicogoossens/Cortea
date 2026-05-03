@@ -71,6 +71,8 @@
   "atelier.duration": "min",
   "atelier.refines": "Refina el rango",
   "atelier.empty": "No hay escenarios disponibles.",
+  "atelier.tab_scenarios": "Escenarios",
+  "atelier.tab_learning_tracks": "Itinerarios de aprendizaje",
   "atelier.empty_region_hint": "Actualmente no hay escenarios de entrenamiento disponibles para",
   "atelier.change_region": "Cambiar su región activa",
   "atelier.fallback_banner": "El contenido específico para la región {{region}} está en preparación. Mientras tanto, se muestran escenarios de etiqueta universales.",

@@ -149,10 +149,13 @@ export default function Counsel() {
     try {
       const res = await fetch(`${API_BASE}/api/counsel`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: query.trim() || undefined,
           domain: domainLabel,
+          domain_key: logDomain,
+          locale,
           region_code: effectiveRegion,
           situation: situationContext.trim() || undefined,
           situational_interests: effectiveSphere ? [effectiveSphere] : (profile?.situational_interests ?? []),

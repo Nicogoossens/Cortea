@@ -5,6 +5,73 @@ import { db, counselQualityLogTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { extractToken } from "../lib/auth-middleware";
 import { getVenuesForCounsel } from "../data/venues";
+import { resolvePrompt } from "../lib/register-quality-prompts";
+
+const VALID_COUNSEL_DOMAINS = new Set([
+  "gastronomy",
+  "business",
+  "eloquence",
+  "formal_events",
+  "dress_code",
+  "cultural_knowledge",
+]);
+
+/**
+ * Evaluate the register quality of a query string using the same Anthropic
+ * model used by the /register-quality/check endpoint, then log the result
+ * to counsel_quality_log tagged with the canonical domain key.
+ *
+ * This runs after the counselling response has already been sent to the client
+ * so it never adds to the user-facing latency. Any failure is non-fatal.
+ */
+async function autoLogCounselQuality(
+  userId: string,
+  query: string,
+  locale: string,
+  domainKey: string,
+): Promise<void> {
+  const anthropicBase = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
+  const anthropicKey  = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
+  if (!anthropicBase || !anthropicKey) return;
+
+  const systemPrompt = resolvePrompt(locale);
+  const response = await fetch(`${anthropicBase}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 128,
+      system: systemPrompt,
+      messages: [{ role: "user", content: `Evaluate this text for elite register:\n\n"${query}"` }],
+    }),
+  });
+
+  if (!response.ok) return;
+
+  const data = await response.json() as { content?: Array<{ type: string; text: string }> };
+  let raw = data.content?.[0]?.text?.trim() ?? "{}";
+  raw = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  let result: { score?: number } = {};
+  try {
+    result = JSON.parse(raw);
+  } catch {
+    return;
+  }
+
+  const score = result.score;
+  if (typeof score !== "number" || score < 1 || score > 10) return;
+
+  await db.insert(counselQualityLogTable).values({
+    user_id: userId,
+    domain: domainKey,
+    score,
+  });
+}
 
 const anthropic = new Anthropic({
   apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
@@ -73,9 +140,11 @@ const SPHERE_DESCRIPTIONS: Record<string, string> = {
 };
 
 router.post("/counsel", async (req, res) => {
-  const { query, domain, region_code, situation, situational_interests, objective } = req.body as {
+  const { query, domain, domain_key, locale, region_code, situation, situational_interests, objective } = req.body as {
     query?: string;
     domain?: string;
+    domain_key?: string;
+    locale?: string;
     region_code?: string;
     situation?: string;
     situational_interests?: string[];
@@ -144,7 +213,32 @@ If a domain is specified, focus your guidance there. If the situation is ambiguo
 
     const text =
       message.content[0].type === "text" ? message.content[0].text : "";
+
     res.json({ guidance: text });
+
+    // After the response is sent, fire-and-forget a real quality evaluation.
+    // Uses the canonical domain_key (not the localized label) so the
+    // readiness engine's per-domain counsel score filter matches correctly.
+    const canonicalDomain = domain_key?.trim();
+    const queryText = query?.trim();
+    if (canonicalDomain && VALID_COUNSEL_DOMAINS.has(canonicalDomain) && queryText) {
+      const token = extractToken(req);
+      if (token) {
+        db.select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.session_token, token))
+          .limit(1)
+          .then(([user]) => {
+            if (user) {
+              return autoLogCounselQuality(user.id, queryText, locale ?? "en", canonicalDomain);
+            }
+            return Promise.resolve();
+          })
+          .catch((logErr) => {
+            console.error("Failed to auto-log counsel quality:", logErr);
+          });
+      }
+    }
   } catch (err) {
     clearTimeout(timer);
     if (err instanceof Error && err.name === "AbortError") {

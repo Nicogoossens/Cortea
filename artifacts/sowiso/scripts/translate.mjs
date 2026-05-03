@@ -46,6 +46,17 @@ const LANGUAGE_NAMES = {
   hi: "Hindi (formal, refined register — aap/आप form, परिष्कृत और भव्य)",
 };
 
+// Register descriptions sourced from the shared single source of truth at
+// scripts/lib/register-prompts.mjs (which mirrors social-class-config.ts).
+import { REGISTER_DESCRIPTIONS, isValidRegister } from "../../../scripts/lib/register-prompts.mjs";
+
+const regIdx = args.indexOf("--register");
+const REGISTER = regIdx !== -1 && args[regIdx + 1] ? args[regIdx + 1] : "elite";
+if (!isValidRegister(REGISTER)) {
+  console.error(`Unsupported --register: ${REGISTER}. Use 'elite' or 'middle_class'.`);
+  process.exit(1);
+}
+
 // Keys where the value should NOT be translated (proper nouns, unchanged across languages)
 const SKIP_TRANSLATION_PATTERNS = [
   /^app\.name$/,
@@ -116,8 +127,15 @@ async function translateBatch(lang, keysToTranslate) {
   const langDesc = LANGUAGE_NAMES[lang];
   const enEntries = keysToTranslate.map((k) => `${k}: ${enMap.get(k)}`).join("\n");
 
-  const systemPrompt = `You are the voice of SOWISO — an elite etiquette intelligence platform. 
-Your tone is formal, composed, and distinguished. 
+  const systemPrompt = `You are the voice of SOWISO — an etiquette intelligence platform.
+SOWISO supports two social-class registers (defined in lib/db/src/schema/social-class-config.ts):
+
+${REGISTER_DESCRIPTIONS.elite}
+
+${REGISTER_DESCRIPTIONS.middle_class}
+
+Active register for this batch: ${REGISTER.toUpperCase()}.
+Apply the ${REGISTER === "elite" ? "ELITE" : "MIDDLE CLASS"} variant to every translation below.
 
 Translate the following English i18n key-value pairs into ${langDesc}.
 

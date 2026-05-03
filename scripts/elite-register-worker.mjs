@@ -37,6 +37,18 @@ const FLAG_LOCALE  = flagArg("--locale");
 const FLAG_DRY_RUN = args.includes("--dry-run");
 const FLAG_VERBOSE = args.includes("--verbose");
 const FLAG_FORCE   = args.includes("--force");
+// --register selects which social-class register to evaluate against.
+// Mirrors lib/db/src/schema/social-class-config.ts (elite + middle_class).
+const FLAG_REGISTER = flagArg("--register") || "elite";
+if (FLAG_REGISTER !== "elite" && FLAG_REGISTER !== "middle_class") {
+  console.error(`Unsupported --register: ${FLAG_REGISTER}. Use 'elite' or 'middle_class'.`);
+  process.exit(1);
+}
+
+// Register descriptions sourced from the shared single source of truth at
+// scripts/lib/register-prompts.mjs (which mirrors social-class-config.ts).
+import { buildRegisterHeader } from "./lib/register-prompts.mjs";
+const registerHeader = buildRegisterHeader;
 
 // ── Keys that must never be rewritten ────────────────────────────────────────
 const SKIP_KEYS = new Set(["app.name", "app.established", "atelier.duration"]);
@@ -258,10 +270,14 @@ function getSystemPrompt(languageCode, formalityRegister, regionLink) {
     `${languageCode}`,
     "en",
   ];
+  let localePrompt = PROMPTS["en"];
   for (const key of keys) {
-    if (PROMPTS[key]) return PROMPTS[key];
+    if (PROMPTS[key]) { localePrompt = PROMPTS[key]; break; }
   }
-  return PROMPTS["en"];
+  // Prepend the social-class register header so the model is grounded in
+  // both the elite and middle-class registers from social-class-config.ts
+  // before it considers the locale-specific style guidance.
+  return `${registerHeader(FLAG_REGISTER)}\n${localePrompt}`;
 }
 
 // ── Evaluate + optionally rewrite a single string ────────────────────────────

@@ -382,6 +382,14 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
 
   const primaryPool = await fetchPool(ctx.level, [ctx.demographic]);
   const ranked = reRankByInterestAndContrast(primaryPool as RawQuestion[], ctx);
+  // TEMP DEBUG
+  console.log("[selectQuestions DEBUG]", JSON.stringify({
+    register: ctx.register, region: ctx.regionCode, pillar: ctx.pillar,
+    phase: ctx.phase, level: ctx.level, lang: ctx.lang,
+    demographic: ctx.demographic, size: ctx.size,
+    crossReserve, primaryBudget,
+    primaryPoolN: primaryPool.length, rankedN: ranked.length,
+  }));
 
   // Tier 3: if we don't have at least 60% of the primary budget from the
   // primary pool, pull common fillers — but never let primary+common exceed

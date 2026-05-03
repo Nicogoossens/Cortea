@@ -567,7 +567,8 @@ export const VENUES: Venue[] = [
 ];
 
 import { EXTRA_VENUES } from "./venues-extra.js";
-VENUES.push(...EXTRA_VENUES);
+import { EXTRA_VENUES2 } from "./venues-extra2.js";
+VENUES.push(...EXTRA_VENUES, ...EXTRA_VENUES2);
 
 export function getVenues(regionCode?: string, category?: VenueCategory): Venue[] {
   return VENUES.filter((v) => {

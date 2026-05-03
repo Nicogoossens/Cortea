@@ -6,8 +6,10 @@ import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { ChevronDown } from "lucide-react";
 
 export function ActiveContextChips() {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const { activeRegion, getRegionName } = useActiveRegion();
+  const langLabel = t("context.active_language");
+  const regionLabel = t("context.active_region");
 
   const [showLangPicker, setShowLangPicker] = useState(false);
 
@@ -43,10 +45,11 @@ export function ActiveContextChips() {
           type="button"
           onClick={() => setShowLangPicker((v) => !v)}
           className={`${chipBase} ${showLangPicker ? chipOpen : chipIdle}`}
-          aria-label={`Language: ${languageLabel}. Click to change.`}
+          aria-label={`${langLabel}: ${languageLabel}. Click to change.`}
           aria-expanded={showLangPicker}
           aria-haspopup="listbox"
         >
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{langLabel}:</span>
           <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
           <span>{languageLabel}</span>
           <ChevronDown
@@ -63,8 +66,9 @@ export function ActiveContextChips() {
         <Link
           href="/profile?focus=region"
           className={`${chipBase} ${chipIdle}`}
-          aria-label={`Region: ${getRegionName(activeRegion)}. Open profile to change.`}
+          aria-label={`${regionLabel}: ${getRegionName(activeRegion)}. Open profile to change.`}
         >
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{regionLabel}:</span>
           <FlagEmoji code={activeRegion} size="sm" />
           <span>{getRegionName(activeRegion)}</span>
         </Link>

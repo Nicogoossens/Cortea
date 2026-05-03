@@ -461,10 +461,16 @@ export default function Profile() {
     if (params.get("focus") !== "region") return;
     setFocusRegion(true);
     // Scroll & highlight after the section has had a chance to expand.
+    // We target the leerregio dropdown ANCHOR specifically (not the card
+    // top) and use block:"center" so the control lands in the middle of
+    // the viewport — otherwise the card opens but the dropdown sits below
+    // the fold and the user does not see what to click.
     const timer = window.setTimeout(() => {
-      const el = document.getElementById("course-settings-card");
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 150);
+      const el =
+        document.getElementById("focus-region-anchor") ??
+        document.getElementById("course-settings-card");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
     // Clear the highlight ring after a few seconds.
     const clearTimer = window.setTimeout(() => setFocusRegion(false), 4000);
     return () => { window.clearTimeout(timer); window.clearTimeout(clearTimer); };
@@ -1386,7 +1392,10 @@ export default function Profile() {
           </div>
 
           {/* Learning region dropdown */}
-          <div className={`space-y-1.5 rounded-sm transition-all ${focusRegion ? "ring-2 ring-primary/60 ring-offset-4 ring-offset-card animate-pulse" : ""}`}>
+          <div
+            id="focus-region-anchor"
+            className={`scroll-mt-32 space-y-1.5 rounded-sm transition-all ${focusRegion ? "ring-2 ring-primary/60 ring-offset-4 ring-offset-card animate-pulse" : ""}`}
+          >
             <div className="flex items-center justify-between">
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.pref_region_label")}</label>
               <SaveIndicator state={regionSave} t={t} />

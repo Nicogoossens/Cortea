@@ -1,9 +1,10 @@
+import type { Stripe } from "stripe";
 import { getUncachableStripeClient } from "./stripeClient";
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
 export class WebhookHandlers {
-  static async processWebhook(payload: Buffer, signature: string): Promise<void> {
+  static async processWebhook(payload: Buffer, signature: string): Promise<Stripe.Event> {
     if (!Buffer.isBuffer(payload)) {
       throw new Error(
         "STRIPE WEBHOOK ERROR: Payload must be a Buffer. " +
@@ -14,10 +15,14 @@ export class WebhookHandlers {
     }
 
     if (!STRIPE_WEBHOOK_SECRET) {
-      return;
+      throw new Error(
+        "STRIPE WEBHOOK ERROR: STRIPE_WEBHOOK_SECRET is not configured. " +
+        "Webhook signature verification is required. " +
+        "Set the STRIPE_WEBHOOK_SECRET environment variable to enable webhook processing."
+      );
     }
 
     const stripe = await getUncachableStripeClient();
-    stripe.webhooks.constructEvent(payload, signature, STRIPE_WEBHOOK_SECRET);
+    return stripe.webhooks.constructEvent(payload, signature, STRIPE_WEBHOOK_SECRET);
   }
 }

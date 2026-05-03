@@ -107,36 +107,46 @@ app.post(
     const sig = Array.isArray(signature) ? signature[0] : signature;
 
     try {
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-
-      const event = JSON.parse(req.body.toString());
+      const event = await WebhookHandlers.processWebhook(req.body as Buffer, sig);
       if (
         event.type === "customer.subscription.updated" ||
         event.type === "customer.subscription.created"
       ) {
         const subscription = event.data.object;
         const userId = subscription.metadata?.userId;
+        const subStatus: string = subscription.status ?? "";
         if (userId) {
-          const stripe = await getUncachableStripeClient();
-          const priceId = subscription.items?.data?.[0]?.price?.id;
-          if (priceId) {
-            const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
-            const product = price.product as import("stripe").Stripe.Product;
-            const tier = product.metadata?.tier as "student" | "traveller" | "ambassador" | undefined;
-            const periodEnd = subscription.current_period_end
-              ? new Date(subscription.current_period_end * 1000)
-              : null;
-            const subStatus = subscription.status ?? "active";
-            if (tier) {
-              await db.update(usersTable)
-                .set({
-                  subscription_tier: tier,
-                  subscription_status: subStatus,
-                  subscription_current_period_end: periodEnd,
-                  payment_failed_at: subStatus === "active" ? null : undefined,
-                })
-                .where(eq(usersTable.id, userId));
+          const isPaidActive = subStatus === "active" || subStatus === "trialing";
+          if (isPaidActive) {
+            const stripe = await getUncachableStripeClient();
+            const priceId = subscription.items?.data?.[0]?.price?.id;
+            if (priceId) {
+              const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+              const product = price.product as import("stripe").Stripe.Product;
+              const tier = product.metadata?.tier as "student" | "traveller" | "ambassador" | undefined;
+              const rawSub = subscription as unknown as Record<string, unknown>;
+              const rawPeriodEnd = typeof rawSub["current_period_end"] === "number" ? rawSub["current_period_end"] : null;
+              const periodEnd = rawPeriodEnd ? new Date(rawPeriodEnd * 1000) : null;
+              if (tier) {
+                await db.update(usersTable)
+                  .set({
+                    subscription_tier: tier,
+                    subscription_status: subStatus,
+                    subscription_current_period_end: periodEnd,
+                    payment_failed_at: null,
+                  })
+                  .where(eq(usersTable.id, userId));
+              }
             }
+          } else {
+            await db.update(usersTable)
+              .set({
+                subscription_tier: "guest",
+                subscription_status: subStatus || "unknown",
+                subscription_current_period_end: null,
+                payment_failed_at: new Date(),
+              })
+              .where(eq(usersTable.id, userId));
           }
         }
       }

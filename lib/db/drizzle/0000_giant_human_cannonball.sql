@@ -480,6 +480,14 @@ CREATE TABLE "counsel_region_seeds" (
 	"promoted_at" timestamp with time zone
 );
 --> statement-breakpoint
+CREATE TABLE "country_votes" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"region_code" text NOT NULL,
+	"period_ym" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -509,4 +517,7 @@ CREATE UNIQUE INDEX "saved_venues_user_venue_idx" ON "saved_venues" USING btree 
 CREATE INDEX "saved_venues_user_idx" ON "saved_venues" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "worker_runs_sweeper_started_idx" ON "worker_runs" USING btree ("sweeper","started_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "counsel_region_seeds_region_domain_key" ON "counsel_region_seeds" USING btree ("region_code","domain");--> statement-breakpoint
-CREATE INDEX "counsel_region_seeds_status_idx" ON "counsel_region_seeds" USING btree ("status","region_code");
+CREATE INDEX "counsel_region_seeds_status_idx" ON "counsel_region_seeds" USING btree ("status","region_code");--> statement-breakpoint
+CREATE UNIQUE INDEX "country_votes_user_region_period_uq" ON "country_votes" USING btree ("user_id","region_code","period_ym");--> statement-breakpoint
+CREATE INDEX "country_votes_period_idx" ON "country_votes" USING btree ("period_ym");--> statement-breakpoint
+CREATE INDEX "country_votes_user_period_idx" ON "country_votes" USING btree ("user_id","period_ym");

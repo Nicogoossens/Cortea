@@ -27,3 +27,4 @@ export * from "./roleplay_reflections";
 export * from "./cc_protocol_removals";
 export * from "./saved-venues";
 export * from "./worker_runs";
+export * from "./counsel-region-seeds";

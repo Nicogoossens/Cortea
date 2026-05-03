@@ -467,6 +467,19 @@ CREATE TABLE "worker_runs" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
+CREATE TABLE "counsel_region_seeds" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"region_code" text NOT NULL,
+	"domain" text NOT NULL,
+	"content" jsonb NOT NULL,
+	"eval_score" integer,
+	"eval_notes" text,
+	"status" text DEFAULT 'draft' NOT NULL,
+	"seeded_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"reviewed_at" timestamp with time zone,
+	"promoted_at" timestamp with time zone
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -494,4 +507,6 @@ CREATE INDEX "companion_messages_recipient_idx" ON "companion_messages" USING bt
 CREATE INDEX "companion_messages_link_idx" ON "companion_messages" USING btree ("link_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "saved_venues_user_venue_idx" ON "saved_venues" USING btree ("user_id","venue_id");--> statement-breakpoint
 CREATE INDEX "saved_venues_user_idx" ON "saved_venues" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "worker_runs_sweeper_started_idx" ON "worker_runs" USING btree ("sweeper","started_at");
+CREATE INDEX "worker_runs_sweeper_started_idx" ON "worker_runs" USING btree ("sweeper","started_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "counsel_region_seeds_region_domain_key" ON "counsel_region_seeds" USING btree ("region_code","domain");--> statement-breakpoint
+CREATE INDEX "counsel_region_seeds_status_idx" ON "counsel_region_seeds" USING btree ("status","region_code");

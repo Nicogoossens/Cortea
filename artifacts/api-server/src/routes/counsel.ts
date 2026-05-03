@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { db, counselQualityLogTable, usersTable, culturalOriginsTable } from "@workspace/db";
+import { db, counselQualityLogTable, usersTable, culturalOriginsTable, counselRegionSeedsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { extractToken } from "../lib/auth-middleware";
 import { getVenuesForCounsel } from "../data/venues";
@@ -200,10 +200,57 @@ router.post("/counsel", async (req, res) => {
     console.error("Failed to load cultural origins for counsel:", err);
   }
 
+  // Optional: distilled seeds produced by the Counsel Seed Worker. We only
+  // load rows promoted to status='active'. If a domain is specified we prefer
+  // that domain's seed; otherwise we attach all active seeds for the region.
+  // Seeds are additive context — they never replace REGION_CONTEXT.
+  let seedContext = "";
+  try {
+    const seedConditions = [
+      eq(counselRegionSeedsTable.region_code, region),
+      eq(counselRegionSeedsTable.status, "active"),
+    ];
+    if (domain) {
+      seedConditions.push(eq(counselRegionSeedsTable.domain, domain));
+    }
+    const seedRows = await db
+      .select({
+        domain: counselRegionSeedsTable.domain,
+        content: counselRegionSeedsTable.content,
+      })
+      .from(counselRegionSeedsTable)
+      .where(and(...seedConditions))
+      .limit(domain ? 1 : 6);
+
+    if (seedRows.length > 0) {
+      const formatted = seedRows
+        .map((row) => {
+          const c = (row.content ?? {}) as {
+            summary?: string;
+            principles?: string[];
+            do_examples?: string[];
+            avoid_examples?: string[];
+            register_notes?: string;
+          };
+          const lines: string[] = [`[${row.domain}]`];
+          if (c.summary) lines.push(`Summary: ${c.summary}`);
+          if (c.principles?.length) lines.push(`Principles: ${c.principles.join(" / ")}`);
+          if (c.do_examples?.length) lines.push(`Recommended: ${c.do_examples.join(" / ")}`);
+          if (c.avoid_examples?.length) lines.push(`Avoid: ${c.avoid_examples.join(" / ")}`);
+          if (c.register_notes) lines.push(`Register: ${c.register_notes}`);
+          return lines.join("\n");
+        })
+        .join("\n\n");
+      seedContext = `\n\nDistilled regional knowledge for ${region} (curated reference — draw on these naturally as supporting depth, never enumerate them, never quote them verbatim):\n${formatted}`;
+    }
+  } catch (err) {
+    console.error("Failed to load counsel region seeds:", err);
+  }
+
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
-${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}${venueContext ? `\n\nCurated venues for ${region} (use these to give specific, concrete recommendations when the question concerns shopping, dining, accommodation, activities or transport — mention venue names naturally, never in a list):\n${venueContext}` : ""}${originsContext}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}${venueContext ? `\n\nCurated venues for ${region} (use these to give specific, concrete recommendations when the question concerns shopping, dining, accommodation, activities or transport — mention venue names naturally, never in a list):\n${venueContext}` : ""}${originsContext}${seedContext}
 Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
 First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 

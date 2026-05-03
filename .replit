@@ -32,6 +32,10 @@ args = "LTQ Translator NL"
 task = "workflow.run"
 args = "google-oauth-backend-tests"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "e2e-google-signin"
+
 [[workflows.workflow]]
 name = "sowiso-tier-access-tests"
 author = "agent"
@@ -75,6 +79,17 @@ args = "pnpm --filter @workspace/api-server test"
 
 [workflows.workflow.metadata]
 isValidation = true
+
+[[workflows.workflow]]
+name = "e2e-google-signin"
+author = "agent"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "ENABLE_TEST_DEBUG_ROUTES=true API_BASE_URL=http://localhost:8080 npx playwright test e2e/google-sign-in.spec.ts --reporter=list"
 
 [agent]
 stack = "PNPM_WORKSPACE"

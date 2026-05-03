@@ -53,6 +53,12 @@ const authLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Too many requests from this address. Please wait a moment and try again." },
+  // Skip rate-limiting when running under the test-debug-routes flag.
+  // Both conditions must be true: non-production environment AND the explicit
+  // opt-in flag, mirroring the same double-gate used in routes/debug.ts.
+  skip: () =>
+    process.env.NODE_ENV !== "production" &&
+    process.env.ENABLE_TEST_DEBUG_ROUTES === "true",
 });
 
 const generalLimiter = rateLimit({

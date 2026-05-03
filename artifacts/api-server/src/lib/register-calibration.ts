@@ -590,7 +590,11 @@ export async function upsertContentTranslationRows(
     const id = ids[i];
     if (id === undefined || !isContentKey(r.key)) return;
     contentRowCount++;
-    const moduleForRow = options.module ?? defaultModuleFor(r.formality_register);
+    // Derive from the effective persisted register (matches the value we
+    // wrote above), not the raw input, so an omitted formality_register
+    // calibrates to the same module the row's metadata actually reflects.
+    const effectiveRegister = r.formality_register ?? "high";
+    const moduleForRow = options.module ?? defaultModuleFor(effectiveRegister);
     byModule[moduleForRow].push(id);
   });
 

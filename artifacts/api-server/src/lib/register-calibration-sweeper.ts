@@ -110,10 +110,9 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
         { err, count: ids.length, module: moduleKey },
         "Calibration sweeper: batch failed",
       );
-      // Stamp errored rows so the sweeper does not retry them in a tight loop.
-      // We use a sentinel by setting calibrated_module to the requested module
-      // only when calibrate succeeds; on hard failure we leave the row alone
-      // and it will retry on the next interval (with backoff via interval).
+      // We deliberately leave failed rows untouched (calibrated_module stays
+      // NULL). The interval itself acts as backoff: rows will be retried on
+      // the next pass. No sentinel stamp is written.
     }
   }
 

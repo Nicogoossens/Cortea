@@ -136,7 +136,6 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     dailyLimit: number;
   } | null>(null);
   /** True once the user clicks "Show context" on a repetition question. */
-  const [studyExpanded, setStudyExpanded] = useState(false);
   // Repetition gate: when a question is a repeat, the user MUST explicitly
   // acknowledge the study_context before the answer options become tappable.
   // Resets every time a new question is shown.
@@ -295,14 +294,13 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     setAnswered(false);
     setFeedback(null);
     setCurrentQuestionIdx(0);
-    setStudyExpanded(false);
     setStudyAcknowledged(false);
   }
 
-  // Repetition UX: a freshly opened question that is_repetition starts with the
-  // study_context collapsed/highlighted; the user must click through to attempt.
+  // Repetition UX: a freshly opened repeat question requires the student to
+  // explicitly acknowledge the study_context before the answer options
+  // become tappable. Reset the gate every time the visible question changes.
   useEffect(() => {
-    setStudyExpanded(false);
     setStudyAcknowledged(false);
   }, [currentQuestionIdx, session?.session_id]);
 
@@ -769,17 +767,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                           <BookOpen className="w-3 h-3" aria-hidden="true" />
                           {t("atelier.track.study_first")}
                         </p>
-                        <p className={`text-xs text-foreground/80 leading-relaxed ${studyExpanded ? "" : "line-clamp-3"}`}>
+                        <p className="text-xs text-foreground/80 leading-relaxed">
                           {(currentQuestion as { study_context?: string | null }).study_context}
                         </p>
-                        {!studyExpanded && (
-                          <button
-                            onClick={() => setStudyExpanded(true)}
-                            className="text-[10px] font-mono uppercase tracking-widest text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-800 dark:hover:text-amber-300"
-                          >
-                            {t("atelier.track.study_show_more")}
-                          </button>
-                        )}
                         {!studyAcknowledged && (
                           <Button
                             type="button"

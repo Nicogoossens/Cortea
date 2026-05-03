@@ -51,6 +51,23 @@ export default function Guides() {
     }
   }, []);
 
+  // Scroll to the deep-linked guide (e.g. /guides#<id>) once cards have rendered.
+  // Used by the "My Guides" section on the Profile page so each purchased
+  // item opens directly at its card with a brief highlight ring.
+  useEffect(() => {
+    if (loading || guides.length === 0) return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash) return;
+    const el = document.getElementById(`guide-${hash}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-primary/60", "ring-offset-2");
+    const timer = window.setTimeout(() => {
+      el.classList.remove("ring-2", "ring-primary/60", "ring-offset-2");
+    }, 2400);
+    return () => window.clearTimeout(timer);
+  }, [loading, guides.length]);
+
   useEffect(() => {
     const fetchGuides = fetch(`${API_BASE}/api/guides`).then((r) => r.json()).catch(() => []);
 
@@ -131,7 +148,8 @@ export default function Guides() {
             return (
               <Card
                 key={guide.id}
-                className={`relative overflow-hidden transition-all duration-300 ${
+                id={`guide-${guide.id}`}
+                className={`relative overflow-hidden transition-all duration-300 scroll-mt-24 ${
                   isOwned ? "border-primary/30 bg-primary/5" : "border-border bg-card hover:border-border/80"
                 }`}
               >

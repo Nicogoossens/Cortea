@@ -11,10 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
-  Layers, MapPin, ArrowRight, UtensilsCrossed, Bookmark,
+  Layers, MapPin, ArrowRight, UtensilsCrossed, Bookmark, BookOpen,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
@@ -127,6 +128,27 @@ interface EnrichedLogEntry {
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+interface PurchasedGuide {
+  id: string;
+  title: string;
+  description: string | null;
+  pillar: string;
+  region_code: string | null;
+  price_cents: number;
+  tier_required: string | null;
+  purchased_at: string;
+}
+
+const GUIDE_PILLAR_LABEL_KEYS: Record<string, string> = {
+  internship: "guides.pillar.internship",
+  exchange: "guides.pillar.exchange",
+  dining: "guides.pillar.dining",
+  interview: "guides.pillar.interview",
+  networking: "guides.pillar.networking",
+  travel: "guides.pillar.travel",
+  business: "guides.pillar.business",
+};
 
 interface UseCaseWithRating {
   id: number;
@@ -426,6 +448,19 @@ export default function Profile() {
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
   const { data: earnedBadges } = useGetLearningTrackBadges({
     query: { enabled: !!userId, staleTime: 30_000 },
+  });
+
+  const { data: purchasedGuides, isLoading: purchasedGuidesLoading } = useQuery<PurchasedGuide[]>({
+    queryKey: ["purchased-guides", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/api/guides/purchased`, {
+        credentials: "include",
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: useCasesData } = useQuery<UseCaseWithRating[]>({
@@ -1987,6 +2022,73 @@ export default function Profile() {
                     </div>
                   );
                 })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── My Guides ── */}
+      <Card id="my-guides" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+            <BookOpen className="w-4 h-4 text-primary/60" aria-hidden="true" />
+            {t("profile.my_guides_title")}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-light">
+            {t("profile.my_guides_desc")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {purchasedGuidesLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-16 rounded-sm" />
+              <Skeleton className="h-16 rounded-sm" />
+            </div>
+          ) : !purchasedGuides || purchasedGuides.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground/70">
+              <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
+              <p className="font-serif text-sm">{t("profile.my_guides_empty")}</p>
+              <Link href="/guides">
+                <p className="text-xs mt-2 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">
+                  {t("profile.my_guides_empty_cta")}
+                </p>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {purchasedGuides.map((guide) => (
+                <Link key={guide.id} href={`/guides#${guide.id}`} aria-label={t("profile.my_guides_open") + ": " + guide.title}>
+                  <div className="flex items-start gap-3 px-3 py-3 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 transition-colors cursor-pointer group">
+                    <BookOpen className="w-4 h-4 text-primary/60 shrink-0 mt-0.5" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground leading-tight truncate">
+                        {guide.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-wider rounded-[2px]">
+                          {t(GUIDE_PILLAR_LABEL_KEYS[guide.pillar] ?? "", guide.pillar)}
+                        </Badge>
+                        {guide.region_code && (
+                          <Badge variant="secondary" className="text-[10px] font-mono rounded-[2px]">
+                            {guide.region_code}
+                          </Badge>
+                        )}
+                      </div>
+                      {guide.purchased_at && (
+                        <p className="text-[10px] text-muted-foreground/60 mt-1.5 font-mono">
+                          {t("profile.my_guides_purchased_on", {
+                            date: format(new Date(guide.purchased_at), "d MMM yyyy", { locale: dateFnsLocale }),
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 mt-1">
+                      {t("profile.my_guides_open")}
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </CardContent>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useGetProfile } from "@workspace/api-client-react";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,10 +22,9 @@ function getRegion(code: string): CompassRegion | undefined {
 }
 
 export default function Navigator() {
-  usePageTitle("Navigator");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
@@ -90,6 +89,12 @@ export default function Navigator() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <SEOHead
+        title={t("seo.navigator.title", "The Navigator — Cultural Arrival Briefings")}
+        description={t("seo.navigator.description", "Pre-trip cultural intelligence for Ambassador members. Receive personalised etiquette briefings for upcoming travel destinations.")}
+        path="/navigator"
+        locale={locale}
+      />
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-serif text-foreground">{t("navigator.title")}</h1>

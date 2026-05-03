@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, useCallback } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useGetProfile, useUpdateProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -281,10 +281,9 @@ function ProximityMap({ highlighted }: { highlighted?: string }) {
 }
 
 export default function InnerCircle() {
-  usePageTitle("Inner Circle");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const queryClient = useQueryClient();
   const { mutate: updateProfile } = useUpdateProfile();
   const downloadCardRef = useRef<HTMLDivElement>(null);
@@ -363,6 +362,12 @@ export default function InnerCircle() {
   if (!hasAccess) {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
+        <SEOHead
+          title={t("seo.inner_circle.title", "The Inner Circle — Ambassador Community")}
+          description={t("seo.inner_circle.description", "Exclusive community for Cortéa Ambassador members. Connect with fellow cultural practitioners, share insights, and access your personalised calling card.")}
+          path="/inner-circle"
+          locale={locale}
+        />
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-serif text-foreground">{t("inner_circle.title")}</h1>
@@ -402,6 +407,12 @@ export default function InnerCircle() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <SEOHead
+        title={t("seo.inner_circle.title", "The Inner Circle — Ambassador Community")}
+        description={t("seo.inner_circle.description", "Exclusive community for Cortéa Ambassador members. Connect with fellow cultural practitioners, share insights, and access your personalised calling card.")}
+        path="/inner-circle"
+        locale={locale}
+      />
       <div
         aria-hidden="true"
         style={{

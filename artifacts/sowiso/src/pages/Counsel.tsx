@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearch, useLocation } from "wouter";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +41,6 @@ function incrementStoredCount(userId: string | null): void {
 type CounselMode = "standard" | "emergency";
 
 export default function Counsel() {
-  usePageTitle("The Counsel");
   const { t, locale } = useLanguage();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | null>(null);
@@ -241,6 +240,12 @@ export default function Counsel() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      <SEOHead
+        title={t("seo.counsel.title", "The Counsel — AI Etiquette Adviser")}
+        description={t("seo.counsel.description")}
+        locale={locale}
+        path="/counsel"
+      />
 
       {/* ── Header ── */}
       <div

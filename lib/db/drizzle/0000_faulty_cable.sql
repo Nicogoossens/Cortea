@@ -45,6 +45,11 @@ CREATE TABLE "users" (
 	"avatar_state" json,
 	"wardrobe_unlocks" json DEFAULT '[]'::json NOT NULL,
 	"calling_card_tagline" text,
+	"utm_source" text,
+	"utm_medium" text,
+	"utm_campaign" text,
+	"utm_content" text,
+	"utm_term" text,
 	CONSTRAINT "users_ambition_level_check" CHECK ("users"."ambition_level" IN ('casual', 'professional', 'diplomatic'))
 );
 --> statement-breakpoint

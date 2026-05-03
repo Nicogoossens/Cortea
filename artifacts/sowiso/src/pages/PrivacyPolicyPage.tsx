@@ -1,6 +1,6 @@
 import { useLanguage, type SupportedLanguage } from "@/lib/i18n";
+import { SEOHead } from "@/components/SEOHead";
 import type { SupportedLocale } from "@/lib/i18n-locales";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { getPolicyContent, type PolicySection, type PolicySubsection } from "@/lib/privacyPolicyContent";
 import { Link } from "wouter";
 import { ArrowLeft, AlertCircle, Shield, Globe } from "lucide-react";
@@ -188,7 +188,6 @@ function SectionBlock({ section }: { section: PolicySection }) {
 }
 
 export default function PrivacyPolicyPage() {
-  usePageTitle("Privacy Policy");
   const { language, dir, setLocale, locale } = useLanguage();
   const policy = getPolicyContent(language);
 
@@ -204,6 +203,13 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
+      <SEOHead
+        title="Privacy Policy — Cortéa"
+        description="Cortéa's privacy policy. How we collect, use, and protect your personal data across our cultural intelligence platform."
+        path="/privacy-policy"
+        locale={locale}
+        noIndex
+      />
       {/* Header bar */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/40">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between gap-4">

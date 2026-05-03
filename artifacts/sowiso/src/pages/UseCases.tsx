@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
 import { BookOpen, Compass, Shield, Scan, ArrowLeft, ArrowRight, Lock, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { SEOHead } from "@/components/SEOHead";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -359,9 +359,8 @@ function UseCaseCard({ useCase, onSelect, isAuthenticated }: {
 }
 
 export default function UseCases() {
-  usePageTitle("Use Cases");
   const { isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [selected, setSelected] = useState<UseCase | null>(null);
 
   const { data: useCases, isLoading } = useQuery<UseCase[]>({
@@ -389,6 +388,12 @@ export default function UseCases() {
 
   return (
     <>
+      <SEOHead
+        title={t("seo.use_cases.title", "Use Case Library — Real-World Etiquette Scenarios")}
+        description={t("seo.use_cases.description", "Practise cultural etiquette through curated real-world situations. Track your readiness score across dining, professional, social, and travel scenarios.")}
+        path="/use-cases"
+        locale={locale}
+      />
       {selected && (
         <UseCaseDetail useCase={selected} onClose={() => setSelected(null)} />
       )}

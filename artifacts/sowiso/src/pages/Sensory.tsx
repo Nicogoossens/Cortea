@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useGetProfile } from "@workspace/api-client-react";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,11 +55,10 @@ function DecibelBar({ db, maxDb, thresholdLabel }: { db: number; maxDb: number; 
 }
 
 export default function Sensory() {
-  usePageTitle("Sensory");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { canUseMicrophone } = usePrivacy();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
@@ -148,6 +147,12 @@ export default function Sensory() {
   if (!hasAccess) {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
+        <SEOHead
+          title={t("seo.sensory.title", "The Sensory — Ambient Noise Awareness")}
+          description={t("seo.sensory.description", "Real-time ambient noise monitoring for Ambassador members. Know when your environment exceeds the threshold for refined dining, gallery visits, or professional meetings.")}
+          path="/sensory"
+          locale={locale}
+        />
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-serif text-foreground">{t("sensory.title")}</h1>
@@ -184,6 +189,12 @@ export default function Sensory() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <SEOHead
+        title={t("seo.sensory.title", "The Sensory — Ambient Noise Awareness")}
+        description={t("seo.sensory.description", "Real-time ambient noise monitoring for Ambassador members. Know when your environment exceeds the threshold for refined dining, gallery visits, or professional meetings.")}
+        path="/sensory"
+        locale={locale}
+      />
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-serif text-foreground">{t("sensory.title")}</h1>

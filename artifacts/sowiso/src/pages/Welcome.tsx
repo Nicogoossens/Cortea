@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ArrowLeft, Briefcase, Globe, Star, User, Crown, TrendingUp, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LandingLayout } from "@/components/layout/LandingLayout";
+import { SEOHead } from "@/components/SEOHead";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -190,9 +190,24 @@ function RegionPicker() {
 
 
 export default function Welcome() {
-  usePageTitle("The Art of Conduct");
   const [, navigate] = useLocation();
   const { t, locale } = useLanguage();
+  const webAppJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Cortéa",
+    "url": "https://cortea.app",
+    "description": "Master cultural etiquette and refined social conduct across 50+ countries.",
+    "applicationCategory": "EducationApplication",
+    "offers": [
+      { "@type": "Offer", "name": "Guest", "price": "0", "priceCurrency": "EUR" },
+      { "@type": "Offer", "name": "Student", "price": "9.99", "priceCurrency": "EUR" },
+      { "@type": "Offer", "name": "Traveller", "price": "19.99", "priceCurrency": "EUR" },
+      { "@type": "Offer", "name": "Ambassador", "price": "39.99", "priceCurrency": "EUR" },
+    ],
+    "availableLanguage": ["en", "nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"],
+    "operatingSystem": "Web",
+  };
   const { activeRegion } = useActiveRegion();
   const [phase, setPhase] = useState<Phase>("hero");
   const [currentQ, setCurrentQ] = useState(0);
@@ -243,6 +258,13 @@ export default function Welcome() {
   if (phase === "hero") {
     return (
       <LandingLayout>
+        <SEOHead
+          title={t("seo.landing.title", "Cortéa — The Art of Conduct")}
+          description={t("seo.landing.description")}
+          locale={locale}
+          path="/"
+          jsonLd={webAppJsonLd}
+        />
         <div className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-12 max-w-4xl mx-auto w-full space-y-14">
 
           <div className="space-y-6 text-center animate-in fade-in duration-700">

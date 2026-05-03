@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { getStoredUtmParams } from "@/lib/utm";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ export default function Register() {
 
     try {
       const baseLang = locale.split("-")[0];
+      const utmParams = getStoredUtmParams();
       const body: Record<string, unknown> = {
         email: form.email.trim(),
         full_name: form.full_name.trim(),
@@ -108,6 +110,7 @@ export default function Register() {
         language_code: baseLang,
         active_region: activeRegion,
         ...(homeCountry ? { country_of_origin: homeCountry } : {}),
+        ...utmParams,
       };
       if (form.password) body.password = form.password;
 

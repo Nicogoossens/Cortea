@@ -4,6 +4,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { ALL_LOCALES } from "@/lib/i18n-locales";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/lib/utm";
 import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
 import { useAuth } from "@/lib/auth";
 import { CheckCircle2, XCircle, Loader2, ArrowRight, BookOpen, Compass, Shield, Scan } from "lucide-react";
@@ -75,7 +76,14 @@ export default function EmailVerify() {
       return;
     }
 
-    fetch(`${API_BASE}/api/auth/verify?token=${encodeURIComponent(token)}`, { credentials: "include" })
+    const utmParams = getStoredUtmParams();
+    const verifyUrl = new URL(`${API_BASE}/api/auth/verify`, window.location.origin);
+    verifyUrl.searchParams.set("token", token);
+    for (const [key, val] of Object.entries(utmParams)) {
+      if (val) verifyUrl.searchParams.set(key, val);
+    }
+
+    fetch(verifyUrl.toString(), { credentials: "include" })
       .then(async (res) => {
         const body = await res.json() as {
           message?: string;
@@ -88,6 +96,7 @@ export default function EmailVerify() {
           active_region?: string;
         };
         if (res.ok) {
+          clearStoredUtmParams();
           if (body.user_id) {
             login(body.user_id, { name: body.full_name, isAdmin: body.is_admin ?? false });
           }

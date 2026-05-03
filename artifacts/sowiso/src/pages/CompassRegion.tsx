@@ -16,7 +16,7 @@ import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
 import { FlagEmoji } from "@/lib/active-region";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead } from "@/components/SEOHead";
 import { useState, useEffect } from "react";
 import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
 import { isCompassRegionDetailLocked } from "@/lib/tier-access";
@@ -387,7 +387,6 @@ export default function CompassRegion() {
     }
   );
 
-  usePageTitle(detail?.region_name ?? "The Cultural Compass");
 
   const protocolsParams = {
     region_code: regionCode,
@@ -505,8 +504,41 @@ export default function CompassRegion() {
   const quickDos = detail.dos.slice(0, 5);
   const quickDonts = detail.donts.slice(0, 5);
 
+  const regionJsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Place",
+      "name": detail.region_name,
+      "description": t("seo.compass_region.description_template", "Cultural etiquette guide for {country}").replace("{country}", detail.region_name),
+      "url": `https://cortea.app/compass/${detail.region_code}`,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": `${detail.region_name} Etiquette Guide`,
+      "description": `Key cultural etiquette topics for ${detail.region_name}`,
+      "url": `https://cortea.app/compass/${detail.region_code}`,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Core Cultural Values" },
+        { "@type": "ListItem", "position": 2, "name": "Social Taboos" },
+        { "@type": "ListItem", "position": 3, "name": "Dining Etiquette" },
+        { "@type": "ListItem", "position": 4, "name": "Language & Communication" },
+        { "@type": "ListItem", "position": 5, "name": "Gift-Giving Protocol" },
+        { "@type": "ListItem", "position": 6, "name": "Dress Code" },
+        { "@type": "ListItem", "position": 7, "name": "Dos & Don'ts" },
+      ],
+    },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500 pb-16">
+      <SEOHead
+        title={detail.region_name}
+        description={t("seo.compass_region.description_template", "Cultural etiquette guide for {country}").replace("{country}", detail.region_name)}
+        locale={locale}
+        path={`/compass/${detail.region_code}`}
+        jsonLd={regionJsonLd}
+      />
       <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
         {t("compass.back")}

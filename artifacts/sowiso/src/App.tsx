@@ -12,6 +12,8 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { AccessibilityProvider, useAccessibility } from "@/lib/accessibility";
 import { PrivacyProvider } from "@/lib/privacy";
 import { useEffect, useRef } from "react";
+import { HelmetProvider } from "react-helmet-async";
+import { captureUtmParams } from "@/lib/utm";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
@@ -252,30 +254,40 @@ function Router() {
   return <AppRouter />;
 }
 
+function UtmCapture() {
+  useEffect(() => {
+    captureUtmParams();
+  }, []);
+  return null;
+}
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PrivacyProvider>
-        <AccessibilityProvider>
-          <LanguageProvider>
-            <UserPreferencesSync />
-            <AppWithRegion>
-              <TooltipProvider>
-                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <Router />
-                </WouterRouter>
-                <RegionDetectionBanner />
-                <PaymentFailedBanner />
-                <CookieConsentBanner />
-                <Toaster />
-              </TooltipProvider>
-            </AppWithRegion>
-          </LanguageProvider>
-        </AccessibilityProvider>
-        </PrivacyProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <PrivacyProvider>
+          <AccessibilityProvider>
+            <LanguageProvider>
+              <UtmCapture />
+              <UserPreferencesSync />
+              <AppWithRegion>
+                <TooltipProvider>
+                  <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                    <Router />
+                  </WouterRouter>
+                  <RegionDetectionBanner />
+                  <PaymentFailedBanner />
+                  <CookieConsentBanner />
+                  <Toaster />
+                </TooltipProvider>
+              </AppWithRegion>
+            </LanguageProvider>
+          </AccessibilityProvider>
+          </PrivacyProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

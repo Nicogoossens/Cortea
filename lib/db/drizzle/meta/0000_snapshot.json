@@ -1,5 +1,5 @@
 {
-  "id": "761d8ff1-d467-4914-8bbb-d24900845370",
+  "id": "32b30f5a-5dd3-4449-854c-9e9b58ebc743",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -299,6 +299,36 @@
         },
         "calling_card_tagline": {
           "name": "calling_card_tagline",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utm_source": {
+          "name": "utm_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utm_medium": {
+          "name": "utm_medium",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utm_campaign": {
+          "name": "utm_campaign",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utm_content": {
+          "name": "utm_content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "utm_term": {
+          "name": "utm_term",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -33,6 +33,17 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 const STORAGE_KEY = "sowiso_locale";
 
 function detectLocale(): SupportedLocale {
+  // ?lang=xx query parameter takes highest priority (enables hreflang URL variants)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    if (langParam) {
+      if (ALL_LOCALES.includes(langParam as SupportedLocale)) return langParam as SupportedLocale;
+      const match = ALL_LOCALES.find((l) => l.startsWith(langParam + "-") || l === langParam);
+      if (match) return match;
+    }
+  } catch { /* SSR/test safety */ }
+
   const stored = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null;
   if (stored && ALL_LOCALES.includes(stored)) return stored;
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useGetProfile } from "@workspace/api-client-react";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,12 +153,11 @@ function classifyPredictions(
 type CameraState = "idle" | "loading_model" | "requesting" | "active" | "denied";
 
 export default function Mirror() {
-  usePageTitle("Mirror");
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { canUseCamera } = usePrivacy();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
@@ -257,6 +256,12 @@ export default function Mirror() {
   if (!hasAccess) {
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
+        <SEOHead
+          title={t("seo.mirror.title", "The Mirror — AI Dress Code Assessment")}
+          description={t("seo.mirror.description", "On-device AI dress code analysis for Ambassador members. Receive discreet, private feedback on your attire for any occasion or venue.")}
+          path="/mirror"
+          locale={locale}
+        />
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <h1 className="text-4xl font-serif text-foreground">The Mirror</h1>
@@ -299,6 +304,12 @@ export default function Mirror() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <SEOHead
+        title={t("seo.mirror.title", "The Mirror — AI Dress Code Assessment")}
+        description={t("seo.mirror.description", "On-device AI dress code analysis for Ambassador members. Receive discreet, private feedback on your attire for any occasion or venue.")}
+        path="/mirror"
+        locale={locale}
+      />
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-serif text-foreground">The Mirror</h1>

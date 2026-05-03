@@ -13,15 +13,22 @@ import { CULTURE_CLUSTERS, getClusterBrief } from "@/lib/clusters";
 import { COMPASS_REGIONS, FlagEmoji, useActiveRegion } from "@/lib/active-region";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useState } from "react";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead } from "@/components/SEOHead";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { hasFullAccess as tierHasFullAccess, isCompassRegionLocked as calcRegionLocked, type SubscriptionTier } from "@/lib/tier-access";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
 export default function Compass() {
-  usePageTitle("The Cultural Compass");
   const { t, locale } = useLocale();
+  const compassJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Cortéa — The Cultural Compass",
+    "url": "https://cortea.app/compass",
+    "description": "Cultural protocols, unwritten rules, and customs for every country worldwide.",
+    "teaches": "International cultural etiquette",
+  };
   const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();
   const { activeRegion } = useActiveRegion();
@@ -58,6 +65,13 @@ export default function Compass() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <SEOHead
+        title={t("seo.compass.title", "The Cultural Compass")}
+        description={t("seo.compass.description")}
+        locale={locale}
+        path="/compass"
+        jsonLd={compassJsonLd}
+      />
       <div className="space-y-4 max-w-3xl">
         <div className="flex items-center gap-3 text-primary mb-2">
           <CompassIcon className="w-8 h-8" aria-hidden="true" />

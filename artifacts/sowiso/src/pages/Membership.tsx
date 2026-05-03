@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -87,8 +87,7 @@ function formatPrice(amount: number | null, currency: string): string {
 type BillingInterval = "monthly" | "yearly";
 
 export default function Membership() {
-  usePageTitle("Membership");
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { getAuthHeaders } = useAuth();
   const { data: profile, isLoading: profileLoading } = useGetProfile();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -157,6 +156,90 @@ export default function Membership() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
+      <SEOHead
+        title={t("seo.membership.title", "Membership — Cortéa")}
+        description={t("seo.membership.description")}
+        path="/membership"
+        locale={locale}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Cortéa",
+            "url": "https://cortea.app",
+            "applicationCategory": "EducationalApplication",
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Basic",
+                "description": "Free access to The Atelier (limited scenarios), The Compass country guides, and 5 Counsel questions.",
+                "price": "0",
+                "priceCurrency": "GBP"
+              },
+              {
+                "@type": "Offer",
+                "name": "Traveller",
+                "description": "Full access to The Atelier, Compass, and unlimited Counsel questions.",
+                "priceSpecification": {
+                  "@type": "UnitPriceSpecification",
+                  "price": "9.99",
+                  "priceCurrency": "GBP",
+                  "unitText": "MONTH"
+                }
+              },
+              {
+                "@type": "Offer",
+                "name": "Ambassador",
+                "description": "All Traveller features plus The Mirror, The Sensory, The Navigator, and The Inner Circle.",
+                "priceSpecification": {
+                  "@type": "UnitPriceSpecification",
+                  "price": "19.99",
+                  "priceCurrency": "GBP",
+                  "unitText": "MONTH"
+                }
+              }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is included in the free Basic plan?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The Basic plan includes limited access to The Atelier scenario practice, all Compass country etiquette guides, and up to 5 AI Counsel questions per month. No credit card required."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What does the Traveller plan include?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The Traveller plan includes unlimited access to all Atelier scenarios across all five etiquette pillars, full Compass country guides, and unlimited AI Counsel questions for any cultural situation."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What additional features does the Ambassador plan provide?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The Ambassador plan includes everything in Traveller plus exclusive access to The Mirror (AI dress code analysis), The Sensory (ambient noise awareness), The Navigator (pre-trip briefings), and The Inner Circle community."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I cancel my subscription at any time?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, you can cancel your Cortéa subscription at any time. Your access continues until the end of your current billing period."
+                }
+              }
+            ]
+          }
+        ]}
+      />
 
       {upgradeSuccess && (
         <div className="flex items-center gap-3 px-5 py-4 bg-primary/5 border border-primary/20 rounded-sm" role="status">

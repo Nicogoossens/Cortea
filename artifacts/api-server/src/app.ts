@@ -5,6 +5,7 @@ import { rateLimit } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import seoRouter from "./routes/seo";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
@@ -208,5 +209,8 @@ app.use("/api/auth", authLimiter);
 app.use("/api", generalLimiter);
 
 app.use("/api", router);
+// SEO discovery files served at both root (for search engines) and /api (for API clients)
+app.use("/", seoRouter);
+app.use("/api", seoRouter);
 
 export default app;

@@ -106,6 +106,12 @@ export const usersTable = pgTable("users", {
   wardrobe_unlocks: json("wardrobe_unlocks").$type<WardrobeItem[]>().notNull().default([]),
   // Digital Calling Card personalisation
   calling_card_tagline: text("calling_card_tagline"),
+  // Campaign attribution (UTM parameters captured on first visit)
+  utm_source: text("utm_source"),
+  utm_medium: text("utm_medium"),
+  utm_campaign: text("utm_campaign"),
+  utm_content: text("utm_content"),
+  utm_term: text("utm_term"),
 }, (t) => [
   check("users_ambition_level_check", sql`${t.ambition_level} IN ('casual', 'professional', 'diplomatic')`),
 ]);

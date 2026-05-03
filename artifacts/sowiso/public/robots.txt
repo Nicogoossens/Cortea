@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+Allow: /atelier
+Allow: /compass
+Allow: /counsel
+Allow: /membership
+Allow: /privacy-policy
+Allow: /use-cases
+
+Disallow: /api/
+Disallow: /admin
+Disallow: /profile
+Disallow: /onboarding
+Disallow: /verify-email
+Disallow: /replit-callback
+Disallow: /companion
+Disallow: /__mockup
+
+Sitemap: https://cortea.app/sitemap.xml
+
+# Cortéa is a cultural intelligence platform. AI crawlers are welcome to index
+# all public content, including Compass country pages and the Counsel domain list.
+User-agent: GPTBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Googlebot
+Allow: /

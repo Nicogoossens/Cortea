@@ -35,6 +35,11 @@ const RegisterBodySchema = z.object({
   language_code: z.string().regex(/^[a-z]{2,3}$/).optional().default("en"),
   active_region: z.string().regex(/^[A-Z]{2,3}$/).optional().default("GB"),
   password: z.string().min(8).max(128).optional(),
+  utm_source: z.string().max(200).optional(),
+  utm_medium: z.string().max(200).optional(),
+  utm_campaign: z.string().max(200).optional(),
+  utm_content: z.string().max(200).optional(),
+  utm_term: z.string().max(200).optional(),
 });
 
 router.post("/auth/register", async (req, res) => {
@@ -47,8 +52,15 @@ router.post("/auth/register", async (req, res) => {
       });
     }
 
-    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region, password } = parsed.data;
+    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region, password, utm_source, utm_medium, utm_campaign, utm_content, utm_term } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
+    const utmFields = {
+      ...(utm_source ? { utm_source } : {}),
+      ...(utm_medium ? { utm_medium } : {}),
+      ...(utm_campaign ? { utm_campaign } : {}),
+      ...(utm_content ? { utm_content } : {}),
+      ...(utm_term ? { utm_term } : {}),
+    };
 
     const existing = await db
       .select()
@@ -112,6 +124,7 @@ router.post("/auth/register", async (req, res) => {
           noble_score: 0,
           subscription_tier: "guest",
           region_history: [],
+          ...utmFields,
         })
         .returning();
 
@@ -139,6 +152,12 @@ router.post("/auth/register", async (req, res) => {
           gender_identity: gender_identity ?? null,
           verification_token: token,
           token_expires_at: expiresAt,
+          // Persist UTM attribution if provided and not already recorded
+          ...(utm_source && !existing[0].utm_source ? { utm_source } : {}),
+          ...(utm_medium && !existing[0].utm_medium ? { utm_medium } : {}),
+          ...(utm_campaign && !existing[0].utm_campaign ? { utm_campaign } : {}),
+          ...(utm_content && !existing[0].utm_content ? { utm_content } : {}),
+          ...(utm_term && !existing[0].utm_term ? { utm_term } : {}),
         })
         .where(eq(usersTable.id, existing[0].id));
 
@@ -167,6 +186,7 @@ router.post("/auth/register", async (req, res) => {
         noble_score: 0,
         subscription_tier: "guest",
         region_history: [],
+        ...utmFields,
       })
       .returning();
 
@@ -185,6 +205,11 @@ router.post("/auth/register", async (req, res) => {
 
 const VerifyQuerySchema = z.object({
   token: z.string().min(1),
+  utm_source: z.string().max(200).optional(),
+  utm_medium: z.string().max(200).optional(),
+  utm_campaign: z.string().max(200).optional(),
+  utm_content: z.string().max(200).optional(),
+  utm_term: z.string().max(200).optional(),
 });
 
 router.get("/auth/verify", async (req, res) => {
@@ -194,7 +219,7 @@ router.get("/auth/verify", async (req, res) => {
       return res.status(400).json({ error: "No verification token was provided." });
     }
 
-    const { token } = parsed.data;
+    const { token, utm_source, utm_medium, utm_campaign, utm_content, utm_term } = parsed.data;
 
     const [user] = await db
       .select()
@@ -210,9 +235,20 @@ router.get("/auth/verify", async (req, res) => {
       return res.status(403).json({ error: "This account has been suspended. Please contact support." });
     }
 
+    // First-touch UTM attribution: persist only if not already recorded
+    const utmPatch = {
+      ...(utm_source && !user.utm_source ? { utm_source } : {}),
+      ...(utm_medium && !user.utm_medium ? { utm_medium } : {}),
+      ...(utm_campaign && !user.utm_campaign ? { utm_campaign } : {}),
+      ...(utm_content && !user.utm_content ? { utm_content } : {}),
+      ...(utm_term && !user.utm_term ? { utm_term } : {}),
+    };
+
     if (user.email_verified) {
       const refreshedToken = randomBytes(32).toString("hex");
-      await db.update(usersTable).set({ session_token: refreshedToken }).where(eq(usersTable.id, user.id));
+      await db.update(usersTable)
+        .set({ session_token: refreshedToken, ...utmPatch })
+        .where(eq(usersTable.id, user.id));
       setSessionCookie(res, refreshedToken);
       return res.json({
         message: "Your address has already been verified.",
@@ -238,6 +274,7 @@ router.get("/auth/verify", async (req, res) => {
         verification_token: null,
         token_expires_at: null,
         session_token: sessionToken,
+        ...utmPatch,
       })
       .where(eq(usersTable.id, user.id));
 

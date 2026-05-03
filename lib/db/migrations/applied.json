@@ -211,7 +211,38 @@
       "status": "applied"
     },
     {
-      "id": "0018_session_master_badge",
+"id": "0017_calling_card_tagline",
+      "file": "lib/db/migrations/0017_calling_card_tagline.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='calling_card_tagline'",
+      "verificationResult": {
+        "rowCount": 1,
+        "note": "calling_card_tagline text column added to users table for Ambassador Digital Calling Card tagline."
+      },
+      "status": "applied"
+    },
+    {
+      "id": "0018_utm_attribution",
+      "file": "lib/db/migrations/0018_utm_attribution.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name LIKE 'utm_%' ORDER BY column_name",
+      "verificationResult": {
+        "rowCount": 5,
+        "rows": [
+          { "column_name": "utm_campaign" },
+          { "column_name": "utm_content" },
+          { "column_name": "utm_medium" },
+          { "column_name": "utm_source" },
+          { "column_name": "utm_term" }
+        ],
+        "note": "UTM attribution columns added to users table: utm_source, utm_medium, utm_campaign, utm_content, utm_term. Applied directly via SQL due to drizzle-kit push being blocked by interactive constraint prompt on unrelated scenarios table. Captures marketing attribution at registration time via utm.ts and Register.tsx."
+      },
+      "status": "applied"
+    },
+    {
+      "id": "0019_session_master_badge",
       "file": "lib/db/migrations/0018_session_master_badge.sql",
       "appliedAt": "2026-05-03",
       "environment": "development",

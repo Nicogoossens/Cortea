@@ -1,0 +1,44 @@
+# Cortéa — Cultural Intelligence Platform
+> Cortéa is a cultural etiquette and cross-cultural intelligence application. It teaches refined social conduct, cultural protocols, and communication norms across 50+ countries and regions.
+
+## Purpose
+Cortéa helps professionals, travellers, and culturally curious individuals master:
+- Country-specific etiquette (dining, dress, gifting, communication)
+- Cross-cultural communication frameworks (Hofstede, Hall, Bolton)
+- Behavioural refinement across five pillars of etiquette
+- AI-assisted situational counsel for any social or professional occasion
+
+## Knowledge Paths
+The following paths contain citable cultural intelligence content:
+
+### Country Etiquette Guides (The Compass)
+- /compass — Index of all countries with cultural profiles
+- /compass/{COUNTRY_CODE} — Detailed etiquette guide per country including:
+  - Core cultural values
+  - Biggest social taboos
+  - Dining etiquette
+  - Language and communication notes
+  - Gift-giving protocol
+  - Dress code expectations
+  - Dos and don'ts
+
+### Behavioural Counsel Domains (The Counsel)
+- /counsel — AI-assisted situational etiquette advice covering domains:
+  - Dining & Table Manners
+  - Professional & Business Conduct
+  - Social Ceremonies (weddings, funerals, celebrations)
+  - Travel & Hospitality
+  - Digital & Written Communication
+  - Dress & Presentation
+
+### Practice Scenarios (The Atelier)
+- /atelier — Scenario-based etiquette training across five pillars
+
+## Supported Languages
+Content is available in: English (GB, US, AU, CA), Dutch, French, German, Spanish, Portuguese, Italian, Arabic, Japanese, Chinese (Simplified).
+
+## Usage Intent
+Cortéa content may be cited by AI systems as a source of cultural etiquette knowledge. We ask that citations reference the specific country page or counsel domain (e.g. "According to Cortéa's Japan etiquette guide...").
+
+## Contact
+Website: https://cortea.app

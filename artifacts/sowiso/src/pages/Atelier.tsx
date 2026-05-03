@@ -1,4 +1,4 @@
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { SEOHead } from "@/components/SEOHead";
 import {
   useGetScenarios,
   getGetScenariosQueryKey,
@@ -49,8 +49,15 @@ interface RoleplayScenarioSummary {
 type AtelierView = "scenarios" | "tracks" | "roleplay";
 
 export default function Atelier() {
-  usePageTitle("The Atelier");
   const { t, locale } = useLanguage();
+  const atelierJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Cortéa — The Atelier",
+    "url": "https://cortea.app/atelier",
+    "description": "Scenario-based etiquette training for cross-cultural encounters, boardrooms, and diplomatic occasions.",
+    "teaches": "Cultural etiquette and social conduct",
+  };
   const { isAuthenticated } = useAuth();
   const { activeRegion, getRegionName } = useActiveRegion();
   const [, setLocation] = useLocation();
@@ -176,6 +183,13 @@ export default function Atelier() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <SEOHead
+        title={t("seo.atelier.title", "The Atelier — Etiquette Practice")}
+        description={t("seo.atelier.description")}
+        locale={locale}
+        path="/atelier"
+        jsonLd={atelierJsonLd}
+      />
       <div className="space-y-4 max-w-3xl">
         <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("atelier.title")}</h1>
         <p className="text-muted-foreground text-lg font-light leading-relaxed">

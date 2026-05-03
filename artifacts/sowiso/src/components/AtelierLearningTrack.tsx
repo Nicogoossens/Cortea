@@ -435,12 +435,17 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   function isPillarLocked(key: string): "session" | "progression" | null {
     if (allComplete) return null;
     if (inProgressSession && key !== researchPillar) return "session";
+    // Any pillar outside the official progression order (e.g. a stray P4
+    // returned by the dataset) is always locked — students must follow the
+    // P1 → P2 → P3 curve.
+    const idx = PILLAR_ORDER.indexOf(key);
+    if (idx === -1) return "progression";
     // If the currently selected phase is itself ahead of the auto-walk
     // (shouldn't happen because the phase column blocks it, but guard
     // anyway), every pillar is locked.
     if (phase > autoPhase) return "progression";
     if (phase < autoPhase) return null; // earlier phases are fully revisitable
-    return PILLAR_ORDER.indexOf(key) > autoPillarIdx ? "progression" : null;
+    return idx > autoPillarIdx ? "progression" : null;
   }
 
   const currentPhaseName = register === "middle_class"
@@ -663,7 +668,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                   {t("atelier.track.section_pillar")}
                 </p>
                 <div className="space-y-1.5">
-                  {Object.entries(RESEARCH_PILLARS).map(([key, label]) => {
+                  {pillarEntries.map(([key, label]) => {
                     const pp = getPillarProgress(key);
                     const level = pp?.current_level ?? 1;
                     const mastered = pp?.mastered ?? false;

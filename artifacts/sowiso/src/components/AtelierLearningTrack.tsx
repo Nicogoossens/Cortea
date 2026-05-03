@@ -74,6 +74,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
 
   const hasManuallyChanged = useRef(false);
   const lastAutoKey = useRef<string>("");
+  // Tracks which session_id we have already aligned currentQuestionIdx to.
+  // Without this, reloading mid-session always shows question[0] which has
+  // already been answered → 409 ANSWER_ALREADY_RECORDED on the next submit.
+  const syncedSessionId = useRef<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
@@ -178,6 +182,29 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   }, [sessionError]);
 
   const { data: progressData } = useGetLearningTrackProgress();
+
+  // Resume mid-session: align the local question pointer with the server's
+  // answers_given the first time we see a given session_id. Otherwise a
+  // page reload (or React Query refetch on focus) re-renders question[0],
+  // which is already in the attempts table → /answer returns 409 and the UI
+  // gets stuck. Per-session_id guard so the user's manual handleNext()
+  // advances are never overwritten.
+  useEffect(() => {
+    const sid = (session as { session_id?: number; answers_given?: number } | undefined)?.session_id;
+    const answersGiven = (session as { answers_given?: number } | undefined)?.answers_given ?? 0;
+    if (sid == null) return;
+    if (syncedSessionId.current === sid) return;
+    syncedSessionId.current = sid;
+    const total = session?.questions?.length ?? 0;
+    // Resume on the first un-answered question; clamp into bounds. If the
+    // session is fully answered we just leave it on the last item — the
+    // session-complete summary card will take over the UI from feedback.
+    const target = Math.min(Math.max(answersGiven, 0), Math.max(total - 1, 0));
+    setCurrentQuestionIdx(target);
+    setSelectedOptionIdx(null);
+    setAnswered(false);
+    setFeedback(null);
+  }, [session]);
 
   // ── Auto-walk: /learning-tracks/next tells us which (phase, pillar) the
   // student should attempt next given their progress in this register × region.

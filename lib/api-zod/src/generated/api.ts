@@ -738,6 +738,12 @@ export const GetLearningTrackSessionResponse = zod.object({
   repeat: zod.boolean(),
   has_questions: zod.boolean(),
   total_questions: zod.number().optional(),
+  answers_given: zod
+    .number()
+    .optional()
+    .describe(
+      "Number of attempts already recorded against this session. Lets the client resume mid-session on the next un-answered question after a reload.",
+    ),
   limits: zod
     .object({
       allowed: zod.boolean(),

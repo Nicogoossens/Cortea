@@ -20,5 +20,7 @@ export interface LearningTrackSession {
   repeat: boolean;
   has_questions: boolean;
   total_questions?: number;
+  /** Number of attempts already recorded against this session. Lets the client resume mid-session on the next un-answered question after a reload. */
+  answers_given?: number;
   limits?: SessionLimitStatus;
 }

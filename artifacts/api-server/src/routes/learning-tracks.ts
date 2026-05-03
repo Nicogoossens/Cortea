@@ -364,6 +364,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         repeat: isRemediation,           // back-compat alias
         has_questions: questions.length > 0,
         total_questions: questions.length,
+        answers_given: session.answers_given,
         questions,
         limits: await computeSessionLimits(userId, register),
       });
@@ -425,6 +426,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       repeat: session.is_remediation,
       has_questions: orderedQuestions.length > 0,
       total_questions: session.total_questions,
+      answers_given: session.answers_given,
       questions: orderedQuestions,
       limits: await computeSessionLimits(userId, register),
     });

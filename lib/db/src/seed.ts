@@ -1,6 +1,7 @@
 import { db } from "./index.js";
 import { cultureProtocolsTable, scenariosTable } from "./schema/index.js";
 import { sql } from "drizzle-orm";
+import { priorityCountryScenarios } from "./seed-scenarios-priority-countries.js";
 
 const protocols: (typeof cultureProtocolsTable.$inferInsert)[] = [
   // ── UNITED KINGDOM ──────────────────────────────────────────────────────────
@@ -1260,6 +1261,7 @@ const scenarios: (typeof scenariosTable.$inferInsert)[] = [
       ]
     }
   },
+  ...priorityCountryScenarios,
 ];
 
 const FLAG_FORCE = process.argv.includes("--force");

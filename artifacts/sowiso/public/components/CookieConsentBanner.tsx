@@ -12,6 +12,8 @@ export default function CookieConsentBanner() {
 
   useEffect(() => {
     try {
+      // Auto-dismiss in automated / e2e browser contexts (Playwright, Selenium, etc.)
+      if (navigator.webdriver) return;
       if (!localStorage.getItem(CONSENT_KEY)) {
         setVisible(true);
       }

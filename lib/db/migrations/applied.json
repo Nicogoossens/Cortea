@@ -159,6 +159,19 @@
         "note": "profiling_consent boolean NOT NULL DEFAULT true added to users table. GDPR Art. 21 opt-out — when false, Bolton/EQ/Mehrabian profile writes are suppressed in noble_score submit route. Default true preserves existing behaviour for all existing users."
       },
       "status": "applied"
+    },
+    {
+      "id": "0013_ambition_level_check",
+      "file": "lib/db/migrations/0013_ambition_level_check.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT conname FROM pg_constraint WHERE conrelid = 'users'::regclass AND conname = 'users_ambition_level_check'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "conname": "users_ambition_level_check" }],
+        "note": "CHECK constraint users_ambition_level_check added to users.ambition_level, allowing only 'casual', 'professional', 'diplomatic'. Invalid inserts now raise a constraint violation error. All existing rows already comply (backfilled in migration 0002)."
+      },
+      "status": "applied"
     }
   ]
 }

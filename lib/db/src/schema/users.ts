@@ -1,4 +1,5 @@
-import { pgTable, text, integer, timestamp, json, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, json, jsonb, boolean, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -45,6 +46,7 @@ export const DEFAULT_BEHAVIOR_PROFILE: BehaviorProfile = {
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
+
   full_name: text("full_name"),
   username: text("username"),
   avatar_url: text("avatar_url"),
@@ -102,7 +104,9 @@ export const usersTable = pgTable("users", {
   last_activity_date: text("last_activity_date"),
   avatar_state: json("avatar_state").$type<AvatarState>(),
   wardrobe_unlocks: json("wardrobe_unlocks").$type<WardrobeItem[]>().notNull().default([]),
-});
+}, (t) => [
+  check("users_ambition_level_check", sql`${t.ambition_level} IN ('casual', 'professional', 'diplomatic')`),
+]);
 
 export interface PrivacySettings {
   incognito: boolean;

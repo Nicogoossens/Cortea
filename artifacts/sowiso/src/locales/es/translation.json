@@ -1293,10 +1293,7 @@
   "membership.cancel_cta": "Cancelar suscripción",
   "membership.cancel_confirm": "¿Está seguro de que desea cancelar su suscripción?",
   "membership.cancel_done_trial": "Su período de prueba ha finalizado; no se le efectuará cargo alguno. Se ha enviado una confirmación.",
-  "membership.cancel_done_period": "Su suscripción finalizará al término del período actual. Se ha enviado una confirmación."
-,
-  "cultures.index.empty": "Las guías de países próximamente estarán disponibles."
-,
+  "membership.cancel_done_period": "Su suscripción finalizará al término del período actual. Se ha enviado una confirmación.",
   "waitlist.seo_title": "Únase a los 100 Fundadores de Cortéa — Lista de Espera",
   "waitlist.seo_description": "Reserve su asiento en Cortéa. Los primeros 100 miembros fundadores reciben un mes de The Traveller, cortesía de la casa.",
   "waitlist.eyebrow": "Lanzamiento suave — 100 Fundadores",
@@ -1346,5 +1343,14 @@
   "admin.waitlist_invite": "Enviar invitación",
   "admin.waitlist_invited": "Invitado",
   "admin.waitlist_filter_all": "Todos los segmentos",
-  "admin.waitlist_empty": "Sin inscripciones aún."
+  "admin.waitlist_empty": "Sin inscripciones aún.",
+  "onboarding.step5_label": "Su Camino",
+  "onboarding.step5_title": "Elija su camino",
+  "onboarding.step5_subtitle": "Comience con una prueba gratuita de 14 días. Cancele en cualquier momento antes de entonces y nunca será facturado.",
+  "onboarding.plan_recommended": "Recomendado para usted",
+  "onboarding.plan_student_tagline": "El camino de un aprendiz",
+  "onboarding.plan_traveller_tagline": "Expanda su mundo",
+  "onboarding.plan_ambassador_tagline": "Refine su presencia",
+  "onboarding.plan_skip_title": "Decida más tarde",
+  "onboarding.plan_skip_subtitle": "Continúe como The Guest. Podrá elegir su camino desde su perfil en cualquier momento."
 }

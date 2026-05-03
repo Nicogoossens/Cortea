@@ -1293,10 +1293,7 @@
   "membership.cancel_cta": "取消会员资格",
   "membership.cancel_confirm": "敬请确认，阁下是否欲取消会员资格？",
   "membership.cancel_done_trial": "试用期已终止；将不收取任何费用。确认函已发送。",
-  "membership.cancel_done_period": "会员资格将于当前周期结束时终止。确认函已发送。"
-,
-  "cultures.index.empty": "国家指南敬请期待。"
-,
+  "membership.cancel_done_period": "会员资格将于当前周期结束时终止。确认函已发送。",
   "waitlist.seo_title": "加入Cortéa创始百人圆桌——候选名单",
   "waitlist.seo_description": "预留您在Cortéa的席位。首批一百位创始成员将获得The Traveller一个月的免费使用权。",
   "waitlist.eyebrow": "柔性启动——创始百人",
@@ -1346,5 +1343,14 @@
   "admin.waitlist_invite": "发送邀请",
   "admin.waitlist_invited": "已邀请",
   "admin.waitlist_filter_all": "所有细分人群",
-  "admin.waitlist_empty": "暂无注册。"
+  "admin.waitlist_empty": "暂无注册。",
+  "onboarding.step5_label": "阁下之道",
+  "onboarding.step5_title": "择其路而行",
+  "onboarding.step5_subtitle": "始于十四日之免费试用。若於此期间前取消，永不蒙收费。",
+  "onboarding.plan_recommended": "为阁下所荐",
+  "onboarding.plan_student_tagline": "学徒之路",
+  "onboarding.plan_traveller_tagline": "拓展阁下之世界",
+  "onboarding.plan_ambassador_tagline": "修进阁下之风仪",
+  "onboarding.plan_skip_title": "他日再决",
+  "onboarding.plan_skip_subtitle": "以The Guest身份继续。阁下得于任何时刻从个人档案中择其路而行。"
 }

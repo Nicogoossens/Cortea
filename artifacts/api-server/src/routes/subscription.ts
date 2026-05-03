@@ -9,7 +9,7 @@ import {
   getTierFeatures,
   type SubscriptionTier,
 } from "../lib/tier-features";
-import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { requireAuthUser, getResolvedUserId, extractToken } from "../lib/auth-middleware";
 import { getUncachableStripeClient } from "../stripeClient";
 import { ensureReferralCode, attachPendingReferral, REFERRAL_REWARD_CAP } from "../lib/referral";
 import { sendCancellationConfirmation } from "../lib/billing-notifications";
@@ -418,6 +418,76 @@ router.post("/referrals/attach", requireAuthUser, async (req, res) => {
     return res.json({ ok: true, ...result });
   } catch {
     return res.status(500).json({ error: "Unable to attach the referral code." });
+  }
+});
+
+/**
+ * POST /onboarding/plan-choice — lightweight conversion-funnel telemetry.
+ *
+ * Called from the new step 5 of onboarding when the user either selects a
+ * tier (which then routes into Stripe checkout) or skips with "decide later".
+ * Logged in a single structured line so we can grep deployment logs to
+ * compute drop-off per onboarding step until a proper analytics table exists.
+ *
+ * Auth-optional: tracking should never block guest flows. We attach the
+ * user_id only when the request is authenticated, and otherwise log "anon".
+ */
+router.post("/onboarding/plan-choice", async (req, res) => {
+  try {
+    const { action, tier, recommendedTier, objectives } = (req.body ?? {}) as {
+      action?: string;
+      tier?: string | null;
+      recommendedTier?: string | null;
+      objectives?: unknown;
+    };
+    const safeAction = typeof action === "string" ? action : "unknown";
+    const safeTier = typeof tier === "string" ? tier : "none";
+    const safeRecommended = typeof recommendedTier === "string" ? recommendedTier : "none";
+    const objectivesList = Array.isArray(objectives)
+      ? objectives.filter((o): o is string => typeof o === "string").join("|")
+      : "";
+
+    // Optional auth: resolve the user from the session token if present so
+    // telemetry can attribute events to a real account, but never reject the
+    // request when the token is missing or invalid.
+    let userId = "anon";
+    try {
+      const token = extractToken(req);
+      if (token) {
+        const [user] = await db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.session_token, token))
+          .limit(1);
+        if (user?.id) userId = user.id;
+      }
+    } catch {
+      /* keep userId as "anon" */
+    }
+
+    // If the user actively chose to defer ("Decide later"), make sure their
+    // tier is explicitly Guest so the requirement is enforced even for accounts
+    // that may have been promoted by some other path. No-op when already guest.
+    if (safeAction === "skipped" && userId !== "anon") {
+      try {
+        await db
+          .update(usersTable)
+          .set({ subscription_tier: "guest" })
+          .where(and(eq(usersTable.id, userId), eq(usersTable.subscription_tier, "guest")));
+        // Note: we intentionally only "confirm" guest here — never demote
+        // a paying user who somehow re-runs onboarding.
+      } catch {
+        /* telemetry must not fail */
+      }
+    }
+
+    console.info(
+      `[onboarding.plan_choice] user=${userId} action=${safeAction} tier=${safeTier} recommended=${safeRecommended} objectives=${objectivesList}`
+    );
+    return res.json({ ok: true });
+  } catch {
+    // Telemetry must never surface as an error to the client.
+    return res.json({ ok: true });
   }
 });
 

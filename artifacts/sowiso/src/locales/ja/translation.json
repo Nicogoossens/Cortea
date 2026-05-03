@@ -1293,10 +1293,7 @@
   "membership.cancel_cta": "会員資格をキャンセルいたす",
   "membership.cancel_confirm": "ご会員資格をキャンセルなされることをご確認いただきたくお願い申し上げます",
   "membership.cancel_done_trial": "試用期間は終了いたされました。料金は発生いたしません。確認のご通知をお送りいたしました",
-  "membership.cancel_done_period": "ご会員資格は現在の期間の終了をもって終了いたされます。確認のご通知をお送りいたしました"
-,
-  "cultures.index.empty": "国別ガイドは近日公開予定です。"
-,
+  "membership.cancel_done_period": "ご会員資格は現在の期間の終了をもって終了いたされます。確認のご通知をお送りいたしました",
   "waitlist.seo_title": "Cortéa創設100人に参加する — ウェイトリスト",
   "waitlist.seo_description": "Cortéaへの席を予約してください。最初の100名の創設メンバーは、The Travellerの1ヶ月間を無料でご利用いただけます。",
   "waitlist.eyebrow": "ソフトローンチ — 創設100人",
@@ -1346,5 +1343,14 @@
   "admin.waitlist_invite": "招待状を送信",
   "admin.waitlist_invited": "招待済み",
   "admin.waitlist_filter_all": "全セグメント",
-  "admin.waitlist_empty": "まだ登録がありません。"
+  "admin.waitlist_empty": "まだ登録がありません。",
+  "onboarding.step5_label": "ご自身の道程",
+  "onboarding.step5_title": "ご自身の道程をお選びください",
+  "onboarding.step5_subtitle": "14日間の無料試用をもって開始いただけます。その期間内にいつでもご解約いただければ、ご請求いたしません。",
+  "onboarding.plan_recommended": "ご推奨のプラン",
+  "onboarding.plan_student_tagline": "修習者の道程",
+  "onboarding.plan_traveller_tagline": "世界を広げる",
+  "onboarding.plan_ambassador_tagline": "ご自身の存在を磨く",
+  "onboarding.plan_skip_title": "後ほどご決定ください",
+  "onboarding.plan_skip_subtitle": "The Guest としてご継続いただけます。プロフィールからいつでもご自身の道程をお選びになれます。"
 }

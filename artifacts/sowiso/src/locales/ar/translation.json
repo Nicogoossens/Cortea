@@ -1293,10 +1293,7 @@
   "membership.cancel_cta": "إلغاء العضويّة",
   "membership.cancel_confirm": "هل تأكّد رغبتك في إلغاء عضويّتك؟",
   "membership.cancel_done_trial": "تمّ إنهاء فترة التجربة؛ لن يتمّ فرض أيّ رسوم. تمّ إرسال رسالة تأكيد.",
-  "membership.cancel_done_period": "ستنتهي عضويّتك عند انقضاء الفترة الحاليّة. تمّ إرسال رسالة تأكيد."
-,
-  "cultures.index.empty": "أدلة الدول قادمة قريباً."
-,
+  "membership.cancel_done_period": "ستنتهي عضويّتك عند انقضاء الفترة الحاليّة. تمّ إرسال رسالة تأكيد.",
   "waitlist.seo_title": "انضم إلى مائة مؤسّسي كورتيا — قائمة الانتظار",
   "waitlist.seo_description": "احجز مقعدك في كورتيا. أول مائة عضو مؤسّس يحصلون على شهر واحد من The Traveller، مجانًا.",
   "waitlist.eyebrow": "إطلاق ناعم — مائة مؤسّس",
@@ -1346,5 +1343,14 @@
   "admin.waitlist_invite": "إرسال دعوة",
   "admin.waitlist_invited": "مدعو",
   "admin.waitlist_filter_all": "جميع الفئات",
-  "admin.waitlist_empty": "لا توجد تسجيلات حتى الآن."
+  "admin.waitlist_empty": "لا توجد تسجيلات حتى الآن.",
+  "onboarding.step5_label": "مسارك الخاص",
+  "onboarding.step5_title": "اختر مسارك",
+  "onboarding.step5_subtitle": "ابدأ بفترة تجريبية مجانية لمدة أربعة عشر يوماً. ألغِ الاشتراك في أي وقت قبل انقضائها، ولن يتم فرض أي رسوم عليك.",
+  "onboarding.plan_recommended": "موصى به لك",
+  "onboarding.plan_student_tagline": "مسار المتدرب",
+  "onboarding.plan_traveller_tagline": "وسّع آفاقك",
+  "onboarding.plan_ambassador_tagline": "هذّب حضورك",
+  "onboarding.plan_skip_title": "قرر لاحقاً",
+  "onboarding.plan_skip_subtitle": "استمرّ كضيف. يمكنك اختيار مسارك من ملفك الشخصي في أي وقت."
 }

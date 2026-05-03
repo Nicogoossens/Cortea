@@ -1293,10 +1293,7 @@
   "membership.cancel_cta": "Mitgliedschaft kündigen",
   "membership.cancel_confirm": "Sind Sie gewiss, dass Sie Ihre Mitgliedschaft kündigen wünschen?",
   "membership.cancel_done_trial": "Ihre Testphase wurde beendet; es erfolgt keine Berechnung. Eine Bestätigung wurde versendet.",
-  "membership.cancel_done_period": "Ihre Mitgliedschaft endet mit Ablauf der gegenwärtigen Periode. Eine Bestätigung wurde versendet."
-,
-  "cultures.index.empty": "Länderführer folgen in Kürze."
-,
+  "membership.cancel_done_period": "Ihre Mitgliedschaft endet mit Ablauf der gegenwärtigen Periode. Eine Bestätigung wurde versendet.",
   "waitlist.seo_title": "Treten Sie den Gründungsmitgliedern von Cortéa bei — Warteliste",
   "waitlist.seo_description": "Reservieren Sie Ihren Platz bei Cortéa. Die ersten 100 Gründungsmitglieder erhalten einen Monat The Traveller kostenlos.",
   "waitlist.eyebrow": "Soft Launch — Gründungsmitglieder 100",
@@ -1346,5 +1343,14 @@
   "admin.waitlist_invite": "Einladung versenden",
   "admin.waitlist_invited": "Eingeladen",
   "admin.waitlist_filter_all": "Alle Segmente",
-  "admin.waitlist_empty": "Noch keine Anmeldungen."
+  "admin.waitlist_empty": "Noch keine Anmeldungen.",
+  "onboarding.step5_label": "Ihr Weg",
+  "onboarding.step5_title": "Wählen Sie Ihren Weg",
+  "onboarding.step5_subtitle": "Beginnen Sie mit einer kostenlosen 14-Tage-Testphase. Sie können jederzeit vor Ablauf dieser Frist kündigen und werden nicht belastet.",
+  "onboarding.plan_recommended": "Für Sie empfohlen",
+  "onboarding.plan_student_tagline": "Der Weg eines Lehrlings",
+  "onboarding.plan_traveller_tagline": "Erweitern Sie Ihren Horizont",
+  "onboarding.plan_ambassador_tagline": "Verfeinern Sie Ihre Präsenz",
+  "onboarding.plan_skip_title": "Entscheiden Sie später",
+  "onboarding.plan_skip_subtitle": "Fahren Sie als The Guest fort. Sie können Ihren Weg jederzeit über Ihr Profil wählen."
 }

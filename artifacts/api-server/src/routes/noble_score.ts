@@ -425,14 +425,43 @@ router.post("/noble-score/submit", async (req, res) => {
     }
 
     const correctionStyle = (scenario as { correction_style?: string | null }).correction_style;
-    const requestLang = lang ? lang.split("-")[0] : "en";
-    const isEnglish = !lang || requestLang === "en";
+    const correctionStyleI18n = (scenario as { correction_style_i18n?: Record<string, string> | null }).correction_style_i18n;
+    const normalizedLangTag = lang ? lang.toLowerCase() : null;
+    const requestLang = normalizedLangTag ? normalizedLangTag.split("-")[0] : "en";
+    const isEnglish = !normalizedLangTag || requestLang === "en";
+
+    /**
+     * Resolve the bespoke per-scenario correction tip for the requested language.
+     * - English locale → use the canonical correction_style column.
+     * - Other locales → prefer the translated value from correction_style_i18n
+     *   (exact tag first, then base subtag — both compared case-insensitively
+     *   against the stored keys), falling back to the English correction_style
+     *   if no translation has been seeded for that language.
+     * Returns null when the scenario has no bespoke tip at all.
+     */
+    function resolveCorrectionStyle(): string | null {
+      if (!correctionStyle) return null;
+      if (isEnglish) return correctionStyle;
+      if (!correctionStyleI18n) return correctionStyle;
+      // Case-insensitive lookup over stored keys so e.g. "FR-FR", "fr_FR",
+      // or "Fr" all hit the canonical "fr" / "fr-fr" entry written by the
+      // translation worker.
+      const lowerEntries = Object.entries(correctionStyleI18n).map(
+        ([k, v]) => [k.toLowerCase(), v] as const,
+      );
+      const lookup = new Map(lowerEntries);
+      const exact = normalizedLangTag ? lookup.get(normalizedLangTag) : undefined;
+      const base = lookup.get(requestLang);
+      return exact ?? base ?? correctionStyle;
+    }
 
     let mentorFeedback: string;
-    if (!isCorrect && correctionStyle && isEnglish) {
-      // Bespoke English correction tip — only shown to English-locale users.
-      // Non-English users receive a translated i18n key from the pool below.
-      mentorFeedback = correctionStyle;
+    const localizedCorrectionStyle = !isCorrect ? resolveCorrectionStyle() : null;
+    if (localizedCorrectionStyle) {
+      // Bespoke per-scenario correction tip (translated when available,
+      // otherwise English fallback). Falls through to the i18n key pool when
+      // the scenario has no custom tip set.
+      mentorFeedback = localizedCorrectionStyle;
     } else {
       const feedbackPool = isCorrect
         ? MENTOR_FEEDBACK_CORRECT[ageBand]

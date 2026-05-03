@@ -45,6 +45,7 @@ export const scenariosTable = pgTable("scenarios", {
   behavioral_tags: jsonb("behavioral_tags").$type<string[]>(),
   bolton_cluster: integer("bolton_cluster"),
   correction_style: text("correction_style"),
+  correction_style_i18n: jsonb("correction_style_i18n").$type<Record<string, string>>(),
   // Social class register
   social_class: text("social_class").notNull().default("universal"),
   // Middle class structural columns

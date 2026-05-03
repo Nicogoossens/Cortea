@@ -184,6 +184,19 @@
         "note": "Seeded 5 cultural-origin records for each of the 17 priority Compass regions (JP, DE, FR, IT, BE, CH, SG, IN, MX, BR, ES, CO, AE, US, NL, PT, ZA), bringing total to 20 regions × 5 records = 100 rows. Added unique index co_region_tradition_unique to make re-runs idempotent on (region_code, tradition). Renumbered from 0013 during rebase because upstream main also added a 0013."
       },
       "status": "applied"
+    },
+    {
+      "id": "0015_correction_style_i18n",
+      "file": "lib/db/migrations/0015_correction_style_i18n.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='scenarios' AND column_name='correction_style_i18n'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "column_name": "correction_style_i18n" }],
+        "note": "correction_style_i18n jsonb column added to scenarios. Stores per-language translations of the bespoke correction_style mentor tip used by /api/noble-score/submit. English fallback remains the canonical correction_style column. Backfilled all 3 existing rows × 9 languages (27 translations) via scripts/correction-style-translate.mjs. Renumbered from 0014 during rebase because upstream main also added a 0014."
+      },
+      "status": "applied"
     }
   ]
 }

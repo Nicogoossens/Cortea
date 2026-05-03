@@ -500,3 +500,89 @@ export async function calibrateI18nMap(
     changed: rewritten > 0,
   };
 }
+
+// ── Centralised translation-row write hook ───────────────────────────────────
+//
+// `upsertContentTranslationRows` is the deterministic write path that any API
+// CRUD flow should use when persisting `translations` rows. It performs an
+// upsert keyed on (language_code, key) and, for every row whose key passes
+// `isContentKey`, queues a fire-and-forget calibration via
+// `calibrateTranslationsByIds`. This guarantees that newly created or updated
+// module-content rows automatically receive register treatment without any
+// caller having to remember to invoke the worker.
+//
+// `module` controls the target register. When omitted, calibration is queued
+// against the requested module; when undefined, no calibration is queued.
+
+export interface ContentTranslationInput {
+  language_code: string;
+  key: string;
+  value: string;
+  formality_register?: string;
+  rtl_flag?: boolean;
+  region_link?: string | null;
+}
+
+export interface UpsertContentTranslationsResult {
+  ids: number[];
+  contentRowIds: number[];
+  calibrationQueued: boolean;
+}
+
+export async function upsertContentTranslationRows(
+  rows: ContentTranslationInput[],
+  options: { module?: CalibrationModule; dryRun?: boolean; force?: boolean } = {}
+): Promise<UpsertContentTranslationsResult> {
+  if (rows.length === 0) {
+    return { ids: [], contentRowIds: [], calibrationQueued: false };
+  }
+
+  const ids: number[] = [];
+  for (const r of rows) {
+    const inserted = await db
+      .insert(translationsTable)
+      .values({
+        language_code: r.language_code,
+        key: r.key,
+        value: r.value,
+        formality_register: r.formality_register ?? "high",
+        rtl_flag: r.rtl_flag ?? false,
+        region_link: r.region_link ?? null,
+      })
+      .onConflictDoUpdate({
+        target: [translationsTable.language_code, translationsTable.key],
+        set: {
+          value: r.value,
+          rtl_flag: r.rtl_flag ?? false,
+          region_link: r.region_link ?? null,
+          // Invalidate prior calibration since the source value changed.
+          calibrated_module: null,
+          quality_reviewed_at: null,
+        },
+      })
+      .returning({ id: translationsTable.id });
+    if (inserted[0]) ids.push(inserted[0].id);
+  }
+
+  const contentRowIds = rows
+    .map((r, i) => ({ key: r.key, id: ids[i] }))
+    .filter((x) => x.id !== undefined && isContentKey(x.key))
+    .map((x) => x.id);
+
+  if (contentRowIds.length > 0 && options.module) {
+    const module = options.module;
+    void calibrateTranslationsByIds(contentRowIds, module, {
+      dryRun: options.dryRun,
+      force: options.force,
+    }).catch(() => {
+      // Errors are surfaced through caller logging; swallow here so the
+      // background promise does not become an unhandled rejection.
+    });
+  }
+
+  return {
+    ids,
+    contentRowIds,
+    calibrationQueued: contentRowIds.length > 0 && Boolean(options.module),
+  };
+}

@@ -595,9 +595,9 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
                     : null;
               if (!module) continue;
 
-              // Calibrate each ScenarioContent field (situation, question,
-              // historical_context) per locale; option text/explanations are
-              // left untouched here to keep the call volume bounded.
+              // Calibrate every user-facing ScenarioContent field per locale:
+              // situation, question, historical_context, plus each option's
+              // text / explanation / behavior_signal.
               const calibrated: Record<string, typeof row.content_i18n[string]> = {
                 ...(row.content_i18n as Record<string, NonNullable<typeof row.content_i18n>[string]>),
               };
@@ -609,9 +609,7 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
                 };
                 if (content.historical_context) fieldMap.historical_context = content.historical_context;
 
-                // Calibrate each field by sending it through the per-locale
-                // calibrator one field at a time, so the locale-specific
-                // system prompt is selected correctly.
+                // Calibrate top-level fields per-locale.
                 const perFieldResult: Record<string, string> = {};
                 for (const [field, text] of Object.entries(fieldMap)) {
                   if (!text) continue;
@@ -619,6 +617,23 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
                   perFieldResult[field] = r.calibrated[locale] ?? text;
                   if (r.changed) anyChanged = true;
                 }
+
+                // Calibrate every option's text / explanation / behavior_signal.
+                const calibratedOptions = await Promise.all(
+                  (content.options ?? []).map(async (opt) => {
+                    const out = { ...opt };
+                    for (const field of ["text", "explanation", "behavior_signal"] as const) {
+                      const v = (opt as Record<string, unknown>)[field];
+                      if (typeof v !== "string" || v.length === 0) continue;
+                      const r = await calibrateI18nMap({ [locale]: v }, module);
+                      const next = r.calibrated[locale] ?? v;
+                      if (r.changed) anyChanged = true;
+                      (out as Record<string, unknown>)[field] = next;
+                    }
+                    return out;
+                  })
+                );
+
                 calibrated[locale] = {
                   ...content,
                   ...(perFieldResult.situation !== undefined ? { situation: perFieldResult.situation } : {}),
@@ -626,6 +641,7 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
                   ...(perFieldResult.historical_context !== undefined
                     ? { historical_context: perFieldResult.historical_context }
                     : {}),
+                  options: calibratedOptions,
                 };
               }
 
@@ -1397,6 +1413,40 @@ router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
 
     if (!updated) {
       return res.status(409).json({ error: "Record not found or is no longer in pending state." });
+    }
+
+    // ── Auto re-translate + re-calibrate when rule_cc was updated ─────────────
+    // Mirrors the cc-save save-path: re-fetch translations for the new English
+    // text and run register calibration over the resulting i18n map. Both
+    // steps are fire-and-forget so the response is not delayed.
+    if (body.rule_cc !== undefined) {
+      const ccId = updated.id;
+      const newRuleCc = updated.rule_cc;
+      const pillarCode = (updated as { pillar_code?: string | null }).pillar_code ?? "Z1";
+      const subcat = updated.subcategory ?? "general";
+      void (async () => {
+        try {
+          const fresh = await translateRuleCc(newRuleCc, pillarCode, subcat, req);
+          if (Object.keys(fresh).length === 0) return;
+          await db
+            .update(cultureProtocolsTable)
+            .set({ rule_cc_i18n: fresh })
+            .where(eq(cultureProtocolsTable.id, ccId));
+          const cal = await calibrateI18nMap(fresh, "standard");
+          if (cal.changed) {
+            await db
+              .update(cultureProtocolsTable)
+              .set({ rule_cc_i18n: cal.calibrated })
+              .where(eq(cultureProtocolsTable.id, ccId));
+          }
+          req.log?.info(
+            { ccId, unchanged: cal.unchanged, rewritten: cal.rewritten, errors: cal.errors },
+            "CC Update: re-translation + register calibration completed"
+          );
+        } catch (e) {
+          req.log?.warn({ e, ccId }, "CC Update: re-translation/calibration failed");
+        }
+      })();
     }
 
     return res.json({ ok: true, ...updated });

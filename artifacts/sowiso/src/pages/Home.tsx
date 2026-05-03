@@ -57,6 +57,7 @@ interface MiniUseCase {
   title: string;
   flag_emoji: string;
   formality_level: string;
+  region_code: string | null;
   readiness_score: number | null;
 }
 
@@ -94,7 +95,7 @@ export default function Home() {
 
   const createProfile = useCreateProfile();
 
-  const { data: useCasesShortlist } = useQuery<MiniUseCase[]>({
+  const { data: allUseCases } = useQuery<MiniUseCase[]>({
     queryKey: ["use-cases-home", userId],
     enabled: !!userId,
     queryFn: async () => {
@@ -102,13 +103,16 @@ export default function Home() {
         credentials: "include",
       });
       if (!res.ok) return [];
-      const all: MiniUseCase[] = await res.json();
-      return all
-        .filter(uc => uc.readiness_score !== null)
-        .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0))
-        .slice(0, 3);
+      return res.json();
     },
   });
+
+  const useCasesShortlist = allUseCases
+    ? allUseCases
+        .filter(uc => uc.readiness_score !== null)
+        .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0))
+        .slice(0, 3)
+    : undefined;
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(false);
@@ -774,10 +778,14 @@ export default function Home() {
                   ? t("navigator.departure_today")
                   : t("navigator.d_minus", { count: days });
               const isPast = days < -30;
-              const regionRows = atelierProgress.filter(r => r.region_code === trip.regionCode);
-              const regionMastered = regionRows.filter(r => r.mastered).length;
-              const readinessPct = regionRows.length > 0
-                ? Math.round((regionMastered / regionRows.length) * 100)
+              const regionUseCases = (allUseCases ?? []).filter(
+                uc => uc.region_code === trip.regionCode && uc.readiness_score !== null
+              );
+              const readinessPct = regionUseCases.length > 0
+                ? Math.round(
+                    regionUseCases.reduce((sum, uc) => sum + (uc.readiness_score ?? 0), 0) /
+                    regionUseCases.length
+                  )
                 : null;
               return (
                 <Link key={trip.id} href="/navigator">
@@ -797,11 +805,9 @@ export default function Home() {
                           <Badge variant="outline" className={`font-mono text-xs ${days < 0 ? "border-muted text-muted-foreground" : "border-amber-400/40 text-amber-600"}`}>
                             {departureLabel}
                           </Badge>
-                          {readinessPct !== null && (
-                            <span className="text-[10px] font-mono text-muted-foreground">
-                              {readinessPct}% {t("home.ready")}
-                            </span>
-                          )}
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {readinessPct !== null ? `${readinessPct}% ${t("home.ready")}` : "—"}
+                          </span>
                         </div>
                       </div>
                     </CardContent>

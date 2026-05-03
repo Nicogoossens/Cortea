@@ -70,6 +70,13 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+class AccountSuspendedError extends Error {
+  constructor() {
+    super("Account is suspended");
+    this.name = "AccountSuspendedError";
+  }
+}
+
 async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
   user: typeof usersTable.$inferSelect;
   isNewUser: boolean;
@@ -90,6 +97,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
     .limit(1);
 
   if (byOAuth.length > 0) {
+    if (byOAuth[0].suspended_at) throw new AccountSuspendedError();
     const sessionToken = generateToken();
     await db.update(usersTable)
       .set({
@@ -110,6 +118,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
       .limit(1);
 
     if (byEmail.length > 0) {
+      if (byEmail[0].suspended_at) throw new AccountSuspendedError();
       const sessionToken = generateToken();
       await db.update(usersTable)
         .set({
@@ -239,6 +248,9 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
 
     return res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
   } catch (err) {
+    if (err instanceof AccountSuspendedError) {
+      return res.redirect("/?error=account_suspended");
+    }
     req.log.error({ err }, "Google OAuth callback failed");
     return res.redirect("/?error=auth_failed");
   }

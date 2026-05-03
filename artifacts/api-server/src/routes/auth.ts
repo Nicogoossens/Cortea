@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
@@ -245,9 +245,16 @@ router.get("/auth/verify", async (req, res) => {
     };
 
     if (user.email_verified) {
+      if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
+        await db.update(usersTable)
+          .set({ verification_token: null, token_expires_at: null })
+          .where(eq(usersTable.id, user.id));
+        return res.status(410).json({ error: "This sign-in link has expired. Please request a new one." });
+      }
+
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable)
-        .set({ session_token: refreshedToken, ...utmPatch })
+        .set({ session_token: refreshedToken, verification_token: null, token_expires_at: null, ...utmPatch })
         .where(eq(usersTable.id, user.id));
       setSessionCookie(res, refreshedToken);
       return res.json({
@@ -669,12 +676,30 @@ router.post("/auth/reset-password", async (req, res) => {
 });
 
 // ── First-admin bootstrap ──────────────────────────────────────────────────────
+// Requires BOOTSTRAP_ADMIN_SECRET to be set in the environment and provided in
+// the request body. Without the secret this endpoint always returns 403 so it
+// cannot be exploited on deployments that have not explicitly configured it.
+const ClaimFirstAdminSchema = z.object({
+  bootstrap_secret: z.string().min(1),
+});
+
 router.post("/auth/claim-first-admin", async (req, res) => {
   try {
+    const configuredSecret = process.env.BOOTSTRAP_ADMIN_SECRET;
+    if (!configuredSecret) {
+      return res.status(403).json({ error: "First-admin bootstrap is not enabled on this deployment." });
+    }
+
     const token = extractToken(req);
     if (!token) {
       return res.status(401).json({ error: "Authentication required." });
     }
+
+    const parsed = ClaimFirstAdminSchema.safeParse(req.body);
+    if (!parsed.success || parsed.data.bootstrap_secret !== configuredSecret) {
+      return res.status(403).json({ error: "Invalid bootstrap secret." });
+    }
+
     const [user] = await db
       .select()
       .from(usersTable)
@@ -683,10 +708,28 @@ router.post("/auth/claim-first-admin", async (req, res) => {
     if (!user) return res.status(401).json({ error: "Invalid session." });
     if (user.is_admin) return res.json({ message: "You are already an administrator." });
 
-    const [{ total }] = await db.select({ total: count() }).from(usersTable).where(eq(usersTable.is_admin, true));
-    if (total > 0) return res.status(403).json({ error: "An administrator already exists. This endpoint is disabled." });
+    // Serializable transaction + conditional update: the SERIALIZABLE isolation
+    // level causes PostgreSQL to abort and retry any concurrent transaction that
+    // produces a serialization anomaly, ensuring only one caller can ever be
+    // promoted on a zero-admin system — even under heavy parallel load.
+    let promoted = false;
+    await db.transaction(async (tx) => {
+      const result = await tx
+        .update(usersTable)
+        .set({ is_admin: true })
+        .where(
+          sql`${usersTable.id} = ${user.id}
+            AND NOT EXISTS (
+              SELECT 1 FROM ${usersTable} WHERE ${usersTable.is_admin} = true LIMIT 1
+            )`
+        )
+        .returning({ id: usersTable.id });
+      promoted = result.length > 0;
+    }, { isolationLevel: "serializable" });
 
-    await db.update(usersTable).set({ is_admin: true }).where(eq(usersTable.id, user.id));
+    if (!promoted) {
+      return res.status(403).json({ error: "An administrator already exists. This endpoint is disabled." });
+    }
     return res.json({ message: "You have been granted administrator access.", is_admin: true });
   } catch (err) {
     req.log.error({ err }, "claim-first-admin failed");

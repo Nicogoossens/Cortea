@@ -51,6 +51,13 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+class AccountSuspendedError extends Error {
+  constructor() {
+    super("Account is suspended");
+    this.name = "AccountSuspendedError";
+  }
+}
+
 async function upsertSowisoUser(claims: Record<string, unknown>): Promise<{
   user: typeof usersTable.$inferSelect;
   isNewUser: boolean;
@@ -69,6 +76,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>): Promise<{
     .limit(1);
 
   if (byOAuth.length > 0) {
+    if (byOAuth[0].suspended_at) throw new AccountSuspendedError();
     const sessionToken = generateToken();
     await db.update(usersTable)
       .set({ session_token: sessionToken, full_name: fullName ?? byOAuth[0].full_name })
@@ -85,6 +93,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>): Promise<{
       .limit(1);
 
     if (byEmail.length > 0) {
+      if (byEmail[0].suspended_at) throw new AccountSuspendedError();
       const sessionToken = generateToken();
       await db.update(usersTable)
         .set({
@@ -219,6 +228,10 @@ router.get("/callback", async (req: Request, res: Response) => {
 
     res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
   } catch (err) {
+    if (err instanceof AccountSuspendedError) {
+      res.redirect("/?error=account_suspended");
+      return;
+    }
     req.log.error({ err }, "OIDC user upsert failed");
     res.redirect("/?error=auth_failed");
   }

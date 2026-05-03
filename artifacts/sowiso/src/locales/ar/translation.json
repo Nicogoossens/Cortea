@@ -963,5 +963,13 @@
   "compass.local.empty": "لم يتم العثور على أماكن لهذا التحديد.",
   "compass.local.etiquette_tip": "نصيحة آداب",
   "compass.local.etiquette": "آداب",
-  "compass.local.occasion_tags_aria": "وسوم المناسبة"
+  "compass.local.occasion_tags_aria": "وسوم المناسبة",
+  "subscription.payment_failed_notice": "تعذّرت معالجة دفعة حديثة. يستمر وصولك مؤقتًا — يُرجى تحديث تفاصيل الفوترة في أقرب وقت ممكن.",
+  "subscription.payment_failed_cta": "مراجعة عضويتك",
+  "subscription.payment_failed_dismiss": "إغلاق",
+  "subscription.profile_renews": "تتجدد العضوية",
+  "subscription.profile_active": "العضوية نشطة",
+  "subscription.profile_payment_failed": "تم تسجيل مشكلة في الدفع. يُرجى مراجعة عضويتك.",
+  "subscription.profile_manage": "إدارة العضوية",
+  "membership.upgrade_success": "تم تحديث عضويتك. مرحبًا بك في مكانتك الجديدة."
 }

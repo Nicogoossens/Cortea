@@ -954,5 +954,13 @@
   "compass.local.empty": "未找到符合此筛选条件的场所。",
   "compass.local.etiquette_tip": "礼仪小贴士",
   "compass.local.etiquette": "礼仪",
-  "compass.local.occasion_tags_aria": "场合标签"
+  "compass.local.occasion_tags_aria": "场合标签",
+  "subscription.payment_failed_notice": "最近一次付款未能处理。您的访问权限暂时保留 — 请尽快更新您的账单信息。",
+  "subscription.payment_failed_cta": "查看您的会员资格",
+  "subscription.payment_failed_dismiss": "关闭",
+  "subscription.profile_renews": "会员续订",
+  "subscription.profile_active": "会员有效",
+  "subscription.profile_payment_failed": "已记录付款问题，请查看您的会员资格。",
+  "subscription.profile_manage": "管理会员资格",
+  "membership.upgrade_success": "您的会员资格已更新。欢迎来到新的等级。"
 }

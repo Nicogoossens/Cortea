@@ -972,5 +972,13 @@
   "compass.local.empty": "Aucun lieu trouvé pour cette sélection.",
   "compass.local.etiquette_tip": "Conseil d'étiquette",
   "compass.local.etiquette": "Étiquette",
-  "compass.local.occasion_tags_aria": "Étiquettes d'occasion"
+  "compass.local.occasion_tags_aria": "Étiquettes d'occasion",
+  "subscription.payment_failed_notice": "Un paiement récent n'a pas pu être traité. Votre accès se poursuit pour le moment — veuillez mettre à jour vos coordonnées de facturation dès que possible.",
+  "subscription.payment_failed_cta": "Vérifier votre adhésion",
+  "subscription.payment_failed_dismiss": "Ignorer",
+  "subscription.profile_renews": "L'adhésion se renouvelle",
+  "subscription.profile_active": "Adhésion active",
+  "subscription.profile_payment_failed": "Un problème de paiement a été noté. Veuillez vérifier votre adhésion.",
+  "subscription.profile_manage": "Gérer l'adhésion",
+  "membership.upgrade_success": "Votre adhésion a été mise à jour. Bienvenue à votre nouveau statut."
 }

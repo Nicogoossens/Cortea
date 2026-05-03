@@ -978,5 +978,13 @@
   "compass.local.empty": "Geen venues gevonden voor deze selectie.",
   "compass.local.etiquette_tip": "Etiquettetip",
   "compass.local.etiquette": "Etiquette",
-  "compass.local.occasion_tags_aria": "Gelegenheidstags"
+  "compass.local.occasion_tags_aria": "Gelegenheidstags",
+  "subscription.payment_failed_notice": "Een recente betaling kon niet worden verwerkt. Uw toegang blijft voorlopig bestaan — werk uw factuurgegevens zo snel mogelijk bij.",
+  "subscription.payment_failed_cta": "Bekijk uw lidmaatschap",
+  "subscription.payment_failed_dismiss": "Sluiten",
+  "subscription.profile_renews": "Lidmaatschap verlengt",
+  "subscription.profile_active": "Lidmaatschap actief",
+  "subscription.profile_payment_failed": "Er is een betalingsprobleem geconstateerd. Bekijk uw lidmaatschap.",
+  "subscription.profile_manage": "Lidmaatschap beheren",
+  "membership.upgrade_success": "Uw lidmaatschap is bijgewerkt. Welkom bij uw nieuwe status."
 }

@@ -963,5 +963,13 @@
   "compass.local.empty": "この条件に該当する会場が見つかりません。",
   "compass.local.etiquette_tip": "エチケットのヒント",
   "compass.local.etiquette": "エチケット",
-  "compass.local.occasion_tags_aria": "シーンタグ"
+  "compass.local.occasion_tags_aria": "シーンタグ",
+  "subscription.payment_failed_notice": "最近のお支払いを処理できませんでした。アクセスは当面継続します — お早めにお支払い情報を更新してください。",
+  "subscription.payment_failed_cta": "メンバーシップを確認",
+  "subscription.payment_failed_dismiss": "閉じる",
+  "subscription.profile_renews": "メンバーシップ更新日",
+  "subscription.profile_active": "メンバーシップ有効",
+  "subscription.profile_payment_failed": "お支払いに問題が発生しました。メンバーシップをご確認ください。",
+  "subscription.profile_manage": "メンバーシップを管理",
+  "membership.upgrade_success": "メンバーシップが更新されました。新しいステータスへようこそ。"
 }

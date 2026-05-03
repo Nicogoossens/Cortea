@@ -972,5 +972,13 @@
   "compass.local.empty": "Keine Locations für diese Auswahl gefunden.",
   "compass.local.etiquette_tip": "Etikette-Tipp",
   "compass.local.etiquette": "Etikette",
-  "compass.local.occasion_tags_aria": "Anlass-Tags"
+  "compass.local.occasion_tags_aria": "Anlass-Tags",
+  "subscription.payment_failed_notice": "Eine kürzliche Zahlung konnte nicht verarbeitet werden. Ihr Zugang bleibt vorerst bestehen — bitte aktualisieren Sie Ihre Zahlungsdaten zeitnah.",
+  "subscription.payment_failed_cta": "Mitgliedschaft überprüfen",
+  "subscription.payment_failed_dismiss": "Schließen",
+  "subscription.profile_renews": "Mitgliedschaft verlängert sich",
+  "subscription.profile_active": "Mitgliedschaft aktiv",
+  "subscription.profile_payment_failed": "Es wurde ein Zahlungsproblem festgestellt. Bitte überprüfen Sie Ihre Mitgliedschaft.",
+  "subscription.profile_manage": "Mitgliedschaft verwalten",
+  "membership.upgrade_success": "Ihre Mitgliedschaft wurde aktualisiert. Willkommen in Ihrem neuen Status."
 }

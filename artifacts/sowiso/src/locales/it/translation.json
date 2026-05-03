@@ -963,5 +963,13 @@
   "compass.local.empty": "Nessun locale trovato per questa selezione.",
   "compass.local.etiquette_tip": "Consiglio di etichetta",
   "compass.local.etiquette": "Etichetta",
-  "compass.local.occasion_tags_aria": "Etichette occasione"
+  "compass.local.occasion_tags_aria": "Etichette occasione",
+  "subscription.payment_failed_notice": "Non è stato possibile elaborare un pagamento recente. L'accesso continua per ora — aggiorna i tuoi dati di fatturazione al più presto.",
+  "subscription.payment_failed_cta": "Rivedi la tua iscrizione",
+  "subscription.payment_failed_dismiss": "Chiudi",
+  "subscription.profile_renews": "L'iscrizione si rinnova",
+  "subscription.profile_active": "Iscrizione attiva",
+  "subscription.profile_payment_failed": "È stato rilevato un problema di pagamento. Rivedi la tua iscrizione.",
+  "subscription.profile_manage": "Gestisci iscrizione",
+  "membership.upgrade_success": "La tua iscrizione è stata aggiornata. Benvenuto nel tuo nuovo livello."
 }

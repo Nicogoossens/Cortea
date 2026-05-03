@@ -27,6 +27,7 @@ import Compass from "@/pages/Compass";
 import CompassRegion from "@/pages/CompassRegion";
 import CompassCluster from "@/pages/CompassCluster";
 import Profile from "@/pages/Profile";
+import CountryVotes from "@/pages/CountryVotes";
 import Register from "@/pages/Register";
 import SignIn from "@/pages/SignIn";
 import EmailVerify from "@/pages/EmailVerify";
@@ -230,6 +231,7 @@ function AppRouter() {
               <Route path="/situations" component={SituationsRedirect} />
               <Route path="/use-cases" component={UseCases} />
               <Route path="/profile" component={Profile} />
+              <Route path="/votes" component={CountryVotes} />
               <Route path="/wardrobe" component={Wardrobe} />
               <Route path="/companion" component={Companion} />
               <Route path="/admin" component={Admin} />

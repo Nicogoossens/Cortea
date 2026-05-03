@@ -118,6 +118,14 @@ export default function Compass() {
             </Link>
           </p>
         )}
+        {!isVisitor && (
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground border-l-2 border-primary/40 pl-3">
+            Welk land moet er als volgende bij?{" "}
+            <Link href="/votes">
+              <span className="text-primary cursor-pointer hover:underline underline-offset-2">Stem mee →</span>
+            </Link>
+          </p>
+        )}
       </div>
 
       {/* Active context chips */}

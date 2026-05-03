@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Download, Mail, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Download, Mail, Loader2, Check, Copy } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -16,6 +16,7 @@ interface Signup {
   segment: string;
   founder_code: string | null;
   founder_position: number | null;
+  activation_link: string | null;
   created_at: string;
   invited_at: string | null;
   claimed_at: string | null;
@@ -37,6 +38,14 @@ export default function AdminWaitlist() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("");
   const [inviting, setInviting] = useState<number | null>(null);
+  const [copied, setCopied] = useState<number | null>(null);
+
+  const handleCopyLink = (id: number, link: string) => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(id);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -155,6 +164,7 @@ export default function AdminWaitlist() {
                       <th className="text-left px-4 py-3">Name / Email</th>
                       <th className="text-left px-4 py-3">Segment</th>
                       <th className="text-left px-4 py-3">Founder code</th>
+                      <th className="text-left px-4 py-3">Activation link</th>
                       <th className="text-left px-4 py-3">Joined</th>
                       <th className="text-right px-4 py-3">Action</th>
                     </tr>
@@ -169,6 +179,25 @@ export default function AdminWaitlist() {
                         </td>
                         <td className="px-4 py-3 text-xs font-mono uppercase tracking-widest text-muted-foreground">{s.segment}</td>
                         <td className="px-4 py-3 font-mono text-xs">{s.founder_code ?? <span className="text-muted-foreground/50">—</span>}</td>
+                        <td className="px-4 py-3 min-w-[320px]">
+                          {s.activation_link ? (
+                            <div className="flex flex-col gap-1.5">
+                              <code className="block font-mono text-xs text-foreground bg-muted/40 border border-border rounded-sm px-2 py-1.5 break-all whitespace-pre-wrap select-all">
+                                {s.activation_link}
+                              </code>
+                              <button
+                                onClick={() => handleCopyLink(s.id, s.activation_link!)}
+                                className="self-start inline-flex items-center gap-1 px-2 py-1 text-xs font-mono rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                                title="Kopieer link"
+                              >
+                                {copied === s.id ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+                                {copied === s.id ? "Gekopieerd" : "Kopieer link"}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/50 text-xs">Geen code</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</td>
                         <td className="px-4 py-3 text-right">
                           {s.invited_at ? (

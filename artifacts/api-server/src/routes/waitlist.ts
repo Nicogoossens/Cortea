@@ -13,6 +13,14 @@ import { sendWaitlistConfirmationEmail, sendWaitlistInvitationEmail } from "../l
 import { extractToken } from "../lib/auth-middleware";
 import { logger } from "../lib/logger";
 
+const BASE_PATH = process.env.BASE_PATH ?? "";
+const APP_URL = (process.env.APP_URL ?? `https://sowiso-01.replit.app${BASE_PATH}`).replace(/\/$/, "");
+
+function buildActivationLink(founderCode: string | null): string | null {
+  if (!founderCode) return null;
+  return `${APP_URL}/register?waitlist=1&code=${founderCode}`;
+}
+
 const router = Router();
 
 async function requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -199,8 +207,13 @@ router.get("/admin/waitlist", requireAdmin, async (req, res) => {
       .from(waitlistSignupsTable)
       .where(isNotNull(waitlistSignupsTable.founder_code));
 
+    const signupsWithLinks = rows.map((r) => ({
+      ...r,
+      activation_link: buildActivationLink(r.founder_code),
+    }));
+
     return res.json({
-      signups: rows,
+      signups: signupsWithLinks,
       totalsBySegment: totals,
       founderClaimed: Number(founderRows[0]?.count ?? 0),
       founderTotal: FOUNDER_SPOTS_TOTAL,

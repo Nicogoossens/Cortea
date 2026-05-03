@@ -3303,7 +3303,7 @@ export default function Admin() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border/50 overflow-x-auto">
+      <div className="flex flex-wrap gap-x-1 gap-y-0 border-b border-border/50">
         {([
           { key: "users" as const, label: "Users", icon: Users },
           { key: "attribution" as const, label: "Attribution", icon: BarChart3 },
@@ -3317,7 +3317,7 @@ export default function Admin() {
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-mono transition-colors border-b-2 -mb-px
+            className={`flex items-center gap-2 shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-mono transition-colors border-b-2 -mb-px
               ${activeTab === key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"

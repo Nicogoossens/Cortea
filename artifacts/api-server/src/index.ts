@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startCalibrationSweeper } from "./lib/register-calibration-sweeper";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,10 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Background safety net: any translations row written directly (CLI scripts,
+  // future code paths, ad-hoc SQL) that is a content key with no calibration
+  // stamp will be picked up by this sweeper on its next pass, so register
+  // calibration is applied automatically with no manual CLI step required.
+  startCalibrationSweeper();
 });

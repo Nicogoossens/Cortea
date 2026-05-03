@@ -60,7 +60,7 @@ router.get("/quests/daily", async (req, res) => {
     })));
   } catch (err) {
     req.log.error({ err }, "Failed to fetch daily quests");
-    return res.status(500).json({ message: "Daily quests are temporarily unavailable." });
+    return res.status(500).json({ error: "Daily quests are temporarily unavailable." });
   }
 });
 
@@ -68,17 +68,17 @@ router.post("/quests/complete", async (req, res) => {
   try {
     const userId = await optionalUserFromToken(req);
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required." });
+      return res.status(401).json({ error: "Authentication required." });
     }
 
     const { quest_id } = req.body as { quest_id?: number };
     if (!quest_id || typeof quest_id !== "number") {
-      return res.status(400).json({ message: "A valid quest_id is required." });
+      return res.status(400).json({ error: "A valid quest_id is required." });
     }
 
     const [quest] = await db.select().from(questsTable).where(eq(questsTable.id, quest_id)).limit(1);
     if (!quest) {
-      return res.status(404).json({ message: "Quest not found." });
+      return res.status(404).json({ error: "Quest not found." });
     }
 
     const today = getTodayISO();
@@ -123,7 +123,7 @@ router.post("/quests/complete", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to complete quest");
-    return res.status(500).json({ message: "Quest completion could not be recorded." });
+    return res.status(500).json({ error: "Quest completion could not be recorded." });
   }
 });
 
@@ -145,7 +145,7 @@ router.get("/streak", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch streak");
-    return res.status(500).json({ message: "Streak information is temporarily unavailable." });
+    return res.status(500).json({ error: "Streak information is temporarily unavailable." });
   }
 });
 

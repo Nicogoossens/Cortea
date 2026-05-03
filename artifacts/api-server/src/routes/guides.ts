@@ -13,7 +13,7 @@ router.get("/guides", async (req, res) => {
     return res.json(guides);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch guides");
-    return res.status(500).json({ message: "Unable to retrieve guides at this time." });
+    return res.status(500).json({ error: "Unable to retrieve guides at this time." });
   }
 });
 
@@ -38,7 +38,7 @@ router.get("/guides/purchased", requireAuthUser, async (req, res) => {
     return res.json(purchased);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch purchased guides");
-    return res.status(500).json({ message: "Unable to retrieve your purchased guides." });
+    return res.status(500).json({ error: "Unable to retrieve your purchased guides." });
   }
 });
 
@@ -49,7 +49,7 @@ router.post("/guides/:id/checkout", requireAuthUser, async (req, res) => {
 
     const [guide] = await db.select().from(guidesTable).where(eq(guidesTable.id, guideId)).limit(1);
     if (!guide) {
-      return res.status(404).json({ message: "The requested guide could not be found." });
+      return res.status(404).json({ error: "The requested guide could not be found." });
     }
 
     const [alreadyOwned] = await db
@@ -62,12 +62,12 @@ router.post("/guides/:id/checkout", requireAuthUser, async (req, res) => {
       .limit(1);
 
     if (alreadyOwned) {
-      return res.status(409).json({ message: "You already have access to this guide." });
+      return res.status(409).json({ error: "You already have access to this guide." });
     }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const stripe = await getUncachableStripeClient();
@@ -109,7 +109,7 @@ router.post("/guides/:id/checkout", requireAuthUser, async (req, res) => {
     return res.json({ url: session.url });
   } catch (err) {
     req.log.error({ err }, "Guide checkout error");
-    return res.status(500).json({ message: "Unable to initiate the purchase at this time." });
+    return res.status(500).json({ error: "Unable to initiate the purchase at this time." });
   }
 });
 

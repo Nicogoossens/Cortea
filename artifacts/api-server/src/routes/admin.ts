@@ -834,7 +834,7 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
 
     // Handle AI-reported errors
     if (typeof parsed2.error === "string") {
-      return res.status(422).json({ error: parsed2.error, message: parsed2.message });
+      return res.status(422).json({ error: parsed2.error, details: parsed2.message });
     }
 
     // ── Quality validation ─────────────────────────────────────────────────────
@@ -842,12 +842,12 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
 
     // 1. rule_cc must not be empty
     if (!parsed2.rule_cc || typeof parsed2.rule_cc !== "string" || (parsed2.rule_cc as string).length < 10) {
-      return res.status(422).json({ error: "INVALID_OUTPUT", message: "rule_cc is missing or too short." });
+      return res.status(422).json({ error: "INVALID_OUTPUT", details: "rule_cc is missing or too short." });
     }
 
     // 2. rule_raw must not be empty
     if (!parsed2.rule_raw || typeof parsed2.rule_raw !== "string" || (parsed2.rule_raw as string).length < 5) {
-      return res.status(422).json({ error: "INVALID_OUTPUT", message: "rule_raw is missing or too short." });
+      return res.status(422).json({ error: "INVALID_OUTPUT", details: "rule_raw is missing or too short." });
     }
 
     // 3. Copyright heuristic — check if rule_cc contains long quoted sequences from fragment
@@ -870,7 +870,7 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
     // 4. Urgency validation
     const urgency = Number(parsed2.urgency);
     if (!Number.isInteger(urgency) || urgency < 1 || urgency > 3) {
-      return res.status(422).json({ error: "INVALID_OUTPUT", message: "urgency must be 1, 2, or 3." });
+      return res.status(422).json({ error: "INVALID_OUTPUT", details: "urgency must be 1, 2, or 3." });
     }
     if (urgency === 3) {
       warnings.push("Urgency 3 (kritisch) — per spec mag max 20% van de regels in een batch urgency=3 hebben. Controleer dit voor bulk-opslag.");
@@ -882,7 +882,7 @@ Volg de 10-stappen workflow en geef de output als geldig JSON-object.`;
     // 6. Pillar validation — AI returns "pillar" field
     const pillarVal = (parsed2.pillar ?? parsed2.pillar_code) as string;
     if (!CC_VALID_PILLARS.includes(pillarVal as typeof CC_VALID_PILLARS[number])) {
-      return res.status(422).json({ error: "INVALID_OUTPUT", message: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
+      return res.status(422).json({ error: "INVALID_OUTPUT", details: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
     }
     // Normalise to "pillar" field name for downstream use
     parsed2.pillar = pillarVal;
@@ -1025,34 +1025,34 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
 
     // 1. Pillar must be a valid Zuil code
     if (!CC_VALID_PILLARS.includes(data.pillar)) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: `pillar must be one of ${CC_VALID_PILLARS.join(", ")}.` });
     }
 
     // 2. Region must be a known country code (not continent-level)
     const regionUp = data.region.toUpperCase();
     if (!CC_VALID_REGIONS.includes(regionUp as typeof CC_VALID_REGIONS[number])) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: `region '${data.region}' is not a recognised code. Use UNIVERSAL or a valid country code.` });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: `region '${data.region}' is not a recognised code. Use UNIVERSAL or a valid country code.` });
     }
 
     // 3. Subcategory must belong to the assigned Zuil
     const validSubcategories = CC_SUBCATEGORIES[data.pillar as keyof typeof CC_SUBCATEGORIES] ?? [];
     if (!validSubcategories.includes(data.subcategory)) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: `subcategory '${data.subcategory}' is not valid for pillar ${data.pillar}. Valid: ${validSubcategories.join(", ")}.` });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: `subcategory '${data.subcategory}' is not valid for pillar ${data.pillar}. Valid: ${validSubcategories.join(", ")}.` });
     }
 
     // 4. At least one persona must be assigned
     if (data.personas.length === 0) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one persona must be assigned." });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: "At least one persona must be assigned." });
     }
 
     // 5. At least one module must be assigned
     if (data.modules.length === 0) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: "At least one module must be assigned." });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: "At least one module must be assigned." });
     }
 
     // 6. rule_cc must not be suspiciously similar to rule_raw (basic paraphrase check)
     if (data.rule_cc.trim().toLowerCase() === data.rule_raw.trim().toLowerCase()) {
-      return res.status(400).json({ error: "VALIDATION_FAILED", message: "rule_cc and rule_raw are identical — rule_cc must be rephrased in C&C mentor style." });
+      return res.status(400).json({ error: "VALIDATION_FAILED", details: "rule_cc and rule_raw are identical — rule_cc must be rephrased in C&C mentor style." });
     }
 
     // 7. verified must always be false — hard enforce (cannot be set by caller)
@@ -1068,8 +1068,7 @@ router.post("/admin/cc-save", requireAdmin, async (req, res) => {
       const urgent3 = urgency3Rows[0]?.n ?? 0;
       if (total >= 5 && urgent3 / total >= 0.20) {
         return res.status(400).json({
-          error: "URGENCY_CAP_EXCEEDED",
-          message: `Max 20% of CC records may be urgency=3. Current: ${urgent3}/${total} (${Math.round(urgent3 / total * 100)}%). Review urgency rating.`,
+          error: "URGENCY_CAP_EXCEEDED", details: `Max 20% of CC records may be urgency=3. Current: ${urgent3}/${total} (${Math.round(urgent3 / total * 100)}%). Review urgency rating.`,
         });
       }
     }

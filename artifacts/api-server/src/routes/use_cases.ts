@@ -314,7 +314,7 @@ router.get("/use-cases", async (req, res) => {
     return res.json(enriched);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch use cases");
-    return res.status(500).json({ message: "Use cases could not be retrieved at this moment." });
+    return res.status(500).json({ error: "Use cases could not be retrieved at this moment." });
   }
 });
 
@@ -330,7 +330,7 @@ router.get("/use-cases/:slug/readiness", async (req, res) => {
       .limit(1);
 
     if (!useCase) {
-      return res.status(404).json({ message: "Use case not found." });
+      return res.status(404).json({ error: "Use case not found." });
     }
 
     if (!userId) {
@@ -343,7 +343,7 @@ router.get("/use-cases/:slug/readiness", async (req, res) => {
     return res.json({ ...useCase, ...rating });
   } catch (err) {
     req.log.error({ err }, "Failed to compute readiness score");
-    return res.status(500).json({ message: "Readiness score could not be computed at this moment." });
+    return res.status(500).json({ error: "Readiness score could not be computed at this moment." });
   }
 });
 

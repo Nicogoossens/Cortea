@@ -14,7 +14,7 @@ router.get("/translations", async (req, res) => {
   try {
     const parsed = TranslationsQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ message: "A language code is required to retrieve translations." });
+      return res.status(400).json({ error: "A language code is required to retrieve translations." });
     }
 
     const rows = await db.select()
@@ -29,7 +29,7 @@ router.get("/translations", async (req, res) => {
     return res.json(result);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch translations");
-    return res.status(500).json({ message: "Translations are momentarily unavailable." });
+    return res.status(500).json({ error: "Translations are momentarily unavailable." });
   }
 });
 

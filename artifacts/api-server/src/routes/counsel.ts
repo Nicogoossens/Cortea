@@ -164,7 +164,7 @@ const LogQualitySchema = z.object({
 router.post("/counsel/log-quality", async (req, res) => {
   const token = extractToken(req);
   if (!token) {
-    return res.status(401).json({ message: "Authentication required." });
+    return res.status(401).json({ error: "Authentication required." });
   }
   const [user] = await db
     .select({ id: usersTable.id })
@@ -172,12 +172,12 @@ router.post("/counsel/log-quality", async (req, res) => {
     .where(eq(usersTable.session_token, token))
     .limit(1);
   if (!user) {
-    return res.status(401).json({ message: "Invalid session." });
+    return res.status(401).json({ error: "Invalid session." });
   }
 
   const parsed = LogQualitySchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: "domain and score (1-10) are required." });
+    return res.status(400).json({ error: "domain and score (1-10) are required." });
   }
 
   const { domain, score } = parsed.data;
@@ -190,7 +190,7 @@ router.post("/counsel/log-quality", async (req, res) => {
     return res.json({ ok: true });
   } catch (err) {
     console.error("Failed to log counsel quality:", err);
-    return res.status(500).json({ message: "Could not log counsel interaction." });
+    return res.status(500).json({ error: "Could not log counsel interaction." });
   }
 });
 

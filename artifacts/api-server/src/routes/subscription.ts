@@ -68,12 +68,12 @@ router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
     const { priceId } = req.body as { priceId?: string };
 
     if (!priceId) {
-      return res.status(400).json({ message: "A price selection is required." });
+      return res.status(400).json({ error: "A price selection is required." });
     }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const stripe = await getUncachableStripeClient();
@@ -105,7 +105,7 @@ router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
     return res.json({ url: session.url });
   } catch (err) {
     console.error("Checkout error:", err);
-    return res.status(500).json({ message: "Unable to initiate the subscription flow at this time." });
+    return res.status(500).json({ error: "Unable to initiate the subscription flow at this time." });
   }
 });
 
@@ -117,7 +117,7 @@ router.post("/subscription/portal", requireAuthUser, async (req, res) => {
     const customerId = user?.stripe_customer_id;
 
     if (!customerId) {
-      return res.status(404).json({ message: "No billing record found for this account." });
+      return res.status(404).json({ error: "No billing record found for this account." });
     }
 
     const stripe = await getUncachableStripeClient();
@@ -133,7 +133,7 @@ router.post("/subscription/portal", requireAuthUser, async (req, res) => {
     return res.json({ url: portalSession.url });
   } catch (err) {
     console.error("Portal error:", err);
-    return res.status(500).json({ message: "The billing portal is momentarily unavailable." });
+    return res.status(500).json({ error: "The billing portal is momentarily unavailable." });
   }
 });
 
@@ -148,7 +148,7 @@ router.get("/subscription/features", requireAuthUser, async (req, res) => {
 
     return res.json(getTierFeatures(user.subscription_tier as SubscriptionTier));
   } catch {
-    return res.status(500).json({ message: "Unable to retrieve subscription features." });
+    return res.status(500).json({ error: "Unable to retrieve subscription features." });
   }
 });
 
@@ -189,7 +189,7 @@ router.get("/subscription/status", requireAuthUser, async (req, res) => {
       hasStripeCustomer: !!user.stripe_customer_id,
     });
   } catch {
-    return res.status(500).json({ message: "Unable to retrieve subscription status." });
+    return res.status(500).json({ error: "Unable to retrieve subscription status." });
   }
 });
 

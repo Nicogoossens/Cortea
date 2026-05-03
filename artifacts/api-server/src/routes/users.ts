@@ -43,7 +43,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const { session_token: _st, verification_token: _vt, ...safeUser } = user;
@@ -55,7 +55,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user profile");
-    return res.status(500).json({ message: "We encountered a difficulty retrieving your profile." });
+    return res.status(500).json({ error: "We encountered a difficulty retrieving your profile." });
   }
 });
 
@@ -78,7 +78,7 @@ router.post("/users/profile", requireAuthUser, async (req, res) => {
 
     const parsed = CreateProfileBodySchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "The information provided does not meet the required form." });
+      return res.status(400).json({ error: "The information provided does not meet the required form." });
     }
 
     const data = parsed.data;
@@ -100,10 +100,10 @@ router.post("/users/profile", requireAuthUser, async (req, res) => {
       return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
     }
 
-    return res.status(404).json({ message: "No account exists for this session. Please register first." });
+    return res.status(404).json({ error: "No account exists for this session. Please register first." });
   } catch (err) {
     req.log.error({ err }, "Failed to create/update user profile");
-    return res.status(500).json({ message: "A difficulty arose while establishing your profile." });
+    return res.status(500).json({ error: "A difficulty arose while establishing your profile." });
   }
 });
 
@@ -136,12 +136,12 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
 
     const bodyParsed = UpdateProfileBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
-      return res.status(400).json({ message: "The information provided does not meet the required form." });
+      return res.status(400).json({ error: "The information provided does not meet the required form." });
     }
 
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const data = bodyParsed.data;
@@ -164,7 +164,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
       if (interests.length > 0 && !interests.some((r) => r.region_code === data.active_region)) {
         return res.status(403).json({
           code: "REGION_NOT_IN_INTERESTS",
-          message: "Add this country to your interests before switching focus to it.",
+          error: "Add this country to your interests before switching focus to it.",
         });
       }
     }
@@ -172,13 +172,13 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
     if (data.username) {
       const [taken] = await db.select({ id: usersTable.id }).from(usersTable)
         .where(and(eq(usersTable.username, data.username), ne(usersTable.id, userId))).limit(1);
-      if (taken) return res.status(409).json({ code: "USERNAME_TAKEN", message: "This username is already claimed by another member." });
+      if (taken) return res.status(409).json({ code: "USERNAME_TAKEN", error: "This username is already claimed by another member." });
     }
 
     if (data.full_name) {
       const [taken] = await db.select({ id: usersTable.id }).from(usersTable)
         .where(and(eq(usersTable.full_name, data.full_name), ne(usersTable.id, userId))).limit(1);
-      if (taken) return res.status(409).json({ code: "FULL_NAME_TAKEN", message: "This display name is already in use by another member." });
+      if (taken) return res.status(409).json({ code: "FULL_NAME_TAKEN", error: "This display name is already in use by another member." });
     }
 
     // ── country_of_origin permanent lock ─────────────────────────────────────
@@ -197,7 +197,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
           // authorised to mutate it. Origin is set-once.
           return res.status(403).json({
             code: "ORIGIN_LOCKED",
-            message: "Your country of origin is permanent. Please contact support if a correction is required.",
+            error: "Your country of origin is permanent. Please contact support if a correction is required.",
           });
         }
         // No-op: skip writing the field at all
@@ -235,7 +235,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
     return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
   } catch (err) {
     req.log.error({ err }, "Failed to update user profile");
-    return res.status(500).json({ message: "A difficulty arose while updating your profile." });
+    return res.status(500).json({ error: "A difficulty arose while updating your profile." });
   }
 }
 
@@ -273,12 +273,12 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
 
     const bodyParsed = UpdateRegionBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
-      return res.status(400).json({ message: "The region code provided is not recognised." });
+      return res.status(400).json({ error: "The region code provided is not recognised." });
     }
 
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const incomingRegion = bodyParsed.data.region_code.toUpperCase();
@@ -296,7 +296,7 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
     if (interests.length > 0 && !interests.some((r) => r.region_code === incomingRegion)) {
       return res.status(403).json({
         code: "REGION_NOT_IN_INTERESTS",
-        message: "Add this country to your interests before setting it as your active focus.",
+        error: "Add this country to your interests before setting it as your active focus.",
       });
     }
     if (interests.length === 0) {
@@ -322,7 +322,7 @@ router.patch("/users/profile/region", requireAuthUser, async (req, res) => {
     return res.json({ ...safeUser, age_group: computeAgeGroup(updated.birth_year), gender: updated.gender_identity ?? null });
   } catch (err) {
     req.log.error({ err }, "Failed to update region");
-    return res.status(500).json({ message: "The region update encountered a difficulty." });
+    return res.status(500).json({ error: "The region update encountered a difficulty." });
   }
 });
 
@@ -334,11 +334,11 @@ router.get("/users/behavior-profile", requireAuthUser, async (req, res) => {
       .from(usersTable)
       .where(eq(usersTable.id, userId))
       .limit(1);
-    if (!user) return res.status(404).json({ message: "Profile not found." });
+    if (!user) return res.status(404).json({ error: "Profile not found." });
     return res.json(user.behavior_profile ?? DEFAULT_BEHAVIOR_PROFILE);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch behavior profile");
-    return res.status(500).json({ message: "The behavioral profile is momentarily unavailable." });
+    return res.status(500).json({ error: "The behavioral profile is momentarily unavailable." });
   }
 });
 
@@ -356,7 +356,7 @@ router.delete("/users/profile/privacy", requireAuthUser, async (req, res) => {
 
     const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     await db.update(usersTable)
@@ -366,7 +366,7 @@ router.delete("/users/profile/privacy", requireAuthUser, async (req, res) => {
     return res.json({ privacy_settings: null });
   } catch (err) {
     req.log.error({ err }, "Failed to reset privacy settings");
-    return res.status(500).json({ message: "A difficulty arose while resetting your privacy settings." });
+    return res.status(500).json({ error: "A difficulty arose while resetting your privacy settings." });
   }
 });
 
@@ -376,12 +376,12 @@ router.patch("/users/profile/privacy", requireAuthUser, async (req, res) => {
 
     const parsed = PrivacySettingsSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "The privacy settings provided are not in the expected form." });
+      return res.status(400).json({ error: "The privacy settings provided are not in the expected form." });
     }
 
     const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     await db.update(usersTable)
@@ -391,7 +391,7 @@ router.patch("/users/profile/privacy", requireAuthUser, async (req, res) => {
     return res.json({ privacy_settings: parsed.data });
   } catch (err) {
     req.log.error({ err }, "Failed to update privacy settings");
-    return res.status(500).json({ message: "A difficulty arose while saving your privacy settings." });
+    return res.status(500).json({ error: "A difficulty arose while saving your privacy settings." });
   }
 });
 
@@ -414,7 +414,7 @@ router.get("/users/me/export", requireAuthUser, async (req, res) => {
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!user) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     const nobleScoreLogs = await db.select()
@@ -482,7 +482,7 @@ router.get("/users/me/export", requireAuthUser, async (req, res) => {
     return res.json(exportPayload);
   } catch (err) {
     req.log.error({ err }, "Failed to generate data export");
-    return res.status(500).json({ message: "We encountered a difficulty generating your data export." });
+    return res.status(500).json({ error: "We encountered a difficulty generating your data export." });
   }
 });
 
@@ -500,12 +500,12 @@ router.patch("/users/profile/profiling-consent", requireAuthUser, async (req, re
 
     const parsed = ProfilingConsentSchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "Expected { profiling_consent: boolean }." });
+      return res.status(400).json({ error: "Expected { profiling_consent: boolean }." });
     }
 
     const [existing] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     await db.update(usersTable)
@@ -515,7 +515,7 @@ router.patch("/users/profile/profiling-consent", requireAuthUser, async (req, re
     return res.json({ profiling_consent: parsed.data.profiling_consent });
   } catch (err) {
     req.log.error({ err }, "Failed to update profiling consent");
-    return res.status(500).json({ message: "A difficulty arose while saving your profiling preference." });
+    return res.status(500).json({ error: "A difficulty arose while saving your profiling preference." });
   }
 });
 
@@ -525,7 +525,7 @@ router.delete("/users/profile", requireAuthUser, async (req, res) => {
 
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!existing) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
     await db.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, userId));
@@ -535,7 +535,7 @@ router.delete("/users/profile", requireAuthUser, async (req, res) => {
     return res.json({ message: "Your profile has been gracefully removed from our records." });
   } catch (err) {
     req.log.error({ err }, "Failed to delete user profile");
-    return res.status(500).json({ message: "A difficulty arose while removing your profile." });
+    return res.status(500).json({ error: "A difficulty arose while removing your profile." });
   }
 });
 

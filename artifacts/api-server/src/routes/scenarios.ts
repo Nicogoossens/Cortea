@@ -119,7 +119,7 @@ router.get("/scenarios", async (req, res) => {
   try {
     const parsed = ScenariosQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ message: "The query parameters provided are not valid. Please review and resubmit." });
+      return res.status(400).json({ error: "The query parameters provided are not valid. Please review and resubmit." });
     }
 
     const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang: queryLang, situational_interests } = parsed.data;
@@ -212,7 +212,7 @@ router.get("/scenarios", async (req, res) => {
     return res.json(withFlag);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch scenarios");
-    return res.status(500).json({ message: "The training scenarios are momentarily unavailable. Please allow a moment." });
+    return res.status(500).json({ error: "The training scenarios are momentarily unavailable. Please allow a moment." });
   }
 });
 
@@ -220,7 +220,7 @@ router.get("/scenarios/:scenarioId", async (req, res) => {
   try {
     const parsedId = ScenarioIdParamSchema.safeParse(req.params);
     if (!parsedId.success) {
-      return res.status(400).json({ message: "The scenario identifier provided is not valid." });
+      return res.status(400).json({ error: "The scenario identifier provided is not valid." });
     }
 
     const parsedQuery = ScenarioIdQuerySchema.safeParse(req.query);
@@ -235,13 +235,13 @@ router.get("/scenarios/:scenarioId", async (req, res) => {
       .limit(1);
 
     if (!scenario) {
-      return res.status(404).json({ message: "This scenario is not yet available in our atelier. Others await your attention." });
+      return res.status(404).json({ error: "This scenario is not yet available in our atelier. Others await your attention." });
     }
 
     return res.json(resolveScenarioLocale(scenario, lang));
   } catch (err) {
     req.log.error({ err }, "Failed to fetch scenario");
-    return res.status(500).json({ message: "A difficulty arose while retrieving this scenario." });
+    return res.status(500).json({ error: "A difficulty arose while retrieving this scenario." });
   }
 });
 

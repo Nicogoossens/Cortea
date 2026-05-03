@@ -80,7 +80,7 @@ router.get("/companion", requireAuthUser, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch companion data");
-    return res.status(500).json({ message: "Unable to load companion dashboard." });
+    return res.status(500).json({ error: "Unable to load companion dashboard." });
   }
 });
 
@@ -90,10 +90,10 @@ router.patch("/companion/share", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
     const parsed = ShareSettingSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid request body." });
+    if (!parsed.success) return res.status(400).json({ error: "Invalid request body." });
 
     const link = await getCompanionLink(userId);
-    if (!link) return res.status(404).json({ message: "No companion link found." });
+    if (!link) return res.status(404).json({ error: "No companion link found." });
 
     const isA = link.user_a_id === userId;
     await db.update(companionLinksTable)
@@ -103,7 +103,7 @@ router.patch("/companion/share", requireAuthUser, async (req, res) => {
     return res.json({ my_share_enabled: parsed.data.enabled });
   } catch (err) {
     req.log.error({ err }, "Failed to update share setting");
-    return res.status(500).json({ message: "Unable to update sharing preference." });
+    return res.status(500).json({ error: "Unable to update sharing preference." });
   }
 });
 
@@ -111,14 +111,14 @@ router.delete("/companion", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
     const link = await getCompanionLink(userId);
-    if (!link) return res.status(404).json({ message: "No companion link found." });
+    if (!link) return res.status(404).json({ error: "No companion link found." });
 
     await db.delete(companionLinksTable).where(eq(companionLinksTable.id, link.id));
 
     return res.json({ message: "Companion connection dissolved." });
   } catch (err) {
     req.log.error({ err }, "Failed to dissolve companion link");
-    return res.status(500).json({ message: "Unable to dissolve companion connection." });
+    return res.status(500).json({ error: "Unable to dissolve companion connection." });
   }
 });
 

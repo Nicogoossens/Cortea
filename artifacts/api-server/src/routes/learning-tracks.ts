@@ -62,7 +62,7 @@ router.get("/learning-tracks/limits", requireAuthUser, async (req, res) => {
     return res.json({ middle_class: mc, elite: el });
   } catch (err) {
     req.log.error({ err }, "Failed to compute limits");
-    return res.status(500).json({ message: "Limit data is momentarily unavailable." });
+    return res.status(500).json({ error: "Limit data is momentarily unavailable." });
   }
 });
 
@@ -73,13 +73,13 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
 
     const parsed = SessionQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid session parameters.", errors: parsed.error.issues });
+      return res.status(400).json({ error: "Invalid session parameters.", errors: parsed.error.issues });
     }
     const { register, research_pillar, phase, region_code, lang } = parsed.data;
     const regionCode = region_code.toUpperCase();
 
     if (register === "middle_class" && !research_pillar) {
-      return res.status(400).json({ message: "research_pillar is required for middle_class register." });
+      return res.status(400).json({ error: "research_pillar is required for middle_class register." });
     }
     const pillar = research_pillar ?? null;
 
@@ -92,11 +92,11 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
-      return res.status(404).json({ message: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Your profile has not yet been established." });
     }
     if (!tierAllows(register, user.subscription_tier ?? "guest")) {
       return res.status(403).json({
-        message: register === "elite"
+        error: register === "elite"
           ? "The elite learning track requires an Ambassador subscription."
           : "Learning tracks require a Traveller or Ambassador subscription.",
       });
@@ -116,7 +116,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     if (userInterests.length > 0 && !userInterests.some((r) => r.region_code === regionCode)) {
       return res.status(403).json({
         code: "REGION_NOT_IN_INTERESTS",
-        message: "Add this country to your interests before studying it.",
+        error: "Add this country to your interests before studying it.",
       });
     }
 
@@ -269,7 +269,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
 
       if (limitDenial) {
         return res.status(429).json({
-          message: limitDenial.reason === "daily_limit"
+          error: limitDenial.reason === "daily_limit"
             ? "You have reached today's session limit for this track. Return tomorrow."
             : "A short reflection cooldown is in effect. Please try again shortly.",
           reason: limitDenial.reason,
@@ -373,7 +373,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track session");
-    return res.status(500).json({ message: "The learning track is momentarily unavailable." });
+    return res.status(500).json({ error: "The learning track is momentarily unavailable." });
   }
 });
 
@@ -384,7 +384,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
 
     const parsed = AnswerBodySchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid answer data.", errors: parsed.error.issues });
+      return res.status(400).json({ error: "Invalid answer data.", errors: parsed.error.issues });
     }
     const { question_id, selected_option_index, register, research_pillar, phase, session_id } = parsed.data;
     const pillar = research_pillar ?? null;
@@ -393,7 +393,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (!tierAllows(register, userTier?.subscription_tier ?? "guest")) {
       return res.status(403).json({
-        message: register === "elite"
+        error: register === "elite"
           ? "The elite learning track requires an Ambassador subscription."
           : "Learning tracks require a Traveller or Ambassador subscription.",
       });
@@ -403,18 +403,18 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       .from(learningTrackQuestionsTable)
       .where(eq(learningTrackQuestionsTable.id, question_id))
       .limit(1);
-    if (!question) return res.status(404).json({ message: "Question not found." });
+    if (!question) return res.status(404).json({ error: "Question not found." });
     if (
       question.register !== register ||
       question.phase !== phase ||
       (question.research_pillar ?? null) !== pillar
     ) {
-      return res.status(400).json({ message: "Question does not belong to the specified register/phase/pillar." });
+      return res.status(400).json({ error: "Question does not belong to the specified register/phase/pillar." });
     }
 
     const options = question.options as { text: string; answer_tier: 1 | 2 | 3; motivation: string }[];
     const selected = options[selected_option_index];
-    if (!selected) return res.status(400).json({ message: "Invalid option index." });
+    if (!selected) return res.status(400).json({ error: "Invalid option index." });
     const { answer_tier, motivation } = selected;
     const isCorrect = answer_tier === 1;
 
@@ -428,15 +428,15 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
 
     if (!session) {
       return res.status(400).json({
-        message: "No active session for this answer. Please start a new session.",
+        error: "No active session for this answer. Please start a new session.",
       });
     }
     if (session.completed_at) {
-      return res.status(409).json({ message: "This session has already been completed." });
+      return res.status(409).json({ error: "This session has already been completed." });
     }
     const served = (session.served_question_ids ?? []) as number[];
     if (!served.includes(question_id)) {
-      return res.status(400).json({ message: "Question is not part of the active session." });
+      return res.status(400).json({ error: "Question is not part of the active session." });
     }
 
     // Idempotency: reject duplicate submissions of the same (session, question).
@@ -449,7 +449,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       .limit(1);
     if (existing) {
       return res.status(409).json({
-        message: "This question has already been answered in this session.",
+        error: "This question has already been answered in this session.",
         code: "ANSWER_ALREADY_RECORDED",
       });
     }
@@ -473,7 +473,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
       const code = (e as { code?: string })?.code;
       if (code === "23505") {
         return res.status(409).json({
-          message: "This question has already been answered in this session.",
+          error: "This question has already been answered in this session.",
           code: "ANSWER_ALREADY_RECORDED",
         });
       }
@@ -654,7 +654,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to process learning track answer");
-    return res.status(500).json({ message: "Unable to process your answer at this time." });
+    return res.status(500).json({ error: "Unable to process your answer at this time." });
   }
 });
 
@@ -668,7 +668,7 @@ router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
     return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track progress");
-    return res.status(500).json({ message: "Progress data is momentarily unavailable." });
+    return res.status(500).json({ error: "Progress data is momentarily unavailable." });
   }
 });
 
@@ -678,7 +678,7 @@ router.get("/learning-tracks/badges", requireAuthUser, async (req, res) => {
     return res.json(badges);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user badges");
-    return res.status(500).json({ message: "Badge data is momentarily unavailable." });
+    return res.status(500).json({ error: "Badge data is momentarily unavailable." });
   }
 });
 
@@ -688,7 +688,7 @@ router.get("/learning-tracks/badges/available", async (req, res) => {
     return res.json(badges);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch badge catalogue");
-    return res.status(500).json({ message: "Badge catalogue is momentarily unavailable." });
+    return res.status(500).json({ error: "Badge catalogue is momentarily unavailable." });
   }
 });
 
@@ -735,7 +735,7 @@ router.get("/users/country-interests", requireAuthUser, async (req, res) => {
     return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch country interests");
-    return res.status(500).json({ message: "Interest data is momentarily unavailable." });
+    return res.status(500).json({ error: "Interest data is momentarily unavailable." });
   }
 });
 
@@ -743,7 +743,7 @@ router.post("/users/country-interests", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
     const parsed = RegionCodeSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "A valid region_code is required." });
+    if (!parsed.success) return res.status(400).json({ error: "A valid region_code is required." });
     const region = parsed.data.region_code.toUpperCase();
 
     // Re-activate (clear hidden_at) if it existed; otherwise insert.
@@ -764,7 +764,7 @@ router.post("/users/country-interests", requireAuthUser, async (req, res) => {
     return res.status(201).json(row);
   } catch (err) {
     req.log.error({ err }, "Failed to add country interest");
-    return res.status(500).json({ message: "Unable to add this country at the moment." });
+    return res.status(500).json({ error: "Unable to add this country at the moment." });
   }
 });
 
@@ -773,7 +773,7 @@ router.delete("/users/country-interests/:region_code", requireAuthUser, async (r
     const userId = getResolvedUserId(req);
     const region = String(req.params.region_code ?? "").toUpperCase();
     if (region.length < 2 || region.length > 10) {
-      return res.status(400).json({ message: "A valid region_code is required." });
+      return res.status(400).json({ error: "A valid region_code is required." });
     }
 
     // Invariant: active_region must always be in the user's interests. If the
@@ -795,7 +795,7 @@ router.delete("/users/country-interests/:region_code", requireAuthUser, async (r
       if (others.length === 0) {
         return res.status(409).json({
           code: "ACTIVE_REGION_LAST",
-          message: "Add another country to your interests before removing your active focus.",
+          error: "Add another country to your interests before removing your active focus.",
         });
       }
       await db.update(usersTable)
@@ -814,7 +814,7 @@ router.delete("/users/country-interests/:region_code", requireAuthUser, async (r
     return res.json({ region_code: region, hidden_at: new Date().toISOString() });
   } catch (err) {
     req.log.error({ err }, "Failed to hide country interest");
-    return res.status(500).json({ message: "Unable to remove this country at the moment." });
+    return res.status(500).json({ error: "Unable to remove this country at the moment." });
   }
 });
 

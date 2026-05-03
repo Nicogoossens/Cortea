@@ -25,22 +25,22 @@ router.get("/roleplay/scenarios", async (req, res) => {
     return res.json(scenarios);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch roleplay scenarios");
-    return res.status(500).json({ message: "Unable to load roleplay scenarios." });
+    return res.status(500).json({ error: "Unable to load roleplay scenarios." });
   }
 });
 
 router.get("/roleplay/scenarios/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid scenario ID." });
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid scenario ID." });
 
     const [scenario] = await db.select().from(roleplayScenarioTable).where(eq(roleplayScenarioTable.id, id)).limit(1);
-    if (!scenario) return res.status(404).json({ message: "Roleplay scenario not found." });
+    if (!scenario) return res.status(404).json({ error: "Roleplay scenario not found." });
 
     return res.json(scenario);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch roleplay scenario");
-    return res.status(500).json({ message: "Unable to load this roleplay scenario." });
+    return res.status(500).json({ error: "Unable to load this roleplay scenario." });
   }
 });
 
@@ -59,7 +59,7 @@ router.post("/roleplay/complete", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
     const parsed = SubmitCompletionSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid completion data." });
+    if (!parsed.success) return res.status(400).json({ error: "Invalid completion data." });
 
     const { scenario_id, role, answers, score } = parsed.data;
 
@@ -74,7 +74,7 @@ router.post("/roleplay/complete", requireAuthUser, async (req, res) => {
     return res.json(completion);
   } catch (err) {
     req.log.error({ err }, "Failed to save roleplay completion");
-    return res.status(500).json({ message: "Unable to save your roleplay result." });
+    return res.status(500).json({ error: "Unable to save your roleplay result." });
   }
 });
 
@@ -87,7 +87,7 @@ router.get("/roleplay/completions", requireAuthUser, async (req, res) => {
     return res.json(completions);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch roleplay completions");
-    return res.status(500).json({ message: "Unable to load your roleplay history." });
+    return res.status(500).json({ error: "Unable to load your roleplay history." });
   }
 });
 
@@ -101,7 +101,7 @@ router.post("/roleplay/reflections", requireAuthUser, async (req, res) => {
   try {
     const userId = getResolvedUserId(req);
     const parsed = AddReflectionSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Invalid reflection data." });
+    if (!parsed.success) return res.status(400).json({ error: "Invalid reflection data." });
 
     const { scenario_id, target_user_id, content } = parsed.data;
 
@@ -114,7 +114,7 @@ router.post("/roleplay/reflections", requireAuthUser, async (req, res) => {
       ).limit(1);
 
     if (links.length === 0) {
-      return res.status(403).json({ message: "You may only leave reflections for your companion." });
+      return res.status(403).json({ error: "You may only leave reflections for your companion." });
     }
 
     const [reflection] = await db.insert(roleplayReflectionsTable).values({
@@ -127,7 +127,7 @@ router.post("/roleplay/reflections", requireAuthUser, async (req, res) => {
     return res.json(reflection);
   } catch (err) {
     req.log.error({ err }, "Failed to save reflection");
-    return res.status(500).json({ message: "Unable to save your reflection." });
+    return res.status(500).json({ error: "Unable to save your reflection." });
   }
 });
 
@@ -135,7 +135,7 @@ router.get("/roleplay/reflections/:scenarioId", requireAuthUser, async (req, res
   try {
     const userId = getResolvedUserId(req);
     const scenarioId = parseInt(req.params.scenarioId, 10);
-    if (isNaN(scenarioId)) return res.status(400).json({ message: "Invalid scenario ID." });
+    if (isNaN(scenarioId)) return res.status(400).json({ error: "Invalid scenario ID." });
 
     const reflections = await db.select().from(roleplayReflectionsTable)
       .where(
@@ -149,7 +149,7 @@ router.get("/roleplay/reflections/:scenarioId", requireAuthUser, async (req, res
     return res.json(reflections);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch reflections");
-    return res.status(500).json({ message: "Unable to load reflections." });
+    return res.status(500).json({ error: "Unable to load reflections." });
   }
 });
 

@@ -13,7 +13,7 @@ router.post("/invitations/generate", requireAuthUser, async (req, res) => {
     const userId = getResolvedUserId(req);
 
     const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    if (!user) return res.status(404).json({ message: "Profile not found." });
+    if (!user) return res.status(404).json({ error: "Profile not found." });
 
     const token = crypto.randomBytes(24).toString("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -28,7 +28,7 @@ router.post("/invitations/generate", requireAuthUser, async (req, res) => {
     return res.json({ token: invitation.token, expires_at: invitation.expires_at });
   } catch (err) {
     req.log.error({ err }, "Failed to generate invitation");
-    return res.status(500).json({ message: "Unable to generate invitation at this time." });
+    return res.status(500).json({ error: "Unable to generate invitation at this time." });
   }
 });
 
@@ -37,14 +37,14 @@ router.get("/invitations/:token", async (req, res) => {
     const { token } = req.params;
 
     const [invitation] = await db.select().from(invitationsTable).where(eq(invitationsTable.token, token)).limit(1);
-    if (!invitation) return res.status(404).json({ message: "This invitation link is not recognised." });
+    if (!invitation) return res.status(404).json({ error: "This invitation link is not recognised." });
 
     if (invitation.status !== "pending") {
-      return res.status(410).json({ message: "This invitation has already been used.", status: invitation.status });
+      return res.status(410).json({ error: "This invitation has already been used.", status: invitation.status });
     }
 
     if (new Date() > invitation.expires_at) {
-      return res.status(410).json({ message: "This invitation has expired.", status: "expired" });
+      return res.status(410).json({ error: "This invitation has expired.", status: "expired" });
     }
 
     const [inviter] = await db
@@ -61,7 +61,7 @@ router.get("/invitations/:token", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch invitation");
-    return res.status(500).json({ message: "Unable to retrieve invitation details." });
+    return res.status(500).json({ error: "Unable to retrieve invitation details." });
   }
 });
 
@@ -72,15 +72,15 @@ router.post("/invitations/redeem", requireAuthUser, async (req, res) => {
     const userId = getResolvedUserId(req);
 
     const parsed = RedeemSchema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: "Token is required." });
+    if (!parsed.success) return res.status(400).json({ error: "Token is required." });
 
     const { token } = parsed.data;
 
     const [invitation] = await db.select().from(invitationsTable).where(eq(invitationsTable.token, token)).limit(1);
-    if (!invitation) return res.status(404).json({ message: "Invitation not found." });
-    if (invitation.status !== "pending") return res.status(410).json({ message: "This invitation has already been used." });
-    if (new Date() > invitation.expires_at) return res.status(410).json({ message: "This invitation has expired." });
-    if (invitation.inviter_id === userId) return res.status(400).json({ message: "You cannot accept your own invitation." });
+    if (!invitation) return res.status(404).json({ error: "Invitation not found." });
+    if (invitation.status !== "pending") return res.status(410).json({ error: "This invitation has already been used." });
+    if (new Date() > invitation.expires_at) return res.status(410).json({ error: "This invitation has expired." });
+    if (invitation.inviter_id === userId) return res.status(400).json({ error: "You cannot accept your own invitation." });
 
     await db.update(invitationsTable)
       .set({ status: "accepted", invitee_id: userId })
@@ -106,7 +106,7 @@ router.post("/invitations/redeem", requireAuthUser, async (req, res) => {
     return res.json({ message: "Invitation accepted. You are now connected as companions." });
   } catch (err) {
     req.log.error({ err }, "Failed to redeem invitation");
-    return res.status(500).json({ message: "Unable to redeem invitation at this time." });
+    return res.status(500).json({ error: "Unable to redeem invitation at this time." });
   }
 });
 

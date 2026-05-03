@@ -162,7 +162,7 @@ router.get("/noble-score", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch noble score");
-    return res.status(500).json({ message: "Your standing could not be retrieved at this moment." });
+    return res.status(500).json({ error: "Your standing could not be retrieved at this moment." });
   }
 });
 
@@ -241,7 +241,7 @@ router.post("/noble-score/submit", async (req, res) => {
 
     const bodyParsed = SubmitAnswerBodySchema.safeParse(req.body);
     if (!bodyParsed.success) {
-      return res.status(400).json({ message: "The submission does not meet the expected form. Please review and resubmit." });
+      return res.status(400).json({ error: "The submission does not meet the expected form. Please review and resubmit." });
     }
 
     const { scenario_id, selected_option_index, time_taken_seconds, lang } = bodyParsed.data;
@@ -249,14 +249,14 @@ router.post("/noble-score/submit", async (req, res) => {
     const [scenario] = await db.select().from(scenariosTable).where(eq(scenariosTable.id, scenario_id)).limit(1);
 
     if (!scenario) {
-      return res.status(404).json({ message: "The referenced scenario could not be located." });
+      return res.status(404).json({ error: "The referenced scenario could not be located." });
     }
 
     const content = scenario.content_json;
     const selectedOption = content.options[selected_option_index];
 
     if (!selectedOption) {
-      return res.status(400).json({ message: "The selected option is not valid for this scenario." });
+      return res.status(400).json({ error: "The selected option is not valid for this scenario." });
     }
 
     /**
@@ -442,7 +442,7 @@ router.post("/noble-score/submit", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to submit scenario answer");
-    return res.status(500).json({ message: "A difficulty arose while processing your response. Please try again." });
+    return res.status(500).json({ error: "A difficulty arose while processing your response. Please try again." });
   }
 });
 
@@ -492,7 +492,7 @@ router.get("/noble-score/log", async (req, res) => {
     return res.json(enriched);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch noble score log");
-    return res.status(500).json({ message: "Your progress history is momentarily unavailable." });
+    return res.status(500).json({ error: "Your progress history is momentarily unavailable." });
   }
 });
 
@@ -535,7 +535,7 @@ router.get("/noble-score/pillars", async (req, res) => {
     return res.json(pillars);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch pillar progress");
-    return res.status(500).json({ message: "Your pillar progress is momentarily unavailable." });
+    return res.status(500).json({ error: "Your pillar progress is momentarily unavailable." });
   }
 });
 

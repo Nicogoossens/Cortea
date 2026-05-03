@@ -75,7 +75,7 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
   const authReq = req as unknown as AuthenticatedRequest;
   const parsed = RequestSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ message: "text and locale are required." });
+    return res.status(400).json({ error: "text and locale are required." });
   }
 
   const anthropicBase = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
@@ -83,7 +83,7 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
 
   if (!anthropicBase || !anthropicKey) {
     req.log.warn("Anthropic env vars not configured — quality check unavailable");
-    return res.status(503).json({ message: "Quality check is not currently available." });
+    return res.status(503).json({ error: "Quality check is not currently available." });
   }
 
   const { text, locale, domain } = parsed.data;
@@ -108,7 +108,7 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
     if (!response.ok) {
       const errText = await response.text();
       req.log.error({ status: response.status, body: errText }, "Anthropic API error");
-      return res.status(500).json({ message: "Quality check temporarily unavailable." });
+      return res.status(500).json({ error: "Quality check temporarily unavailable." });
     }
 
     const data = await response.json() as { content?: Array<{ type: string; text: string }> };
@@ -155,7 +155,7 @@ router.post("/register-quality/check", requireAuthUser, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Register quality check failed");
-    return res.status(500).json({ message: "Quality check temporarily unavailable." });
+    return res.status(500).json({ error: "Quality check temporarily unavailable." });
   }
 });
 

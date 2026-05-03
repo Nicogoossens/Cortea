@@ -81,7 +81,7 @@ router.get("/culture/protocols", async (req, res) => {
   try {
     const parsed = ProtocolsQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ message: "A region must be specified to retrieve cultural protocols." });
+      return res.status(400).json({ error: "A region must be specified to retrieve cultural protocols." });
     }
 
     const { region_code, pillar, pillar_code, context, locale, situational_interests, verified_only } = parsed.data;
@@ -174,7 +174,7 @@ router.get("/culture/protocols", async (req, res) => {
     return res.json(enriched);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch culture protocols");
-    return res.status(500).json({ message: "Cultural protocols are momentarily unavailable. Please allow a moment." });
+    return res.status(500).json({ error: "Cultural protocols are momentarily unavailable. Please allow a moment." });
   }
 });
 
@@ -228,7 +228,7 @@ router.get("/culture/compass", async (req, res) => {
     return res.json(entries);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass");
-    return res.status(500).json({ message: "The Cultural Compass is momentarily unavailable." });
+    return res.status(500).json({ error: "The Cultural Compass is momentarily unavailable." });
   }
 });
 
@@ -246,7 +246,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
   try {
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
     if (!paramParsed.success) {
-      return res.status(400).json({ message: "The region code provided is not valid." });
+      return res.status(400).json({ error: "The region code provided is not valid." });
     }
 
     const queryParsed = CompassQuerySchema.safeParse(req.query);
@@ -265,7 +265,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
 
     if (rows.length === 0) {
       return res.status(404).json({
-        message: `The region '${regionCode}' is not yet within our compass. Further regions are being added in due course.`,
+        error: `The region '${regionCode}' is not yet within our compass. Further regions are being added in due course.`,
       });
     }
 
@@ -297,7 +297,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch compass region");
-    return res.status(500).json({ message: "The Cultural Compass is momentarily unavailable." });
+    return res.status(500).json({ error: "The Cultural Compass is momentarily unavailable." });
   }
 });
 
@@ -310,7 +310,7 @@ router.get("/culture/origins", async (req, res) => {
   try {
     const parsed = CulturalOriginsQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      return res.status(400).json({ message: "A valid region code must be specified." });
+      return res.status(400).json({ error: "A valid region code must be specified." });
     }
 
     const { region_code, domain } = parsed.data;
@@ -329,7 +329,7 @@ router.get("/culture/origins", async (req, res) => {
     return res.json(rows);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch cultural origins");
-    return res.status(500).json({ message: "Cultural origins are momentarily unavailable." });
+    return res.status(500).json({ error: "Cultural origins are momentarily unavailable." });
   }
 });
 

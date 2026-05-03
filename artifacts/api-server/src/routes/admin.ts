@@ -43,8 +43,8 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction): Pr
       res.status(401).json({ error: "The authorisation token is not recognised." });
       return;
     }
-    if (user.suspended_at !== null) {
-      res.status(403).json({ error: "Your account has been suspended. Please contact support." });
+    if (user.suspended_at) {
+      res.status(403).json({ error: "This account has been suspended. Please contact support." });
       return;
     }
     if (!user.is_admin) {

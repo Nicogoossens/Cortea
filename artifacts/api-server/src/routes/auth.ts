@@ -162,6 +162,9 @@ router.post("/auth/register", async (req, res) => {
         .where(eq(usersTable.id, existing[0].id));
 
       const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
+      if (!sent && process.env.NODE_ENV === "production") {
+        return res.status(503).json({ error: "Email delivery is not available. Please contact support." });
+      }
       return res.json({
         message: "A new verification link has been dispatched to your address.",
         ...(!sent ? { dev_verification_url: url } : {}),
@@ -191,6 +194,10 @@ router.post("/auth/register", async (req, res) => {
       .returning();
 
     const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
+
+    if (!sent && process.env.NODE_ENV === "production") {
+      return res.status(503).json({ error: "Email delivery is not available. Please contact support." });
+    }
 
     return res.status(201).json({
       message: "Your account has been established. A verification link has been dispatched to your address.",
@@ -246,26 +253,14 @@ router.get("/auth/verify", async (req, res) => {
 
     if (user.email_verified) {
       if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
-        await db.update(usersTable)
-          .set({ verification_token: null, token_expires_at: null })
-          .where(eq(usersTable.id, user.id));
-        return res.status(410).json({ error: "This sign-in link has expired. Please request a new one." });
+        return res.status(410).json({ error: "This verification link has expired. Please request a new one." });
       }
-
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable)
         .set({ session_token: refreshedToken, verification_token: null, token_expires_at: null, ...utmPatch })
         .where(eq(usersTable.id, user.id));
       setSessionCookie(res, refreshedToken);
-      return res.json({
-        message: "Your address has already been verified.",
-        already_verified: true,
-        user_id: user.id,
-        full_name: user.full_name,
-        is_admin: user.is_admin,
-        language_code: user.language_code,
-        active_region: user.active_region,
-      });
+      return res.json({ message: "Your address has already been verified.", already_verified: true, user_id: user.id, full_name: user.full_name, is_admin: user.is_admin, language_code: user.language_code, active_region: user.active_region });
     }
 
     if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
@@ -339,6 +334,10 @@ router.post("/auth/resend", async (req, res) => {
 
     const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale });
 
+    if (!sent && process.env.NODE_ENV === "production") {
+      return res.status(503).json({ error: "Email delivery is not available. Please contact support." });
+    }
+
     return res.json({
       message: "A new verification link has been dispatched to your address.",
       ...(!sent ? { dev_verification_url: url } : {}),
@@ -393,6 +392,10 @@ router.post("/auth/signin", async (req, res) => {
       .where(eq(usersTable.id, user.id));
 
     const { sent, url } = await sendActivationEmail({ to: normalizedEmail, token, locale: user.language_code });
+
+    if (!sent && process.env.NODE_ENV === "production") {
+      return res.status(503).json({ error: "Email delivery is not available. Please contact support." });
+    }
 
     return res.json({
       message: "A sign-in link has been dispatched to your address.",
@@ -590,6 +593,10 @@ router.post("/auth/forgot-password", async (req, res) => {
       locale: user.language_code,
     });
 
+    if (!sent && process.env.NODE_ENV === "production") {
+      return res.status(503).json({ error: "Email delivery is not available. Please contact support." });
+    }
+
     return res.json({
       message: genericMessage,
       ...(!sent ? { dev_reset_url: url } : {}),
@@ -675,29 +682,25 @@ router.post("/auth/reset-password", async (req, res) => {
   }
 });
 
-// ── First-admin bootstrap ──────────────────────────────────────────────────────
-// Requires BOOTSTRAP_ADMIN_SECRET to be set in the environment and provided in
-// the request body. Without the secret this endpoint always returns 403 so it
-// cannot be exploited on deployments that have not explicitly configured it.
-const ClaimFirstAdminSchema = z.object({
+const ClaimFirstAdminBodySchema = z.object({
   bootstrap_secret: z.string().min(1),
 });
 
 router.post("/auth/claim-first-admin", async (req, res) => {
   try {
-    const configuredSecret = process.env.BOOTSTRAP_ADMIN_SECRET;
-    if (!configuredSecret) {
-      return res.status(403).json({ error: "First-admin bootstrap is not enabled on this deployment." });
+    const expectedSecret = process.env.BOOTSTRAP_ADMIN_SECRET;
+    if (!expectedSecret) {
+      return res.status(403).json({ error: "This endpoint is disabled." });
+    }
+
+    const parsed = ClaimFirstAdminBodySchema.safeParse(req.body);
+    if (!parsed.success || parsed.data.bootstrap_secret !== expectedSecret) {
+      return res.status(403).json({ error: "Invalid or missing bootstrap secret." });
     }
 
     const token = extractToken(req);
     if (!token) {
       return res.status(401).json({ error: "Authentication required." });
-    }
-
-    const parsed = ClaimFirstAdminSchema.safeParse(req.body);
-    if (!parsed.success || parsed.data.bootstrap_secret !== configuredSecret) {
-      return res.status(403).json({ error: "Invalid bootstrap secret." });
     }
 
     const [user] = await db
@@ -706,32 +709,26 @@ router.post("/auth/claim-first-admin", async (req, res) => {
       .where(eq(usersTable.session_token, token))
       .limit(1);
     if (!user) return res.status(401).json({ error: "Invalid session." });
+
+    if (user.suspended_at) {
+      return res.status(403).json({ error: "This account has been suspended. Please contact support." });
+    }
+
     if (user.is_admin) return res.json({ message: "You are already an administrator." });
 
-    // Serializable transaction + conditional update: the SERIALIZABLE isolation
-    // level causes PostgreSQL to abort and retry any concurrent transaction that
-    // produces a serialization anomaly, ensuring only one caller can ever be
-    // promoted on a zero-admin system — even under heavy parallel load.
-    let promoted = false;
     await db.transaction(async (tx) => {
-      const result = await tx
-        .update(usersTable)
-        .set({ is_admin: true })
-        .where(
-          sql`${usersTable.id} = ${user.id}
-            AND NOT EXISTS (
-              SELECT 1 FROM ${usersTable} WHERE ${usersTable.is_admin} = true LIMIT 1
-            )`
-        )
-        .returning({ id: usersTable.id });
-      promoted = result.length > 0;
+      const [{ total }] = await tx.select({ total: count() }).from(usersTable).where(eq(usersTable.is_admin, true));
+      if (total > 0) {
+        throw Object.assign(new Error("admin_exists"), { statusCode: 403 });
+      }
+      await tx.update(usersTable).set({ is_admin: true }).where(eq(usersTable.id, user.id));
     }, { isolationLevel: "serializable" });
 
-    if (!promoted) {
+    return res.json({ message: "You have been granted administrator access.", is_admin: true });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "admin_exists") {
       return res.status(403).json({ error: "An administrator already exists. This endpoint is disabled." });
     }
-    return res.json({ message: "You have been granted administrator access.", is_admin: true });
-  } catch (err) {
     req.log.error({ err }, "claim-first-admin failed");
     return res.status(500).json({ error: "A difficulty arose. Please try again." });
   }

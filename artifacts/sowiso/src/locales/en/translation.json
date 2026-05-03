@@ -1228,5 +1228,9 @@
   "atelier.track.start_next_session": "Start next session",
   "atelier.track.start_remediation": "Start remediation",
   "atelier.track.next_session_cooldown_hint": "Reflection pause — the next session opens in about 5 minutes.",
-  "home.greeting_named": "Good day, {{name}}."
+  "home.greeting_named": "Good day, {{name}}.",
+  "compass.search_placeholder": "Search countries…",
+  "compass.search_aria": "Search countries",
+  "compass.search_clear": "Clear search",
+  "compass.search_no_results": "No countries match your search."
 }

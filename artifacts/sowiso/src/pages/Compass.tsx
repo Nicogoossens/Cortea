@@ -6,7 +6,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { Compass as CompassIcon, Globe, Lock, LayoutGrid, List, Clock } from "lucide-react";
+import { Compass as CompassIcon, Globe, Lock, LayoutGrid, List, Clock, Search, X } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { CULTURE_CLUSTERS, getClusterBrief } from "@/lib/clusters";
@@ -33,6 +33,7 @@ export default function Compass() {
   const { data: profile } = useGetProfile();
   const { activeRegion } = useActiveRegion();
   const [view, setView] = useState<"clusters" | "regions">("clusters");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const tier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
   const isVisitor = !isAuthenticated;
@@ -45,6 +46,27 @@ export default function Compass() {
     { locale, ...(spheresParam ? { situational_interests: spheresParam } : {}) },
     { query: { queryKey: [...getGetCultureCompassQueryKey(), locale, spheresParam ?? ""] } }
   );
+
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const trimmedQuery = searchQuery.trim();
+  const filteredRegions = (() => {
+    if (!regions) return regions;
+    const q = normalize(trimmedQuery);
+    if (!q) return regions;
+    return regions.filter((r) => {
+      if (normalize(r.region_code).includes(q)) return true;
+      if (normalize(r.region_name ?? "").includes(q)) return true;
+      const localName = COMPASS_REGIONS.find((cr) => cr.code === r.region_code)?.names;
+      if (localName) {
+        for (const v of Object.values(localName)) {
+          if (typeof v === "string" && normalize(v).includes(q)) return true;
+        }
+      }
+      return false;
+    });
+  })();
 
   const activeClusterId = CULTURE_CLUSTERS.find((c) =>
     (c.members as string[]).includes(activeRegion)
@@ -208,13 +230,44 @@ export default function Compass() {
       {/* ── ALL REGIONS VIEW ── */}
       {view === "regions" && (
         <>
+          {/* Search input */}
+          <div className="relative max-w-md pt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" aria-hidden="true" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("compass.search_placeholder", "Search countries…")}
+              aria-label={t("compass.search_aria", "Search countries")}
+              className="w-full h-10 pl-10 pr-10 text-sm bg-card border border-border rounded-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground/50"
+              data-testid="input-compass-search"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/60 hover:text-foreground transition-colors"
+                aria-label={t("compass.search_clear", "Clear search")}
+                data-testid="button-compass-search-clear"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          {trimmedQuery && filteredRegions && (
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground -mt-4">
+              {filteredRegions.length} {t("compass.countries")}
+            </p>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6" aria-label={t("common.loading")} aria-live="polite">
               {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-sm" />)}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              {regions?.map((region) => {
+              {filteredRegions?.map((region) => {
                 const isLocked = calcRegionLocked(tier, isAuthenticated, GUEST_UNLOCKED_REGIONS, region.region_code);
                 const isUserRegion = region.region_code === activeRegion;
 
@@ -320,11 +373,20 @@ export default function Compass() {
                   </Link>
                 );
               })}
-              {(!regions || regions.length === 0) && (
+              {(!filteredRegions || filteredRegions.length === 0) && (
                 <div className="col-span-full py-16 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/5">
                   <Globe className="w-12 h-12 mx-auto mb-4 opacity-20" aria-hidden="true" />
-                  <p className="font-serif text-xl">The cartographers are expanding the compass.</p>
-                  <p className="text-sm mt-2">New regions will be available shortly.</p>
+                  {trimmedQuery ? (
+                    <>
+                      <p className="font-serif text-xl">{t("compass.search_no_results", "No countries match your search.")}</p>
+                      <p className="text-sm mt-2">"{trimmedQuery}"</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-serif text-xl">The cartographers are expanding the compass.</p>
+                      <p className="text-sm mt-2">New regions will be available shortly.</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

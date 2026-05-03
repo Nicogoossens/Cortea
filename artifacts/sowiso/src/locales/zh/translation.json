@@ -1228,5 +1228,9 @@
   "atelier.guest.teaser.mock.opt3": "等待主人先饮，再跟随。",
   "atelier.guest.teaser.mock.opt4": "大声敬酒，表示感谢所有宾客。",
   "atelier.guest.teaser.cta_title": "登录以开始练习",
-  "atelier.guest.teaser.cta_body": "创建免费账户，解锁所有支持国家的学习轨迹、支柱印章及角色扮演情景。"
+  "atelier.guest.teaser.cta_body": "创建免费账户，解锁所有支持国家的学习轨迹、支柱印章及角色扮演情景。",
+  "compass.search_placeholder": "搜索国家…",
+  "compass.search_aria": "搜索国家",
+  "compass.search_clear": "清除搜索",
+  "compass.search_no_results": "没有匹配的国家。"
 }

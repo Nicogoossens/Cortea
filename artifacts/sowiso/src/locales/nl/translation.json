@@ -1228,5 +1228,9 @@
   "atelier.track.start_next_session": "Volgende sessie starten",
   "atelier.track.start_remediation": "Herhaling starten",
   "atelier.track.next_session_cooldown_hint": "Reflectiepauze — de volgende sessie opent over ongeveer 5 minuten.",
-  "home.greeting_named": "Goedendag, {{name}}."
+  "home.greeting_named": "Goedendag, {{name}}.",
+  "compass.search_placeholder": "Zoek landen…",
+  "compass.search_aria": "Zoek landen",
+  "compass.search_clear": "Zoekopdracht wissen",
+  "compass.search_no_results": "Geen landen gevonden voor je zoekopdracht."
 }

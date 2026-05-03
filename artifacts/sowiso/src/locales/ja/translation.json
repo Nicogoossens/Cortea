@@ -1228,5 +1228,9 @@
   "atelier.guest.teaser.mock.opt3": "ホストのお召し上がりをお待ちになられてから、その後をお追いになります。",
   "atelier.guest.teaser.mock.opt4": "テーブルの向こうにてご大声でお礼のお言葉をお述べになります。",
   "atelier.guest.teaser.cta_title": "ご登録いただき練習をお始めください",
-  "atelier.guest.teaser.cta_body": "無料アカウントを作成いたされますと、すべての対応国向けの学習トラック、柱のシール及びロールプレイシナリオをご利用いただけるようになります。"
+  "atelier.guest.teaser.cta_body": "無料アカウントを作成いたされますと、すべての対応国向けの学習トラック、柱のシール及びロールプレイシナリオをご利用いただけるようになります。",
+  "compass.search_placeholder": "国を検索…",
+  "compass.search_aria": "国を検索",
+  "compass.search_clear": "検索をクリア",
+  "compass.search_no_results": "検索に一致する国がありません。"
 }

@@ -1228,5 +1228,9 @@
   "atelier.track.start_next_session": "ابدأ الجلسة التالية",
   "atelier.track.start_remediation": "ابدأ المراجعة",
   "atelier.track.next_session_cooldown_hint": "فترة تأمل — تُفتح الجلسة التالية خلال 5 دقائق تقريباً.",
-  "home.greeting_named": "طاب يومك يا {{name}}."
+  "home.greeting_named": "طاب يومك يا {{name}}.",
+  "compass.search_placeholder": "ابحث عن الدول…",
+  "compass.search_aria": "ابحث عن الدول",
+  "compass.search_clear": "مسح البحث",
+  "compass.search_no_results": "لا توجد دول تطابق بحثك."
 }

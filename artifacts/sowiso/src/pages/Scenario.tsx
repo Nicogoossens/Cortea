@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Check, X, ShieldAlert, BookOpen, FileText } from "lucide-react";
+import { ArrowLeft, Check, X, ShieldAlert, BookOpen, FileText, Sparkles, Flame, Shirt } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { levelKey } from "@/lib/content-labels";
+import { useToast } from "@/hooks/use-toast";
 
 type ScenarioMode = "classic" | "story";
 
@@ -28,6 +29,7 @@ export default function Scenario() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { t, locale } = useLanguage();
+  const { toast } = useToast();
   const scenarioId = parseInt(id || "0", 10);
   const lang = locale.split("-")[0];
 
@@ -43,6 +45,8 @@ export default function Scenario() {
     score_delta: number;
     level_up: boolean;
     new_level_name?: string | null;
+    new_unlock?: { id: string; name: string; region: string; pillar: number; unlocked_at: string } | null;
+    streak_milestone?: number | null;
   } | null>(null);
   const [mode, setMode] = useState<ScenarioMode>(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("scenario_mode") : null;
@@ -105,6 +109,18 @@ export default function Scenario() {
       {
         onSuccess: (data) => {
           setResult(data);
+          if (data.new_unlock) {
+            toast({
+              title: t("scenario.unlock_toast_title"),
+              description: t("scenario.unlock_toast_desc", { name: data.new_unlock.name }),
+            });
+          }
+          if (data.streak_milestone) {
+            toast({
+              title: t("scenario.streak_toast_title", { days: data.streak_milestone }),
+              description: t("scenario.streak_toast_desc"),
+            });
+          }
         }
       }
     );
@@ -277,6 +293,47 @@ export default function Scenario() {
                   </div>
                 )}
               </div>
+
+              {result.new_unlock && (
+                <div
+                  className="flex items-start gap-4 p-4 rounded-sm border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-amber-500/5 animate-in fade-in zoom-in-95 duration-700"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-sm bg-amber-500/20 flex items-center justify-center">
+                    <Shirt className="w-5 h-5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-mono text-amber-700 dark:text-amber-400 mb-1">
+                      <Sparkles className="w-3 h-3" aria-hidden="true" />
+                      {t("scenario.unlock_banner_label")}
+                    </div>
+                    <div className="font-serif text-lg text-foreground">{result.new_unlock.name}</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{t("scenario.unlock_banner_desc")}</div>
+                  </div>
+                </div>
+              )}
+
+              {result.streak_milestone && (
+                <div
+                  className="flex items-start gap-4 p-4 rounded-sm border border-orange-500/40 bg-gradient-to-br from-orange-500/10 to-orange-500/5 animate-in fade-in zoom-in-95 duration-700"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-sm bg-orange-500/20 flex items-center justify-center">
+                    <Flame className="w-5 h-5 text-orange-700 dark:text-orange-400" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs uppercase tracking-widest font-mono text-orange-700 dark:text-orange-400 mb-1">
+                      {t("scenario.streak_banner_label")}
+                    </div>
+                    <div className="font-serif text-lg text-foreground">
+                      {t("scenario.streak_banner_title", { days: result.streak_milestone })}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{t("scenario.streak_banner_desc")}</div>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="bg-background/50 border-t border-border/50 py-4 flex justify-end">
               <Button variant="outline" onClick={() => setLocation("/atelier")} className="font-serif">

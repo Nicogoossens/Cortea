@@ -288,7 +288,11 @@ router.post("/noble-score/submit", async (req, res) => {
     let newTotalScore = 0;
     let levelUp = false;
     let newLevelName: string | null = null;
+    let newUnlock: WardrobeItem | null = null;
+    let streakMilestone: number | null = null;
     let ageBand: AgeBand = "adult";
+
+    const STREAK_MILESTONES = new Set([3, 7, 14, 30]);
 
     if (userId) {
       await ensurePillarProgress(userId);
@@ -348,6 +352,10 @@ router.post("/noble-score/submit", async (req, res) => {
           newStreak = 1;
         }
 
+        if (newStreak !== currentStreak && STREAK_MILESTONES.has(newStreak)) {
+          streakMilestone = newStreak;
+        }
+
         // Wardrobe unlock logic — Pillar 2 (Appearance)
         const currentWardrobe: WardrobeItem[] = (user as { wardrobe_unlocks?: WardrobeItem[] | null }).wardrobe_unlocks ?? [];
         let newWardrobe = currentWardrobe;
@@ -361,14 +369,16 @@ router.post("/noble-score/submit", async (req, res) => {
           const alreadyUnlocked = new Set(currentWardrobe.map((w) => w.id));
           for (const threshold of WARDROBE_THRESHOLDS) {
             if (newPillarScore >= threshold.minScore && !alreadyUnlocked.has(threshold.id)) {
-              newWardrobe = [...newWardrobe, {
+              const unlockedItem: WardrobeItem = {
                 id: threshold.id,
                 name: threshold.name,
                 region: threshold.region,
                 pillar: 2,
                 unlocked_at: today,
-              }];
+              };
+              newWardrobe = [...newWardrobe, unlockedItem];
               alreadyUnlocked.add(threshold.id);
+              newUnlock = unlockedItem;
             }
           }
         }
@@ -439,6 +449,8 @@ router.post("/noble-score/submit", async (req, res) => {
       new_total_score: newTotalScore,
       level_up: levelUp,
       new_level_name: newLevelName,
+      new_unlock: newUnlock,
+      streak_milestone: streakMilestone,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to submit scenario answer");

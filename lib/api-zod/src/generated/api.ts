@@ -593,6 +593,24 @@ export const SubmitScenarioAnswerResponse = zod.object({
   new_total_score: zod.number(),
   level_up: zod.boolean(),
   new_level_name: zod.string().nullish(),
+  new_unlock: zod
+    .object({
+      id: zod.string(),
+      name: zod.string(),
+      region: zod.string(),
+      pillar: zod.number(),
+      unlocked_at: zod.string(),
+    })
+    .nullish()
+    .describe(
+      "Newly unlocked wardrobe item if this submit triggered an unlock.",
+    ),
+  streak_milestone: zod
+    .number()
+    .nullish()
+    .describe(
+      "The streak day count if a milestone (3, 7, 14, 30) was just reached.",
+    ),
 });
 
 /**

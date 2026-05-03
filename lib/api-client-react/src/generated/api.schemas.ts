@@ -293,6 +293,17 @@ export interface SubmitAnswerBody {
   lang?: string;
 }
 
+/**
+ * Newly unlocked wardrobe item if this submit triggered an unlock.
+ */
+export type AnswerResultNewUnlock = {
+  id: string;
+  name: string;
+  region: string;
+  pillar: number;
+  unlocked_at: string;
+} | null;
+
 export interface AnswerResult {
   correct: boolean;
   explanation: string;
@@ -301,6 +312,10 @@ export interface AnswerResult {
   new_total_score: number;
   level_up: boolean;
   new_level_name?: string | null;
+  /** Newly unlocked wardrobe item if this submit triggered an unlock. */
+  new_unlock?: AnswerResultNewUnlock;
+  /** The streak day count if a milestone (3, 7, 14, 30) was just reached. */
+  streak_milestone?: number | null;
 }
 
 export interface ScoreLogEntry {

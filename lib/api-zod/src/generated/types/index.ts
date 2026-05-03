@@ -8,6 +8,7 @@
 
 export * from "./addCountryInterestBody";
 export * from "./answerResult";
+export * from "./answerResultNewUnlock";
 export * from "./createProfileBody";
 export * from "./createProfileBodyAmbitionLevel";
 export * from "./culturalOrigin";

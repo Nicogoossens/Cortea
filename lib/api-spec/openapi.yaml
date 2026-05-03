@@ -1212,6 +1212,21 @@ components:
         new_level_name:
           type: string
           nullable: true
+        new_unlock:
+          nullable: true
+          description: Newly unlocked wardrobe item if this submit triggered an unlock.
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            region: { type: string }
+            pillar: { type: integer }
+            unlocked_at: { type: string }
+          required: [id, name, region, pillar, unlocked_at]
+        streak_milestone:
+          type: integer
+          nullable: true
+          description: The streak day count if a milestone (3, 7, 14, 30) was just reached.
       required:
         - correct
         - explanation

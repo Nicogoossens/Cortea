@@ -296,6 +296,93 @@ router.get("/admin/content/status", requireAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /admin/compass-regions — list every compass region (published + stub).
+ * Returns: region_code, flag_emoji, is_published, locale_count, completeness (0-100).
+ * Completeness = avg across locales of filled etiquette fields / 9.
+ */
+router.get("/admin/compass-regions", requireAdmin, async (_req, res) => {
+  try {
+    const rows = await db.select().from(compassRegionsTable);
+
+    const REQUIRED = [
+      "region_name",
+      "core_value",
+      "biggest_taboo",
+      "dining_etiquette",
+      "language_notes",
+      "gift_protocol",
+      "dress_code",
+      "dos",
+      "donts",
+    ] as const;
+
+    const out = rows.map((row) => {
+      const content = (row.content ?? {}) as Record<string, Record<string, unknown>>;
+      const locales = Object.keys(content);
+      let completeness = 0;
+      if (locales.length > 0) {
+        let totalFilled = 0;
+        for (const loc of locales) {
+          const c = content[loc] ?? {};
+          for (const field of REQUIRED) {
+            const v = c[field];
+            if (Array.isArray(v) ? v.length > 0 : typeof v === "string" ? v.length > 0 : false) {
+              totalFilled++;
+            }
+          }
+        }
+        completeness = Math.round((totalFilled / (locales.length * REQUIRED.length)) * 100);
+      }
+      return {
+        region_code: row.region_code,
+        flag_emoji: row.flag_emoji,
+        is_published: row.is_published,
+        locale_count: locales.length,
+        completeness,
+      };
+    });
+
+    out.sort((a, b) => {
+      if (a.is_published !== b.is_published) return a.is_published ? -1 : 1;
+      if (a.completeness !== b.completeness) return b.completeness - a.completeness;
+      return a.region_code.localeCompare(b.region_code);
+    });
+
+    return res.json(out);
+  } catch (err) {
+    _req.log?.error({ err }, "Admin: failed to list compass regions");
+    return res.status(500).json({ error: "A difficulty arose listing compass regions." });
+  }
+});
+
+const PublishToggleSchema = z.object({
+  is_published: z.boolean(),
+});
+
+/** PATCH /admin/compass-regions/:regionCode — toggle is_published. */
+router.patch("/admin/compass-regions/:regionCode", requireAdmin, async (req, res) => {
+  try {
+    const regionCode = req.params.regionCode.toUpperCase();
+    const parsed = PublishToggleSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "is_published (boolean) is required." });
+    }
+    const result = await db
+      .update(compassRegionsTable)
+      .set({ is_published: parsed.data.is_published })
+      .where(eq(compassRegionsTable.region_code, regionCode))
+      .returning({ region_code: compassRegionsTable.region_code });
+    if (result.length === 0) {
+      return res.status(404).json({ error: `Region '${regionCode}' not found.` });
+    }
+    return res.json({ ok: true, region_code: regionCode, is_published: parsed.data.is_published });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to toggle compass region publish flag");
+    return res.status(500).json({ error: "A difficulty arose updating the region." });
+  }
+});
+
 // ── Migration guard ───────────────────────────────────────────────────────────
 
 interface MigrationEntry {
@@ -440,7 +527,7 @@ const ScenarioImportSchema = z.object({
   difficulty_level: z.number().int().min(1).max(5).default(1),
   estimated_minutes: z.number().int().min(1).max(60).default(5),
   noble_score_impact: z.number().int().min(1).max(20).default(5),
-  bolton_cluster: z.number().int().min(1).max(3).nullable().optional(),
+  bolton_cluster: z.number().int().min(1).max(5).nullable().optional(),
   behavioral_tags: z.array(z.string()).optional().default([]),
   correction_style: z.string().nullable().optional(),
   // Social class register fields (all optional, safe defaults)
@@ -489,10 +576,43 @@ const CultureProtocolImportSchema = z.object({
   social_class: z.enum(["universal", "elite", "middle_class"]).optional().default("universal"),
 });
 
+const REQUIRED_LOCALE_FIELDS = [
+  "region_name",
+  "core_value",
+  "biggest_taboo",
+  "dining_etiquette",
+  "language_notes",
+  "gift_protocol",
+  "dress_code",
+  "dos",
+  "donts",
+] as const;
+
 const CompassRegionImportSchema = z.object({
   region_code: z.string().length(2),
   flag_emoji: z.string().optional(),
-  content: z.record(z.string(), z.unknown()),
+  content: z
+    .record(z.string(), z.unknown())
+    .refine((c) => Object.keys(c).length >= 1, {
+      message:
+        "content must contain at least one locale key (e.g. 'en-GB') with the etiquette fields filled in.",
+    })
+    .refine(
+      (c) => {
+        for (const [, locale] of Object.entries(c)) {
+          if (!locale || typeof locale !== "object" || Array.isArray(locale)) return false;
+          const obj = locale as Record<string, unknown>;
+          for (const field of REQUIRED_LOCALE_FIELDS) {
+            if (!(field in obj)) return false;
+          }
+        }
+        return true;
+      },
+      {
+        message:
+          "Each locale in content must include all etiquette fields: region_name, core_value, biggest_taboo, dining_etiquette, language_notes, gift_protocol, dress_code, dos, donts.",
+      }
+    ),
 });
 
 const LearningTrackImportSchema = z.object({
@@ -669,11 +789,17 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
         const typedContent = content as CompassLocaleMap;
         await db
           .insert(compassRegionsTable)
-          .values({ region_code, flag_emoji: flag_emoji ?? "", content: typedContent })
+          .values({
+            region_code,
+            flag_emoji: flag_emoji ?? "",
+            content: typedContent,
+            is_published: true,
+          })
           .onConflictDoUpdate({
             target: compassRegionsTable.region_code,
             set: {
               content: typedContent,
+              is_published: true,
               ...(flag_emoji ? { flag_emoji } : {}),
             },
           });

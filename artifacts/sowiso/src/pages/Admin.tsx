@@ -829,7 +829,164 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
           )}
         </CardContent>
       </Card>
+
+      <CompassRegionsDataScore />
     </div>
+  );
+}
+
+// ── Compass Regions Data Score ────────────────────────────────────────────────
+
+interface CompassRegionRow {
+  region_code: string;
+  flag_emoji: string;
+  is_published: boolean;
+  locale_count: number;
+  completeness: number;
+}
+
+function CompassRegionsDataScore() {
+  const [rows, setRows] = useState<CompassRegionRow[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "published" | "stub">("all");
+
+  const fetchRows = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/compass-regions`, { credentials: "include" });
+      if (res.ok) setRows(await res.json() as CompassRegionRow[]);
+    } catch { /* silent */ } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRows(); }, [fetchRows]);
+
+  async function togglePublished(row: CompassRegionRow) {
+    setPendingCode(row.region_code);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/compass-regions/${row.region_code}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_published: !row.is_published }),
+      });
+      if (res.ok) {
+        setRows((prev) => prev?.map((r) => r.region_code === row.region_code
+          ? { ...r, is_published: !row.is_published }
+          : r) ?? null);
+      }
+    } finally {
+      setPendingCode(null);
+    }
+  }
+
+  const filtered = (rows ?? []).filter((r) =>
+    filter === "all" ? true : filter === "published" ? r.is_published : !r.is_published
+  );
+  const publishedCount = (rows ?? []).filter((r) => r.is_published).length;
+  const totalCount = rows?.length ?? 0;
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Compass Regions — Data Score
+          </span>
+          <Button variant="outline" size="sm" className="font-mono text-xs gap-1.5" onClick={fetchRows} disabled={loading}>
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Refresh
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-2 items-center text-xs font-mono">
+          <span className="text-muted-foreground">
+            {publishedCount}/{totalCount} published
+          </span>
+          <div className="flex gap-1 ml-auto">
+            {(["all", "published", "stub"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-2.5 py-1 rounded-sm border text-xs font-mono uppercase tracking-widest ${
+                  filter === f
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 border-border text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading && !rows ? (
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-9 rounded-sm" />)}
+          </div>
+        ) : (
+          <div className="overflow-auto max-h-[480px] border border-border/50 rounded-sm">
+            <table className="w-full text-xs font-mono">
+              <thead className="bg-muted/40 sticky top-0">
+                <tr className="text-left">
+                  <th className="px-3 py-2 font-medium text-muted-foreground/80">Flag</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground/80">Code</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground/80">Published</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground/80">Locales</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground/80">Completeness</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((row) => (
+                  <tr key={row.region_code} className="border-t border-border/40 hover:bg-muted/20">
+                    <td className="px-3 py-2 text-base leading-none">{row.flag_emoji}</td>
+                    <td className="px-3 py-2 text-foreground/90">{row.region_code}</td>
+                    <td className="px-3 py-2">
+                      <button
+                        onClick={() => togglePublished(row)}
+                        disabled={pendingCode === row.region_code}
+                        className={`px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-widest border ${
+                          row.is_published
+                            ? "bg-green-50 border-green-300 text-green-800"
+                            : "bg-muted border-border text-muted-foreground"
+                        } ${pendingCode === row.region_code ? "opacity-50" : "hover:opacity-80 cursor-pointer"}`}
+                      >
+                        {pendingCode === row.region_code
+                          ? "…"
+                          : row.is_published ? "Published" : "Stub"}
+                      </button>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{row.locale_count}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${row.completeness === 100 ? "bg-green-500" : row.completeness > 0 ? "bg-amber-400" : "bg-muted-foreground/20"}`}
+                            style={{ width: `${row.completeness}%` }}
+                          />
+                        </div>
+                        <span className="text-muted-foreground tabular-nums">{row.completeness}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-8 text-center text-muted-foreground/60">
+                      No regions match this filter.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

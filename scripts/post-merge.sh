@@ -14,7 +14,14 @@ psql "$DATABASE_URL" -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constrain
 psql "$DATABASE_URL" -f lib/db/migrations/0016_companion_messages.sql 2>/dev/null || true
 
 echo "--- Seeding Atelier scenarios (idempotent upsert) ---"
-pnpm --filter @workspace/db tsx src/seed.ts
+pnpm --filter @workspace/db exec tsx src/seed.ts
+
+echo "--- Seeding world country stubs (~195 ISO codes, onConflictDoNothing) ---"
+pnpm --filter @workspace/db exec tsx src/seed-world-stubs.ts
+
+echo "--- Seeding Compass priority country content (17 published countries) ---"
+pnpm --filter @workspace/db exec tsx src/seed-compass.ts
+pnpm --filter @workspace/db exec tsx src/seed-compass-priority.ts
 
 echo "--- Seeding UI translations (idempotent upsert) ---"
 node scripts/seed-translations.mjs

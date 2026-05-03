@@ -41,23 +41,23 @@ const DOMAIN_ORDER = ["dining", "business", "greetings", "gift-giving", "dress"]
 
 type VenueCategoryTab = {
   id: VenueCategory;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
 };
 
 const CATEGORY_TABS: VenueCategoryTab[] = [
-  { id: "shops", label: "Winkels", icon: ShoppingBag },
-  { id: "dining", label: "Dinen", icon: Utensils },
-  { id: "activities", label: "Activiteiten", icon: Dumbbell },
-  { id: "accommodations", label: "Verblijven", icon: Hotel },
-  { id: "transport", label: "Transport", icon: Car },
+  { id: "shops", labelKey: "compass.local.tab_shops", icon: ShoppingBag },
+  { id: "dining", labelKey: "compass.local.tab_dining", icon: Utensils },
+  { id: "activities", labelKey: "compass.local.tab_activities", icon: Dumbbell },
+  { id: "accommodations", labelKey: "compass.local.tab_accommodations", icon: Hotel },
+  { id: "transport", labelKey: "compass.local.tab_transport", icon: Car },
 ];
 
-const OCCASION_LABELS: Record<OccasionTag, string> = {
-  business: "Zakelijk",
-  romantic: "Romantisch",
-  family: "Familiair",
-  social: "Vriendschappelijk",
+const OCCASION_LABEL_KEYS: Record<OccasionTag, string> = {
+  business: "compass.local.occasion_business",
+  romantic: "compass.local.occasion_romantic",
+  family: "compass.local.occasion_family",
+  social: "compass.local.occasion_social",
 };
 
 function TheLocalSection({ regionCode }: { regionCode: string }) {
@@ -65,6 +65,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
   const [occasionFilter, setOccasionFilter] = useState<OccasionTag | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLocale();
 
   useEffect(() => {
     setLoading(true);
@@ -90,10 +91,10 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
         <MapPin className="w-4 h-4 text-primary flex-shrink-0" aria-hidden="true" />
         <div>
           <h2 id="the-local-heading" className="font-serif text-2xl text-foreground">
-            The Local
+            {t("compass.local.heading")}
           </h2>
           <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60 mt-0.5">
-            Gecureerde venues & aanbevelingen
+            {t("compass.local.subtitle")}
           </p>
         </div>
       </div>
@@ -102,9 +103,9 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
       <div
         className="flex overflow-x-auto gap-0 rounded-sm border border-border/50 divide-x divide-border/50 bg-muted/10"
         role="tablist"
-        aria-label="Venue categorieën"
+        aria-label={t("compass.local.categories_aria")}
       >
-        {CATEGORY_TABS.map(({ id, label, icon: Icon }) => {
+        {CATEGORY_TABS.map(({ id, labelKey, icon: Icon }) => {
           const isActive = activeTab === id;
           const count = venues.filter((v) => v.category === id).length;
           return (
@@ -126,7 +127,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
               }`}
             >
               <Icon className={`w-3.5 h-3.5 ${isActive ? "text-primary-foreground" : "text-muted-foreground/70"}`} aria-hidden="true" />
-              <span>{label}</span>
+              <span>{t(labelKey)}</span>
               {count > 0 && (
                 <span className={`text-[9px] font-mono ${isActive ? "text-primary-foreground/70" : "text-muted-foreground/50"}`}>
                   {count}
@@ -139,7 +140,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
 
       {/* Occasion filter — dining only */}
       {activeTab === "dining" && (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter op gelegenheid">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("compass.local.occasion_filter_aria")}>
           <button
             type="button"
             onClick={() => setOccasionFilter(null)}
@@ -149,7 +150,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
                 : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
             }`}
           >
-            Alle
+            {t("compass.local.all")}
           </button>
           {occasionTags.map((tag) => (
             <button
@@ -162,7 +163,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
                   : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
-              {OCCASION_LABELS[tag]}
+              {t(OCCASION_LABEL_KEYS[tag])}
             </button>
           ))}
         </div>
@@ -183,7 +184,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
         ) : filteredVenues.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground text-sm">
             <MapPin className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
-            <p>Geen venues gevonden voor deze selectie.</p>
+            <p>{t("compass.local.empty")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Star, MapPin } from "lucide-react";
+import { useLocale } from "@/lib/i18n";
 
 export type VenueCategory = "shops" | "dining" | "activities" | "accommodations" | "transport";
 export type OccasionTag = "business" | "romantic" | "family" | "social";
@@ -16,11 +17,11 @@ export interface Venue {
   etiquetteTip: string;
 }
 
-const OCCASION_LABELS: Record<OccasionTag, string> = {
-  business: "Zakelijk",
-  romantic: "Romantisch",
-  family: "Familiair",
-  social: "Vriendschappelijk",
+const OCCASION_TAG_KEYS: Record<OccasionTag, string> = {
+  business: "compass.local.occasion_business",
+  romantic: "compass.local.occasion_romantic",
+  family: "compass.local.occasion_family",
+  social: "compass.local.occasion_social",
 };
 
 const OCCASION_COLORS: Record<OccasionTag, string> = {
@@ -36,6 +37,7 @@ interface VenueCardProps {
 
 export function VenueCard({ venue }: VenueCardProps) {
   const [tipOpen, setTipOpen] = useState(false);
+  const { t } = useLocale();
 
   return (
     <div className="border border-border/50 rounded-sm bg-card hover:border-border/80 transition-colors">
@@ -65,13 +67,13 @@ export function VenueCard({ venue }: VenueCardProps) {
 
         {/* Occasion tags (dining only) */}
         {venue.occasionTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5" aria-label="Gelegenheidstags">
+          <div className="flex flex-wrap gap-1.5" aria-label={t("compass.local.occasion_tags_aria")}>
             {venue.occasionTags.map((tag) => (
               <span
                 key={tag}
                 className={`text-[10px] font-mono uppercase tracking-wide border rounded-[2px] px-1.5 py-0.5 ${OCCASION_COLORS[tag]}`}
               >
-                {OCCASION_LABELS[tag]}
+                {t(OCCASION_TAG_KEYS[tag])}
               </span>
             ))}
           </div>
@@ -85,7 +87,7 @@ export function VenueCard({ venue }: VenueCardProps) {
           aria-expanded={tipOpen}
         >
           <MapPin className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-          <span>Etiquettetip</span>
+          <span>{t("compass.local.etiquette_tip")}</span>
           {tipOpen
             ? <ChevronUp className="w-3 h-3 ml-auto" aria-hidden="true" />
             : <ChevronDown className="w-3 h-3 ml-auto" aria-hidden="true" />}
@@ -95,10 +97,10 @@ export function VenueCard({ venue }: VenueCardProps) {
           <div
             className="text-sm text-muted-foreground bg-primary/5 border border-primary/15 rounded-sm p-3 leading-relaxed animate-in fade-in slide-in-from-top-1 duration-150"
             role="note"
-            aria-label="Etiquettetip"
+            aria-label={t("compass.local.etiquette_tip")}
           >
             <span className="text-primary font-medium text-xs font-mono uppercase tracking-widest block mb-1.5">
-              Etiquette
+              {t("compass.local.etiquette")}
             </span>
             {venue.etiquetteTip}
           </div>

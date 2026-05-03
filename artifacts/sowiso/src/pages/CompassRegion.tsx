@@ -11,7 +11,7 @@ import {
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen, ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -67,11 +67,13 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
   const [occasionFilter, setOccasionFilter] = useState<OccasionTag | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useLocale();
   const { savedIds, pendingId, toggleSave } = useSavedVenues(isAuthenticated);
 
   useEffect(() => {
     setLoading(true);
+    setSearchQuery("");
     fetch(`${API_BASE}/api/venues?region=${encodeURIComponent(regionCode)}`)
       .then((r) => r.ok ? r.json() : { venues: [] })
       .then((data: { venues: Venue[] }) => {
@@ -81,7 +83,18 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
       .finally(() => setLoading(false));
   }, [regionCode]);
 
-  const tabVenues = venues.filter((v) => v.category === activeTab);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const matchesQuery = (v: Venue): boolean => {
+    if (!normalizedQuery) return true;
+    return (
+      v.name.toLowerCase().includes(normalizedQuery) ||
+      v.description.toLowerCase().includes(normalizedQuery) ||
+      v.subcategory.toLowerCase().includes(normalizedQuery)
+    );
+  };
+
+  const searchedVenues = venues.filter(matchesQuery);
+  const tabVenues = searchedVenues.filter((v) => v.category === activeTab);
   const filteredVenues = activeTab === "dining" && occasionFilter
     ? tabVenues.filter((v) => v.occasionTags.includes(occasionFilter))
     : tabVenues;
@@ -102,6 +115,29 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
         </div>
       </div>
 
+      {/* Search input */}
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" aria-hidden="true" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={t("compass.local.search_placeholder")}
+          aria-label={t("compass.local.search_aria")}
+          className="w-full pl-9 pr-9 py-2.5 rounded-sm border border-border/50 bg-background text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-colors"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            aria-label={t("compass.local.search_clear")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/60 hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
       {/* Category tabs */}
       <div
         className="flex overflow-x-auto gap-0 rounded-sm border border-border/50 divide-x divide-border/50 bg-muted/10"
@@ -110,7 +146,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
       >
         {CATEGORY_TABS.map(({ id, labelKey, icon: Icon }) => {
           const isActive = activeTab === id;
-          const count = venues.filter((v) => v.category === id).length;
+          const count = searchedVenues.filter((v) => v.category === id).length;
           return (
             <button
               key={id}
@@ -187,7 +223,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
         ) : filteredVenues.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground text-sm">
             <MapPin className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
-            <p>{t("compass.local.empty")}</p>
+            <p>{normalizedQuery ? t("compass.local.empty_search") : t("compass.local.empty")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

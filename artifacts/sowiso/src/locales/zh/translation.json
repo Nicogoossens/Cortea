@@ -922,5 +922,19 @@
   "scenario.story_mode": "故事模式",
   "scenario.classic_mode": "经典模式",
   "scenario.story_choose": "选择您的回应",
-  "scenario.story_tap": "点击以选择"
+  "scenario.story_tap": "点击以选择",
+  "compass.origins_title": "源流与编年",
+  "compass.origins_subtitle": "这一地区传统背后的历史与文化根源。",
+  "compass.origins_era": "时代",
+  "compass.origins_influences": "影响",
+  "compass.origins_connected_rule": "当今的礼仪",
+  "compass.origins_domain_dining": "餐桌",
+  "compass.origins_domain_business": "商务",
+  "compass.origins_domain_greetings": "问候",
+  "compass.origins_domain_gift-giving": "馈赠",
+  "compass.origins_domain_dress": "着装",
+  "compass.origins_empty": "该地区的历史背景正在整理中。",
+  "scenario.go_deeper": "深入了解",
+  "scenario.go_deeper_desc": "在「指南针」中阅读历史背景",
+  "scenario.go_deeper_cta": "打开{{region}}的指南针"
 }

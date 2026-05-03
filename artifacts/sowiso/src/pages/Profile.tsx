@@ -1357,25 +1357,10 @@ export default function Profile() {
       >
         <CardContent className="space-y-5">
 
-          {/* Warning banner */}
-          {showCourseChangeWarning && (
-            <div className="flex items-start gap-3 px-4 py-3 rounded-sm bg-amber-50/60 border border-amber-200/60 dark:bg-amber-950/20 dark:border-amber-800/40">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
-              <div className="flex-1 text-sm text-amber-800 dark:text-amber-300 font-light">
-                {t("profile.course_change_warning")}{" "}
-                <Link href="/navigator" className="underline underline-offset-2 font-medium hover:opacity-80 transition-opacity">
-                  {t("profile.course_change_navigator_link")}
-                </Link>
-              </div>
-              <button
-                onClick={() => setShowCourseChangeWarning(false)}
-                className="text-amber-600/70 hover:text-amber-800 transition-colors shrink-0"
-                aria-label={t("common.close")}
-              >
-                <X className="w-4 h-4" aria-hidden="true" />
-              </button>
-            </div>
-          )}
+          {/* Course-change warning banner removed — The Navigator is not yet
+              populated with content, so directing users there for "a new
+              session" produced an empty page and was confusing. Re-enable
+              once Navigator content exists. */}
 
           {/* Ambition level */}
           <div className="space-y-1.5">

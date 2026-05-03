@@ -224,6 +224,11 @@ export default function Atelier() {
         </div>
       )}
 
+      {/* Visitor teaser — fills the otherwise-empty page with a preview of
+          what registered users get. Three feature cards + a faded mock of a
+          live learning session with a lock-overlay register CTA. */}
+      {isVisitor && <VisitorAtelierTeaser t={t} />}
+
       {/* View toggle: Learning Tracks / Roleplay (Scenarios tab intentionally
           removed — the scenario library is no longer a standalone end-user
           surface; sessions are the canonical entry point). */}
@@ -611,5 +616,153 @@ export default function Atelier() {
         </div>
       ))}
     </div>
+  );
+}
+
+/**
+ * VisitorAtelierTeaser
+ * --------------------
+ * Inline preview block shown to unauthenticated visitors so the Atelier
+ * page does not feel empty. Three feature cards summarise what registered
+ * users get, followed by a faded "behind glass" mock of a live learning
+ * session with a lock-overlay register CTA on top.
+ */
+function VisitorAtelierTeaser({
+  t,
+}: {
+  t: (k: string, v?: Record<string, string | number> | string) => string;
+}) {
+  return (
+    <section className="space-y-8" aria-labelledby="atelier-visitor-teaser-heading">
+      <header className="space-y-1">
+        <h2
+          id="atelier-visitor-teaser-heading"
+          className="font-serif text-2xl text-foreground flex items-center gap-2"
+        >
+          <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
+          {t("atelier.guest.teaser.heading")}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {t("atelier.guest.teaser.subtitle")}
+        </p>
+      </header>
+
+      {/* Three feature cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-serif text-base flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary" aria-hidden="true" />
+              {t("atelier.guest.teaser.feat1.title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground leading-relaxed">
+            {t("atelier.guest.teaser.feat1.body")}
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-serif text-base flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              {t("atelier.guest.teaser.feat2.title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground leading-relaxed">
+            {t("atelier.guest.teaser.feat2.body")}
+          </CardContent>
+        </Card>
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-serif text-base flex items-center gap-2">
+              <Users2 className="w-4 h-4 text-primary" aria-hidden="true" />
+              {t("atelier.guest.teaser.feat3.title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground leading-relaxed">
+            {t("atelier.guest.teaser.feat3.body")}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Faded mock of a live session, with a lock-overlay register CTA. */}
+      <div className="relative rounded-sm border border-border/40 bg-muted/10 overflow-hidden">
+        {/* Mock content (decorative — visually only, behind a fade + lock) */}
+        <div
+          aria-hidden="true"
+          className="p-6 space-y-5 blur-[2px] opacity-70 select-none pointer-events-none"
+        >
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            <span className="px-2 py-0.5 rounded-sm bg-primary/10 text-primary">
+              {t("atelier.guest.teaser.mock.register_label")}
+            </span>
+            <span>·</span>
+            <span>{t("atelier.guest.teaser.mock.phase_label")}</span>
+            <span>·</span>
+            <span>{t("atelier.guest.teaser.mock.pillar_label")}</span>
+          </div>
+
+          <div>
+            <h3 className="font-serif text-xl text-foreground mb-2">
+              {t("atelier.guest.teaser.mock.question")}
+            </h3>
+            <div className="space-y-2">
+              {[
+                "atelier.guest.teaser.mock.opt1",
+                "atelier.guest.teaser.mock.opt2",
+                "atelier.guest.teaser.mock.opt3",
+                "atelier.guest.teaser.mock.opt4",
+              ].map((k) => (
+                <div
+                  key={k}
+                  className="flex items-center gap-3 px-4 py-3 rounded-sm border border-border/40 bg-background/50 text-sm text-foreground/80"
+                >
+                  <span className="w-4 h-4 rounded-full border border-border/60 flex-shrink-0" />
+                  <span>{t(k)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Faux pillar ladder */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border/30">
+            <span>P1</span>
+            <span className="flex gap-1.5" aria-hidden="true">
+              <span className="w-2 h-2 rounded-full bg-foreground/70" />
+              <span className="w-2 h-2 rounded-full bg-foreground/70" />
+              <span className="w-2 h-2 rounded-full bg-foreground/40" />
+              <span className="w-2 h-2 rounded-full border border-foreground/40" />
+              <span className="w-2 h-2 rounded-full border border-foreground/40" />
+            </span>
+            <span className="ml-2">3 / 5</span>
+          </div>
+        </div>
+
+        {/* Lock + CTA overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-background/60 to-background/85">
+          <div className="text-center space-y-4 px-6 max-w-md">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border border-primary/30">
+              <Lock className="w-5 h-5 text-primary" aria-hidden="true" />
+            </div>
+            <h3 className="font-serif text-xl text-foreground">
+              {t("atelier.guest.teaser.cta_title")}
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t("atelier.guest.teaser.cta_body")}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <Button asChild>
+                <Link href="/register">{t("atelier.guest.create_account")}</Link>
+              </Button>
+              <Link
+                href="/sign-in"
+                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
+              >
+                {t("atelier.guest.signin")}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,6 +1,9 @@
 /**
  * Atelier practice scenarios for the 17 priority Compass countries.
- * 8 scenarios per country, spread across all 5 pillars:
+ * 8–9 scenarios per country, covering all three required context types
+ * (social, business, dining). Scenarios are distributed across the
+ * five pillars as culturally appropriate — not every pillar appears
+ * in every country:
  *   1 = Cultural Knowledge, 2 = Appearance, 3 = Eloquence,
  *   4 = Table Manners, 5 = Drinks
  *

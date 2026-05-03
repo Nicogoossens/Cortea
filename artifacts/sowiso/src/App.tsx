@@ -19,6 +19,7 @@ import { captureReferralCode, getStoredReferralCode, clearStoredReferralCode } f
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
+import TestModeToggle from "@/components/TestModeToggle";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Welcome from "@/pages/Welcome";
@@ -324,6 +325,7 @@ function App() {
                   <RegionDetectionBanner />
                   <PaymentFailedBanner />
                   <CookieConsentBanner />
+                  <TestModeToggle />
                   <Toaster />
                 </TooltipProvider>
               </AppWithRegion>

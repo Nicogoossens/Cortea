@@ -351,6 +351,8 @@
   "signin.sent_body_suffix": "Volg de link om uw oefeningen te hervatten.",
   "signin.no_account": "Nog geen lid?",
   "signin.join_waitlist": "Schrijf u in voor de Founding 100 wachtlijst",
+  "signin.error_auth_failed": "Aanmelden mislukt. Probeer het opnieuw.",
+  "signin.error_account_suspended": "Uw account is tijdelijk opgeschort.",
   "onboarding.step1_label": "Afkomst",
   "onboarding.step2_label": "Ambities",
   "onboarding.step3_label": "Interesses",

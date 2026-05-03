@@ -1363,5 +1363,7 @@
   "register.closed_body": "Cortéa befindet sich gegenwärtig in der geschlossenen Betaphase, während sich die Gründungsgruppe der 100 konstituiert. Neue Konten werden eröffnet, sobald die Gründungskohorte vollständig ist.",
   "register.closed_join_waitlist": "Reservieren Sie Ihren Gründungsplatz",
   "register.closed_already_member": "Ich verfüge bereits über ein Konto — anmelden",
-  "signin.join_waitlist": "Treten Sie der Warteliste der Gründenden 100 bei"
+  "signin.join_waitlist": "Treten Sie der Warteliste der Gründenden 100 bei",
+  "signin.error_auth_failed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+  "signin.error_account_suspended": "Ihr Konto wurde vorübergehend gesperrt."
 }

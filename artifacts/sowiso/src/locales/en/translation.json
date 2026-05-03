@@ -381,6 +381,8 @@
   "signin.sent_body_suffix": "Follow the link to continue your practice.",
   "signin.no_account": "Not yet a member?",
   "signin.join_waitlist": "Join the Founding 100 waitlist",
+  "signin.error_auth_failed": "Sign-in failed. Please try again.",
+  "signin.error_account_suspended": "Your account has been temporarily suspended.",
   "reset.title": "Reset Password",
   "reset.subtitle": "Enter your correspondence address and we will send you a link to reset your password.",
   "reset.submit": "Send Reset Link",

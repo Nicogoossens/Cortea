@@ -25,9 +25,10 @@ async function getOidcConfig(): Promise<oidc.Configuration> {
 }
 
 function getOrigin(req: Request): string {
-  const proto = req.headers["x-forwarded-proto"] ?? "https";
-  const host = req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "localhost";
-  return `${proto}://${host}`;
+  if (process.env.APP_PUBLIC_URL) {
+    return process.env.APP_PUBLIC_URL.replace(/\/$/, "");
+  }
+  return `${req.protocol}://${req.hostname}`;
 }
 
 function setOidcCookie(res: Response, name: string, value: string) {
@@ -164,7 +165,7 @@ router.get("/login", async (req: Request, res: Response) => {
     res.redirect(redirectTo.href);
   } catch (err) {
     req.log.error({ err }, "OIDC login init failed");
-    res.redirect("/?error=auth_failed");
+    res.redirect("/signin?error=auth_failed");
   }
 });
 
@@ -182,7 +183,7 @@ router.get("/callback", async (req: Request, res: Response) => {
   const expectedState = req.cookies?.oidc_state as string | undefined;
 
   if (!codeVerifier || !expectedState) {
-    res.redirect("/?error=auth_failed");
+    res.redirect("/signin?error=auth_failed");
     return;
   }
 
@@ -201,13 +202,13 @@ router.get("/callback", async (req: Request, res: Response) => {
     });
   } catch (err) {
     req.log.error({ err }, "OIDC token exchange failed");
-    res.redirect("/?error=auth_failed");
+    res.redirect("/signin?error=auth_failed");
     return;
   }
 
   const claims = tokens.claims();
   if (!claims) {
-    res.redirect("/?error=auth_failed");
+    res.redirect("/signin?error=auth_failed");
     return;
   }
 
@@ -226,11 +227,11 @@ router.get("/callback", async (req: Request, res: Response) => {
     res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
   } catch (err) {
     if (err instanceof Error && (err as any).statusCode === 403) {
-      res.redirect("/?error=account_suspended");
+      res.redirect("/signin?error=account_suspended");
       return;
     }
     req.log.error({ err }, "OIDC user upsert failed");
-    res.redirect("/?error=auth_failed");
+    res.redirect("/signin?error=auth_failed");
   }
 });
 

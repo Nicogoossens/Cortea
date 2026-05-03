@@ -1363,5 +1363,7 @@
   "register.closed_body": "Cortéaは現在、創設100名の構成を進めている間、クローズドベータ版として運用されております。創設メンバーの確定後、新規アカウント登録を再開いたします。",
   "register.closed_join_waitlist": "創設メンバーの地位をお確保ください",
   "register.closed_already_member": "既にアカウントをお持ちです — サインイン",
-  "signin.join_waitlist": "創設100名の待機リストにご参加ください"
+  "signin.join_waitlist": "創設100名の待機リストにご参加ください",
+  "signin.error_auth_failed": "サインインに失敗しました。もう一度お試しください。",
+  "signin.error_account_suspended": "アカウントが一時的に停止されています。"
 }

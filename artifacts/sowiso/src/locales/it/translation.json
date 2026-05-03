@@ -1363,5 +1363,7 @@
   "register.closed_body": "Cortéa si trova attualmente in fase beta ristretta mentre si costituisce il gruppo dei Founding 100. I nuovi account verranno resi disponibili una volta che la coorte fondatrice avrà raggiunto il suo completamento.",
   "register.closed_join_waitlist": "Assicuratevi il vostro posto tra i fondatori",
   "register.closed_already_member": "Posseggo già un account — accedi",
-  "signin.join_waitlist": "Iscrivitevi alla lista d'attesa dei Founding 100"
+  "signin.join_waitlist": "Iscrivitevi alla lista d'attesa dei Founding 100",
+  "signin.error_auth_failed": "Accesso non riuscito. Si prega di riprovare.",
+  "signin.error_account_suspended": "Il suo account è stato temporaneamente sospeso."
 }

@@ -1363,5 +1363,7 @@
   "register.closed_body": "Cortéa se encuentra actualmente en fase beta cerrada mientras los Cien Fundadores se constituyen. Las nuevas cuentas se reabrirán una vez que la cohorte fundadora esté completa.",
   "register.closed_join_waitlist": "Reserve su lugar fundador",
   "register.closed_already_member": "Ya poseo una cuenta — iniciar sesión",
-  "signin.join_waitlist": "Únase a la lista de espera de los Cien Fundadores"
+  "signin.join_waitlist": "Únase a la lista de espera de los Cien Fundadores",
+  "signin.error_auth_failed": "El inicio de sesión ha fallado. Por favor, inténtelo de nuevo.",
+  "signin.error_account_suspended": "Su cuenta ha sido suspendida temporalmente."
 }

@@ -7,7 +7,11 @@
  *
  * Redirect URIs to register in Google Cloud Console (Web application type):
  *   Production: https://sowiso-01.replit.app/api/auth/google/callback
- *   Development: https://56840555-1cfa-43bc-a3b6-882efd178da0-00-2g9a62dbputmc-u4w0ra8p.worf.replit.dev/api/auth/google/callback
+ *   Development: https://56840555-1cfa-43bc-a3b6-882efd178da0-00-2g9a62dbputmc.worf.replit.dev/api/auth/google/callback
+ *
+ * NOTE: The dev URL changes when the Replit workspace restarts with a new domain.
+ * Check the current domain in the Replit workspace URL bar and update Google Cloud Console
+ * accordingly: Authorized redirect URIs → add <current-dev-domain>/api/auth/google/callback
  *
  * Status: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured.
  * The /api/auth/google/status endpoint returns {"configured":true}.
@@ -44,9 +48,10 @@ async function getGoogleConfig(): Promise<oidc.Configuration> {
 }
 
 function getOrigin(req: Request): string {
-  const proto = req.headers["x-forwarded-proto"] ?? "https";
-  const host = req.headers["x-forwarded-host"] ?? req.headers["host"] ?? "localhost";
-  return `${proto}://${host}`;
+  if (process.env.APP_PUBLIC_URL) {
+    return process.env.APP_PUBLIC_URL.replace(/\/$/, "");
+  }
+  return `${req.protocol}://${req.hostname}`;
 }
 
 function setSecureCookie(res: Response, name: string, value: string) {
@@ -196,7 +201,7 @@ router.get("/auth/google", async (req: Request, res: Response) => {
     return res.redirect(redirectTo.href);
   } catch (err) {
     req.log.error({ err }, "Google OAuth init failed");
-    return res.redirect("/?error=auth_failed");
+    return res.redirect("/signin?error=auth_failed");
   }
 });
 
@@ -213,7 +218,7 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
   const expectedState = req.cookies?.g_state as string | undefined;
 
   if (!codeVerifier || !expectedState) {
-    return res.redirect("/?error=auth_failed");
+    return res.redirect("/signin?error=auth_failed");
   }
 
   const origin = getOrigin(req);
@@ -231,7 +236,7 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
 
     const claims = tokens.claims();
     if (!claims) {
-      return res.redirect("/?error=auth_failed");
+      return res.redirect("/signin?error=auth_failed");
     }
 
     const { user, isNewUser } = await upsertGoogleUser(claims as unknown as Record<string, unknown>);
@@ -247,10 +252,10 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
     return res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
   } catch (err) {
     if (err instanceof Error && (err as any).statusCode === 403 && err.message === "Account suspended") {
-      return res.redirect("/?error=account_suspended");
+      return res.redirect("/signin?error=account_suspended");
     }
     req.log.error({ err }, "Google OAuth callback failed");
-    return res.redirect("/?error=auth_failed");
+    return res.redirect("/signin?error=auth_failed");
   }
 });
 

@@ -1363,5 +1363,7 @@
   "register.closed_body": "Cortéa 目前处于闭合测试阶段，创始百人团队正在组建中。待创始群体完成后，新账户注册将重新开放。",
   "register.closed_join_waitlist": "预留您的创始位置",
   "register.closed_already_member": "我已拥有账户——登录",
-  "signin.join_waitlist": "加入创始百人等候列表"
+  "signin.join_waitlist": "加入创始百人等候列表",
+  "signin.error_auth_failed": "登录失败，请重试。",
+  "signin.error_account_suspended": "您的账户已被暂时停用。"
 }

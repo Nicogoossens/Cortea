@@ -43,6 +43,16 @@ export default function SignIn() {
       .catch(() => setGoogleConfigured(false));
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get("error");
+    if (urlError === "auth_failed") {
+      setError(t("signin.error_auth_failed"));
+    } else if (urlError === "account_suspended") {
+      setError(t("signin.error_account_suspended"));
+    }
+  }, [t]);
+
   async function handlePasswordSignIn(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) return;

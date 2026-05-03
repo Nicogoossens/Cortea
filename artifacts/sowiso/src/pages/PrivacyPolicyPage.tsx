@@ -1,8 +1,21 @@
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type SupportedLanguage } from "@/lib/i18n";
+import type { SupportedLocale } from "@/lib/i18n-locales";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { getPolicyContent, type PolicySection, type PolicySubsection } from "@/lib/privacyPolicyContent";
 import { Link } from "wouter";
-import { ArrowLeft, AlertCircle, Shield } from "lucide-react";
+import { ArrowLeft, AlertCircle, Shield, Globe } from "lucide-react";
+
+const POLICY_LANGUAGES: { code: SupportedLanguage; label: string; defaultLocale: SupportedLocale }[] = [
+  { code: "en", label: "English", defaultLocale: "en-GB" },
+  { code: "nl", label: "Nederlands", defaultLocale: "nl-NL" },
+  { code: "de", label: "Deutsch", defaultLocale: "de-DE" },
+  { code: "fr", label: "Français", defaultLocale: "fr-FR" },
+  { code: "es", label: "Español", defaultLocale: "es-ES" },
+  { code: "it", label: "Italiano", defaultLocale: "it-IT" },
+  { code: "pt", label: "Português", defaultLocale: "pt-PT" },
+  { code: "ja", label: "日本語", defaultLocale: "ja-JP" },
+  { code: "ar", label: "العربية", defaultLocale: "ar-SA" },
+];
 
 function PlaceholderBadge({ text }: { text: string }) {
   if (!text.includes("[") && !text.includes("★")) return <>{text}</>;
@@ -176,8 +189,18 @@ function SectionBlock({ section }: { section: PolicySection }) {
 
 export default function PrivacyPolicyPage() {
   usePageTitle("Privacy Policy");
-  const { language, dir } = useLanguage();
+  const { language, dir, setLocale, locale } = useLanguage();
   const policy = getPolicyContent(language);
+
+  const currentSelection = POLICY_LANGUAGES.find((l) => l.code === language)?.code ?? "en";
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const code = e.target.value as SupportedLanguage;
+    const entry = POLICY_LANGUAGES.find((l) => l.code === code);
+    if (!entry) return;
+    if (locale.startsWith(code + "-")) return;
+    setLocale(entry.defaultLocale);
+  };
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
@@ -190,9 +213,28 @@ export default function PrivacyPolicyPage() {
               Cortéa
             </button>
           </Link>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-            <Shield className="h-3.5 w-3.5 text-primary/60" />
-            {policy.meta.version}
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center">
+              <Globe className="h-3.5 w-3.5 text-muted-foreground absolute left-2 pointer-events-none" />
+              <select
+                value={currentSelection}
+                onChange={handleLanguageChange}
+                aria-label="Select policy language"
+                data-testid="select-policy-language"
+                className="appearance-none bg-background border border-border/60 rounded-sm pl-7 pr-7 py-1.5 text-xs font-mono text-foreground hover:border-border focus:outline-none focus:ring-1 focus:ring-primary/40 cursor-pointer"
+              >
+                {POLICY_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-2 text-muted-foreground text-xs">▾</span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground font-mono">
+              <Shield className="h-3.5 w-3.5 text-primary/60" />
+              {policy.meta.version}
+            </div>
           </div>
         </div>
       </header>

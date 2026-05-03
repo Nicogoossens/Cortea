@@ -26,7 +26,8 @@ import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja, zhCN } fr
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
 import { VenueCard } from "@/components/VenueCard";
@@ -752,6 +753,14 @@ export default function Profile() {
   // progress + badge trail, displayed as an independent panel below.
   const [interestsList, setInterestsList] = useState<{ region_code: string }[]>([]);
   const [interestsBusy, setInterestsBusy] = useState(false);
+  type CountrySortMode = "available_first" | "most_used" | "az" | "za";
+  const [countrySort, setCountrySort] = useState<CountrySortMode>(() => {
+    if (typeof window === "undefined") return "available_first";
+    return (localStorage.getItem("profile_country_sort") as CountrySortMode) || "available_first";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("profile_country_sort", countrySort);
+  }, [countrySort]);
   type TrackProgressRow = {
     register: string;
     region_code: string;
@@ -1684,26 +1693,81 @@ export default function Profile() {
         storageKey="countries"
       >
         <CardContent>
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+              {t("profile.countries_sort_label", "Sorteren")}
+            </div>
+            <Select value={countrySort} onValueChange={(v) => setCountrySort(v as CountrySortMode)}>
+              <SelectTrigger className="w-[260px] h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="available_first">{t("profile.countries_sort_available", "Beschikbare landen eerst")}</SelectItem>
+                <SelectItem value="most_used">{t("profile.countries_sort_most_used", "Meest geoefend")}</SelectItem>
+                <SelectItem value="az">{t("profile.countries_sort_az", "Naam A → Z")}</SelectItem>
+                <SelectItem value="za">{t("profile.countries_sort_za", "Naam Z → A")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {COMPASS_REGIONS.map((region) => {
-              const isActive = interestsList.some((r) => r.region_code === region.code);
-              return (
-                <button
-                  key={region.code}
-                  onClick={() => toggleInterestRegion(region.code)}
-                  disabled={interestsBusy}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-sm border text-sm transition-all ${
-                    isActive
-                      ? "bg-primary/10 text-primary border-primary/35 font-medium"
-                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                  }`}
-                >
-                  <FlagEmoji code={region.flag} size="sm" />
-                  {getRegionName(region.code)}
-                  {isActive ? <Check className="w-3.5 h-3.5 ml-1" aria-hidden="true" /> : null}
-                </button>
-              );
-            })}
+            {(() => {
+              const usageFor = (code: string) =>
+                trackProgress
+                  .filter((p) => p.region_code === code)
+                  .reduce((s, p) => s + (p.current_level || 0), 0);
+              const sorted = [...COMPASS_REGIONS].sort((a, b) => {
+                const aAvail = isRegionActive(a.code) ? 1 : 0;
+                const bAvail = isRegionActive(b.code) ? 1 : 0;
+                if (countrySort === "available_first" && aAvail !== bAvail) return bAvail - aAvail;
+                if (countrySort === "most_used") {
+                  const diff = usageFor(b.code) - usageFor(a.code);
+                  if (diff !== 0) return diff;
+                }
+                const an = getRegionName(a.code);
+                const bn = getRegionName(b.code);
+                return countrySort === "za" ? bn.localeCompare(an) : an.localeCompare(bn);
+              });
+              return sorted.map((region) => {
+                const isPicked = interestsList.some((r) => r.region_code === region.code);
+                const available = isRegionActive(region.code);
+                return (
+                  <button
+                    key={region.code}
+                    onClick={() => available && toggleInterestRegion(region.code)}
+                    disabled={interestsBusy || !available}
+                    title={available
+                      ? (isPicked ? t("profile.countries_remove_hint", "Klik om te verwijderen") : t("profile.countries_add_hint", "Klik om toe te voegen"))
+                      : t("profile.countries_unavailable_hint", "Dit land is binnenkort beschikbaar")}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-sm border text-sm transition-all ${
+                      !available
+                        ? "border-border/30 bg-muted/30 text-muted-foreground/50 cursor-not-allowed line-through decoration-muted-foreground/30"
+                        : isPicked
+                          ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                          : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                    }`}
+                  >
+                    <FlagEmoji code={region.flag} size="sm" />
+                    {getRegionName(region.code)}
+                    {available && isPicked ? <Check className="w-3.5 h-3.5 ml-1" aria-hidden="true" /> : null}
+                    {!available ? (
+                      <span className="ml-1 text-[9px] font-mono uppercase tracking-wider px-1 py-0.5 rounded-sm border border-muted-foreground/20 text-muted-foreground/60">
+                        {t("profile.countries_soon", "binnenkort")}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+          <div className="flex items-center gap-3 mt-3 text-[11px] font-mono uppercase tracking-wider text-muted-foreground/70">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2 h-2 rounded-full bg-primary/70" aria-hidden="true" />
+              {t("profile.countries_legend_available", "Beschikbaar")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+              {t("profile.countries_legend_unavailable", "Nog niet beschikbaar")}
+            </span>
           </div>
           {interestsList.length === 0 && (
             <p className="text-xs text-muted-foreground/60 italic font-light mt-3">

@@ -2,6 +2,7 @@ import { db } from "./index.js";
 import { cultureProtocolsTable, scenariosTable } from "./schema/index.js";
 import { sql } from "drizzle-orm";
 import { priorityCountryScenarios } from "./seed-scenarios-priority-countries.js";
+import { ccVerifiedProtocols } from "./seed-cc-verified-protocols.js";
 
 const protocols: (typeof cultureProtocolsTable.$inferInsert)[] = [
   // ── UNITED KINGDOM ──────────────────────────────────────────────────────────
@@ -227,6 +228,12 @@ const protocols: (typeof cultureProtocolsTable.$inferInsert)[] = [
   { region_code: "ZA", pillar: 5, context: "social", rule_type: "Umqombothi — Traditional Beer", rule_description: "Umqombothi (traditional sorghum beer) carries deep cultural significance in Zulu and Xhosa communities. If offered, accept with both hands and a show of genuine respect." },
   { region_code: "ZA", pillar: 5, context: "social", rule_type: "Amarula — The National Liqueur", rule_description: "Amarula (cream liqueur from the marula fruit) is a proudly South African product. Familiarity with it signals cultural awareness and is a reliable conversation opener." },
   { region_code: "ZA", pillar: 5, context: "social", rule_type: "Non-Drinkers Are Respected", rule_description: "South Africa's diverse religious and cultural landscape means many do not drink alcohol. Offering excellent non-alcoholic options and never pressuring abstainers is a mark of considerate hosting." },
+
+  // ── CC Screening Worker — verified, source-attributed records ───────────────
+  // Seeded with verified=true and source_book set so the Cultural Compass
+  // renders First Aid (urgency=3) and Notes from the Library (grouped by
+  // pillar_code Z1-Z5) for priority regions GB, JP, FR, AE, US.
+  ...ccVerifiedProtocols,
 ];
 
 // 3 scenarios per pillar per region = 3 × 5 × 3 = 45 total

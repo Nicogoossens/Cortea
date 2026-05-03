@@ -14,6 +14,10 @@ export default function CookieConsentBanner() {
     try {
       // Auto-dismiss in automated / e2e browser contexts (Playwright, Selenium, etc.)
       if (navigator.webdriver) return;
+      // Suppress via URL query param (?test_mode=1) for manual QA testers
+      if (new URLSearchParams(window.location.search).get("test_mode") === "1") return;
+      // Suppress via localStorage flag (cortea_test_mode=1) for bookmarked QA sessions
+      if (localStorage.getItem("cortea_test_mode") === "1") return;
       if (!localStorage.getItem(CONSENT_KEY)) {
         setVisible(true);
       }

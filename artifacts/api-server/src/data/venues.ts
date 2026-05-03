@@ -568,7 +568,17 @@ export const VENUES: Venue[] = [
 
 import { EXTRA_VENUES } from "./venues-extra.js";
 import { EXTRA_VENUES2 } from "./venues-extra2.js";
-VENUES.push(...EXTRA_VENUES, ...EXTRA_VENUES2);
+import { EXTRA_VENUES3 } from "./venues-extra3.js";
+// Merge with later sources overriding earlier ones on duplicate id, so the most
+// recent curated database (database4 → EXTRA_VENUES3) wins over older stub data.
+{
+  const merged = new Map<string, Venue>();
+  for (const v of [...VENUES, ...EXTRA_VENUES, ...EXTRA_VENUES2, ...EXTRA_VENUES3]) {
+    merged.set(v.id, v);
+  }
+  VENUES.length = 0;
+  VENUES.push(...merged.values());
+}
 
 export function getVenues(regionCode?: string, category?: VenueCategory): Venue[] {
   return VENUES.filter((v) => {

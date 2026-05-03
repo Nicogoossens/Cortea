@@ -89,6 +89,21 @@ const MEHRABIAN_WEIGHTS: Record<string, MehrabianWeight> = {
   TN: { nonverbal: 25, tone: 40, words: 35, note: "Mediterranean Maghreb sophistication — humour, voice and articulate code-switching lead." },
   SN: { nonverbal: 35, tone: 40, words: 25, note: "Teranga hospitality and Sufi spirituality — melodic voice and storytelling carry social weight." },
   FJ: { nonverbal: 30, tone: 45, words: 25, note: "The Bula spirit — generous, gentle, communal warmth — vocal warmth and tone carry the welcome." },
+  AT: { nonverbal: 52, tone: 23, words: 25, note: "Refined formality, intellectual seriousness, and deep pride in cultural heritage — Austria sees itself as the surviving heart of Mitteleuropa." },
+  CZ: { nonverbal: 55, tone: 18, words: 27, note: "Quiet competence, dry wit, and deep cultural literacy — Czechs prize understatement, scepticism, and the well-made object." },
+  DK: { nonverbal: 50, tone: 20, words: 30, note: "Egalitarian quiet, design intelligence, and well-earned trust — Denmark prizes restraint, social cohesion, and the well-made everyday object." },
+  FI: { nonverbal: 60, tone: 12, words: 28, note: "Sisu — quiet endurance, honest competence, and the dignity of doing things properly without comment." },
+  EG: { nonverbal: 40, tone: 35, words: 25, note: "Karam — generosity and unhurried Nile-valley hospitality carry the social contract." },
+  RS: { nonverbal: 30, tone: 40, words: 30, note: "Slavic Orthodox heritage, fierce hospitality, and pride in a long history of empire, resistance, and cultural defiance." },
+  LT: { nonverbal: 40, tone: 30, words: 30, note: "Quiet Baltic-forest spirituality and pride in being one of Europe's last Christianised nations — restrained dignity carries the room." },
+  SK: { nonverbal: 40, tone: 25, words: 35, note: "Quiet Slavic-Catholic heritage and mountain-and-folk identity — Habsburg sophistication meets deep village tradition." },
+  BD: { nonverbal: 25, tone: 45, words: 30, note: "Bengali cultural pride — language, literature, music, food — combined with Muslim hospitality and the deep memory of 1971." },
+  MM: { nonverbal: 40, tone: 35, words: 25, note: "Theravada Buddhist devotion pervades daily life — composed bearing and gentle voice carry the cultural weight." },
+  BT: { nonverbal: 45, tone: 30, words: 25, note: "Vajrayana Buddhist devotion and Gross National Happiness philosophy — calm presence and stewardship lead." },
+  KW: { nonverbal: 40, tone: 30, words: 30, note: "Resilient mercantile heritage and refined Gulf hospitality — pride in pre-oil pearl-diving and trading roots." },
+  DZ: { nonverbal: 25, tone: 40, words: 35, note: "Maghreb-Berber-Arab pride combined with deep memory of the long War of Independence — articulate voice and conviction lead." },
+  DO: { nonverbal: 30, tone: 45, words: 25, note: "Caribbean-Spanish warmth and deep Catholic-syncretic religiosity — Santo Domingo as cradle of European America." },
+  PA: { nonverbal: 25, tone: 40, words: 35, note: "Trans-isthmian crossroads identity — five centuries of trade between oceans and continents shape cosmopolitan urban sophistication." },
 };
 
 const VALID_SPHERES_CULTURE = ["business", "gastronomy", "arts_culture", "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality"] as const;

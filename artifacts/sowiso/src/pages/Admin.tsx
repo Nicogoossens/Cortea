@@ -2545,15 +2545,87 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+interface StripeTierProduct {
+  tier: "guest" | "student" | "traveller" | "ambassador";
+  productId: string;
+  displayName: string;
+  monthlyPriceId: string | null;
+  monthlyAmount: number | null;
+  yearlyPriceId: string | null;
+  yearlyAmount: number | null;
+  currency: string;
+}
+
+interface StripeStatus {
+  configured: boolean;
+  reachable: boolean;
+  products: StripeTierProduct[];
+  error?: string;
+}
+
+function formatPrice(cents: number | null, currency: string): string {
+  if (cents == null) return "—";
+  const symbol = currency.toLowerCase() === "eur" ? "€" : currency.toUpperCase() + " ";
+  return `${symbol}${(cents / 100).toFixed(2)}`;
+}
+
 function IntegrationsPanel() {
   const [googleStatus, setGoogleStatus] = useState<"checking" | "configured" | "not_configured">("checking");
+  const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(true);
+  const [seedingStudent, setSeedingStudent] = useState<ActionState>("idle");
+  const [seedError, setSeedError] = useState<string | null>(null);
+
+  const refreshStripe = useCallback(async () => {
+    setStripeLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/stripe/status`, { credentials: "include" });
+      if (res.ok) {
+        const data = (await res.json()) as StripeStatus;
+        setStripeStatus(data);
+      } else {
+        setStripeStatus({ configured: false, reachable: false, products: [] });
+      }
+    } catch {
+      setStripeStatus({ configured: false, reachable: false, products: [] });
+    } finally {
+      setStripeLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/auth/google/status`)
       .then((r) => r.json())
       .then((d: { configured: boolean }) => setGoogleStatus(d.configured ? "configured" : "not_configured"))
       .catch(() => setGoogleStatus("not_configured"));
-  }, []);
+    void refreshStripe();
+  }, [refreshStripe]);
+
+  const studentProduct = stripeStatus?.products.find((p) => p.tier === "student");
+  const studentReady =
+    !!studentProduct && !!studentProduct.monthlyPriceId && !!studentProduct.yearlyPriceId;
+
+  const seedStudent = async () => {
+    setSeedingStudent("loading");
+    setSeedError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/stripe/seed/student`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setSeedError(data.error ?? "Het Student-product kon niet worden aangemaakt.");
+        setSeedingStudent("error");
+        return;
+      }
+      setSeedingStudent("done");
+      await refreshStripe();
+    } catch (err) {
+      setSeedError(err instanceof Error ? err.message : "Onbekende fout.");
+      setSeedingStudent("error");
+    }
+  };
 
   const redirectUri = "https://sowiso-01.replit.app/api/auth/google/callback";
   const devRedirectUri = typeof window !== "undefined"
@@ -2684,6 +2756,203 @@ function IntegrationsPanel() {
               <div>
                 <span className="font-medium text-foreground/70 block mb-0.5">Callback endpoint</span>
                 <code className="font-mono text-[11px]">/api/auth/google/callback</code>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stripe */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 32 32" aria-hidden="true" className="shrink-0">
+              <path d="M111.328 15.602c0-4.97-2.415-8.9-7.013-8.9s-7.423 3.93-7.423 8.86c0 5.85 3.32 8.81 8.04 8.81 2.32 0 4.05-.53 5.36-1.27v-3.92c-1.31.66-2.81 1.06-4.71 1.06-1.87 0-3.51-.66-3.72-2.91h9.4c0-.25.06-1.24.06-1.73zm-9.5-1.84c0-2.16 1.32-3.06 2.52-3.06 1.18 0 2.42.9 2.42 3.06zm-12.21-7.06c-1.91 0-3.13.9-3.81 1.52l-.25-1.21H81.4v22.71l4.79-1.02v-5.51c.69.5 1.71 1.21 3.39 1.21 3.43 0 6.55-2.76 6.55-8.86.05-5.55-3.13-8.84-6.51-8.84zM88.34 19.81c-1.13 0-1.79-.4-2.25-.91l-.03-7.07c.49-.55 1.18-.95 2.28-.95 1.74 0 2.94 1.95 2.94 4.45 0 2.55-1.18 4.48-2.94 4.48zM75.46 5.42l4.81-1.04V.5l-4.81 1.04zm0 1.46h4.81v16.81h-4.81zm-5.16 1.42l-.31-1.42h-4.13v16.81h4.79V12.32c1.13-1.42 3.04-1.21 3.65-.97V6.88c-.61-.21-2.86-.61-4 1.42zm-9.59-5.6L56.03 3.7l-.02 15.36c0 2.83 2.13 4.91 4.96 4.91 1.56 0 2.71-.27 3.34-.59v-3.85c-.61.24-3.65 1.13-3.65-1.69V11h3.65V6.88h-3.65zm-13.74 9.4c0-.74.61-1.02 1.62-1.02 1.45 0 3.28.43 4.73 1.21V8.49c-1.58-.62-3.13-.87-4.73-.87-3.86 0-6.43 2.02-6.43 5.39 0 5.27 7.25 4.42 7.25 6.69 0 .87-.76 1.16-1.83 1.16-1.58 0-3.6-.65-5.21-1.52v4.55c1.78.77 3.57 1.09 5.21 1.09 3.96 0 6.68-1.96 6.68-5.39-.02-5.69-7.29-4.66-7.29-6.81z" transform="scale(0.25) translate(-30 -2)" fill="#635bff"/>
+              <path d="M16 0C7.16 0 0 7.16 0 16s7.16 16 16 16 16-7.16 16-16S24.84 0 16 0zm6.43 21.18c-.48 1.27-1.34 2.27-2.46 2.86-.86.45-1.86.7-2.93.7-1.51 0-2.92-.34-4.04-.83v-3.34c.96.5 2.36 1 3.79 1 .96 0 1.66-.36 1.66-1.06 0-1.6-5.6-.96-5.6-5.4 0-2.36 1.66-4.16 4.7-4.16 1.43 0 2.66.27 3.46.55v3.32c-.86-.43-2-.86-3.16-.86-.86 0-1.5.27-1.5.83 0 1.5 5.7.84 5.7 5.4 0 .39-.04.7-.12 1z" fill="#635bff"/>
+            </svg>
+            Stripe billing
+            <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-mono ${
+              stripeLoading
+                ? "border border-border bg-muted/30 text-muted-foreground"
+                : studentReady
+                ? "border border-green-300 bg-green-50 text-green-700"
+                : stripeStatus?.configured
+                ? "border border-amber-300 bg-amber-50 text-amber-700"
+                : "border border-amber-300 bg-amber-50 text-amber-700"
+            }`}>
+              {stripeLoading
+                ? "Controleren…"
+                : studentReady
+                ? "Student actief"
+                : stripeStatus?.configured
+                ? "Sleutel ok – product ontbreekt"
+                : "Niet geconfigureerd"}
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {!stripeLoading && !stripeStatus?.configured && (
+            <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Stripe-account nog niet actief</p>
+                <p className="text-xs text-amber-700/80 mt-1 font-light">
+                  Zodra het Stripe-account beschikbaar is, stel <code className="font-mono">STRIPE_SECRET_KEY</code> in als omgevingsvariabele.
+                  De Membership-pagina toont tot dan statische tier-kaarten zonder werkende checkout.
+                </p>
+              </div>
+            </div>
+          )}
+          {!stripeLoading && stripeStatus?.configured && !stripeStatus.reachable && (
+            <div className="flex items-start gap-3 p-4 border border-red-200 bg-red-50/60 rounded-sm">
+              <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Stripe is onbereikbaar</p>
+                <p className="text-xs text-red-700/80 mt-1 font-light">
+                  {stripeStatus.error ?? "Controleer de sleutel en netwerktoegang."}
+                </p>
+              </div>
+            </div>
+          )}
+          {!stripeLoading && stripeStatus?.configured && stripeStatus.reachable && (
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">Stripe-sleutel actief</p>
+                  <p className="text-xs text-green-700/80 mt-1 font-light">
+                    {studentReady
+                      ? "Het Student-product is klaar voor checkout."
+                      : "Maak hieronder het Student-product aan om de €4.99/mnd en €39/jaar abonnementen te activeren."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">
+                  Tier-producten in Stripe
+                </h3>
+                {stripeStatus.products.length === 0 && (
+                  <p className="text-xs text-muted-foreground font-light">
+                    Nog geen tier-producten met <code className="font-mono">metadata.tier</code> in Stripe.
+                  </p>
+                )}
+                {stripeStatus.products.map((p) => (
+                  <div key={p.productId} className="border border-border/50 rounded-sm p-3 bg-muted/20">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">{p.displayName}</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-background text-muted-foreground">
+                          {p.tier}
+                        </span>
+                      </div>
+                      <code className="text-[10px] font-mono text-muted-foreground/70">{p.productId}</code>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <span className="text-muted-foreground/70 block">Maandelijks</span>
+                        <span className="font-mono text-foreground/80">
+                          {formatPrice(p.monthlyAmount, p.currency)}
+                        </span>
+                        {p.monthlyPriceId && (
+                          <code className="block text-[10px] font-mono text-muted-foreground/60 mt-0.5">
+                            {p.monthlyPriceId}
+                          </code>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground/70 block">Jaarlijks</span>
+                        <span className="font-mono text-foreground/80">
+                          {formatPrice(p.yearlyAmount, p.currency)}
+                        </span>
+                        {p.yearlyPriceId && (
+                          <code className="block text-[10px] font-mono text-muted-foreground/60 mt-0.5">
+                            {p.yearlyPriceId}
+                          </code>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <Button
+                  size="sm"
+                  variant={studentReady ? "outline" : "default"}
+                  disabled={seedingStudent === "loading"}
+                  onClick={seedStudent}
+                >
+                  {seedingStudent === "loading" ? (
+                    <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Bezig…</>
+                  ) : studentReady ? (
+                    <><RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Student-prijzen verifiëren</>
+                  ) : (
+                    <><Plus className="w-3.5 h-3.5 mr-1.5" /> Maak Student-product aan</>
+                  )}
+                </Button>
+                {seedingStudent === "done" && (
+                  <span className="text-xs text-green-700 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Bijgewerkt
+                  </span>
+                )}
+                {seedingStudent === "error" && seedError && (
+                  <span className="text-xs text-red-700">{seedError}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+            <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
+                <span>
+                  Open je <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">Stripe Dashboard → Developers → API keys</a> en kopieer de Secret key (sk_test_… of sk_live_…).
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
+                <div className="space-y-1 flex-1">
+                  <span>Stel deze in als Replit-omgevingsvariabele:</span>
+                  <div className="mt-2 flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
+                    <code className="text-xs font-mono text-foreground/80 flex-1">STRIPE_SECRET_KEY</code>
+                    <span className="text-[10px] text-muted-foreground/60">= sk_…</span>
+                  </div>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
+                <span>Herstart de API-server en klik hierboven op <strong className="text-foreground">Maak Student-product aan</strong>. Deze actie is idempotent en maakt de €4.99/mnd en €39/jaar prijzen aan.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
+                <span>Optioneel — voor volledige reproduceerbaarheid kun je het seed-script draaien:
+                  <code className="block mt-1 font-mono text-[11px] bg-muted/40 border border-border/50 rounded-sm px-2 py-1">pnpm --filter @workspace/api-server tsx src/scripts/seed-stripe-student.ts</code>
+                </span>
+              </li>
+            </ol>
+          </div>
+
+          <div className="border-t border-border/40 pt-4">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Product-metadata</span>
+                <code className="font-mono text-[11px]">tier = student | traveller | ambassador</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Webhook endpoint</span>
+                <code className="font-mono text-[11px]">/api/stripe/webhook</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Student – maandelijks</span>
+                <code className="font-mono text-[11px]">€4.99 EUR · interval=month</code>
+              </div>
+              <div>
+                <span className="font-medium text-foreground/70 block mb-0.5">Student – jaarlijks</span>
+                <code className="font-mono text-[11px]">€39.00 EUR · interval=year</code>
               </div>
             </div>
           </div>

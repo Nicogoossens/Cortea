@@ -120,7 +120,7 @@ app.post(
           if (priceId) {
             const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
             const product = price.product as import("stripe").Stripe.Product;
-            const tier = product.metadata?.tier as "traveller" | "ambassador" | undefined;
+            const tier = product.metadata?.tier as "student" | "traveller" | "ambassador" | undefined;
             const periodEnd = subscription.current_period_end
               ? new Date(subscription.current_period_end * 1000)
               : null;

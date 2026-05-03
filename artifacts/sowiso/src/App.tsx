@@ -207,6 +207,7 @@ function AppRouter() {
                   <Route path="/membership" component={Membership} />
                   <Route path="/guides" component={Guides} />
                   <Route path="/wardrobe" component={Wardrobe} />
+                  <Route path="/profile" component={Profile} />
                   <Route component={NotFound} />
                 </Switch>
               </Shell>

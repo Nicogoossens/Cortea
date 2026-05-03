@@ -3,7 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { db, counselQualityLogTable, usersTable, culturalOriginsTable, counselRegionSeedsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
-import { extractToken } from "../lib/auth-middleware";
+import { extractToken, requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
+import { hasFeatureAccess } from "../lib/tier-features";
 import { getVenuesForCounsel } from "../data/venues";
 import { resolvePrompt } from "../lib/register-quality-prompts";
 
@@ -139,7 +140,17 @@ const SPHERE_DESCRIPTIONS: Record<string, string> = {
   travel_hospitality: "travel and hospitality settings — luxury hotels, private transfers, international travel, and concierge interactions",
 };
 
-router.post("/counsel", async (req, res) => {
+router.post("/counsel", requireAuthUser, async (req, res) => {
+  // Enforce subscription-tier entitlement. Only members whose tier includes
+  // aiCounselUnlimited (traveller and ambassador) may invoke the AI counsel.
+  // Guest and student callers receive a 403 rather than consuming Anthropic credits.
+  const userTierRow = await resolveUserTier(req);
+  const counselTier = userTierRow?.subscription_tier ?? "guest";
+  if (!hasFeatureAccess(counselTier, "aiCounselUnlimited")) {
+    res.status(403).json({ error: "AI counsel is available to Traveller and Ambassador members. Please upgrade your membership to continue." });
+    return;
+  }
+
   const { query, domain, domain_key, locale, region_code, situation, situational_interests, objective } = req.body as {
     query?: string;
     domain?: string;

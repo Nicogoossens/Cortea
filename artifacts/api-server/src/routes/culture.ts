@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { cultureProtocolsTable, compassRegionsTable, culturalOriginsTable } from "@workspace/db";
 import { eq, and, or, isNull, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
+import { hasFeatureAccess, canAccessRegion } from "../lib/tier-features";
 
 const router = Router();
 
@@ -130,11 +132,22 @@ const CompassQuerySchema = z.object({
   situational_interests: z.string().optional(),
 });
 
-router.get("/culture/protocols", async (req, res) => {
+router.get("/culture/protocols", requireAuthUser, async (req, res) => {
   try {
+    const userTierRow = await resolveUserTier(req);
+    const tier = userTierRow?.subscription_tier ?? "guest";
+    if (!hasFeatureAccess(tier, "fullCulturalCompass")) {
+      return res.status(403).json({ error: "Access to cultural protocols requires a premium membership." });
+    }
+
     const parsed = ProtocolsQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({ error: "A region must be specified to retrieve cultural protocols." });
+    }
+
+    const region_code_raw = parsed.data.region_code.toUpperCase();
+    if (!canAccessRegion(tier, userTierRow?.active_region ?? "", region_code_raw)) {
+      return res.status(403).json({ error: "Your current membership does not include access to this region." });
     }
 
     const { region_code, pillar, pillar_code, context, locale, situational_interests, verified_only } = parsed.data;
@@ -295,8 +308,14 @@ const SPHERE_TO_COMPASS_FIELDS: Record<string, string[]> = {
   music_entertainment: ["dos", "donts"],
 };
 
-router.get("/culture/compass/:regionCode", async (req, res) => {
+router.get("/culture/compass/:regionCode", requireAuthUser, async (req, res) => {
   try {
+    const userTierRow = await resolveUserTier(req);
+    const tier = userTierRow?.subscription_tier ?? "guest";
+    if (!hasFeatureAccess(tier, "fullCulturalCompass")) {
+      return res.status(403).json({ error: "Access to the Cultural Compass requires a premium membership." });
+    }
+
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
     if (!paramParsed.success) {
       return res.status(400).json({ error: "The region code provided is not valid." });
@@ -308,6 +327,10 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
     const spheres = rawSpheres.split(",").map((s) => s.trim()).filter(Boolean);
 
     const regionCode = paramParsed.data.regionCode.toUpperCase();
+
+    if (!canAccessRegion(tier, userTierRow?.active_region ?? "", regionCode)) {
+      return res.status(403).json({ error: "Your current membership does not include access to this region." });
+    }
 
     const rows = await db.select()
       .from(compassRegionsTable)

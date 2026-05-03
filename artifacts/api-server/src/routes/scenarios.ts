@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { scenariosTable, type Scenario, type ScenarioContent } from "@workspace/db";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { z } from "zod";
+import { requireAuthUser, resolveUserTier } from "../lib/auth-middleware";
+import { TIER_FEATURES } from "../lib/tier-features";
 
 const router = Router();
 
@@ -115,12 +117,18 @@ function resolveScenarioLocales(scenarios: Scenario[], lang?: string): Scenario[
   return scenarios.map((s) => resolveScenarioLocale(s, lang));
 }
 
-router.get("/scenarios", async (req, res) => {
+router.get("/scenarios", requireAuthUser, async (req, res) => {
   try {
     const parsed = ScenariosQuerySchema.safeParse(req.query);
     if (!parsed.success) {
       return res.status(400).json({ error: "The query parameters provided are not valid. Please review and resubmit." });
     }
+
+    // Resolve the caller's subscription tier to enforce difficulty caps server-side.
+    // Unauthenticated callers are treated as guests and capped at the guest maximum.
+    const userTierRow = await resolveUserTier(req);
+    const tier = userTierRow?.subscription_tier ?? "guest";
+    const tierDifficultyMax = TIER_FEATURES[tier].scenarioDifficultyMax;
 
     const { region_code, pillar, difficulty_level, difficulty_max, age_group, limit, lang: queryLang, situational_interests } = parsed.data;
     const lang = pickLang(queryLang, req.headers["accept-language"]);
@@ -135,8 +143,15 @@ router.get("/scenarios", async (req, res) => {
     if (difficulty_level !== undefined) {
       conditions.push(eq(scenariosTable.difficulty_level, difficulty_level));
     }
-    if (difficulty_max !== undefined) {
-      conditions.push(lte(scenariosTable.difficulty_level, difficulty_max));
+
+    // Always enforce the tier's maximum difficulty, regardless of what the caller requested.
+    // If the tier has no cap (null), apply only the caller-supplied difficulty_max if present.
+    const effectiveDifficultyMax = tierDifficultyMax !== null
+      ? (difficulty_max !== undefined ? Math.min(difficulty_max, tierDifficultyMax) : tierDifficultyMax)
+      : difficulty_max;
+
+    if (effectiveDifficultyMax !== undefined) {
+      conditions.push(lte(scenariosTable.difficulty_level, effectiveDifficultyMax));
     }
     if (age_group !== undefined) {
       conditions.push(eq(scenariosTable.age_group, age_group));
@@ -176,7 +191,7 @@ router.get("/scenarios", async (req, res) => {
       ];
       if (pillar !== undefined) fallbackConditions.push(eq(scenariosTable.pillar, pillar));
       if (difficulty_level !== undefined) fallbackConditions.push(eq(scenariosTable.difficulty_level, difficulty_level));
-      if (difficulty_max !== undefined) fallbackConditions.push(lte(scenariosTable.difficulty_level, difficulty_max));
+      if (effectiveDifficultyMax !== undefined) fallbackConditions.push(lte(scenariosTable.difficulty_level, effectiveDifficultyMax));
       if (age_group !== undefined) fallbackConditions.push(eq(scenariosTable.age_group, age_group));
 
       // Fetch enough fallback items to reach at least FALLBACK_MINIMUM total.
@@ -216,7 +231,7 @@ router.get("/scenarios", async (req, res) => {
   }
 });
 
-router.get("/scenarios/:scenarioId", async (req, res) => {
+router.get("/scenarios/:scenarioId", requireAuthUser, async (req, res) => {
   try {
     const parsedId = ScenarioIdParamSchema.safeParse(req.params);
     if (!parsedId.success) {
@@ -236,6 +251,15 @@ router.get("/scenarios/:scenarioId", async (req, res) => {
 
     if (!scenario) {
       return res.status(404).json({ error: "This scenario is not yet available in our atelier. Others await your attention." });
+    }
+
+    // Enforce tier-based difficulty cap for direct scenario lookups.
+    // Unauthenticated callers are capped at the guest maximum.
+    const userTierRow = await resolveUserTier(req);
+    const tier = userTierRow?.subscription_tier ?? "guest";
+    const tierDifficultyMax = TIER_FEATURES[tier].scenarioDifficultyMax;
+    if (tierDifficultyMax !== null && (scenario.difficulty_level ?? 0) > tierDifficultyMax) {
+      return res.status(403).json({ error: "This scenario requires a higher membership tier to access." });
     }
 
     return res.json(resolveScenarioLocale(scenario, lang));

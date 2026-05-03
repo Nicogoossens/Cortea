@@ -2,6 +2,7 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
+import type { SubscriptionTier } from "./tier-features";
 
 export interface AuthenticatedRequest extends Request {
   resolvedUserId: string;
@@ -83,4 +84,34 @@ export async function requireAuthUser(
 
 export function getResolvedUserId(req: Request): string {
   return (req as AuthenticatedRequest).resolvedUserId;
+}
+
+/**
+ * Resolves the authenticated user's subscription tier and active region from the
+ * session token, if present. Returns null when the request is unauthenticated.
+ * Used by routes that need optional-auth tier enforcement.
+ */
+export async function resolveUserTier(req: Request): Promise<{
+  id: string;
+  subscription_tier: SubscriptionTier;
+  active_region: string | null;
+} | null> {
+  const token = extractToken(req);
+  if (!token) return null;
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      subscription_tier: usersTable.subscription_tier,
+      active_region: usersTable.active_region,
+      suspended_at: usersTable.suspended_at,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.session_token, token))
+    .limit(1);
+  if (!user || user.suspended_at !== null) return null;
+  return {
+    id: user.id,
+    subscription_tier: (user.subscription_tier ?? "guest") as SubscriptionTier,
+    active_region: user.active_region ?? null,
+  };
 }

@@ -726,6 +726,8 @@
   "privacy.clear_local": "مسح البيانات المحلية",
   "privacy.auto_cleanup": "مسح تلقائي عند تسجيل الخروج",
   "privacy.auto_cleanup_desc": "إزالة إجابات السيناريوهات المخزّنة تلقائياً عند تسجيل الخروج من Cortéa.",
+  "privacy.remember_prefs": "استعادة تفضيلاتي عند تسجيل الدخول",
+  "privacy.remember_prefs_desc": "عند التفعيل، يتم حفظ إعدادات الخصوصية على الخادم واستعادتها تلقائياً في المرة القادمة التي تسجل فيها الدخول.",
   "privacy.data_transparency": "شفافية البيانات",
   "privacy.records_removed": "تمت إزالة {{count}} سجل",
   "privacy.records_removed_plural": "تمت إزالة {{count}} سجلات",

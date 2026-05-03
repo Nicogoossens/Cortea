@@ -348,6 +348,7 @@ const PrivacySettingsSchema = z.object({
   microphoneEnabled: z.boolean(),
   locationEnabled: z.boolean(),
   autoCleanup: z.boolean(),
+  rememberPreferences: z.boolean().optional().default(false),
 });
 
 router.delete("/users/profile/privacy", requireAuthUser, async (req, res) => {

@@ -114,6 +114,7 @@ export interface PrivacySettings {
   microphoneEnabled: boolean;
   locationEnabled: boolean;
   autoCleanup: boolean;
+  rememberPreferences: boolean;
 }
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ created_at: true });

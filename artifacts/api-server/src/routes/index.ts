@@ -27,6 +27,7 @@ import roleplayRouter from "./roleplay";
 import atelierSessionRouter from "./atelier-session";
 import translationHealthRouter from "./translation-health";
 import { countryVotesRouter } from "./country-votes";
+import culturesPublicRouter from "./cultures-public";
 
 const router: IRouter = Router();
 
@@ -58,5 +59,6 @@ router.use(roleplayRouter);
 router.use(atelierSessionRouter);
 router.use(translationHealthRouter);
 router.use(countryVotesRouter);
+router.use(culturesPublicRouter);
 
 export default router;

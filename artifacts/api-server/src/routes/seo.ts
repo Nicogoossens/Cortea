@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { compassRegionsTable } from "@workspace/db";
+import { compassRegionsTable, type CompassLocaleContent } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { slugify } from "./cultures-public";
 
 const router = Router();
 
@@ -66,23 +67,40 @@ ${buildHreflangLinks(path)}
 router.get("/sitemap.xml", async (req, res) => {
   try {
     const regions = await db
-      .select({ region_code: compassRegionsTable.region_code })
+      .select({
+        region_code: compassRegionsTable.region_code,
+        content: compassRegionsTable.content,
+      })
       .from(compassRegionsTable)
       .where(eq(compassRegionsTable.is_published, true));
 
-    const staticEntries = PUBLIC_PATHS.map((path) =>
-      buildUrlEntry(path, path === "/" ? "weekly" : "monthly", path === "/" ? "1.0" : "0.8")
-    );
+    const staticEntries = [
+      ...PUBLIC_PATHS.map((path) =>
+        buildUrlEntry(path, path === "/" ? "weekly" : "monthly", path === "/" ? "1.0" : "0.8")
+      ),
+      buildUrlEntry("/cultures", "weekly", "0.9"),
+    ];
 
     const regionEntries = regions.map((r) => {
       const path = `/compass/${r.region_code}`;
       return buildUrlEntry(path, "monthly", "0.7");
     });
 
+    // Public SEO landing pages (one per published country with content).
+    const cultureEntries: string[] = [];
+    for (const r of regions) {
+      const content = (r.content ?? {}) as Record<string, CompassLocaleContent>;
+      const en = content["en-GB"] ?? content["en"];
+      if (!en?.region_name) continue;
+      const slug = slugify(en.region_name);
+      if (!slug) continue;
+      cultureEntries.push(buildUrlEntry(`/cultures/${slug}`, "monthly", "0.85"));
+    }
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[...staticEntries, ...regionEntries].join("\n")}
+${[...staticEntries, ...regionEntries, ...cultureEntries].join("\n")}
 </urlset>`;
 
     res.set("Content-Type", "application/xml");
@@ -100,6 +118,7 @@ Allow: /
 Allow: /atelier
 Allow: /compass
 Allow: /counsel
+Allow: /cultures
 Allow: /membership
 Allow: /privacy-policy
 Allow: /use-cases

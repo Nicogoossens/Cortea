@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "EdQn6eAVObY3bzShkIQBb"
+uri = "file://docs/marketing/backlink-strategy.md"
+type = "text"
+title = "Cortéa — Backlink & Off-Page SEO Strategy"

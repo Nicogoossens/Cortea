@@ -49,6 +49,7 @@ import InviteLanding from "@/pages/InviteLanding";
 import Companion from "@/pages/Companion";
 import RoleplayScenario from "@/pages/RoleplayScenario";
 import ResetPassword from "@/pages/ResetPassword";
+import { CultureLanding, CulturesIndex } from "@/pages/Cultures";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -182,6 +183,10 @@ function AppRouter() {
       <Route path="/invite/:token">
         <InviteLanding />
       </Route>
+
+      {/* Public SEO landing pages — auth-agnostic, server-rendered for organic acquisition */}
+      <Route path="/cultures" component={CulturesIndex} />
+      <Route path="/cultures/:slug" component={CultureLanding} />
 
       {/* Auth-conditional routing */}
       <Route>

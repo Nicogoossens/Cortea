@@ -65,6 +65,15 @@ interface RouteMeta {
   jsonLd?: object | object[];
 }
 
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // HTML helpers
 // ────────────────────────────────────────────────────────────────────────────
@@ -152,6 +161,57 @@ function compassBody(regions: RegionRow[]): string {
     <ul style="list-style:none;padding:0;column-count:2;column-gap:24px;">
       ${regionList}
     </ul>`);
+}
+
+function culturesIndexBody(regions: RegionRow[]): string {
+  const items = regions
+    .map((r) => {
+      const slug = slugify(r.region_name);
+      return `<li style="padding:6px 0;"><a href="/cultures/${slug}" style="color:#8B6914;text-decoration:none;font-size:1rem;">${esc(r.region_name)} — Etiquette &amp; Cultural Guide</a></li>`;
+    })
+    .join("\n");
+  return pageShell(`
+    <h1 style="font-size:2.5rem;margin-bottom:12px;">Cultural Etiquette Guides by Country</h1>
+    <p style="font-size:1.1rem;color:#6a5a48;margin-bottom:36px;line-height:1.7;">
+      Free country-by-country etiquette guides — dining, dress code, business customs, and the unwritten rules visitors miss. Distilled into one calm page per culture.
+    </p>
+    <h2 style="font-size:1.3rem;margin-bottom:20px;">Country Guides</h2>
+    <ul style="list-style:none;padding:0;column-count:2;column-gap:24px;">
+      ${items}
+    </ul>
+    <p style="margin-top:36px;font-size:0.95rem;color:#6a5a48;">
+      <a href="/register?ref=cultures" style="color:#8B6914;font-weight:600;">Get the full guides + 50&plus; other countries — 14 days free →</a>
+    </p>`);
+}
+
+function cultureLandingBody(r: RegionRow): string {
+  const dosList = r.dos && r.dos.length > 0
+    ? `<ul style="list-style:none;padding:0;">${listItems(r.dos.slice(0, 3))}</ul>`
+    : "";
+  const dontsList = r.donts && r.donts.length > 0
+    ? `<ul style="list-style:none;padding:0;">${listItems(r.donts.slice(0, 3))}</ul>`
+    : "";
+  const dosMore = r.dos ? Math.max(0, r.dos.length - 3) : 0;
+  const dontsMore = r.donts ? Math.max(0, r.donts.length - 3) : 0;
+  return pageShell(`
+    <p style="font-size:0.8rem;color:#9a8a7a;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
+      <a href="/cultures" style="color:#8B6914;text-decoration:none;">Cultures</a> / ${esc(r.region_name)}
+    </p>
+    <h1 style="font-size:2.5rem;margin-bottom:8px;">${esc(r.region_name)} Etiquette &amp; Cultural Guide</h1>
+    <p style="font-size:1rem;color:#8B6914;margin-bottom:32px;font-style:italic;">${r.core_value ? esc(r.core_value) : "Cultural intelligence for travellers and professionals"}</p>
+    ${r.dining_etiquette ? card("Dining Etiquette", r.dining_etiquette) : ""}
+    ${r.dress_code ? card("Dress Code", r.dress_code) : ""}
+    ${r.language_notes ? card("Language & Communication", r.language_notes) : ""}
+    ${r.gift_protocol ? card("Gift-Giving Protocol", r.gift_protocol) : ""}
+    ${r.biggest_taboo ? card("Biggest Taboo", r.biggest_taboo) : ""}
+    ${dosList ? `<div style="border:1px solid #e2d9c8;border-radius:8px;padding:20px 24px;margin-bottom:16px;"><h3 style="margin:0 0 8px;color:#2a5c2a;">Do</h3>${dosList}${dosMore > 0 ? `<p style="margin-top:8px;font-size:0.85rem;color:#9a8a7a;">${dosMore} more — unlock with membership</p>` : ""}</div>` : ""}
+    ${dontsList ? `<div style="border:1px solid #e2d9c8;border-radius:8px;padding:20px 24px;margin-bottom:16px;"><h3 style="margin:0 0 8px;color:#8B2020;">Don\'t</h3>${dontsList}${dontsMore > 0 ? `<p style="margin-top:8px;font-size:0.85rem;color:#9a8a7a;">${dontsMore} more — unlock with membership</p>` : ""}</div>` : ""}
+    <div style="margin-top:32px;padding:24px;border:1px solid #d6c4a3;border-radius:8px;background:#faf3e6;">
+      <p style="font-size:0.75rem;color:#8B6914;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 8px;">Cortéa Membership</p>
+      <h2 style="font-size:1.4rem;margin:0 0 8px;color:#3a2c1e;">Get the full ${esc(r.region_name)} guide + 50+ other countries — 14 days free</h2>
+      <p style="margin:0 0 16px;color:#5a4a3a;line-height:1.6;">Unlock every country profile, every dos &amp; don'ts list, and the full Atelier scenario library. Cancel anytime.</p>
+      <a href="/register?ref=cultures" style="display:inline-block;padding:12px 24px;background:#3a2c1e;color:#fff;border-radius:4px;text-decoration:none;font-size:0.95rem;">Join the waitlist →</a>
+    </div>`);
 }
 
 function compassRegionBody(r: RegionRow): string {
@@ -548,6 +608,60 @@ async function run(): Promise<void> {
     },
   ];
 
+  // ── Public Cultures landing pages (SEO-first acquisition channel) ──────────
+  const culturesIndexRoute: RouteMeta = {
+    path: "/cultures",
+    title: "Cultural Etiquette Guides by Country — Cortéa",
+    description: "Free country-by-country etiquette guides: dining, dress code, business customs, gift-giving and the unwritten rules visitors miss.",
+    bodyHtml: culturesIndexBody(regions),
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Cultural Etiquette Guides by Country",
+      "url": `${BASE_URL}/cultures`,
+      "description": "Free country-by-country etiquette guides across 50+ cultures.",
+    },
+  };
+
+  const cultureLandingRoutes: RouteMeta[] = regions.map((r) => {
+    const slug = slugify(r.region_name);
+    const path = `/cultures/${slug}`;
+    const url = `${BASE_URL}${path}`;
+    return {
+      path,
+      title: `${r.region_name} Etiquette & Cultural Guide — Cortéa`,
+      description: `${r.region_name} etiquette: dining, dress code, business customs, gift-giving, and the unwritten rules visitors miss. Free guide from Cortéa.`,
+      bodyHtml: cultureLandingBody(r),
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": `${r.region_name} Etiquette & Cultural Guide`,
+          "description": `${r.region_name} etiquette: dining, dress code, business customs, gift-giving, and the unwritten rules visitors miss.`,
+          "about": { "@type": "Country", "name": r.region_name, "identifier": r.region_code },
+          "publisher": { "@type": "Organization", "name": "Cortéa", "url": BASE_URL },
+          "url": url,
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "Country",
+          "name": r.region_name,
+          "identifier": r.region_code,
+          "url": url,
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Cortéa", "item": `${BASE_URL}/` },
+            { "@type": "ListItem", "position": 2, "name": "Cultures", "item": `${BASE_URL}/cultures` },
+            { "@type": "ListItem", "position": 3, "name": r.region_name, "item": url },
+          ],
+        },
+      ],
+    };
+  });
+
   // ── Compass region routes ──────────────────────────────────────────────────
   const compassRoutes: RouteMeta[] = regions.map((r) => ({
     path: `/compass/${r.region_code}`,
@@ -580,7 +694,7 @@ async function run(): Promise<void> {
     ],
   }));
 
-  const allRoutes = [...staticRoutes, ...compassRoutes];
+  const allRoutes = [...staticRoutes, culturesIndexRoute, ...cultureLandingRoutes, ...compassRoutes];
 
   console.log(`📄  Generating prerendered HTML for ${allRoutes.length} routes…`);
   for (const route of allRoutes) {
@@ -600,6 +714,8 @@ async function run(): Promise<void> {
     sitemapUrl("/use-cases", "monthly", "0.6"),
     sitemapUrl("/situations", "monthly", "0.6"),
     sitemapUrl("/privacy-policy", "yearly", "0.3"),
+    sitemapUrl("/cultures", "weekly", "0.9"),
+    ...regions.map((r) => sitemapUrl(`/cultures/${slugify(r.region_name)}`, "monthly", "0.85")),
     ...regions.map((r) => sitemapUrl(`/compass/${r.region_code}`, "monthly", "0.7")),
   ];
 

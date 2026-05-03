@@ -172,6 +172,18 @@
         "note": "CHECK constraint users_ambition_level_check added to users.ambition_level, allowing only 'casual', 'professional', 'diplomatic'. Invalid inserts now raise a constraint violation error. All existing rows already comply (backfilled in migration 0002)."
       },
       "status": "applied"
+    },
+    {
+      "id": "0014_seed_cultural_origins_priority",
+      "file": "lib/db/migrations/0014_seed_cultural_origins_priority.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT region_code, COUNT(*) AS count FROM cultural_origins GROUP BY region_code ORDER BY region_code",
+      "verificationResult": {
+        "rowCount": 20,
+        "note": "Seeded 5 cultural-origin records for each of the 17 priority Compass regions (JP, DE, FR, IT, BE, CH, SG, IN, MX, BR, ES, CO, AE, US, NL, PT, ZA), bringing total to 20 regions × 5 records = 100 rows. Added unique index co_region_tradition_unique to make re-runs idempotent on (region_code, tradition). Renumbered from 0013 during rebase because upstream main also added a 0013."
+      },
+      "status": "applied"
     }
   ]
 }

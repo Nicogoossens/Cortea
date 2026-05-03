@@ -17,7 +17,11 @@ function scoreDeltaKey(delta: number): string {
   return "profile.log.observed";
 }
 
-const REGIONS_WITH_ORIGINS = ["GB", "CN", "CA"];
+const REGIONS_WITH_ORIGINS = [
+  "GB", "CN", "CA",
+  "JP", "DE", "FR", "IT", "BE", "CH", "SG", "IN",
+  "MX", "BR", "ES", "CO", "AE", "US", "NL", "PT", "ZA",
+];
 
 export default function Scenario() {
   usePageTitle("Practice Scenario");

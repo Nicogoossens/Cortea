@@ -34,15 +34,20 @@ function ToggleRow({
       <button
         onClick={onToggle}
         disabled={disabled}
-        aria-pressed={enabled}
+        role="switch"
+        aria-checked={enabled}
         aria-label={`${enabled ? "Disable" : "Enable"} ${label}`}
-        className={`relative flex-shrink-0 mt-0.5 inline-flex h-5 w-9 items-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
-          enabled ? "bg-primary border-primary" : "bg-muted border-border"
+        className={`group relative flex-shrink-0 mt-0.5 inline-flex h-6 w-11 items-center rounded-full border transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+          enabled
+            ? "bg-primary border-primary/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]"
+            : "bg-muted/60 border-border hover:bg-muted"
         } ${disabled ? "cursor-not-allowed" : "cursor-pointer"}`}
       >
+        <span className="sr-only">{enabled ? "On" : "Off"}</span>
         <span
-          className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
-            enabled ? "translate-x-[18px]" : "translate-x-0.5"
+          aria-hidden="true"
+          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transform transition-transform duration-200 ease-out ${
+            enabled ? "translate-x-[22px]" : "translate-x-[2px]"
           }`}
         />
       </button>

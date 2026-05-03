@@ -12,12 +12,12 @@ import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 import { GarmentAvatar } from "@/components/GarmentAvatar";
+import { WelcomeBanner } from "@/components/WelcomeBanner";
 
 import { NAVIGATOR_KEY, NavigatorTrip, daysUntil } from "@/lib/navigator-utils";
 
 const TRIP_ALERT_DISMISS_PREFIX = "trip_alert_dismissed";
 
-const WELCOME_DURATION_MS = 7000;
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface DailyQuest {
@@ -114,11 +114,6 @@ export default function Home() {
         .slice(0, 3)
     : undefined;
 
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeVisible, setWelcomeVisible] = useState(false);
-  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
   const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
   const [tripAlertDismissed, setTripAlertDismissed] = useState(false);
@@ -184,35 +179,6 @@ export default function Home() {
       });
     }
   }, [profileError, userId, createProfile]);
-
-  useEffect(() => {
-    if (!userId || !profile || !nobleScore) return;
-    const sessionKey = `welcome_shown_${firstName ? "named" : "anon"}_${userId}`;
-    if (sessionStorage.getItem(sessionKey)) return;
-    sessionStorage.setItem(sessionKey, "1");
-
-    setShowWelcome(true);
-    const fadeIn = setTimeout(() => setWelcomeVisible(true), 30);
-    const fadeOut = setTimeout(() => handleDismiss(), WELCOME_DURATION_MS);
-    dismissTimerRef.current = fadeOut;
-
-    return () => {
-      clearTimeout(fadeIn);
-      clearTimeout(fadeOut);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, profile?.full_name, nobleScore?.total_score]);
-
-  useEffect(() => () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    if (dismissFadeRef.current) clearTimeout(dismissFadeRef.current);
-  }, []);
-
-  const handleDismiss = () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    setWelcomeVisible(false);
-    dismissFadeRef.current = setTimeout(() => setShowWelcome(false), 400);
-  };
 
   const handleDismissTripAlert = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -327,53 +293,30 @@ export default function Home() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-      {showWelcome && (
-        <div
-          role="status"
-          aria-live="polite"
-          aria-label={firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
-          className={[
-            "relative flex items-start gap-4 rounded-sm border border-primary/20 bg-primary/5 px-5 py-4",
-            "transition-all duration-400",
-            welcomeVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none",
-          ].join(" ")}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="font-serif text-xl text-foreground leading-snug">
-              {firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
-            </p>
-            {nobleScore?.total_score !== undefined && (
-              <p className="mt-0.5 text-sm text-muted-foreground font-light">
-                {t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })}
-              </p>
-            )}
-            {nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0 && (
-              <p className="mt-0.5 text-sm text-primary/70 font-light">
-                {t("home.welcome_back_next_rank", {
-                  remaining: nobleScore.next_level_threshold - nobleScore.total_score,
-                  next_level: t(levelKey(nobleScore.next_level_name)),
-                })}
-              </p>
-            )}
-            {!firstName && (
-              <Link
-                href="/profile"
-                onClick={handleDismiss}
-                className="mt-1.5 inline-block text-sm text-primary/80 hover:text-primary underline-offset-2 hover:underline transition-colors font-light"
-              >
-                {t("home.welcome_back_prompt")}
-              </Link>
-            )}
-          </div>
-          <button
-            onClick={handleDismiss}
-            aria-label={t("home.welcome_back_dismiss")}
-            className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      <WelcomeBanner
+        userId={userId}
+        hasProfile={!!profile}
+        hasScore={!!nobleScore}
+        firstName={firstName}
+        namedLabel={firstName ? t("home.welcome_back", { name: firstName }) : ""}
+        anonLabel={t("home.welcome_back_anonymous")}
+        scoreLine={
+          nobleScore?.total_score !== undefined
+            ? t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })
+            : null
+        }
+        nextRankLine={
+          nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0
+            ? t("home.welcome_back_next_rank", {
+                remaining: nobleScore.next_level_threshold - nobleScore.total_score,
+                next_level: t(levelKey(nobleScore.next_level_name)),
+              })
+            : null
+        }
+        promptLabel={t("home.welcome_back_prompt")}
+        dismissLabel={t("home.welcome_back_dismiss")}
+      />
+
 
       {isAuthenticated && isAmbassador && alertTrips.length > 0 && !tripAlertDismissed && (
         <div className="relative group">

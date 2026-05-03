@@ -12,12 +12,12 @@ import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 import { GarmentAvatar } from "@/components/GarmentAvatar";
+import { WelcomeBanner } from "@/components/WelcomeBanner";
 
 import { NAVIGATOR_KEY, NavigatorTrip, daysUntil } from "@/lib/navigator-utils";
 
 const TRIP_ALERT_DISMISS_PREFIX = "trip_alert_dismissed";
 
-const WELCOME_DURATION_MS = 7000;
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface DailyQuest {
@@ -57,6 +57,7 @@ interface MiniUseCase {
   title: string;
   flag_emoji: string;
   formality_level: string;
+  region_code: string | null;
   readiness_score: number | null;
 }
 
@@ -87,14 +88,14 @@ interface EarnedBadge {
 export default function Home() {
   usePageTitle("Home");
   const { t, language } = useLanguage();
-  const { userId, isAuthenticated, getAuthHeaders } = useAuth();
+  const { userId, isAuthenticated, isAdmin, getAuthHeaders } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
 
   const createProfile = useCreateProfile();
 
-  const { data: useCasesShortlist } = useQuery<MiniUseCase[]>({
+  const { data: allUseCases } = useQuery<MiniUseCase[]>({
     queryKey: ["use-cases-home", userId],
     enabled: !!userId,
     queryFn: async () => {
@@ -102,18 +103,16 @@ export default function Home() {
         credentials: "include",
       });
       if (!res.ok) return [];
-      const all: MiniUseCase[] = await res.json();
-      return all
-        .filter(uc => uc.readiness_score !== null)
-        .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0))
-        .slice(0, 3);
+      return res.json();
     },
   });
 
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeVisible, setWelcomeVisible] = useState(false);
-  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const useCasesShortlist = allUseCases
+    ? allUseCases
+        .filter(uc => uc.readiness_score !== null)
+        .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0))
+        .slice(0, 3)
+    : undefined;
 
   const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
   const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
@@ -180,35 +179,6 @@ export default function Home() {
       });
     }
   }, [profileError, userId, createProfile]);
-
-  useEffect(() => {
-    if (!userId || !profile || !nobleScore) return;
-    const sessionKey = `welcome_shown_${firstName ? "named" : "anon"}_${userId}`;
-    if (sessionStorage.getItem(sessionKey)) return;
-    sessionStorage.setItem(sessionKey, "1");
-
-    setShowWelcome(true);
-    const fadeIn = setTimeout(() => setWelcomeVisible(true), 30);
-    const fadeOut = setTimeout(() => handleDismiss(), WELCOME_DURATION_MS);
-    dismissTimerRef.current = fadeOut;
-
-    return () => {
-      clearTimeout(fadeIn);
-      clearTimeout(fadeOut);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, profile?.full_name, nobleScore?.total_score]);
-
-  useEffect(() => () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    if (dismissFadeRef.current) clearTimeout(dismissFadeRef.current);
-  }, []);
-
-  const handleDismiss = () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    setWelcomeVisible(false);
-    dismissFadeRef.current = setTimeout(() => setShowWelcome(false), 400);
-  };
 
   const handleDismissTripAlert = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -323,53 +293,30 @@ export default function Home() {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-      {showWelcome && (
-        <div
-          role="status"
-          aria-live="polite"
-          aria-label={firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
-          className={[
-            "relative flex items-start gap-4 rounded-sm border border-primary/20 bg-primary/5 px-5 py-4",
-            "transition-all duration-400",
-            welcomeVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none",
-          ].join(" ")}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="font-serif text-xl text-foreground leading-snug">
-              {firstName ? t("home.welcome_back", { name: firstName }) : t("home.welcome_back_anonymous")}
-            </p>
-            {nobleScore?.total_score !== undefined && (
-              <p className="mt-0.5 text-sm text-muted-foreground font-light">
-                {t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })}
-              </p>
-            )}
-            {nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0 && (
-              <p className="mt-0.5 text-sm text-primary/70 font-light">
-                {t("home.welcome_back_next_rank", {
-                  remaining: nobleScore.next_level_threshold - nobleScore.total_score,
-                  next_level: t(levelKey(nobleScore.next_level_name)),
-                })}
-              </p>
-            )}
-            {!firstName && (
-              <Link
-                href="/profile"
-                onClick={handleDismiss}
-                className="mt-1.5 inline-block text-sm text-primary/80 hover:text-primary underline-offset-2 hover:underline transition-colors font-light"
-              >
-                {t("home.welcome_back_prompt")}
-              </Link>
-            )}
-          </div>
-          <button
-            onClick={handleDismiss}
-            aria-label={t("home.welcome_back_dismiss")}
-            className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      <WelcomeBanner
+        userId={userId}
+        hasProfile={!!profile}
+        hasScore={!!nobleScore}
+        firstName={firstName}
+        namedLabel={firstName ? t("home.welcome_back", { name: firstName }) : ""}
+        anonLabel={t("home.welcome_back_anonymous")}
+        scoreLine={
+          nobleScore?.total_score !== undefined
+            ? t("home.welcome_back_score", { score: nobleScore.total_score, level: levelLabel })
+            : null
+        }
+        nextRankLine={
+          nobleScore?.next_level_name && nobleScore.next_level_threshold - nobleScore.total_score > 0
+            ? t("home.welcome_back_next_rank", {
+                remaining: nobleScore.next_level_threshold - nobleScore.total_score,
+                next_level: t(levelKey(nobleScore.next_level_name)),
+              })
+            : null
+        }
+        promptLabel={t("home.welcome_back_prompt")}
+        dismissLabel={t("home.welcome_back_dismiss")}
+      />
+
 
       {isAuthenticated && isAmbassador && alertTrips.length > 0 && !tripAlertDismissed && (
         <div className="relative group">
@@ -420,12 +367,45 @@ export default function Home() {
         </p>
       </div>
 
+      {(!isAuthenticated || (profile?.subscription_tier ?? "guest") === "guest") && (
+        <Link href="/membership">
+          <div
+            data-testid="link-home-upgrade-cta"
+            className="group relative overflow-hidden rounded-sm border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-card to-card hover:border-amber-500/50 hover:from-amber-500/10 transition-all duration-300 cursor-pointer"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500/40 via-amber-400/60 to-amber-500/40" aria-hidden="true" />
+            <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
+              <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-sm bg-amber-500/10 border border-amber-500/20">
+                <Crown className="h-6 w-6 text-amber-600" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-amber-700/70">
+                  {t("home.upgrade_eyebrow")}
+                </p>
+                <h2 className="font-serif text-xl md:text-2xl text-foreground">
+                  {t("home.upgrade_title")}
+                </h2>
+                <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-2xl">
+                  {t("home.upgrade_description")}
+                </p>
+              </div>
+              <div className="shrink-0">
+                <span className="inline-flex items-center gap-2 px-5 py-3 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-700 text-sm font-medium tracking-wide group-hover:bg-amber-500/20 transition-colors">
+                  {t("home.upgrade_cta")}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
+
       {/* Streak widget — subtle, above the grid */}
       {isAuthenticated && streak > 0 && (
         <StreakWidget streak={streak} />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8">
 
         <Card className="bg-card border-border shadow-sm overflow-hidden relative group" aria-label={t("home.standing")}>
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
@@ -503,7 +483,7 @@ export default function Home() {
                 </div>
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && isAdmin && (
                 <Link href="/wardrobe" className="flex items-center justify-between gap-3 pt-2 border-t border-border/30 group/avatar">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0 rounded-full bg-muted/30 ring-1 ring-border/40 p-1 transition-all group-hover/avatar:ring-primary/40">
@@ -532,35 +512,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 bg-card border-border shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="font-serif text-xl">{t("profile.domain_mastery")}</CardTitle>
-            <CardDescription>{t("profile.domain_subtitle")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {pillars?.map((pillar) => (
-                <div key={pillar.pillar} className="space-y-2">
-                  <div className="text-sm font-medium leading-tight">{pillar.pillar_domain}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider">{pillar.current_title}</div>
-                  <div
-                    className="h-1 w-full bg-muted rounded-full overflow-hidden"
-                    role="progressbar"
-                    aria-label={pillar.pillar_domain}
-                    aria-valuenow={pillar.progress_percent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  >
-                    <div
-                      className="h-full bg-primary transition-all duration-1000"
-                      style={{ width: `${pillar.progress_percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {isAuthenticated && (
@@ -654,7 +605,7 @@ export default function Home() {
 
       <div className="space-y-6">
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("home.continue_studies")}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
           <Link href="/atelier" className="group">
             <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
@@ -774,10 +725,14 @@ export default function Home() {
                   ? t("navigator.departure_today")
                   : t("navigator.d_minus", { count: days });
               const isPast = days < -30;
-              const regionRows = atelierProgress.filter(r => r.region_code === trip.regionCode);
-              const regionMastered = regionRows.filter(r => r.mastered).length;
-              const readinessPct = regionRows.length > 0
-                ? Math.round((regionMastered / regionRows.length) * 100)
+              const regionUseCases = (allUseCases ?? []).filter(
+                uc => uc.region_code === trip.regionCode && uc.readiness_score !== null
+              );
+              const readinessPct = regionUseCases.length > 0
+                ? Math.round(
+                    regionUseCases.reduce((sum, uc) => sum + (uc.readiness_score ?? 0), 0) /
+                    regionUseCases.length
+                  )
                 : null;
               return (
                 <Link key={trip.id} href="/navigator">
@@ -797,11 +752,9 @@ export default function Home() {
                           <Badge variant="outline" className={`font-mono text-xs ${days < 0 ? "border-muted text-muted-foreground" : "border-amber-400/40 text-amber-600"}`}>
                             {departureLabel}
                           </Badge>
-                          {readinessPct !== null && (
-                            <span className="text-[10px] font-mono text-muted-foreground">
-                              {readinessPct}% {t("home.ready")}
-                            </span>
-                          )}
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {readinessPct !== null ? `${readinessPct}% ${t("home.ready")}` : "—"}
+                          </span>
                         </div>
                       </div>
                     </CardContent>

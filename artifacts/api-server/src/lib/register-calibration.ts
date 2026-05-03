@@ -16,6 +16,7 @@
 
 import { db, translationsTable } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
+import { logger } from "./logger";
 
 export type CalibrationModule = "standard" | "elite";
 
@@ -566,6 +567,11 @@ export async function upsertContentTranslationRows(
           value: r.value,
           rtl_flag: r.rtl_flag ?? false,
           region_link: r.region_link ?? null,
+          // Persist register metadata when supplied so DB state cannot drift
+          // from the module used for the calibration we are about to enqueue.
+          ...(r.formality_register !== undefined
+            ? { formality_register: r.formality_register }
+            : {}),
           // Invalidate prior calibration since the source value changed.
           calibrated_module: null,
           quality_reviewed_at: null,
@@ -595,9 +601,14 @@ export async function upsertContentTranslationRows(
       void calibrateTranslationsByIds(targetIds, moduleKey, {
         dryRun: options.dryRun,
         force: options.force,
-      }).catch(() => {
-        // Errors are surfaced through caller logging; swallow here so the
-        // background promise does not become an unhandled rejection.
+      }).catch((err) => {
+        // Log so operators have visibility into background failures; the
+        // sweeper will retry on its next pass since calibrated_module
+        // remains NULL on failure.
+        logger.warn(
+          { err, count: targetIds.length, module: moduleKey },
+          "upsertContentTranslationRows: fire-and-forget calibration failed",
+        );
       });
     }
   }

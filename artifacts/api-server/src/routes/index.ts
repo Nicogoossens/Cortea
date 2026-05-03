@@ -30,6 +30,7 @@ import { countryVotesRouter } from "./country-votes";
 import culturesPublicRouter from "./cultures-public";
 import waitlistRouter from "./waitlist";
 import systemConfigRouter from "./system-config";
+import debugRouter from "./debug";
 
 const router: IRouter = Router();
 
@@ -64,5 +65,6 @@ router.use(countryVotesRouter);
 router.use(culturesPublicRouter);
 router.use(waitlistRouter);
 router.use(systemConfigRouter);
+router.use(debugRouter);
 
 export default router;

@@ -24,6 +24,7 @@ import { usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { issueRedeemCode } from "../lib/redeem-codes";
+import { getOrigin } from "../lib/origin";
 
 const GOOGLE_ISSUER = "https://accounts.google.com";
 const COOKIE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -45,13 +46,6 @@ async function getGoogleConfig(): Promise<oidc.Configuration> {
     );
   }
   return googleConfigCache;
-}
-
-function getOrigin(req: Request): string {
-  if (process.env.APP_PUBLIC_URL) {
-    return process.env.APP_PUBLIC_URL.replace(/\/$/, "");
-  }
-  return `${req.protocol}://${req.hostname}`;
 }
 
 function setSecureCookie(res: Response, name: string, value: string) {

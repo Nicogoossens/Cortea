@@ -127,3 +127,6 @@ BETA_INVITE_CODE = "DEV-BDA41371471CA2C7"
 
 [userenv.production]
 APP_PUBLIC_URL = "https://sowiso-01.replit.app"
+
+[userenv.development]
+ENABLE_TEST_DEBUG_ROUTES = "true"

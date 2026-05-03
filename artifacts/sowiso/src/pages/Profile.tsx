@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
 import { VenueCard } from "@/components/VenueCard";
+import { ReferralCard } from "@/components/ReferralCard";
 import { CountryProgressOverview } from "@/components/CountryProgressOverview";
 import { useSavedVenues } from "@/lib/saved-venues";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
@@ -1057,6 +1058,12 @@ export default function Profile() {
           </Link>
         </div>
       )}
+
+      {/* ── Referrals ──
+          Personal referral link, share buttons, and reward summary.
+          Sits just above Badges so the user can see, share and track in
+          one glance. */}
+      <ReferralCard />
 
       {/* ── Badges ──
           Hier verplaatst (was eerder verder onderaan de pagina) zodat de

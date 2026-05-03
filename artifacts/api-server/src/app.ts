@@ -14,6 +14,9 @@ import { usersTable, purchasedGuidesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { getUncachableStripeClient } from "./stripeClient";
+import { grantReferralRewardOnFirstPaid } from "./lib/referral";
+import { maxTier, type SubscriptionTier as SubTier } from "./lib/tier-features";
+import { sendCancellationConfirmation } from "./lib/billing-notifications";
 
 const app: Express = express();
 
@@ -127,15 +130,57 @@ app.post(
               const rawSub = subscription as unknown as Record<string, unknown>;
               const rawPeriodEnd = typeof rawSub["current_period_end"] === "number" ? rawSub["current_period_end"] : null;
               const periodEnd = rawPeriodEnd ? new Date(rawPeriodEnd * 1000) : null;
+              const rawTrialEnd = typeof rawSub["trial_end"] === "number" ? rawSub["trial_end"] : null;
+              const trialEnd = rawTrialEnd ? new Date(rawTrialEnd * 1000) : null;
               if (tier) {
+                // Read current state to decide whether an active referral
+                // reward should "shield" the effective subscription_tier
+                // from being overwritten back down to the Stripe billing
+                // tier mid-reward.
+                const [current] = await db
+                  .select({
+                    effective: usersTable.subscription_tier,
+                    rewardEnds: usersTable.referral_reward_ends_at,
+                  })
+                  .from(usersTable)
+                  .where(eq(usersTable.id, userId))
+                  .limit(1);
+                const rewardActive =
+                  !!current?.rewardEnds && current.rewardEnds.getTime() > Date.now();
+                // Effective access tier:
+                //   - if no reward is active: track Stripe truth exactly
+                //   - if reward is active: keep the higher of (Stripe tier,
+                //     current effective tier) so the reward overlay is not
+                //     silently revoked, but a genuine paid upgrade still wins
+                const effectiveTier = rewardActive && current
+                  ? maxTier(tier as SubTier, current.effective as SubTier)
+                  : (tier as SubTier);
+
                 await db.update(usersTable)
                   .set({
-                    subscription_tier: tier,
+                    subscription_tier: effectiveTier,
+                    billing_tier: tier,
                     subscription_status: subStatus,
                     subscription_current_period_end: periodEnd,
+                    trial_ends_at: trialEnd,
+                    // Reset reminder idempotency whenever a NEW trial begins
+                    // (i.e. a trial_end is now present). When the trial is
+                    // cleared we leave the timestamp alone — the value only
+                    // matters for the next trial cycle.
+                    ...(trialEnd ? { trial_reminder_sent_at: null } : {}),
                     payment_failed_at: null,
                   })
                   .where(eq(usersTable.id, userId));
+
+                // Referral reward fires at most once per user, on first true
+                // paid conversion. The helper atomically claims `first_paid_at`
+                // so duplicate webhook deliveries (and trial→active vs
+                // active→active updates) are safely no-ops.
+                if (subStatus === "active") {
+                  void grantReferralRewardOnFirstPaid(userId).catch((err) =>
+                    logger.error({ err, userId }, "Failed to grant referral reward")
+                  );
+                }
               }
             }
           } else {
@@ -173,13 +218,34 @@ app.post(
         const subscription = event.data.object;
         const userId = subscription.metadata?.userId;
         if (userId) {
+          const [u] = await db
+            .select({
+              email: usersTable.email,
+              phone: usersTable.phone_number,
+              fullName: usersTable.full_name,
+              status: usersTable.subscription_status,
+            })
+            .from(usersTable)
+            .where(eq(usersTable.id, userId))
+            .limit(1);
           await db.update(usersTable)
             .set({
               subscription_tier: "guest",
               subscription_status: "canceled",
               subscription_current_period_end: null,
+              trial_ends_at: null,
             })
             .where(eq(usersTable.id, userId));
+          // Best-effort confirmation. Skip if our own cancel route already
+          // sent one (status === "canceled" already set).
+          if (u && u.status !== "canceled") {
+            void sendCancellationConfirmation({
+              email: u.email,
+              phone: u.phone,
+              fullName: u.fullName,
+              duringTrial: subscription.status === "trialing",
+            });
+          }
         }
       }
 

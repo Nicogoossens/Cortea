@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-type SubscriptionTier = "guest" | "student" | "traveller" | "ambassador";
+type SubscriptionTier = "guest" | "student" | "traveller" | "ambassador" | "concierge";
 
 interface Plan {
   productId: string;
@@ -22,6 +22,7 @@ interface Plan {
   yearlyPriceId: string | null;
   yearlyAmount: number | null;
   currency: string;
+  trialDays?: number;
 }
 
 const TIER_META: Record<SubscriptionTier, {
@@ -73,6 +74,18 @@ const TIER_META: Record<SubscriptionTier, {
       "membership.ambassador.feature4",
     ],
   },
+  concierge: {
+    taglineKey: "membership.concierge.tagline",
+    icon: Crown,
+    accent: "#6b4a9b",
+    featureKeys: [
+      "membership.concierge.feature1",
+      "membership.concierge.feature2",
+      "membership.concierge.feature3",
+      "membership.concierge.feature4",
+      "membership.concierge.feature5",
+    ],
+  },
 };
 
 function formatPrice(amount: number | null, currency: string): string {
@@ -96,6 +109,44 @@ export default function Membership() {
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [managingBilling, setManagingBilling] = useState(false);
   const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+  const [status, setStatus] = useState<{
+    tier: string;
+    status: string;
+    inTrial: boolean;
+    trialEndsAt: string | null;
+    renewalDate: string | null;
+  } | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelDone, setCancelDone] = useState<string | null>(null);
+
+  // Pull current subscription state so we can show trial countdown +
+  // a one-click cancel option without leaving the membership page.
+  useEffect(() => {
+    fetch(`${API_BASE}/api/subscription/status`, { headers: getAuthHeaders() })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setStatus(d))
+      .catch(() => setStatus(null));
+  }, [getAuthHeaders]);
+
+  const handleCancel = async () => {
+    if (!confirm(t("membership.cancel_confirm", "Are you sure you want to cancel your membership?"))) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/subscription/cancel`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      const j = await res.json();
+      if (res.ok) {
+        setCancelDone(j.duringTrial ? "trial" : "period");
+        // Refresh status panel
+        const s = await fetch(`${API_BASE}/api/subscription/status`, { headers: getAuthHeaders() });
+        if (s.ok) setStatus(await s.json());
+      }
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -146,7 +197,7 @@ export default function Membership() {
     }
   };
 
-  const tierOrder: SubscriptionTier[] = ["guest", "student", "traveller", "ambassador"];
+  const tierOrder: SubscriptionTier[] = ["guest", "student", "traveller", "ambassador", "concierge"];
 
   const getPriceId = (plan: Plan): string | null =>
     billing === "monthly" ? plan.monthlyPriceId : plan.yearlyPriceId;
@@ -248,6 +299,67 @@ export default function Membership() {
         </div>
       )}
 
+      {/* Active subscription / trial dashboard panel.
+          Surfaces trial status, renewal date, and the one-click cancel
+          required by the brief. Hidden for guests. */}
+      {status && status.tier !== "guest" && (
+        <div className="rounded-sm border border-border/60 bg-card p-5 space-y-3" data-testid="subscription-panel">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                {t("membership.current_standing", "Your current standing")}
+              </p>
+              <p className="font-serif text-lg text-foreground capitalize">{status.tier}</p>
+              {status.inTrial && status.trialEndsAt && (
+                <p className="text-sm text-primary font-light">
+                  {t("membership.trial_active", { date: new Date(status.trialEndsAt).toLocaleDateString() })}
+                </p>
+              )}
+              {!status.inTrial && status.renewalDate && status.status !== "cancel_at_period_end" && status.status !== "canceled" && (
+                <p className="text-xs text-muted-foreground font-light">
+                  {t("membership.renews_on", { date: new Date(status.renewalDate).toLocaleDateString() })}
+                </p>
+              )}
+              {status.status === "cancel_at_period_end" && status.renewalDate && (
+                <p className="text-xs text-amber-500 font-light">
+                  {t("membership.access_until", { date: new Date(status.renewalDate).toLocaleDateString() })}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManageBilling}
+                disabled={managingBilling}
+                data-testid="manage-billing-btn"
+              >
+                {managingBilling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("membership.manage", "Manage billing")}
+              </Button>
+              {status.status !== "cancel_at_period_end" && status.status !== "canceled" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="text-muted-foreground hover:text-foreground"
+                  data-testid="cancel-subscription-btn"
+                >
+                  {cancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("membership.cancel_cta", "Cancel membership")}
+                </Button>
+              )}
+            </div>
+          </div>
+          {cancelDone && (
+            <p className="text-xs text-foreground/80 font-light italic" role="status">
+              {cancelDone === "trial"
+                ? t("membership.cancel_done_trial", "Your trial has been ended; no charge will be made. A confirmation has been sent.")
+                : t("membership.cancel_done_period", "Your membership will end at the close of the current period. A confirmation has been sent.")}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
         <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{t("membership.eyebrow")}</p>
         <h1 className="text-4xl md:text-5xl font-serif text-foreground">{t("membership.title")}</h1>
@@ -287,22 +399,26 @@ export default function Membership() {
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-96 rounded-sm" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {tierOrder.map((tier) => {
             const meta = TIER_META[tier];
             const plan = plans.find((p) => p.tier === tier);
             const isCurrentTier = tier === currentTier;
             const isAmbassador = tier === "ambassador";
+            const isConcierge = tier === "concierge";
             const isStudent = tier === "student";
             const Icon = meta.icon;
             const priceId = plan ? getPriceId(plan) : null;
             const amount = plan ? getAmount(plan) : null;
+            const trialDays = plan?.trialDays ?? 0;
 
             return (
               <Card
                 key={tier}
                 className={`relative overflow-hidden transition-all duration-300 ${
-                  isAmbassador
+                  isConcierge
+                    ? "border-[#6b4a9b]/40 bg-gradient-to-b from-card to-[#6b4a9b]/10 shadow-md"
+                    : isAmbassador
                     ? "border-[#9b7c4a]/30 bg-gradient-to-b from-card to-[#9b7c4a]/5"
                     : isStudent
                     ? "border-[#4a7c9b]/30 bg-gradient-to-b from-card to-[#4a7c9b]/5"
@@ -337,8 +453,21 @@ export default function Membership() {
                     {t(meta.taglineKey)}
                   </p>
                   <h2 className="font-serif text-2xl text-foreground">{
-                    plan?.displayName ?? (tier === "guest" ? "The Guest" : tier === "traveller" ? "The Traveller" : "The Ambassador")
+                    plan?.displayName ?? (
+                      tier === "guest" ? "The Guest"
+                      : tier === "student" ? "The Student"
+                      : tier === "traveller" ? "The Traveller"
+                      : tier === "ambassador" ? "The Ambassador"
+                      : "The Concierge"
+                    )
                   }</h2>
+                  {trialDays > 0 && !isCurrentTier && (
+                    <div className="mt-2">
+                      <span className="text-[10px] font-mono uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5 rounded-[2px] border border-primary/20">
+                        {t("membership.trial_badge", { days: trialDays }) || `${trialDays}-day free trial`}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="pt-4">
                     {tier === "guest" ? (
@@ -392,8 +521,8 @@ export default function Membership() {
                       <Button
                         className="w-full font-serif gap-2 group"
                         style={{
-                          backgroundColor: isAmbassador ? "#9b7c4a" : undefined,
-                          borderColor: isAmbassador ? "#9b7c4a" : undefined,
+                          backgroundColor: isConcierge ? "#6b4a9b" : isAmbassador ? "#9b7c4a" : undefined,
+                          borderColor: isConcierge ? "#6b4a9b" : isAmbassador ? "#9b7c4a" : undefined,
                         }}
                         onClick={() => handleCheckout(priceId, tier)}
                         disabled={!!checkingOut || !priceId}
@@ -407,6 +536,8 @@ export default function Membership() {
                               ? t("membership.cta_traveller")
                               : tier === "student"
                               ? t("membership.cta_student")
+                              : tier === "concierge"
+                              ? t("membership.cta_concierge")
                               : t("membership.cta_ambassador")}
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                           </>

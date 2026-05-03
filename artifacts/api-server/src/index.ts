@@ -4,6 +4,7 @@ import { startCalibrationSweeper } from "./lib/register-calibration-sweeper";
 import { startScenarioTranslationSweeper } from "./lib/register-scenario-translation-sweeper";
 import { startUiTranslationSweeper } from "./lib/ui-translation-sweeper";
 import { startRegisterUiAuditSweeper } from "./lib/register-ui-audit-sweeper";
+import { startTrialReminderSweeper } from "./lib/trial-reminder-sweeper";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +55,10 @@ app.listen(port, (err) => {
   // hasn't been quality-reviewed yet is automatically evaluated and stamped.
   // No manual `node scripts/elite-register-worker.mjs` call is required.
   startRegisterUiAuditSweeper();
+
+  // Dispatches a single email + SMS reminder ~3 days before any
+  // 14-day trial ends, so users are never surprised by a charge.
+  startTrialReminderSweeper();
 
   // Step-5 dev smoketest: after startup, run the i18n-audit script once and
   // log its summary so missing-key drift is visible in the dev console.

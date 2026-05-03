@@ -50,6 +50,17 @@ CREATE TABLE "users" (
 	"utm_campaign" text,
 	"utm_content" text,
 	"utm_term" text,
+	"referral_code" text,
+	"referred_by_user_id" text,
+	"pending_referral_code" text,
+	"referral_count_successful" integer DEFAULT 0 NOT NULL,
+	"referral_rewards_active" integer DEFAULT 0 NOT NULL,
+	"phone_number" text,
+	"trial_reminder_sent_at" timestamp,
+	"first_paid_at" timestamp,
+	"pre_referral_tier" text,
+	"referral_reward_ends_at" timestamp,
+	"billing_tier" text,
 	CONSTRAINT "users_ambition_level_check" CHECK ("users"."ambition_level" IN ('casual', 'professional', 'diplomatic'))
 );
 --> statement-breakpoint
@@ -488,6 +499,18 @@ CREATE TABLE "country_votes" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "referrals" (
+	"id" text PRIMARY KEY NOT NULL,
+	"referrer_user_id" text NOT NULL,
+	"referred_user_id" text NOT NULL,
+	"referral_code" text NOT NULL,
+	"status" text DEFAULT 'pending' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"converted_at" timestamp,
+	"rewarded_at" timestamp,
+	CONSTRAINT "referrals_referred_user_id_unique" UNIQUE("referred_user_id")
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -520,4 +543,6 @@ CREATE UNIQUE INDEX "counsel_region_seeds_region_domain_key" ON "counsel_region_
 CREATE INDEX "counsel_region_seeds_status_idx" ON "counsel_region_seeds" USING btree ("status","region_code");--> statement-breakpoint
 CREATE UNIQUE INDEX "country_votes_user_region_period_uq" ON "country_votes" USING btree ("user_id","region_code","period_ym");--> statement-breakpoint
 CREATE INDEX "country_votes_period_idx" ON "country_votes" USING btree ("period_ym");--> statement-breakpoint
-CREATE INDEX "country_votes_user_period_idx" ON "country_votes" USING btree ("user_id","period_ym");
+CREATE INDEX "country_votes_user_period_idx" ON "country_votes" USING btree ("user_id","period_ym");--> statement-breakpoint
+CREATE INDEX "referrals_referrer_idx" ON "referrals" USING btree ("referrer_user_id");--> statement-breakpoint
+CREATE INDEX "referrals_status_idx" ON "referrals" USING btree ("status");

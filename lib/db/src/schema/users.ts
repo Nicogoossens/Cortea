@@ -112,6 +112,28 @@ export const usersTable = pgTable("users", {
   utm_campaign: text("utm_campaign"),
   utm_content: text("utm_content"),
   utm_term: text("utm_term"),
+  // Referral system — every user has a unique code; new signups may carry one
+  referral_code: text("referral_code"),
+  referred_by_user_id: text("referred_by_user_id"),
+  pending_referral_code: text("pending_referral_code"),
+  referral_count_successful: integer("referral_count_successful").notNull().default(0),
+  referral_rewards_active: integer("referral_rewards_active").notNull().default(0),
+  // SMS contact for trial / billing notifications (E.164)
+  phone_number: text("phone_number"),
+  // Idempotency for the 3-day-before-trial-end reminder
+  trial_reminder_sent_at: timestamp("trial_reminder_sent_at"),
+  // First moment the user converted from free/guest to a paid subscription.
+  // Gates the referral reward so it can only fire once per user, even if
+  // Stripe sends repeated subscription.updated events.
+  first_paid_at: timestamp("first_paid_at"),
+  // Snapshot of the user's tier prior to a referral reward. The reward
+  // sweeper reverts subscription_tier back to this value at expiry.
+  pre_referral_tier: text("pre_referral_tier"),
+  referral_reward_ends_at: timestamp("referral_reward_ends_at"),
+  // True billing tier from Stripe, kept separate from the effective
+  // (possibly reward-elevated) subscription_tier so webhook syncs cannot
+  // silently revoke an active referral reward.
+  billing_tier: text("billing_tier"),
 }, (t) => [
   check("users_ambition_level_check", sql`${t.ambition_level} IN ('casual', 'professional', 'diplomatic')`),
 ]);

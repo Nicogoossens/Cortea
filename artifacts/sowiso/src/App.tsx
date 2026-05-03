@@ -14,6 +14,7 @@ import { PrivacyProvider } from "@/lib/privacy";
 import { useEffect, useRef } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { captureUtmParams } from "@/lib/utm";
+import { captureReferralCode, getStoredReferralCode, clearStoredReferralCode } from "@/lib/referral-capture";
 import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
@@ -264,7 +265,34 @@ function Router() {
 function UtmCapture() {
   useEffect(() => {
     captureUtmParams();
+    captureReferralCode();
   }, []);
+  return null;
+}
+
+/**
+ * On first authenticated session after a `?ref=` visit, posts the captured
+ * referral code to the server so it is associated with the user before they
+ * convert to paid. Idempotent on the server side.
+ */
+function ReferralAttach() {
+  const { isAuthenticated, userId } = useAuth();
+  const sentForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isAuthenticated || !userId) return;
+    const code = getStoredReferralCode();
+    if (!code) return;
+    if (sentForRef.current === userId) return;
+    sentForRef.current = userId;
+    fetch(`${API_BASE}/api/referrals/attach`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    })
+      .then(() => clearStoredReferralCode())
+      .catch(() => { /* keep code, retry next session */ });
+  }, [isAuthenticated, userId]);
   return null;
 }
 
@@ -277,6 +305,7 @@ function App() {
           <AccessibilityProvider>
             <LanguageProvider>
               <UtmCapture />
+              <ReferralAttach />
               <UserPreferencesSync />
               <AppWithRegion>
                 <TooltipProvider>

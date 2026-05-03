@@ -280,6 +280,34 @@ export default function Welcome() {
             </p>
           </div>
 
+          {/* "Cortéa is for everyone…" — moved above the region picker so visitors immediately know what this is about */}
+          <div className="w-full border-t border-border/20 pt-10 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
+            <h2 className="text-center font-serif text-lg text-foreground/80">
+              {t("welcome.audience_section_title")}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,       accent: "text-emerald-600/70 bg-emerald-500/10" },
+                { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,      accent: "text-sky-600/70   bg-sky-500/10"   },
+                { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,       accent: "text-violet-600/70 bg-violet-500/10" },
+                { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase,  accent: "text-amber-600/70 bg-amber-500/10" },
+              ].map(({ headingKey, bodyKey, Icon, accent }) => (
+                <div key={headingKey} className="flex gap-3.5 items-start px-5 py-4 rounded-sm border border-border/20 bg-card/40">
+                  <span className={`mt-0.5 shrink-0 flex items-center justify-center w-7 h-7 rounded-full ${accent}`} aria-hidden="true">
+                    <Icon className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="space-y-1">
+                    <h3 className="font-serif text-sm text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
+                    <p className="text-xs text-muted-foreground font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground/50 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
+              {t("welcome.foundation_sentence")}
+            </p>
+          </div>
+
           <div className="w-full border-t border-border/30 pt-10">
             <RegionPicker />
           </div>
@@ -293,12 +321,13 @@ export default function Welcome() {
               {t("welcome.begin")}
               <ChevronRight className="w-5 h-5" aria-hidden="true" />
             </Button>
-            <p className="text-xs text-muted-foreground/50 font-light">
+            <p className="text-base text-muted-foreground font-light">
               {t("landing.signin_prompt")}{" "}
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); navigate("/signin"); }}
-                className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
+                className="font-medium text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary transition-colors"
+                data-testid="link-welcome-signin"
               >
                 {t("landing.signin_link")}
               </a>
@@ -356,32 +385,6 @@ export default function Welcome() {
             </div>
           </Link>
 
-          <div className="w-full border-t border-border/10 pt-8 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "600ms" }}>
-            <h2 className="text-center font-serif text-lg text-foreground/80">
-              {t("welcome.audience_section_title")}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, accent: "text-amber-600/70 bg-amber-500/10" },
-                { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,      accent: "text-sky-600/70   bg-sky-500/10"   },
-                { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,       accent: "text-violet-600/70 bg-violet-500/10" },
-                { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,       accent: "text-emerald-600/70 bg-emerald-500/10" },
-              ].map(({ headingKey, bodyKey, Icon, accent }) => (
-                <div key={headingKey} className="flex gap-3.5 items-start px-5 py-4 rounded-sm border border-border/20 bg-card/40">
-                  <span className={`mt-0.5 shrink-0 flex items-center justify-center w-7 h-7 rounded-full ${accent}`} aria-hidden="true">
-                    <Icon className="w-3.5 h-3.5" />
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="font-serif text-sm text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
-                    <p className="text-xs text-muted-foreground font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground/50 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
-              {t("welcome.foundation_sentence")}
-            </p>
-          </div>
         </div>
       </LandingLayout>
     );

@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "Länder suchen…",
   "compass.search_aria": "Länder suchen",
   "compass.search_clear": "Suche löschen",
-  "compass.search_no_results": "Keine Länder entsprechen Ihrer Suche."
+  "compass.search_no_results": "Keine Länder entsprechen Ihrer Suche.",
+  "compass.regions_teaser_eyebrow": "Länderatlas",
+  "compass.regions_teaser_body": "Jede Karte zeigt den Kernwert eines Landes, sein größtes Tabu und die ungeschriebenen Regeln des Alltags. Wählen Sie eine Flagge und treten Sie ein."
 }

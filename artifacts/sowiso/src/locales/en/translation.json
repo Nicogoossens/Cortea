@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "Search countries…",
   "compass.search_aria": "Search countries",
   "compass.search_clear": "Clear search",
-  "compass.search_no_results": "No countries match your search."
+  "compass.search_no_results": "No countries match your search.",
+  "compass.regions_teaser_eyebrow": "Country atlas",
+  "compass.regions_teaser_body": "Each card reveals a country's core value, its biggest taboo and the unwritten rules of daily life. Pick a flag to step inside."
 }

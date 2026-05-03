@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "Cerca paesi…",
   "compass.search_aria": "Cerca paesi",
   "compass.search_clear": "Cancella ricerca",
-  "compass.search_no_results": "Nessun paese corrisponde alla tua ricerca."
+  "compass.search_no_results": "Nessun paese corrisponde alla tua ricerca.",
+  "compass.regions_teaser_eyebrow": "Atlante dei paesi",
+  "compass.regions_teaser_body": "Ogni scheda rivela il valore fondamentale di un paese, il suo più grande tabù e le regole non scritte della vita quotidiana. Scegli una bandiera per entrare."
 }

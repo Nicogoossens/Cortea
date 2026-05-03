@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "国を検索…",
   "compass.search_aria": "国を検索",
   "compass.search_clear": "検索をクリア",
-  "compass.search_no_results": "検索に一致する国がありません。"
+  "compass.search_no_results": "検索に一致する国がありません。",
+  "compass.regions_teaser_eyebrow": "国別アトラス",
+  "compass.regions_teaser_body": "各カードには、その国の核となる価値観、最大のタブー、日常生活の暗黙のルールが示されています。国旗を選んで中へ。"
 }

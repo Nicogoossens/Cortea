@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "Zoek landen…",
   "compass.search_aria": "Zoek landen",
   "compass.search_clear": "Zoekopdracht wissen",
-  "compass.search_no_results": "Geen landen gevonden voor je zoekopdracht."
+  "compass.search_no_results": "Geen landen gevonden voor je zoekopdracht.",
+  "compass.regions_teaser_eyebrow": "Landenatlas",
+  "compass.regions_teaser_body": "Elke kaart toont de kernwaarde van een land, het grootste taboe en de ongeschreven regels van het dagelijks leven. Kies een vlag en stap binnen."
 }

@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "ابحث عن الدول…",
   "compass.search_aria": "ابحث عن الدول",
   "compass.search_clear": "مسح البحث",
-  "compass.search_no_results": "لا توجد دول تطابق بحثك."
+  "compass.search_no_results": "لا توجد دول تطابق بحثك.",
+  "compass.regions_teaser_eyebrow": "أطلس الدول",
+  "compass.regions_teaser_body": "تكشف كل بطاقة عن القيمة الأساسية للدولة، وأكبر المحظورات فيها، والقواعد غير المكتوبة للحياة اليومية. اختر علماً لتدخل."
 }

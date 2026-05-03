@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "搜索国家…",
   "compass.search_aria": "搜索国家",
   "compass.search_clear": "清除搜索",
-  "compass.search_no_results": "没有匹配的国家。"
+  "compass.search_no_results": "没有匹配的国家。",
+  "compass.regions_teaser_eyebrow": "国家图谱",
+  "compass.regions_teaser_body": "每张卡片揭示一个国家的核心价值、最大禁忌以及日常生活中的潜规则。选择一面国旗，进入了解。"
 }

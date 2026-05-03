@@ -230,6 +230,16 @@ export default function Compass() {
       {/* ── ALL REGIONS VIEW ── */}
       {view === "regions" && (
         <>
+          {/* Teaser explaining the country cards */}
+          <div className="border-l-2 border-primary/40 bg-primary/[0.03] pl-4 py-3 pr-4 rounded-r-sm">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-primary/70 mb-1">
+              {t("compass.regions_teaser_eyebrow")}
+            </p>
+            <p className="text-sm text-foreground/80 font-light leading-relaxed">
+              {t("compass.regions_teaser_body")}
+            </p>
+          </div>
+
           {/* Search input */}
           <div className="relative max-w-md pt-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" aria-hidden="true" />

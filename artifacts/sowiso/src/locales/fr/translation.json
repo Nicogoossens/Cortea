@@ -1232,5 +1232,7 @@
   "compass.search_placeholder": "Rechercher des pays…",
   "compass.search_aria": "Rechercher des pays",
   "compass.search_clear": "Effacer la recherche",
-  "compass.search_no_results": "Aucun pays ne correspond à votre recherche."
+  "compass.search_no_results": "Aucun pays ne correspond à votre recherche.",
+  "compass.regions_teaser_eyebrow": "Atlas des pays",
+  "compass.regions_teaser_body": "Chaque carte révèle la valeur centrale d'un pays, son plus grand tabou et les règles non écrites du quotidien. Choisissez un drapeau pour entrer."
 }

@@ -181,6 +181,26 @@ app.post(
                     logger.error({ err, userId }, "Failed to grant referral reward")
                   );
                 }
+
+                // Mark the founder code as redeemed only now that the
+                // Traveller subscription is actually active. Abandoned
+                // checkouts therefore never consume the user's benefit.
+                const founderCode = subscription.metadata?.founderCode;
+                if (tier === "traveller" && founderCode) {
+                  try {
+                    const { markFounderCodeRedeemed } = await import("./routes/waitlist");
+                    const [u] = await db
+                      .select({ email: usersTable.email })
+                      .from(usersTable)
+                      .where(eq(usersTable.id, userId))
+                      .limit(1);
+                    if (u?.email) {
+                      await markFounderCodeRedeemed(u.email, userId, founderCode);
+                    }
+                  } catch (err) {
+                    console.warn("Failed to mark founder code redeemed in webhook:", err);
+                  }
+                }
               }
             }
           } else {

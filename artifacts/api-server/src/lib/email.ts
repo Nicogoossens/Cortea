@@ -303,6 +303,198 @@ export interface SendActivationEmailResult {
   url: string;
 }
 
+function buildWaitlistConfirmationHtml(opts: {
+  name: string;
+  founderCode: string | null;
+  founderPosition: number | null;
+  locale: string;
+}): string {
+  const { name, founderCode, founderPosition, locale } = opts;
+  const lang = (["en", "nl", "fr", "de", "es"].includes(locale) ? locale : "en") as "en" | "nl" | "fr" | "de" | "es";
+
+  const c = {
+    subject: {
+      en: "Welcome to the Cortéa waitlist", nl: "Welkom op de Cortéa-wachtlijst",
+      fr: "Bienvenue sur la liste d'attente Cortéa", de: "Willkommen auf der Cortéa-Warteliste",
+      es: "Bienvenido a la lista de espera de Cortéa",
+    },
+    greeting: {
+      en: `Dear ${name},`, nl: `Beste ${name},`,
+      fr: `Cher ${name},`, de: `Liebe(r) ${name},`, es: `Estimado ${name},`,
+    },
+    bodyFounder: {
+      en: "You are among the Founding 100 — those receiving exclusive early access to the art of conduct. Your personal founder code below grants you one month of The Traveller, complimentary, when registration opens.",
+      nl: "U behoort tot de Founding 100 — degenen die exclusieve vroege toegang krijgen tot de kunst van het gedrag. Uw persoonlijke foundercode hieronder geeft u één maand The Traveller cadeau wanneer de registratie opent.",
+      fr: "Vous faites partie des 100 fondateurs — ceux qui reçoivent un accès anticipé exclusif à l'art de la conduite. Votre code fondateur personnel ci-dessous vous offre un mois gratuit de The Traveller dès l'ouverture des inscriptions.",
+      de: "Sie gehören zu den Founding 100 — jenen mit exklusivem Vorabzugang zur Kunst des Benehmens. Ihr persönlicher Founder-Code unten schenkt Ihnen einen Monat The Traveller, sobald die Registrierung öffnet.",
+      es: "Está entre los 100 fundadores — quienes reciben acceso anticipado exclusivo al arte de la conducta. Su código personal de fundador a continuación le otorga un mes gratis de The Traveller cuando se abra el registro.",
+    },
+    bodyWaitlist: {
+      en: "The Founding 100 spots are now claimed, but you have a confirmed seat on the regular waitlist. We will write to you the moment your invitation is ready.",
+      nl: "De 100 founding spots zijn vergeven, maar uw plek op de reguliere wachtlijst is bevestigd. Wij schrijven u zodra uw uitnodiging klaarstaat.",
+      fr: "Les 100 places fondatrices sont attribuées, mais votre place sur la liste d'attente régulière est confirmée. Nous vous écrirons dès que votre invitation sera prête.",
+      de: "Die 100 Founding-Plätze sind vergeben, doch Ihr Platz auf der regulären Warteliste ist bestätigt. Wir schreiben Ihnen, sobald Ihre Einladung bereitsteht.",
+      es: "Las 100 plazas fundadoras están ocupadas, pero su lugar en la lista de espera regular está confirmado. Le escribiremos en cuanto su invitación esté lista.",
+    },
+    codeLabel: { en: "Your founder code", nl: "Uw foundercode", fr: "Votre code fondateur", de: "Ihr Founder-Code", es: "Su código de fundador" },
+    positionLabel: {
+      en: (n: number) => `Founding member #${n} of 100`,
+      nl: (n: number) => `Founding member #${n} van 100`,
+      fr: (n: number) => `Membre fondateur n°${n} sur 100`,
+      de: (n: number) => `Founding Member Nr. ${n} von 100`,
+      es: (n: number) => `Miembro fundador n.º ${n} de 100`,
+    },
+    howTo: {
+      en: "When registration opens, sign in with this same email address — your discount will be applied automatically at checkout.",
+      nl: "Wanneer de registratie opent, log dan in met dit e-mailadres — uw korting wordt automatisch toegepast bij de checkout.",
+      fr: "Lors de l'ouverture des inscriptions, connectez-vous avec cette même adresse e-mail — votre remise sera appliquée automatiquement au paiement.",
+      de: "Wenn die Registrierung öffnet, melden Sie sich mit dieser E-Mail-Adresse an — Ihr Rabatt wird automatisch beim Checkout angewandt.",
+      es: "Cuando se abra el registro, inicie sesión con este mismo correo — su descuento se aplicará automáticamente en el pago.",
+    },
+    footer: {
+      en: "The art of conduct, since 2024.", nl: "De kunst van gedrag, sinds 2024.",
+      fr: "L'art de la conduite, depuis 2024.", de: "Die Kunst des Benehmens, seit 2024.",
+      es: "El arte de la conducta, desde 2024.",
+    },
+  };
+
+  const codeBlock = founderCode ? `
+    <div style="text-align:center;margin:32px 0;">
+      <p style="font-size:11px;color:#8a8a8a;letter-spacing:0.2em;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${c.codeLabel[lang]}</p>
+      <div style="display:inline-block;background:#1a2e1a;color:#f0ebe3;padding:18px 36px;font-family:'Courier New',monospace;font-size:22px;letter-spacing:0.15em;">${founderCode}</div>
+      ${founderPosition ? `<p style="margin-top:12px;font-size:12px;color:#8fa88f;font-family:'Courier New',monospace;letter-spacing:0.15em;text-transform:uppercase;">${c.positionLabel[lang](founderPosition)}</p>` : ""}
+    </div>` : "";
+
+  const body = founderCode ? c.bodyFounder[lang] : c.bodyWaitlist[lang];
+
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head><meta charset="UTF-8" /><title>${c.subject[lang]}</title></head>
+<body style="margin:0;background:#f5f0eb;font-family:Georgia,'Times New Roman',serif;color:#2c2c2c;">
+  <div style="max-width:600px;margin:40px auto;background:#fffdf9;border:1px solid #e8e0d5;">
+    <div style="background:#1a2e1a;padding:40px 48px;text-align:center;">
+      <div style="color:#f0ebe3;font-size:28px;letter-spacing:0.2em;text-transform:uppercase;">Cortéa</div>
+      <div style="color:#8fa88f;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;margin-top:6px;font-family:'Courier New',monospace;">${c.footer[lang]}</div>
+    </div>
+    <div style="padding:48px;">
+      <p style="font-size:18px;color:#1a2e1a;margin-bottom:20px;font-style:italic;">${c.greeting[lang]}</p>
+      <p style="font-size:15px;line-height:1.8;color:#4a4a4a;">${body}</p>
+      ${codeBlock}
+      ${founderCode ? `<p style="font-size:13px;line-height:1.7;color:#6a6a6a;">${c.howTo[lang]}</p>` : ""}
+    </div>
+    <div style="background:#f5f0eb;padding:24px 48px;text-align:center;border-top:1px solid #e8e0d5;">
+      <p style="font-size:11px;color:#9a9a9a;letter-spacing:0.15em;text-transform:uppercase;font-family:'Courier New',monospace;">Cortéa &mdash; ${c.footer[lang]}</p>
+    </div>
+  </div>
+</body></html>`;
+}
+
+export interface SendWaitlistConfirmationOptions {
+  to: string;
+  name: string;
+  founderCode: string | null;
+  founderPosition: number | null;
+  locale?: string;
+}
+
+export async function sendWaitlistConfirmationEmail(opts: SendWaitlistConfirmationOptions): Promise<{ sent: boolean }> {
+  const lang = (["en", "nl", "fr", "de", "es"].includes(opts.locale ?? "") ? opts.locale : "en") as "en" | "nl" | "fr" | "de" | "es";
+  const subjects: Record<typeof lang, string> = {
+    en: opts.founderCode ? "Welcome to the Cortéa Founding 100" : "You're on the Cortéa waitlist",
+    nl: opts.founderCode ? "Welkom bij de Cortéa Founding 100" : "U staat op de Cortéa-wachtlijst",
+    fr: opts.founderCode ? "Bienvenue parmi les 100 fondateurs Cortéa" : "Vous êtes sur la liste d'attente Cortéa",
+    de: opts.founderCode ? "Willkommen bei den Cortéa Founding 100" : "Sie stehen auf der Cortéa-Warteliste",
+    es: opts.founderCode ? "Bienvenido a los 100 fundadores de Cortéa" : "Está en la lista de espera de Cortéa",
+  };
+  const html = buildWaitlistConfirmationHtml({
+    name: opts.name, founderCode: opts.founderCode, founderPosition: opts.founderPosition, locale: lang,
+  });
+  const mailOptions = { from: `"${FROM_NAME}" <${FROM_ADDRESS}>`, to: opts.to, subject: subjects[lang], html };
+  const transport = createTransport();
+  if (transport) {
+    try {
+      await transport.sendMail(mailOptions);
+      logger.info({ to: opts.to, founderCode: opts.founderCode ? "yes" : "no" }, "Waitlist confirmation email sent");
+      return { sent: true };
+    } catch (err) {
+      logger.error({ err, to: opts.to }, "Failed to send waitlist confirmation email");
+      throw err;
+    }
+  }
+  logger.warn({ to: opts.to, code: opts.founderCode }, "SMTP not configured — waitlist confirmation not delivered (logged only)");
+  console.log("\n" + "=".repeat(70));
+  console.log("  CORTÉA WAITLIST CONFIRMATION (SMTP not configured)");
+  console.log("=".repeat(70));
+  console.log(`  To:      ${opts.to}`);
+  console.log(`  Subject: ${subjects[lang]}`);
+  if (opts.founderCode) console.log(`  Code:    ${opts.founderCode} (position ${opts.founderPosition ?? "?"} / 100)`);
+  console.log("=".repeat(70) + "\n");
+  return { sent: false };
+}
+
+export interface SendWaitlistInvitationOptions {
+  to: string;
+  name: string;
+  founderCode: string | null;
+  locale?: string;
+}
+
+export async function sendWaitlistInvitationEmail(opts: SendWaitlistInvitationOptions): Promise<{ sent: boolean }> {
+  const lang = (["en", "nl", "fr", "de", "es"].includes(opts.locale ?? "") ? opts.locale : "en") as "en" | "nl" | "fr" | "de" | "es";
+  const subjects: Record<typeof lang, string> = {
+    en: "Your Cortéa invitation is ready", nl: "Uw Cortéa-uitnodiging staat klaar",
+    fr: "Votre invitation Cortéa est prête", de: "Ihre Cortéa-Einladung ist bereit",
+    es: "Su invitación a Cortéa está lista",
+  };
+  const greeting: Record<typeof lang, string> = {
+    en: `Dear ${opts.name},`, nl: `Beste ${opts.name},`,
+    fr: `Cher ${opts.name},`, de: `Liebe(r) ${opts.name},`, es: `Estimado ${opts.name},`,
+  };
+  const body: Record<typeof lang, string> = {
+    en: "Your seat at Cortéa is ready. Sign in with this email address to begin.",
+    nl: "Uw plek bij Cortéa staat klaar. Log in met dit e-mailadres om te beginnen.",
+    fr: "Votre place chez Cortéa est prête. Connectez-vous avec cette adresse e-mail pour commencer.",
+    de: "Ihr Platz bei Cortéa ist bereit. Melden Sie sich mit dieser E-Mail-Adresse an.",
+    es: "Su plaza en Cortéa está lista. Inicie sesión con este correo electrónico para empezar.",
+  };
+  const cta: Record<typeof lang, string> = {
+    en: "Activate Membership", nl: "Lidmaatschap Activeren",
+    fr: "Activer l'adhésion", de: "Mitgliedschaft Aktivieren", es: "Activar Membresía",
+  };
+  const url = `${APP_URL}/register?waitlist=1${opts.founderCode ? `&code=${opts.founderCode}` : ""}`;
+  const html = `<!DOCTYPE html><html lang="${lang}"><body style="margin:0;background:#f5f0eb;font-family:Georgia,serif;color:#2c2c2c;">
+  <div style="max-width:600px;margin:40px auto;background:#fffdf9;border:1px solid #e8e0d5;">
+    <div style="background:#1a2e1a;padding:40px 48px;text-align:center;color:#f0ebe3;font-size:28px;letter-spacing:0.2em;text-transform:uppercase;">Cortéa</div>
+    <div style="padding:48px;">
+      <p style="font-size:18px;color:#1a2e1a;margin-bottom:20px;font-style:italic;">${greeting[lang]}</p>
+      <p style="font-size:15px;line-height:1.8;color:#4a4a4a;">${body[lang]}</p>
+      ${opts.founderCode ? `<p style="font-family:'Courier New',monospace;font-size:14px;color:#1a2e1a;margin-top:24px;">Founder code: <strong>${opts.founderCode}</strong></p>` : ""}
+      <div style="text-align:center;margin:36px 0;">
+        <a href="${url}" style="display:inline-block;background:#1a2e1a;color:#f0ebe3;text-decoration:none;padding:14px 40px;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;font-family:'Courier New',monospace;">${cta[lang]}</a>
+      </div>
+    </div>
+  </div>
+</body></html>`;
+  const mailOptions = { from: `"${FROM_NAME}" <${FROM_ADDRESS}>`, to: opts.to, subject: subjects[lang], html };
+  const transport = createTransport();
+  if (transport) {
+    try {
+      await transport.sendMail(mailOptions);
+      return { sent: true };
+    } catch (err) {
+      logger.error({ err, to: opts.to }, "Failed to send waitlist invitation email");
+      throw err;
+    }
+  }
+  console.log("\n" + "=".repeat(70));
+  console.log("  CORTÉA WAITLIST INVITATION (SMTP not configured)");
+  console.log("=".repeat(70));
+  console.log(`  To:      ${opts.to}`);
+  console.log(`  Link:    ${url}`);
+  console.log("=".repeat(70) + "\n");
+  return { sent: false };
+}
+
 export async function sendActivationEmail({
   to,
   token,

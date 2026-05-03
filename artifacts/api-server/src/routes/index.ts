@@ -28,6 +28,7 @@ import atelierSessionRouter from "./atelier-session";
 import translationHealthRouter from "./translation-health";
 import { countryVotesRouter } from "./country-votes";
 import culturesPublicRouter from "./cultures-public";
+import waitlistRouter from "./waitlist";
 
 const router: IRouter = Router();
 
@@ -60,5 +61,6 @@ router.use(atelierSessionRouter);
 router.use(translationHealthRouter);
 router.use(countryVotesRouter);
 router.use(culturesPublicRouter);
+router.use(waitlistRouter);
 
 export default router;

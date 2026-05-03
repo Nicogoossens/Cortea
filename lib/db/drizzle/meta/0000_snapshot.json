@@ -1,5 +1,5 @@
 {
-  "id": "a11488cd-5ec0-4ab3-8743-4d7b97c9ebc5",
+  "id": "75f4b46c-cc09-40c4-a0a5-eddd3906bb31",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -3756,6 +3756,142 @@
       },
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.waitlist_signups": {
+      "name": "waitlist_signups",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "segment": {
+          "name": "segment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'en'"
+        },
+        "founder_code": {
+          "name": "founder_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "founder_position": {
+          "name": "founder_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "invited_at": {
+          "name": "invited_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claimed_user_id": {
+          "name": "claimed_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "waitlist_signups_email_unique": {
+          "name": "waitlist_signups_email_unique",
+          "columns": [
+            {
+              "expression": "lower(\"email\")",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "waitlist_signups_founder_code_unique": {
+          "name": "waitlist_signups_founder_code_unique",
+          "columns": [
+            {
+              "expression": "founder_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "waitlist_signups_founder_position_unique": {
+          "name": "waitlist_signups_founder_position_unique",
+          "columns": [
+            {
+              "expression": "founder_position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "waitlist_signups_segment_check": {
+          "name": "waitlist_signups_segment_check",
+          "value": "\"waitlist_signups\".\"segment\" IN ('business', 'expat', 'student', 'elite', 'other')"
+        },
+        "waitlist_signups_founder_position_range": {
+          "name": "waitlist_signups_founder_position_range",
+          "value": "\"waitlist_signups\".\"founder_position\" IS NULL OR (\"waitlist_signups\".\"founder_position\" >= 1 AND \"waitlist_signups\".\"founder_position\" <= 100)"
+        }
+      },
       "isRLSEnabled": false
     }
   },

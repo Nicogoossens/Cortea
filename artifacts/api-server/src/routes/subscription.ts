@@ -13,6 +13,35 @@ import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import { getUncachableStripeClient } from "../stripeClient";
 import { ensureReferralCode, attachPendingReferral, REFERRAL_REWARD_CAP } from "../lib/referral";
 import { sendCancellationConfirmation } from "../lib/billing-notifications";
+import { getFounderCodeForEmail } from "./waitlist";
+import type Stripe from "stripe";
+
+const FOUNDERS_COUPON_ID = "FOUNDERS100";
+
+/**
+ * Lazily ensure the FOUNDERS100 coupon exists in Stripe (1 month free Traveller,
+ * up to 100 redemptions). Returns the coupon id, or null if Stripe rejects it.
+ */
+async function ensureFoundersCoupon(stripe: Stripe): Promise<string | null> {
+  try {
+    const existing = await stripe.coupons.retrieve(FOUNDERS_COUPON_ID);
+    return existing.id;
+  } catch {
+    try {
+      const coupon = await stripe.coupons.create({
+        id: FOUNDERS_COUPON_ID,
+        percent_off: 100,
+        duration: "once",
+        max_redemptions: 100,
+        name: "Founding 100 — first month free",
+      });
+      return coupon.id;
+    } catch (err) {
+      console.warn("Unable to create FOUNDERS100 coupon:", err);
+      return null;
+    }
+  }
+}
 
 const router = Router();
 
@@ -114,6 +143,32 @@ router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
       ? `https://${process.env.REPLIT_DOMAINS.split(",")[0]}`
       : "http://localhost:3000";
 
+    // If the user signed up to the Founding 100 waitlist AND is checking out
+    // the Traveller tier, automatically apply the FOUNDERS100 coupon. The
+    // discount is gated to Traveller only — verified by reading the Stripe
+    // product's `tier` metadata. Redemption is recorded in the Stripe webhook
+    // once the subscription becomes active (not here), so abandoned checkouts
+    // do not consume the user's founder benefit.
+    let founderCode: string | null = null;
+    let appliedDiscount: { coupon: string }[] | undefined;
+    try {
+      const candidate = await getFounderCodeForEmail(user.email);
+      if (candidate) {
+        const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+        const product = price.product as Stripe.Product;
+        const productTier = product.metadata?.tier;
+        if (productTier === "traveller") {
+          const couponId = await ensureFoundersCoupon(stripe);
+          if (couponId) {
+            founderCode = candidate;
+            appliedDiscount = [{ coupon: couponId }];
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Founder code lookup failed (continuing without discount):", err);
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -124,11 +179,12 @@ router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
       payment_method_collection: "always",
       success_url: `${baseUrl}/?upgrade=success`,
       cancel_url: `${baseUrl}/membership`,
-      metadata: { userId },
+      metadata: { userId, founderCode: founderCode ?? "" },
       subscription_data: {
-        metadata: { userId },
+        metadata: { userId, founderCode: founderCode ?? "" },
         ...(eligibleForTrial ? { trial_period_days: TRIAL_DAYS } : {}),
       },
+      ...(appliedDiscount ? { discounts: appliedDiscount } : { allow_promotion_codes: true }),
     });
 
     return res.json({ url: session.url, trialDays: eligibleForTrial ? TRIAL_DAYS : 0 });

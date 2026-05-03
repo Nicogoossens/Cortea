@@ -51,6 +51,8 @@ import Companion from "@/pages/Companion";
 import RoleplayScenario from "@/pages/RoleplayScenario";
 import ResetPassword from "@/pages/ResetPassword";
 import { CultureLanding, CulturesIndex } from "@/pages/Cultures";
+import Waitlist from "@/pages/Waitlist";
+import AdminWaitlist from "@/pages/AdminWaitlist";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -189,6 +191,11 @@ function AppRouter() {
       <Route path="/cultures" component={CulturesIndex} />
       <Route path="/cultures/:slug" component={CultureLanding} />
 
+      {/* Public waitlist landing — accessible without auth, no shell */}
+      <Route path="/waitlist">
+        <Waitlist />
+      </Route>
+
       {/* Auth-conditional routing */}
       <Route>
         {!isAuthenticated ? (
@@ -240,6 +247,7 @@ function AppRouter() {
               <Route path="/votes" component={CountryVotes} />
               <Route path="/wardrobe" component={Wardrobe} />
               <Route path="/companion" component={Companion} />
+              <Route path="/admin/waitlist" component={AdminWaitlist} />
               <Route path="/admin" component={Admin} />
               <Route path="/membership" component={Membership} />
               <Route path="/mirror" component={Mirror} />

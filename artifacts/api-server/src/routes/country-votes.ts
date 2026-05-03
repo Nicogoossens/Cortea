@@ -8,6 +8,25 @@ import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 const router = Router();
 
 const VOTES_PER_USER_PER_PERIOD = 5;
+// A country is considered "live" (and therefore drops from the votable list)
+// once it has at least this many real Atelier learning-track questions seeded.
+// Until then the short Compass intro is just placeholder copy — voting is about
+// requesting the full ~8000-question dataset for that country.
+const LIVE_QUESTION_THRESHOLD = 1000;
+
+async function getLiveQuestionCodes(): Promise<Set<string>> {
+  const rows = await db.execute(sql`
+    SELECT region_code, COUNT(*)::int AS n
+    FROM learning_track_questions
+    GROUP BY region_code
+    HAVING COUNT(*) >= ${LIVE_QUESTION_THRESHOLD}
+  `);
+  const out = new Set<string>();
+  for (const r of (rows.rows ?? rows) as Array<{ region_code: string }>) {
+    out.add(r.region_code);
+  }
+  return out;
+}
 
 function currentPeriodYm(): string {
   const d = new Date();
@@ -126,14 +145,13 @@ async function getVotableCountries(): Promise<Array<{ region_code: string; regio
     .select({
       region_code: compassRegionsTable.region_code,
       flag_emoji: compassRegionsTable.flag_emoji,
-      is_published: compassRegionsTable.is_published,
     })
     .from(compassRegionsTable);
-  const publishedCodes = new Set(rows.filter((r) => r.is_published).map((r) => r.region_code));
-  const stubByCode = new Map(rows.filter((r) => !r.is_published).map((r) => [r.region_code, r]));
+  const stubByCode = new Map(rows.map((r) => [r.region_code, r]));
+  const liveCodes = await getLiveQuestionCodes();
   const out: Array<{ region_code: string; region_name: string; flag_emoji: string | null }> = [];
   for (const code of Object.keys(COUNTRY_NAMES)) {
-    if (publishedCodes.has(code)) continue;
+    if (liveCodes.has(code)) continue;
     const stub = stubByCode.get(code);
     out.push({
       region_code: code,
@@ -180,25 +198,17 @@ router.post("/votes", requireAuthUser, async (req, res) => {
 
     if (!COUNTRY_NAMES[code]) {
       const stub = await db
-        .select({ region_code: compassRegionsTable.region_code, is_published: compassRegionsTable.is_published })
+        .select({ region_code: compassRegionsTable.region_code })
         .from(compassRegionsTable)
         .where(eq(compassRegionsTable.region_code, code))
         .limit(1);
-      if (stub.length && stub[0].is_published) {
-        return res.status(400).json({ error: "Dit land is al beschikbaar in de Compass." });
-      }
       if (!stub.length) {
         return res.status(400).json({ error: "Onbekende landcode." });
       }
-    } else {
-      const published = await db
-        .select({ is_published: compassRegionsTable.is_published })
-        .from(compassRegionsTable)
-        .where(eq(compassRegionsTable.region_code, code))
-        .limit(1);
-      if (published.length && published[0].is_published) {
-        return res.status(400).json({ error: "Dit land is al beschikbaar in de Compass." });
-      }
+    }
+    const liveCodes = await getLiveQuestionCodes();
+    if (liveCodes.has(code)) {
+      return res.status(400).json({ error: "Dit land is al volledig beschikbaar." });
     }
 
     const existing = await db

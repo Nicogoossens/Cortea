@@ -70,7 +70,10 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-async function upsertGoogleUser(claims: Record<string, unknown>) {
+async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
+  user: typeof usersTable.$inferSelect;
+  isNewUser: boolean;
+}> {
   const sub = claims.sub as string;
   const email = (claims.email as string | undefined)?.toLowerCase().trim() ?? null;
   const name = (claims.name as string | undefined) ?? null;
@@ -95,7 +98,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>) {
         avatar_url: avatarUrl ?? byOAuth[0].avatar_url,
       })
       .where(eq(usersTable.id, byOAuth[0].id));
-    return { ...byOAuth[0], session_token: sessionToken };
+    return { user: { ...byOAuth[0], session_token: sessionToken }, isNewUser: false };
   }
 
   // 2. Look up by email — link to existing account
@@ -118,7 +121,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>) {
           avatar_url: avatarUrl ?? byEmail[0].avatar_url,
         })
         .where(eq(usersTable.id, byEmail[0].id));
-      return { ...byEmail[0], session_token: sessionToken };
+      return { user: { ...byEmail[0], session_token: sessionToken }, isNewUser: false };
     }
   }
 
@@ -139,10 +142,14 @@ async function upsertGoogleUser(claims: Record<string, unknown>) {
       noble_score: 0,
       subscription_tier: "guest",
       region_history: [],
+      onboarding_completed: false,
     })
     .returning();
 
-  return { ...newUser, session_token: sessionToken };
+  return {
+    user: { ...newUser, session_token: sessionToken },
+    isNewUser: true,
+  };
 }
 
 /** GET /api/auth/google — starts the Google OAuth flow */
@@ -220,13 +227,14 @@ router.get("/auth/google/callback", async (req: Request, res: Response) => {
       return res.redirect("/?error=auth_failed");
     }
 
-    const user = await upsertGoogleUser(claims as unknown as Record<string, unknown>);
+    const { user, isNewUser } = await upsertGoogleUser(claims as unknown as Record<string, unknown>);
 
     const redeemCode = issueRedeemCode({
       token: user.session_token!,
       userId: user.id,
       fullName: user.full_name ?? null,
       isAdmin: user.is_admin ?? false,
+      isNewUser,
     });
 
     return res.redirect(`${origin}${returnTo}?code=${redeemCode}`);

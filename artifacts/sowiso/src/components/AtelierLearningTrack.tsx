@@ -118,6 +118,18 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     sessionsToday: number;
     dailyLimit: number;
   } | null>(null);
+  /**
+   * When the server returns 403 we distinguish two cases so the user is
+   * routed to the right remedy:
+   *   - `tier`   → upgrade card, deep-links to /membership
+   *   - `region` → "add this country to your interests" card, deep-links
+   *                to the profile country picker.
+   */
+  const [accessDenial, setAccessDenial] = useState<
+    | { kind: "tier"; register: Register }
+    | { kind: "region"; regionCode: string }
+    | null
+  >(null);
   /** True once the user clicks "Show context" on a repetition question. */
   // Repetition gate: when a question is a repeat, the user MUST explicitly
   // acknowledge the study_context before the answer options become tappable.
@@ -137,31 +149,52 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       queryKey: [...getGetLearningTrackSessionQueryKey(sessionParams)],
       staleTime: 0,
       retry: (count, err: unknown) => {
-        // Don't retry on 429 — the limit needs to actually expire first.
+        // Don't retry on 429 (limit must expire) or 403 (must change tier
+        // / interests first — retry just thrashes the API).
         const status = (err as { status?: number } | null)?.status;
-        return status !== 429 && count < 2;
+        return status !== 429 && status !== 403 && count < 2;
       },
     },
   });
 
-  // Surface 429 limit responses (sessionError carries the parsed body via custom-fetch)
+  // Surface 429 limit + 403 access-denial responses. ApiError exposes the
+  // parsed JSON body on `.data` (older code looked at `.body`, which was
+  // always undefined — kept as a fallback so legacy patched errors still
+  // work during a partial deploy).
   useEffect(() => {
     if (!sessionError) {
       setLimitInfo(null);
+      setAccessDenial(null);
       return;
     }
-    const e = sessionError as { status?: number; body?: { reason?: string; retry_after_seconds?: number; sessions_today?: number; daily_limit?: number } };
-    if (e?.status === 429 && (e.body?.reason === "daily_limit" || e.body?.reason === "cooldown")) {
+    const e = sessionError as {
+      status?: number;
+      data?: { reason?: string; retry_after_seconds?: number; sessions_today?: number; daily_limit?: number; code?: string };
+      body?: { reason?: string; retry_after_seconds?: number; sessions_today?: number; daily_limit?: number; code?: string };
+    };
+    const payload = e?.data ?? e?.body;
+    if (e?.status === 429 && (payload?.reason === "daily_limit" || payload?.reason === "cooldown")) {
       setLimitInfo({
-        reason: e.body.reason,
-        retryAfterSeconds: e.body.retry_after_seconds ?? 0,
-        sessionsToday: e.body.sessions_today ?? 0,
-        dailyLimit: e.body.daily_limit ?? 0,
+        reason: payload.reason,
+        retryAfterSeconds: payload.retry_after_seconds ?? 0,
+        sessionsToday: payload.sessions_today ?? 0,
+        dailyLimit: payload.daily_limit ?? 0,
       });
-    } else {
-      setLimitInfo(null);
+      setAccessDenial(null);
+      return;
     }
-  }, [sessionError]);
+    if (e?.status === 403) {
+      setLimitInfo(null);
+      if (payload?.code === "REGION_NOT_IN_INTERESTS") {
+        setAccessDenial({ kind: "region", regionCode: activeRegion });
+      } else {
+        setAccessDenial({ kind: "tier", register });
+      }
+      return;
+    }
+    setLimitInfo(null);
+    setAccessDenial(null);
+  }, [sessionError, activeRegion, register]);
 
   const { data: progressData } = useGetLearningTrackProgress();
 
@@ -193,12 +226,37 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // The student no longer picks freely; the system walks them sequentially.
   // Manual override is available behind the "Advanced" toggle below.
   const nextSlotParams = { register, region_code: activeRegion };
-  const { data: nextSlot, refetch: refetchNextSlot } = useGetLearningTrackNext(nextSlotParams, {
+  const { data: nextSlot, error: nextSlotError, refetch: refetchNextSlot } = useGetLearningTrackNext(nextSlotParams, {
     query: {
       queryKey: getGetLearningTrackNextQueryKey(nextSlotParams),
       staleTime: 0,
+      retry: (count, err: unknown) => {
+        const status = (err as { status?: number } | null)?.status;
+        return status !== 403 && count < 2;
+      },
     },
   });
+
+  // /next can also 403 (tier or region) before /session even fires, e.g. on
+  // first paint after the user upgrades a region away from their tier. Mirror
+  // the session-error logic so the explainer card shows up either way.
+  useEffect(() => {
+    if (!nextSlotError) {
+      // /next succeeded (or hasn't fired yet). If /session is also clear,
+      // drop any stale denial card so the UI doesn't get stuck after the
+      // user upgrades or adds the region to interests in another tab.
+      if (!sessionError) setAccessDenial(null);
+      return;
+    }
+    const e = nextSlotError as { status?: number; data?: { code?: string }; body?: { code?: string } };
+    if (e?.status !== 403) return;
+    const payload = e?.data ?? e?.body;
+    if (payload?.code === "REGION_NOT_IN_INTERESTS") {
+      setAccessDenial({ kind: "region", regionCode: activeRegion });
+    } else {
+      setAccessDenial({ kind: "tier", register });
+    }
+  }, [nextSlotError, sessionError, activeRegion, register]);
 
   useEffect(() => {
     if (!nextSlot || hasManuallyChanged.current) return;
@@ -661,6 +719,39 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     ? t("atelier.track.daily_limit_desc", { sessions: limitInfo.sessionsToday, limit: limitInfo.dailyLimit })
                     : t("atelier.track.cooldown_desc", { minutes: Math.max(1, Math.ceil(limitInfo.retryAfterSeconds / 60)) })}
                 </p>
+              </CardContent>
+            </Card>
+          ) : accessDenial ? (
+            // ── 403 tier-gate or region-not-in-interests explainer ───────────
+            <Card className="border-primary/30 bg-primary/[0.04]">
+              <CardContent className="py-8 text-center space-y-4">
+                <Lock className="w-8 h-8 mx-auto text-primary/70" aria-hidden="true" />
+                <h3 className="font-serif text-lg text-foreground">
+                  {accessDenial.kind === "tier"
+                    ? t(
+                        accessDenial.register === "elite"
+                          ? "atelier.track.tier_locked_title_ambassador"
+                          : "atelier.track.tier_locked_title_traveller",
+                      )
+                    : t("atelier.track.region_locked_title", { region: getRegionName(accessDenial.regionCode as RegionCode) })}
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  {accessDenial.kind === "tier"
+                    ? t(
+                        accessDenial.register === "elite"
+                          ? "atelier.track.tier_locked_desc_ambassador"
+                          : "atelier.track.tier_locked_desc_traveller",
+                      )
+                    : t("atelier.track.region_locked_desc", { region: getRegionName(accessDenial.regionCode as RegionCode) })}
+                </p>
+                <Link href={accessDenial.kind === "tier" ? "/membership" : "/profile#interests"}>
+                  <Button variant="default" className="font-serif gap-2 mt-1">
+                    {accessDenial.kind === "tier"
+                      ? t("atelier.track.tier_locked_cta")
+                      : t("atelier.track.region_locked_cta")}
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : !session?.has_questions ? (

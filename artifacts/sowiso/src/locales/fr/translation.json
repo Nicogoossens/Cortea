@@ -1176,5 +1176,13 @@
   "compass.local.save": "Enregistrer le lieu",
   "compass.local.unsave": "Retirer des lieux enregistrés",
   "compass.local.save_aria": "Enregistrer {{name}} parmi vos lieux",
-  "compass.local.unsave_aria": "Retirer {{name}} de vos lieux enregistrés"
+  "compass.local.unsave_aria": "Retirer {{name}} de vos lieux enregistrés",
+  "atelier.track.tier_locked_title_traveller": "Ce parcours est réservé au Voyageur",
+  "atelier.track.tier_locked_desc_traveller": "Les parcours d'apprentissage font partie des rangs Voyageur et Ambassadeur. Élevez votre adhésion pour commencer.",
+  "atelier.track.tier_locked_title_ambassador": "Le parcours Élite est réservé à l'Ambassadeur",
+  "atelier.track.tier_locked_desc_ambassador": "Le programme Élite est réservé au rang d'Ambassadeur. Élevez votre adhésion pour y accéder.",
+  "atelier.track.tier_locked_cta": "Voir les adhésions",
+  "atelier.track.region_locked_title": "{{region}} ne fait pas encore partie de vos intérêts",
+  "atelier.track.region_locked_desc": "Ajoutez {{region}} à vos pays d'intérêt pour étudier son étiquette.",
+  "atelier.track.region_locked_cta": "Gérer mes pays d'intérêt"
 }

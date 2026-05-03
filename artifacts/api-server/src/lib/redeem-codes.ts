@@ -16,6 +16,8 @@ export interface RedeemEntry {
   userId: string;
   fullName: string | null;
   isAdmin: boolean;
+  /** True iff the account was just created during this OAuth callback. */
+  isNewUser: boolean;
   expiresAt: number;
 }
 

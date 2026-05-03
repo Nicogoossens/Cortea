@@ -51,7 +51,10 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-async function upsertSowisoUser(claims: Record<string, unknown>) {
+async function upsertSowisoUser(claims: Record<string, unknown>): Promise<{
+  user: typeof usersTable.$inferSelect;
+  isNewUser: boolean;
+}> {
   const sub = claims.sub as string;
   const email = (claims.email as string | undefined)?.toLowerCase().trim() ?? null;
   const firstName = (claims.first_name as string | undefined) ?? "";
@@ -70,7 +73,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
     await db.update(usersTable)
       .set({ session_token: sessionToken, full_name: fullName ?? byOAuth[0].full_name })
       .where(eq(usersTable.id, byOAuth[0].id));
-    return { ...byOAuth[0], session_token: sessionToken };
+    return { user: { ...byOAuth[0], session_token: sessionToken }, isNewUser: false };
   }
 
   // 2. Look up by email (link existing magic-link account)
@@ -92,7 +95,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
           full_name: byEmail[0].full_name ?? fullName,
         })
         .where(eq(usersTable.id, byEmail[0].id));
-      return { ...byEmail[0], session_token: sessionToken };
+      return { user: { ...byEmail[0], session_token: sessionToken }, isNewUser: false };
     }
   }
 
@@ -122,7 +125,7 @@ async function upsertSowisoUser(claims: Record<string, unknown>) {
     is_admin: false,
   }).returning();
 
-  return newUser;
+  return { user: newUser, isNewUser: true };
 }
 
 /** GET /api/login — starts the OIDC flow with PKCE */
@@ -203,7 +206,7 @@ router.get("/callback", async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await upsertSowisoUser(claims as unknown as Record<string, unknown>);
+    const { user, isNewUser } = await upsertSowisoUser(claims as unknown as Record<string, unknown>);
 
     // Issue a short-lived one-time redemption code — session token stays server-side.
     const redeemCode = issueRedeemCode({
@@ -211,6 +214,7 @@ router.get("/callback", async (req: Request, res: Response) => {
       userId: user.id,
       fullName: user.full_name ?? null,
       isAdmin: user.is_admin ?? false,
+      isNewUser,
     });
 
     res.redirect(`${origin}${returnTo}?code=${redeemCode}`);
@@ -249,6 +253,7 @@ router.get("/auth/redeem", (req: Request, res: Response) => {
     userId: entry.userId,
     fullName: entry.fullName,
     isAdmin: entry.isAdmin,
+    isNewUser: entry.isNewUser,
   });
 });
 

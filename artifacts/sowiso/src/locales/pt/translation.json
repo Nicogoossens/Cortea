@@ -1176,5 +1176,13 @@
   "compass.local.save": "Guardar local",
   "compass.local.unsave": "Remover dos guardados",
   "compass.local.save_aria": "Guardar {{name}} em seus locais",
-  "compass.local.unsave_aria": "Remover {{name}} dos seus locais"
+  "compass.local.unsave_aria": "Remover {{name}} dos seus locais",
+  "atelier.track.tier_locked_title_traveller": "Este percurso é reservado ao Viajante",
+  "atelier.track.tier_locked_desc_traveller": "Os percursos de aprendizagem pertencem aos níveis Viajante e Embaixador. Eleve a sua subscrição para começar.",
+  "atelier.track.tier_locked_title_ambassador": "O percurso Elite é reservado ao Embaixador",
+  "atelier.track.tier_locked_desc_ambassador": "O currículo Elite pertence ao nível de Embaixador. Eleve a sua subscrição para o desbloquear.",
+  "atelier.track.tier_locked_cta": "Ver subscrições",
+  "atelier.track.region_locked_title": "{{region}} ainda não está nos seus interesses",
+  "atelier.track.region_locked_desc": "Adicione {{region}} aos seus países de interesse para estudar a etiqueta.",
+  "atelier.track.region_locked_cta": "Gerir países de interesse"
 }

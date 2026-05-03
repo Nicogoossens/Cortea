@@ -7,6 +7,7 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import seoRouter from "./routes/seo";
 import { logger } from "./lib/logger";
+import { globalErrorHandler } from "./lib/error-handler";
 import { WebhookHandlers } from "./webhookHandlers";
 import { db } from "@workspace/db";
 import { usersTable, purchasedGuidesTable } from "@workspace/db";
@@ -212,5 +213,9 @@ app.use("/api", router);
 // SEO discovery files served at both root (for search engines) and /api (for API clients)
 app.use("/", seoRouter);
 app.use("/api", seoRouter);
+
+// Global error handler — MUST come after all routes so Express dispatches
+// thrown / rejected errors to it. Returns JSON 500 (no stack in production).
+app.use(globalErrorHandler);
 
 export default app;

@@ -1176,5 +1176,13 @@
   "compass.local.save": "Locatie opslaan",
   "compass.local.unsave": "Uit opgeslagen verwijderen",
   "compass.local.save_aria": "{{name}} naar uw locaties opslaan",
-  "compass.local.unsave_aria": "{{name}} uit uw locaties verwijderen"
+  "compass.local.unsave_aria": "{{name}} uit uw locaties verwijderen",
+  "atelier.track.tier_locked_title_traveller": "Dit traject is voorbehouden aan De Reiziger",
+  "atelier.track.tier_locked_desc_traveller": "De leertrajecten horen bij de standen Reiziger en Ambassadeur. Verhoog uw lidmaatschap om te beginnen.",
+  "atelier.track.tier_locked_title_ambassador": "Het Elite-traject is voorbehouden aan De Ambassadeur",
+  "atelier.track.tier_locked_desc_ambassador": "Het Elite-curriculum hoort bij de Ambassadeursstand. Verhoog uw lidmaatschap om het te ontgrendelen.",
+  "atelier.track.tier_locked_cta": "Lidmaatschappen bekijken",
+  "atelier.track.region_locked_title": "{{region}} staat nog niet in uw interesses",
+  "atelier.track.region_locked_desc": "Voeg {{region}} toe aan uw landinteresses om de etiquette te bestuderen.",
+  "atelier.track.region_locked_cta": "Landinteresses beheren"
 }

@@ -29,7 +29,7 @@ export default function ReplitCallback() {
     // The code is single-use; the session is stored in an HttpOnly cookie.
     fetch(`${API_BASE}/api/auth/redeem?code=${encodeURIComponent(code)}`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-      .then(async (data: { userId: string; fullName: string | null; isAdmin: boolean }) => {
+      .then(async (data: { userId: string; fullName: string | null; isAdmin: boolean; isNewUser?: boolean }) => {
         // Check onboarding status using the session cookie that was just set
         const profileRes = await fetch(`${API_BASE}/api/users/profile`, {
           credentials: "include",
@@ -39,7 +39,9 @@ export default function ReplitCallback() {
           language_code?: string;
           active_region?: string;
         } : null;
-        const isNewUser = profile?.onboarding_completed === false;
+        // Prefer the authoritative isNewUser flag from /auth/redeem; fall back
+        // to the profile lookup for legacy clients / pre-rollout sessions.
+        const isNewUser = data.isNewUser ?? (profile?.onboarding_completed === false);
 
         login(data.userId, {
           name: data.fullName ?? undefined,

@@ -1176,5 +1176,13 @@
   "compass.local.save": "会場を保存する",
   "compass.local.unsave": "保存から削除する",
   "compass.local.save_aria": "{{name}}をお気に入り会場に保存する",
-  "compass.local.unsave_aria": "{{name}}をお気に入り会場から削除する"
+  "compass.local.unsave_aria": "{{name}}をお気に入り会場から削除する",
+  "atelier.track.tier_locked_title_traveller": "このトラックはトラベラー専用です",
+  "atelier.track.tier_locked_desc_traveller": "ラーニングトラックはトラベラーおよびアンバサダーの会員レベルでご利用いただけます。会員レベルを上げて開始してください。",
+  "atelier.track.tier_locked_title_ambassador": "エリートトラックはアンバサダー専用です",
+  "atelier.track.tier_locked_desc_ambassador": "エリートカリキュラムはアンバサダー会員レベル限定です。会員レベルを上げて解除してください。",
+  "atelier.track.tier_locked_cta": "会員プランを見る",
+  "atelier.track.region_locked_title": "{{region}}はまだ興味リストに含まれていません",
+  "atelier.track.region_locked_desc": "{{region}}を興味のある国に追加して、その国のエチケットを学びましょう。",
+  "atelier.track.region_locked_cta": "興味のある国を管理"
 }

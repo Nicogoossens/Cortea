@@ -1176,5 +1176,13 @@
   "atelier.track.locked_session": "Finish your current batch first — pillars and phases unlock as you progress.",
   "atelier.track.locked_progression": "Master the previous level to unlock this one.",
   "atelier.track.locked_progression_hint": "You can revisit anything you've already mastered. Higher pillars and phases unlock as you complete each batch.",
-  "atelier.track.no_content_try_other": "Try another pillar or register"
+  "atelier.track.no_content_try_other": "Try another pillar or register",
+  "atelier.track.tier_locked_title_traveller": "This track is reserved for The Traveller",
+  "atelier.track.tier_locked_desc_traveller": "Learning Tracks are part of the Traveller and Ambassador standings. Elevate your membership to begin training.",
+  "atelier.track.tier_locked_title_ambassador": "The Elite track is reserved for The Ambassador",
+  "atelier.track.tier_locked_desc_ambassador": "The Elite curriculum is part of the Ambassador standing. Elevate your membership to unlock it.",
+  "atelier.track.tier_locked_cta": "View memberships",
+  "atelier.track.region_locked_title": "{{region}} is not yet in your interests",
+  "atelier.track.region_locked_desc": "Add {{region}} to your country interests to begin studying its etiquette.",
+  "atelier.track.region_locked_cta": "Manage country interests"
 }

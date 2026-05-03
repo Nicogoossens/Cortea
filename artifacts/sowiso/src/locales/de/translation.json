@@ -1176,5 +1176,13 @@
   "compass.local.save": "Schauplatz speichern",
   "compass.local.unsave": "Aus gespeicherten Schauplätzen entfernen",
   "compass.local.save_aria": "{{name}} in Ihren Schauplätzen speichern",
-  "compass.local.unsave_aria": "{{name}} aus Ihren Schauplätzen entfernen"
+  "compass.local.unsave_aria": "{{name}} aus Ihren Schauplätzen entfernen",
+  "atelier.track.tier_locked_title_traveller": "Dieser Pfad ist dem Reisenden vorbehalten",
+  "atelier.track.tier_locked_desc_traveller": "Lernpfade gehören zu den Stufen Reisender und Botschafter. Erhöhen Sie Ihre Mitgliedschaft, um zu beginnen.",
+  "atelier.track.tier_locked_title_ambassador": "Der Elite-Pfad ist dem Botschafter vorbehalten",
+  "atelier.track.tier_locked_desc_ambassador": "Das Elite-Curriculum ist der Botschafter-Stufe vorbehalten. Erhöhen Sie Ihre Mitgliedschaft, um es freizuschalten.",
+  "atelier.track.tier_locked_cta": "Mitgliedschaften ansehen",
+  "atelier.track.region_locked_title": "{{region}} gehört noch nicht zu Ihren Interessen",
+  "atelier.track.region_locked_desc": "Fügen Sie {{region}} Ihren Länderinteressen hinzu, um die Etikette zu studieren.",
+  "atelier.track.region_locked_cta": "Länderinteressen verwalten"
 }

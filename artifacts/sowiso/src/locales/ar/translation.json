@@ -1176,5 +1176,13 @@
   "compass.local.save": "احفظ المكان",
   "compass.local.unsave": "أزل من المحفوظات",
   "compass.local.save_aria": "احفظ {{name}} إلى أماكنك",
-  "compass.local.unsave_aria": "أزل {{name}} من أماكنك المحفوظة"
+  "compass.local.unsave_aria": "أزل {{name}} من أماكنك المحفوظة",
+  "atelier.track.tier_locked_title_traveller": "هذا المسار مخصّص للمسافر",
+  "atelier.track.tier_locked_desc_traveller": "مسارات التعلّم متاحة لعضويتَي المسافر والسفير. ارفع مستوى عضويتك للبدء.",
+  "atelier.track.tier_locked_title_ambassador": "مسار النخبة مخصّص للسفير",
+  "atelier.track.tier_locked_desc_ambassador": "منهج النخبة مخصّص لمرتبة السفير. ارفع مستوى عضويتك لفتحه.",
+  "atelier.track.tier_locked_cta": "عرض العضويات",
+  "atelier.track.region_locked_title": "{{region}} ليست ضمن اهتماماتك بعد",
+  "atelier.track.region_locked_desc": "أضِف {{region}} إلى بلدان اهتمامك لدراسة آدابها.",
+  "atelier.track.region_locked_cta": "إدارة بلدان الاهتمام"
 }

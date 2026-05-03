@@ -1176,5 +1176,13 @@
   "compass.local.save": "Salvi la sede",
   "compass.local.unsave": "Rimuova dalle sedi salvate",
   "compass.local.save_aria": "Salvi {{name}} alle Sue sedi",
-  "compass.local.unsave_aria": "Rimuova {{name}} dalle Sue sedi"
+  "compass.local.unsave_aria": "Rimuova {{name}} dalle Sue sedi",
+  "atelier.track.tier_locked_title_traveller": "Questo percorso è riservato al Viaggiatore",
+  "atelier.track.tier_locked_desc_traveller": "I percorsi di apprendimento appartengono ai livelli Viaggiatore e Ambasciatore. Eleva la tua iscrizione per iniziare.",
+  "atelier.track.tier_locked_title_ambassador": "Il percorso Élite è riservato all'Ambasciatore",
+  "atelier.track.tier_locked_desc_ambassador": "Il curriculum Élite è riservato al livello Ambasciatore. Eleva la tua iscrizione per sbloccarlo.",
+  "atelier.track.tier_locked_cta": "Vedi iscrizioni",
+  "atelier.track.region_locked_title": "{{region}} non è ancora tra i tuoi interessi",
+  "atelier.track.region_locked_desc": "Aggiungi {{region}} ai tuoi paesi di interesse per studiarne il galateo.",
+  "atelier.track.region_locked_cta": "Gestisci paesi di interesse"
 }

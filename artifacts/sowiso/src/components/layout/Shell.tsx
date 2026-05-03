@@ -96,9 +96,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.sensory",      href: "/sensory",      icon: Ear,         adminOnly: true       },
     { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
     { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
-    { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   authOnly: true        },
+    { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   adminOnly: true       },
     { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true        },
-    { key: "nav.companion",    href: "/companion",    icon: MessageSquare, authOnly: true      },
+    { key: "nav.companion",    href: "/companion",    icon: MessageSquare, adminOnly: true     },
     { key: "nav.profile",      href: "/profile",      icon: User,        authOnly: true        },
     { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];

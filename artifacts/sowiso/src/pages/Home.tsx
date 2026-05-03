@@ -462,7 +462,7 @@ export default function Home() {
         <StreakWidget streak={streak} />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8">
 
         <Card className="bg-card border-border shadow-sm overflow-hidden relative group" aria-label={t("home.standing")}>
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
@@ -569,35 +569,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2 bg-card border-border shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="font-serif text-xl">{t("profile.domain_mastery")}</CardTitle>
-            <CardDescription>{t("profile.domain_subtitle")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {pillars?.map((pillar) => (
-                <div key={pillar.pillar} className="space-y-2">
-                  <div className="text-sm font-medium leading-tight">{pillar.pillar_domain}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider">{pillar.current_title}</div>
-                  <div
-                    className="h-1 w-full bg-muted rounded-full overflow-hidden"
-                    role="progressbar"
-                    aria-label={pillar.pillar_domain}
-                    aria-valuenow={pillar.progress_percent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  >
-                    <div
-                      className="h-full bg-primary transition-all duration-1000"
-                      style={{ width: `${pillar.progress_percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {isAuthenticated && (
@@ -691,7 +662,7 @@ export default function Home() {
 
       <div className="space-y-6">
         <h2 className="font-serif text-2xl border-b border-border pb-2">{t("home.continue_studies")}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
           <Link href="/atelier" className="group">
             <Card className="h-full border-border bg-card transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">

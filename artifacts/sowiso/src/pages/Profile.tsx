@@ -1037,7 +1037,7 @@ export default function Profile() {
       )}
 
       {/* ── Personal Details + Preferences ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
 
         {/* Personal Details */}
         <Card className="bg-card border-border shadow-sm">
@@ -1167,47 +1167,15 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Complete profile — visible only when one or more of the
-                set-once identity fields (full name, birth year, gender) is
-                still missing. Opens a modal that lets the user fill in
-                whatever is absent. Once saved, the field is locked. */}
-            {profileData && (!profileData.full_name || !profileData.birth_year || !profileData.gender_identity) && (
-              <div className="pt-3 border-t border-border/50">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full font-mono text-xs uppercase tracking-wider"
-                  onClick={openCompleteProfile}
-                >
-                  <Pencil className="w-3 h-3 mr-2" aria-hidden="true" />
-                  {t("profile.complete_profile_cta")}
-                </Button>
-                <p className="text-xs text-muted-foreground/60 font-light mt-2 leading-snug">
-                  {t("profile.complete_profile_hint")}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Preferences */}
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="font-serif text-lg flex items-center gap-2">
-              <Languages className="w-4 h-4 text-primary/60" aria-hidden="true" />
-              {t("profile.preferences")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Language — labelled <select> dropdown of the supported base
-                languages. Selecting an option PATCHes the user profile and
-                immediately switches the UI locale. */}
-            <div className="space-y-2">
+            {/* Preferred language — moved out of the standalone "Preferences"
+                card so users see it alongside their other personal data.
+                Selecting an option PATCHes the user profile and immediately
+                switches the UI locale. */}
+            <div className="pt-3 border-t border-border/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="profile-language-select"
-                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground"
+                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70"
                 >
                   {t("profile.pref_language")}
                 </label>
@@ -1232,52 +1200,34 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Region */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_region_label")}</label>
-                <SaveIndicator state={regionSave} t={t} />
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowRegionPicker((v) => !v)}
-                  onBlur={() => setTimeout(() => setShowRegionPicker(false), 150)}
-                  aria-haspopup="listbox"
-                  aria-expanded={showRegionPicker}
-                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
+            {/* Complete profile — visible only when one or more of the
+                set-once identity fields (full name, birth year, gender) is
+                still missing. Opens a modal that lets the user fill in
+                whatever is absent. Once saved, the field is locked. */}
+            {profileData && (!profileData.full_name || !profileData.birth_year || !profileData.gender_identity) && (
+              <div className="pt-3 border-t border-border/50">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full font-mono text-xs uppercase tracking-wider"
+                  onClick={openCompleteProfile}
                 >
-                  <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <FlagEmoji code={activeRegion} size="sm" />
-                  <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {showRegionPicker && (
-                  <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
-                    {COMPASS_REGIONS.map((region) => {
-                      const isSelected = region.code === activeRegion;
-                      return (
-                        <button
-                          key={region.code}
-                          role="option"
-                          aria-selected={isSelected}
-                          onMouseDown={() => handleRegionChange(region.code as RegionCode)}
-                          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
-                            isSelected
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          }`}
-                        >
-                          <FlagEmoji code={region.flag} size="sm" />
-                          {getRegionName(region.code)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                  <Pencil className="w-3 h-3 mr-2" aria-hidden="true" />
+                  {t("profile.complete_profile_cta")}
+                </Button>
+                <p className="text-xs text-muted-foreground/60 font-light mt-2 leading-snug">
+                  {t("profile.complete_profile_hint")}
+                </p>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* The standalone "Preferences" card was removed: language now lives
+            inside Personal Details (above) and learning region is managed
+            from the Course Settings panel below. This eliminates the
+            duplicate region picker that confused users. */}
       </div>
 
       {/* ── Course Settings (Cursinstellingen) ── */}

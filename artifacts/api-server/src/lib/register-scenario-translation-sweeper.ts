@@ -25,6 +25,9 @@ import { existsSync } from "node:fs";
 import { db, scenariosTable } from "@workspace/db";
 import { isNull, sql } from "drizzle-orm";
 import { logger } from "./logger";
+import { checkDailyBudget, recordWorkerRun } from "./worker-cost";
+
+const SWEEPER_NAME = "scenario-translation";
 
 const DEFAULT_BATCH = 25;
 const DEFAULT_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
@@ -230,6 +233,27 @@ export function startScenarioTranslationSweeper(
       if (pending === 0) return;
       const range = await findPendingRange(batchSize);
       if (!range) return;
+
+      // Per-day USD spend cap: refuse to spawn if today's accumulated
+      // scenario-translation spend has already reached the budget.
+      const budget = await checkDailyBudget(SWEEPER_NAME);
+      if (budget.over) {
+        logger.warn(
+          { spent: budget.spent, budget: budget.budget, sweeper: SWEEPER_NAME },
+          "Scenario translation sweeper: daily budget reached, skipping worker spawn",
+        );
+        await recordWorkerRun({
+          sweeper: SWEEPER_NAME,
+          startedAt: new Date(),
+          itemsProcessed: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          status: "budget_capped",
+          metadata: { spent: budget.spent, budget: budget.budget, pending, batch: range },
+        });
+        return;
+      }
+
       logger.info(
         { pending, batch: range },
         "Scenario translation sweeper: launching worker",

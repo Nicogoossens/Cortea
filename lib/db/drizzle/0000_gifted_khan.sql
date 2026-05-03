@@ -452,6 +452,21 @@ CREATE TABLE "saved_venues" (
 	"saved_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "worker_runs" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"sweeper" text NOT NULL,
+	"started_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"finished_at" timestamp with time zone,
+	"elapsed_ms" integer,
+	"items_processed" integer DEFAULT 0 NOT NULL,
+	"input_tokens" integer DEFAULT 0 NOT NULL,
+	"output_tokens" integer DEFAULT 0 NOT NULL,
+	"estimated_usd" double precision DEFAULT 0 NOT NULL,
+	"model" text,
+	"status" text DEFAULT 'ok' NOT NULL,
+	"metadata" jsonb
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -478,4 +493,5 @@ CREATE UNIQUE INDEX "ub_user_badge_idx" ON "user_badges" USING btree ("user_id",
 CREATE INDEX "companion_messages_recipient_idx" ON "companion_messages" USING btree ("recipient_id");--> statement-breakpoint
 CREATE INDEX "companion_messages_link_idx" ON "companion_messages" USING btree ("link_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "saved_venues_user_venue_idx" ON "saved_venues" USING btree ("user_id","venue_id");--> statement-breakpoint
-CREATE INDEX "saved_venues_user_idx" ON "saved_venues" USING btree ("user_id");
+CREATE INDEX "saved_venues_user_idx" ON "saved_venues" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "worker_runs_sweeper_started_idx" ON "worker_runs" USING btree ("sweeper","started_at");

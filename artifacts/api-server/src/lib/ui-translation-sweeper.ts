@@ -24,6 +24,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { logger } from "./logger";
+import { checkDailyBudget, recordWorkerRun } from "./worker-cost";
+
+const SWEEPER_NAME = "ui-translation";
 
 const SUPPORTED_LOCALES = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -167,6 +170,8 @@ function spawnWorker(repoRoot: string, gaps: LocaleGap[]): void {
     "UI translation sweeper: worker spawned",
   );
 
+  // The worker script emits its own __AI_COST__ line and inserts the
+  // worker_runs row itself; we just surface its log lines here.
   proc.stdout?.on("data", (buf: Buffer) => {
     const msg = buf.toString().trim();
     if (msg) logger.info({ msg }, "ui-translate-worker stdout");
@@ -245,6 +250,27 @@ export function startUiTranslationSweeper(opts: UiTranslationSweeperOptions = {}
       lastGaps = gaps;
       lastRunAt = Date.now();
       if (gaps.length === 0) return;
+
+      // Per-day USD spend cap: refuse to spawn the worker if today's
+      // accumulated UI-translation spend has already reached the budget.
+      const budget = await checkDailyBudget(SWEEPER_NAME);
+      if (budget.over) {
+        logger.warn(
+          { spent: budget.spent, budget: budget.budget, sweeper: SWEEPER_NAME },
+          "UI translation sweeper: daily budget reached, skipping worker spawn",
+        );
+        await recordWorkerRun({
+          sweeper: SWEEPER_NAME,
+          startedAt: new Date(),
+          itemsProcessed: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          status: "budget_capped",
+          metadata: { spent: budget.spent, budget: budget.budget, gaps: gaps.length },
+        });
+        return;
+      }
+
       logger.info(
         {
           enKeyCount,

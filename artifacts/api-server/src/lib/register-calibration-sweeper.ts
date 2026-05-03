@@ -28,6 +28,9 @@ import {
   type CalibrationModule,
 } from "./register-calibration";
 import { logger } from "./logger";
+import { checkDailyBudget, recordWorkerRun } from "./worker-cost";
+
+const SWEEPER_NAME = "register-calibration";
 
 const CONTENT_PREFIXES = [
   "scenario.",
@@ -103,7 +106,12 @@ function chooseModule(formalityRegister: string | null | undefined): Calibration
   return "standard";
 }
 
-async function runOnce(batchSize: number): Promise<{ processed: number; errors: number }> {
+async function runOnce(batchSize: number): Promise<{
+  processed: number;
+  errors: number;
+  inputTokens: number;
+  outputTokens: number;
+}> {
   const prefixConditions = CONTENT_PREFIXES.map((p) => like(translationsTable.key, `${p}%`));
   const prefixOr = prefixConditions.length === 1 ? prefixConditions[0] : or(...prefixConditions);
 
@@ -129,7 +137,9 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
     .orderBy(asc(translationsTable.id))
     .limit(batchSize);
 
-  if (candidates.length === 0) return { processed: 0, errors: 0 };
+  if (candidates.length === 0) {
+    return { processed: 0, errors: 0, inputTokens: 0, outputTokens: 0 };
+  }
 
   // Group rows by chosen module so each call processes a homogeneous batch.
   const byModule: Record<CalibrationModule, number[]> = { standard: [], elite: [] };
@@ -139,6 +149,8 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
 
   let processed = 0;
   let errors = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
   for (const moduleKey of Object.keys(byModule) as CalibrationModule[]) {
     const ids = byModule[moduleKey];
     if (ids.length === 0) continue;
@@ -146,6 +158,8 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
       const summary = await calibrateTranslationsByIds(ids, moduleKey);
       processed += summary.passed + summary.rewritten;
       errors += summary.errors;
+      inputTokens += summary.usage.input_tokens;
+      outputTokens += summary.usage.output_tokens;
     } catch (err) {
       errors += ids.length;
       logger.warn(
@@ -158,7 +172,7 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
     }
   }
 
-  return { processed, errors };
+  return { processed, errors, inputTokens, outputTokens };
 }
 
 export interface SweeperOptions {
@@ -196,19 +210,62 @@ export function startCalibrationSweeper(opts: SweeperOptions = {}): void {
   const tick = async () => {
     if (running) return;
     running = true;
+    const startedAt = new Date();
     try {
-      const { processed, errors } = await runOnce(batchSize);
+      // Per-day USD spend cap: short-circuit before we spend another cent if
+      // today's accumulated spend has already met or exceeded the budget.
+      const budget = await checkDailyBudget(SWEEPER_NAME);
+      if (budget.over) {
+        logger.warn(
+          { spent: budget.spent, budget: budget.budget, sweeper: SWEEPER_NAME },
+          "Calibration sweeper: daily budget reached, skipping pass",
+        );
+        lastProcessed = 0;
+        lastErrors = 0;
+        lastRunAt = Date.now();
+        await recordWorkerRun({
+          sweeper: SWEEPER_NAME,
+          startedAt,
+          itemsProcessed: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          status: "budget_capped",
+          metadata: { spent: budget.spent, budget: budget.budget },
+        });
+        return;
+      }
+
+      const { processed, errors, inputTokens, outputTokens } =
+        await runOnce(batchSize);
       lastProcessed = processed;
       lastErrors = errors;
       lastRunAt = Date.now();
       if (processed > 0 || errors > 0) {
         logger.info(
-          { processed, errors, batchSize },
+          { processed, errors, batchSize, inputTokens, outputTokens },
           "Calibration sweeper: pass completed",
         );
+        await recordWorkerRun({
+          sweeper: SWEEPER_NAME,
+          startedAt,
+          itemsProcessed: processed,
+          inputTokens,
+          outputTokens,
+          status: errors > 0 ? "partial" : "ok",
+          metadata: { errors, batchSize },
+        });
       }
     } catch (err) {
       logger.warn({ err }, "Calibration sweeper: pass failed");
+      await recordWorkerRun({
+        sweeper: SWEEPER_NAME,
+        startedAt,
+        itemsProcessed: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        status: "failed",
+        metadata: { error: err instanceof Error ? err.message : String(err) },
+      });
     } finally {
       running = false;
     }

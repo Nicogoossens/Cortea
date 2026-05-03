@@ -184,12 +184,22 @@ interface EvaluationResult {
   rewritten: string;
 }
 
+export interface UsageDelta {
+  input_tokens: number;
+  output_tokens: number;
+}
+
+interface EvaluationOutput {
+  result: EvaluationResult | null;
+  usage: UsageDelta;
+}
+
 async function evaluateString(
   value: string,
   module: CalibrationModule,
   languageCode: string,
   regionLink: string | null
-): Promise<EvaluationResult | null> {
+): Promise<EvaluationOutput> {
   const anthropicBase = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
   const anthropicKey = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
 
@@ -238,6 +248,11 @@ async function evaluateString(
 
   const data = (await response.json()) as {
     content?: Array<{ type: string; text: string }>;
+    usage?: { input_tokens?: number; output_tokens?: number };
+  };
+  const usage: UsageDelta = {
+    input_tokens: Number(data.usage?.input_tokens ?? 0) || 0,
+    output_tokens: Number(data.usage?.output_tokens ?? 0) || 0,
   };
   let text = data.content?.[0]?.text?.trim() ?? "";
   text = text.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
@@ -249,15 +264,18 @@ async function evaluateString(
       typeof parsed.score !== "number" ||
       typeof parsed.rewritten !== "string"
     ) {
-      return null;
+      return { result: null, usage };
     }
     return {
-      pass: parsed.pass,
-      score: parsed.score,
-      rewritten: parsed.rewritten,
+      result: {
+        pass: parsed.pass,
+        score: parsed.score,
+        rewritten: parsed.rewritten,
+      },
+      usage,
     };
   } catch {
-    return null;
+    return { result: null, usage };
   }
 }
 
@@ -288,6 +306,12 @@ export interface CalibrationSummary {
   skipped: number;
   errors: number;
   results: RowOutcome[];
+  /**
+   * Aggregate Anthropic token usage across every evaluateString call this
+   * batch made. Used by the calibration sweeper to record per-run AI spend in
+   * the worker_runs table.
+   */
+  usage: UsageDelta;
 }
 
 export interface CalibrateOptions {
@@ -324,6 +348,7 @@ export async function calibrateTranslationsByIds(
     skipped: 0,
     errors: 0,
     results: [],
+    usage: { input_tokens: 0, output_tokens: 0 },
   };
 
   if (ids.length === 0) return summary;
@@ -369,9 +394,9 @@ export async function calibrateTranslationsByIds(
       continue;
     }
 
-    let result: EvaluationResult | null;
+    let evalOut: EvaluationOutput;
     try {
-      result = await evaluateString(
+      evalOut = await evaluateString(
         row.value,
         module,
         row.language_code,
@@ -388,6 +413,9 @@ export async function calibrateTranslationsByIds(
       continue;
     }
 
+    summary.usage.input_tokens += evalOut.usage.input_tokens;
+    summary.usage.output_tokens += evalOut.usage.output_tokens;
+    const result = evalOut.result;
     if (result === null) {
       summary.errors++;
       summary.results.push({ id, status: "error", reason: "parse_error" });
@@ -474,7 +502,8 @@ export async function calibrateI18nMap(
     }
     const regionLink = code.includes("-") ? code : null;
     try {
-      const result = await evaluateString(value, module, baseCode, regionLink);
+      const evalOut = await evaluateString(value, module, baseCode, regionLink);
+      const result = evalOut.result;
       if (result === null) {
         errors++;
         return;

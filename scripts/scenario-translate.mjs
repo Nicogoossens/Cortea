@@ -23,6 +23,17 @@ import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
 import { jsonrepair } from "jsonrepair";
+import {
+  checkDailyBudget,
+  recordWorkerRun,
+  closeWorkerCostPool,
+} from "./lib/worker-cost.mjs";
+
+const SWEEPER_NAME = "scenario-translation";
+const MODEL = "claude-haiku-4-5";
+
+let totalInputTokens = 0;
+let totalOutputTokens = 0;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -151,7 +162,7 @@ async function callAnthropic(systemPrompt, userPrompt) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: MODEL,
       max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
@@ -164,6 +175,9 @@ async function callAnthropic(systemPrompt, userPrompt) {
   }
 
   const data = await response.json();
+  // Accumulate per-call usage for the end-of-run worker_runs row.
+  totalInputTokens += Number(data.usage?.input_tokens ?? 0) || 0;
+  totalOutputTokens += Number(data.usage?.output_tokens ?? 0) || 0;
   return data.content?.[0]?.text?.trim() ?? "";
 }
 
@@ -206,12 +220,34 @@ function parseTranslation(raw, scenario) {
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 async function main() {
+  const runStartedAt = new Date();
   console.log("SOWISO Scenario Translation Worker");
   console.log(`Mode:    ${FLAG_DRY_RUN ? "DRY RUN — no database writes" : "LIVE — translations will be saved"}`);
   if (FLAG_LANG) console.log(`Filter:  lang = ${FLAG_LANG}`);
   if (FLAG_ID)   console.log(`Filter:  scenario id = ${FLAG_ID}`);
   if (FLAG_FORCE) console.log("Force:   re-translating already-translated scenarios");
   console.log("─".repeat(60));
+
+  // Daily USD budget cap: refuse to start if today's spend is already over.
+  const budget = await checkDailyBudget(SWEEPER_NAME);
+  if (budget.over) {
+    console.warn(
+      `[scenario-translate] Daily AI budget reached for ${SWEEPER_NAME}: spent $${budget.spent.toFixed(4)} of $${budget.budget}. Skipping run.`,
+    );
+    await recordWorkerRun({
+      sweeper: SWEEPER_NAME,
+      startedAt: runStartedAt,
+      itemsProcessed: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: "budget_capped",
+      model: MODEL,
+      metadata: { spent: budget.spent, budget: budget.budget },
+    });
+    await closeWorkerCostPool();
+    await pool.end();
+    return;
+  }
 
   const conditions = ["1=1"];
   const params = [];
@@ -318,6 +354,24 @@ async function main() {
   console.log(`Translated: ${translated}  Skipped: ${skipped}  Failed: ${failed}`);
   if (FLAG_DRY_RUN) console.log("DRY RUN — no database writes performed.");
 
+  await recordWorkerRun({
+    sweeper: SWEEPER_NAME,
+    startedAt: runStartedAt,
+    itemsProcessed: translated,
+    inputTokens: totalInputTokens,
+    outputTokens: totalOutputTokens,
+    model: MODEL,
+    status: failed > 0 ? "partial" : "ok",
+    metadata: {
+      targetLangs: TARGET_LANGS,
+      skipped,
+      failed,
+      dryRun: FLAG_DRY_RUN,
+      from: FLAG_FROM,
+      to: FLAG_TO,
+    },
+  });
+  await closeWorkerCostPool();
   await pool.end();
 }
 

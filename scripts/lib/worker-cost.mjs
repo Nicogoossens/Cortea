@@ -1,0 +1,157 @@
+/**
+ * Script-side companion to artifacts/api-server/src/lib/worker-cost.ts.
+ *
+ * Used by the worker scripts that get spawned by the sweepers
+ * (translate-ui.mjs, scenario-translate.mjs, register-calibration-worker.mjs)
+ * to record their per-run token usage and USD spend in the same `worker_runs`
+ * table the in-process sweepers write to. Uses pg directly so the scripts
+ * stay free of the @workspace/db drizzle import path.
+ *
+ * Pricing must stay in lockstep with worker-cost.ts.
+ */
+
+import { createRequire } from "module";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const _require = createRequire(new URL("../../lib/db/package.json", import.meta.url));
+const { Pool } = _require("pg");
+
+const DEFAULT_MODEL = "claude-haiku-4-5";
+
+export const PRICING_USD_PER_MTOK = {
+  "claude-haiku-4-5": { input: 1, output: 5 },
+};
+
+export function estimateUsd(model, inputTokens, outputTokens) {
+  const p =
+    PRICING_USD_PER_MTOK[model ?? DEFAULT_MODEL] ??
+    PRICING_USD_PER_MTOK[DEFAULT_MODEL];
+  return (inputTokens * p.input + outputTokens * p.output) / 1_000_000;
+}
+
+export function extractUsage(data) {
+  const u = data?.usage;
+  return {
+    input_tokens: Number(u?.input_tokens ?? 0) || 0,
+    output_tokens: Number(u?.output_tokens ?? 0) || 0,
+  };
+}
+
+let sharedPool = null;
+function getPool() {
+  if (!sharedPool) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("worker-cost: DATABASE_URL not set");
+    }
+    sharedPool = new Pool({ connectionString: process.env.DATABASE_URL });
+  }
+  return sharedPool;
+}
+
+export function getDailyBudgetUsd(sweeper) {
+  const envKey = `AI_DAILY_BUDGET_USD_${sweeper.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}`;
+  const perSweeper = process.env[envKey];
+  if (perSweeper && !Number.isNaN(Number(perSweeper))) return Number(perSweeper);
+  const global = process.env.AI_DAILY_BUDGET_USD;
+  if (global && !Number.isNaN(Number(global))) return Number(global);
+  return Number.POSITIVE_INFINITY;
+}
+
+export async function getDailySpendUsd(sweeper) {
+  const pool = getPool();
+  const { rows } = await pool.query(
+    `SELECT COALESCE(SUM(estimated_usd), 0)::float8 AS usd
+       FROM worker_runs
+      WHERE sweeper = $1
+        AND started_at >= date_trunc('day', NOW())`,
+    [sweeper],
+  );
+  return Number(rows[0]?.usd ?? 0);
+}
+
+export async function checkDailyBudget(sweeper) {
+  const budget = getDailyBudgetUsd(sweeper);
+  if (!Number.isFinite(budget)) return { over: false, spent: 0, budget };
+  let spent = 0;
+  try {
+    spent = await getDailySpendUsd(sweeper);
+  } catch (err) {
+    // If the worker_runs table is missing (fresh db) we'd rather proceed than
+    // block all AI work, so swallow and treat as zero spend.
+    process.stderr.write(
+      `[worker-cost] daily-spend lookup failed for ${sweeper}: ${err.message}\n`,
+    );
+    return { over: false, spent: 0, budget };
+  }
+  return { over: spent >= budget, spent, budget };
+}
+
+export async function recordWorkerRun({
+  sweeper,
+  startedAt,
+  itemsProcessed = 0,
+  inputTokens = 0,
+  outputTokens = 0,
+  model,
+  status = "ok",
+  metadata,
+}) {
+  const finishedAt = new Date();
+  const elapsedMs = finishedAt.getTime() - new Date(startedAt).getTime();
+  const m = model ?? DEFAULT_MODEL;
+  const usd = estimateUsd(m, inputTokens, outputTokens);
+  const pool = getPool();
+  try {
+    await pool.query(
+      `INSERT INTO worker_runs
+         (sweeper, started_at, finished_at, elapsed_ms, items_processed,
+          input_tokens, output_tokens, estimated_usd, model, status, metadata)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [
+        sweeper,
+        new Date(startedAt),
+        finishedAt,
+        elapsedMs,
+        itemsProcessed,
+        inputTokens,
+        outputTokens,
+        usd,
+        m,
+        status,
+        metadata ? JSON.stringify(metadata) : null,
+      ],
+    );
+  } catch (err) {
+    process.stderr.write(
+      `[worker-cost] failed to insert worker_runs row for ${sweeper}: ${err.message}\n`,
+    );
+  }
+  // Structured single-line summary so the parent sweeper's stdout pipe can
+  // re-surface it through pino without having to parse arbitrary log spew.
+  process.stdout.write(
+    `__AI_COST__ ${JSON.stringify({
+      sweeper,
+      elapsedMs,
+      itemsProcessed,
+      inputTokens,
+      outputTokens,
+      estimatedUsd: Number(usd.toFixed(6)),
+      model: m,
+      status,
+    })}\n`,
+  );
+  return { elapsedMs, estimatedUsd: usd };
+}
+
+export async function closeWorkerCostPool() {
+  if (sharedPool) {
+    try {
+      await sharedPool.end();
+    } catch {
+      /* ignore */
+    }
+    sharedPool = null;
+  }
+}

@@ -25,6 +25,17 @@ import {
   REGISTER_DESCRIPTIONS,
   isValidRegister,
 } from "./lib/register-prompts.mjs";
+import {
+  checkDailyBudget,
+  recordWorkerRun,
+  closeWorkerCostPool,
+} from "./lib/worker-cost.mjs";
+
+const SWEEPER_NAME = "ui-translation";
+const MODEL = "claude-haiku-4-5";
+
+let totalInputTokens = 0;
+let totalOutputTokens = 0;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -94,7 +105,7 @@ async function callClaude(systemPrompt, userPrompt) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-4-5",
+      model: MODEL,
       max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
@@ -102,6 +113,10 @@ async function callClaude(systemPrompt, userPrompt) {
   });
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
   const data = await res.json();
+  // Accumulate per-call usage so we can record a single worker_runs row at
+  // the end of the script. Anthropic always returns a `usage` block.
+  totalInputTokens += Number(data.usage?.input_tokens ?? 0) || 0;
+  totalOutputTokens += Number(data.usage?.output_tokens ?? 0) || 0;
   return data.content?.[0]?.text ?? "";
 }
 
@@ -129,6 +144,29 @@ function buildSystemPrompt(langName) {
     `- Use locale conventions for currency, dates, and numbers.`,
     `- Return ONLY a valid JSON object — no markdown fences, no commentary.`,
   ].join("\n");
+}
+
+// ── Daily USD budget cap (refuse to start if today's spend is already over) ─
+const RUN_STARTED_AT = new Date();
+{
+  const budget = await checkDailyBudget(SWEEPER_NAME);
+  if (budget.over) {
+    console.warn(
+      `[ui-translate] Daily AI budget reached for ${SWEEPER_NAME}: spent $${budget.spent.toFixed(4)} of $${budget.budget}. Skipping run.`,
+    );
+    await recordWorkerRun({
+      sweeper: SWEEPER_NAME,
+      startedAt: RUN_STARTED_AT,
+      itemsProcessed: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: "budget_capped",
+      model: MODEL,
+      metadata: { spent: budget.spent, budget: budget.budget },
+    });
+    await closeWorkerCostPool();
+    process.exit(0);
+  }
 }
 
 // ── Per-language translation pass ──────────────────────────────────────────
@@ -219,3 +257,21 @@ for (const targetLang of TARGET_LANGS) {
 }
 
 console.log(`\n✓ translate-ui complete — added ${grandTotalAdded} key(s), failed ${grandTotalFailed} across ${TARGET_LANGS.length} locale(s).`);
+
+// Record one worker_runs row for the whole invocation so daily/weekly spend
+// per sweeper is queryable in SQL.
+await recordWorkerRun({
+  sweeper: SWEEPER_NAME,
+  startedAt: RUN_STARTED_AT,
+  itemsProcessed: grandTotalAdded,
+  inputTokens: totalInputTokens,
+  outputTokens: totalOutputTokens,
+  model: MODEL,
+  status: grandTotalFailed > 0 ? "partial" : "ok",
+  metadata: {
+    targetLangs: TARGET_LANGS,
+    register: REGISTER,
+    failed: grandTotalFailed,
+  },
+});
+await closeWorkerCostPool();

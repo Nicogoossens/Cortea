@@ -102,6 +102,12 @@ vi.mock("@workspace/api-client-react", () => ({
     isLoading: false,
     error: null,
   }),
+  useGetCultureProtocols: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
+  getGetCultureProtocolsQueryKey: () => ["culture-protocols"],
   setBaseUrl: () => {},
 }));
 

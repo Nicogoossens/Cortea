@@ -4,10 +4,15 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck, BookOpen, Info, AlertTriangle } from "lucide-react";
+import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck, BookOpen, Info, AlertTriangle, LifeBuoy } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
-import { useGetProfile } from "@workspace/api-client-react";
+import {
+  useGetProfile,
+  useGetCultureProtocols,
+  getGetCultureProtocolsQueryKey,
+  type CultureProtocol,
+} from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useRegisterQuality } from "@/hooks/useRegisterQuality";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -99,6 +104,30 @@ export default function Counsel() {
   const isSphereOverriding = sessionSphere !== null && sessionSphere !== profileSphere;
 
   const [, navigate] = useLocation();
+
+  // ── Verified First Aid records (urgency=3) for the active region ──
+  const firstAidParams = {
+    region_code: effectiveRegion,
+    locale,
+    verified_only: true,
+    ...(effectiveSphere ? { situational_interests: effectiveSphere } : {}),
+  };
+  const { data: firstAidProtocols } = useGetCultureProtocols(firstAidParams, {
+    query: {
+      enabled: regionActive,
+      queryKey: [
+        ...getGetCultureProtocolsQueryKey(firstAidParams),
+        locale,
+        effectiveSphere ?? "",
+        "counsel-first-aid",
+      ],
+    },
+  });
+  const firstAidRecords: CultureProtocol[] = (firstAidProtocols ?? []).filter(
+    (p) => p.verified === true && !!p.source_book && p.urgency === 3,
+  );
+  const ccDisplay = (p: CultureProtocol): string =>
+    p.display_rule ?? p.rule_cc ?? p.rule_description;
 
   function isDomainAccessible(key: DomainKey): boolean {
     return isCounselDomainAccessible(
@@ -913,6 +942,47 @@ export default function Counsel() {
               <p className="text-xl leading-relaxed font-serif text-foreground">{response}</p>
             </CardContent>
           </Card>
+
+          {/* First Aid from the Library — verified urgency=3 CC records */}
+          {firstAidRecords.length > 0 && (
+            <section
+              aria-labelledby="counsel-first-aid-heading"
+              className="bg-destructive/5 border border-destructive/30 rounded-sm p-6 md:p-8 space-y-5"
+            >
+              <div className="flex items-center gap-3 pb-4 border-b border-destructive/15">
+                <LifeBuoy className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+                <div>
+                  <h2
+                    id="counsel-first-aid-heading"
+                    className="text-sm font-mono uppercase tracking-widest text-destructive font-semibold"
+                  >
+                    {t("compass.cc.first_aid")}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t("compass.cc.first_aid_subtitle")}
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-3" aria-label={t("compass.cc.first_aid")}>
+                {firstAidRecords.map((p) => (
+                  <li key={p.id} className="flex gap-3 items-start text-sm">
+                    <AlertTriangle
+                      className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-foreground/90 leading-relaxed">{ccDisplay(p)}</p>
+                      {p.source_book && (
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                          {t("compass.cc.source_label")} · {p.source_book}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <div className="flex justify-center">
             <Button variant="outline" onClick={handleReset} className="font-serif gap-2">

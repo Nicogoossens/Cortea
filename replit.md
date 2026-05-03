@@ -40,7 +40,7 @@ The Cortéa application is structured as a pnpm workspace monorepo.
 - **Content Segmentation**: Differentiates `locale` (UI language) from `activeRegion` (etiquette context).
 - **Module Structure**: Emphasizes separation of concerns; routes handle validation and service calls, while services contain business logic and DB queries.
 - **Behavioral Psychology Layer**: Invisible profiling (`behavior_profile` JSON column on users) tracks user behavior (e.g., listening score, assertiveness style, conflict mode) and influences AI responses and personalized content. User-facing labels are etiquette-focused, not psychological.
-- **Gamification Layer**: Includes daily streaks, quests, wardrobe unlocks, and an "Oeps-Knop" (emergency apology guide). Pillar mastery unlocks avatar customizations.
+- **Gamification Layer**: Includes daily streaks, quests, wardrobe unlocks, and an "Oeps-Knop" (emergency apology guide). Pillar mastery unlocks avatar customizations. Badge system covers four Atelier types (pillar → phase → country → ambassador) plus a fifth type `compass` (one per country, register-agnostic) awarded silently when a user visits a Compass region page. Triggered via `POST /api/compass/:regionCode/visited`.
 - **Subscription Tiers**: Three tiers (Guest, Traveller, Ambassador) with feature flagging and Stripe integration for payments. Content gating is implemented with blurred overlays and upgrade prompts.
 - **Cultural Compass (The Local)**: Integrates curated venue data for specific regions and categories, providing context to AI counsel. This data is static and in-memory.
 - **Admin Tools**: `CC Screening Worker` for AI-driven extraction and multilingual translation of etiquette rules from text fragments.

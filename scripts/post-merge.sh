@@ -6,7 +6,16 @@ echo "=== SOWISO post-merge setup ==="
 echo "--- Installing dependencies ---"
 pnpm install --frozen-lockfile
 
-echo "--- Applying schema additions (idempotent) ---"
+# ─────────────────────────────────────────────────────────────────────────────
+# Schema sync — fully automatic, idempotent, never prompts.
+# Any new tables/columns introduced by the merged code are added here so that
+# subsequent seed steps and API requests cannot fail with "relation does not
+# exist". See scripts/sync-schema.sh for the strategy.
+# ─────────────────────────────────────────────────────────────────────────────
+echo "--- Syncing Drizzle schema (idempotent, non-interactive) ---"
+bash scripts/sync-schema.sh
+
+echo "--- Applying schema additions (legacy idempotent ALTERs) ---"
 psql "$DATABASE_URL" -c "ALTER TABLE culture_protocols ADD COLUMN IF NOT EXISTS reviewed_by text;" 2>/dev/null || true
 psql "$DATABASE_URL" -c "ALTER TABLE culture_protocols ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;" 2>/dev/null || true
 psql "$DATABASE_URL" -c "ALTER TABLE users ADD COLUMN IF NOT EXISTS profiling_consent boolean NOT NULL DEFAULT true;" 2>/dev/null || true
@@ -29,4 +38,23 @@ node scripts/seed-translations.mjs
 echo "--- Ensuring admin account ---"
 node scripts/ensure-admin.mjs
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Background workers — no manual launch required.
+# The api-server runs two long-lived sweepers that automatically pick up any
+# pending work after this post-merge step finishes:
+#
+#   1. register-calibration-sweeper:  scans `translations` rows whose key
+#      matches a content prefix and whose `calibrated_module` is NULL,
+#      then rewrites them in the correct register (formal NL/FR/DE/...).
+#
+#   2. register-scenario-translation-sweeper: scans `scenarios` rows whose
+#      `content_i18n` is NULL, then spawns scripts/scenario-translate.mjs
+#      to translate title + content into nl, fr, de, es, pt, it, ar, ja, zh.
+#
+# Both sweepers run on a fixed interval inside the api-server process, so
+# they survive shell sessions and are guaranteed to pick up any data added
+# by this post-merge or by future admin imports.
+# ─────────────────────────────────────────────────────────────────────────────
+
 echo "=== Post-merge complete ==="
+echo "Background workers in api-server will translate + calibrate any new content automatically."

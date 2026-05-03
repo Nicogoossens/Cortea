@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startCalibrationSweeper } from "./lib/register-calibration-sweeper";
+import { startScenarioTranslationSweeper } from "./lib/register-scenario-translation-sweeper";
 
 const rawPort = process.env["PORT"];
 
@@ -29,4 +30,10 @@ app.listen(port, (err) => {
   // stamp will be picked up by this sweeper on its next pass, so register
   // calibration is applied automatically with no manual CLI step required.
   startCalibrationSweeper();
+
+  // Companion safety net for `scenarios.content_i18n`: any scenario row
+  // inserted by any path (admin import, post-merge seed, ad-hoc SQL) without
+  // translations will be picked up by this sweeper on its next pass and
+  // handed to the scenario-translate worker — no manual CLI step required.
+  startScenarioTranslationSweeper();
 });

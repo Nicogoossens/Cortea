@@ -88,16 +88,16 @@ describe("multi-country progression independence", () => {
   });
 });
 
-// ── session-limit window (4th session 429) ──────────────────────────────────
+// ── session-limit window (no daily cap — limit set to 9999) ─────────────────
 describe("session limits — 429 enforcement", () => {
-  it("blocks the 4th middle_class session of the day with daily_limit", () => {
-    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 3, 999))
-      .toEqual({ allowed: false, reason: "daily_limit" });
+  it("allows many middle_class sessions in the same day (no daily cap)", () => {
+    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 500, 999).allowed)
+      .toBe(true);
   });
 
-  it("blocks the 3rd elite session of the day with daily_limit", () => {
-    expect(isSessionAllowed(REGISTER_CONFIG.elite, 2, 999))
-      .toEqual({ allowed: false, reason: "daily_limit" });
+  it("allows many elite sessions in the same day (no daily cap)", () => {
+    expect(isSessionAllowed(REGISTER_CONFIG.elite, 500, 999).allowed)
+      .toBe(true);
   });
 
   it("blocks back-to-back sessions inside the cooldown window", () => {

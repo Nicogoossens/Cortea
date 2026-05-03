@@ -1042,6 +1042,90 @@ export default function Profile() {
         </div>
       )}
 
+      {/* ── Badges ──
+          Hier verplaatst (was eerder verder onderaan de pagina) zodat de
+          gebruiker meteen na het identiteitsblok zijn behaalde
+          onderscheidingen ziet, vóór de persoonlijke gegevens. */}
+      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+            <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
+            {t("profile.badges_title")}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-light">
+            {t("profile.badges_desc")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!earnedBadges || earnedBadges.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground/60">
+              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
+              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
+              <Link href="/atelier">
+                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Group badges by type */}
+              {(["pillar", "phase", "country", "ambassador"] as const)
+                .filter((type) => earnedBadges.some((b) => b.badge_type === type))
+                .map((type) => {
+                  const group = earnedBadges.filter((b) => b.badge_type === type);
+                  const typeLabel =
+                    type === "pillar" ? t("profile.badges_type_pillar")
+                    : type === "phase" ? t("profile.badges_type_phase")
+                    : type === "country" ? t("profile.badges_type_country")
+                    : t("profile.badges_type_ambassador");
+                  const TypeIcon =
+                    type === "pillar" ? Medal
+                    : type === "phase" ? Trophy
+                    : type === "country" ? Globe
+                    : Shield;
+                  return (
+                    <div key={type}>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <TypeIcon className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                          {typeLabel} {group.length > 1 ? `(${group.length})` : ""}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {group.map((badge) => (
+                          <div
+                            key={badge.slug}
+                            className="flex items-start gap-3 px-3 py-2.5 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
+                          >
+                            <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
+                              {type === "pillar" ? "🏅"
+                                : type === "phase" ? "🏆"
+                                : type === "country" ? "🌟"
+                                : "🎖️"}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-foreground leading-tight truncate">
+                                {badge.title}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug line-clamp-2">
+                                {badge.description}
+                              </p>
+                              {badge.awarded_at && (
+                                <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
+                                  {format(new Date(badge.awarded_at), "d MMM yyyy", { locale: dateFnsLocale })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* ── Personal Details + Preferences ── */}
       <div className="grid grid-cols-1 gap-6">
 
@@ -1452,95 +1536,96 @@ export default function Profile() {
               aanbevelingen stuurt hoort thuis in dit ene vak; visueel
               gescheiden door subkoppen, niet door extra kaarten. */}
 
-          <SubsectionHeading
+          <CollapsibleSubsection
             icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
             title={t("profile.interests_title")}
             description={t("profile.interests_subtitle")}
-          />
-
-          {/* Objectives */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.objectives_label")}</label>
-              <SaveIndicator state={objectivesSave} t={t} />
+            storageKey="interests"
+          >
+            {/* Objectives */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.objectives_label")}</label>
+                <SaveIndicator state={objectivesSave} t={t} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
+                  const isActive = (profileData?.objectives ?? []).includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleObjectiveToggle(key)}
+                      disabled={objectivesSave === "saving"}
+                      className={`text-left px-4 py-3 rounded-sm border text-sm transition-all ${
+                        isActive
+                          ? "bg-primary/10 border-primary/40 text-primary font-medium"
+                          : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                      }`}
+                    >
+                      {t(labelKey)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
-                const isActive = (profileData?.objectives ?? []).includes(key);
-                return (
-                  <button
-                    key={key}
-                    onClick={() => handleObjectiveToggle(key)}
-                    disabled={objectivesSave === "saving"}
-                    className={`text-left px-4 py-3 rounded-sm border text-sm transition-all ${
-                      isActive
-                        ? "bg-primary/10 border-primary/40 text-primary font-medium"
-                        : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
-                    }`}
-                  >
-                    {t(labelKey)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Sports & Leisure */}
-          <InterestSelector
-            label={t("profile.sports_leisure_label")}
-            presets={INTEREST_PRESETS.sports}
-            tags={profileData?.interests_sports ?? []}
-            saveState={sportsSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_sports ?? []).includes(v);
-              if (active) handleTagRemove("sports", v);
-              else handleTagAdd("sports", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("sports", v)}
-            t={t}
-          />
+            {/* Sports & Leisure */}
+            <InterestSelector
+              label={t("profile.sports_leisure_label")}
+              presets={INTEREST_PRESETS.sports}
+              tags={profileData?.interests_sports ?? []}
+              saveState={sportsSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_sports ?? []).includes(v);
+                if (active) handleTagRemove("sports", v);
+                else handleTagAdd("sports", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("sports", v)}
+              t={t}
+            />
 
-          {/* Dress Code Preferences */}
-          <InterestSelector
-            label={t("profile.dress_code_prefs_label")}
-            presets={INTEREST_PRESETS.dress_code}
-            tags={profileData?.interests_dress_code ?? []}
-            saveState={dressCodeSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_dress_code ?? []).includes(v);
-              if (active) handleTagRemove("dress_code", v);
-              else handleTagAdd("dress_code", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("dress_code", v)}
-            t={t}
-          />
+            {/* Dress Code Preferences */}
+            <InterestSelector
+              label={t("profile.dress_code_prefs_label")}
+              presets={INTEREST_PRESETS.dress_code}
+              tags={profileData?.interests_dress_code ?? []}
+              saveState={dressCodeSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_dress_code ?? []).includes(v);
+                if (active) handleTagRemove("dress_code", v);
+                else handleTagAdd("dress_code", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("dress_code", v)}
+              t={t}
+            />
+          </CollapsibleSubsection>
 
-          <SubsectionHeading
+          <CollapsibleSubsection
             icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
             title={t("profile.culinary_interests_label")}
-          />
+            storageKey="culinary"
+          >
+            <InterestSelector
+              label={t("profile.culinary_interests_label")}
+              presets={INTEREST_PRESETS.cuisine}
+              tags={profileData?.interests_cuisine ?? []}
+              saveState={cuisineSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_cuisine ?? []).includes(v);
+                if (active) handleTagRemove("cuisine", v);
+                else handleTagAdd("cuisine", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("cuisine", v)}
+              t={t}
+            />
+          </CollapsibleSubsection>
 
-          <InterestSelector
-            label={t("profile.culinary_interests_label")}
-            presets={INTEREST_PRESETS.cuisine}
-            tags={profileData?.interests_cuisine ?? []}
-            saveState={cuisineSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_cuisine ?? []).includes(v);
-              if (active) handleTagRemove("cuisine", v);
-              else handleTagAdd("cuisine", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("cuisine", v)}
-            t={t}
-          />
-
-          <SubsectionHeading
+          <CollapsibleSubsection
             icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
             title={t("profile.spheres_title")}
             description={t("profile.spheres_subtitle")}
-          />
-
-          <div>
+            storageKey="spheres"
+          >
             <div className="flex flex-wrap gap-2">
               {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
                 const isActive = (profileData?.situational_interests ?? []).includes(key);
@@ -1570,7 +1655,7 @@ export default function Profile() {
                 </span>
               )}
             </div>
-          </div>
+          </CollapsibleSubsection>
 
         </CardContent>
       </CollapsibleSection>
@@ -1967,87 +2052,6 @@ export default function Profile() {
             <div className="text-center py-12 text-muted-foreground">
               <p className="font-serif text-lg">{t("profile.no_history")}</p>
               <p className="text-sm mt-1">{t("profile.visit_atelier")}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Badges ── */}
-      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
-            <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
-            {t("profile.badges_title")}
-          </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground font-light">
-            {t("profile.badges_desc")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!earnedBadges || earnedBadges.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground/60">
-              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
-              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
-              <Link href="/atelier">
-                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {/* Group badges by type */}
-              {(["pillar", "phase", "country", "ambassador"] as const)
-                .filter((type) => earnedBadges.some((b) => b.badge_type === type))
-                .map((type) => {
-                  const group = earnedBadges.filter((b) => b.badge_type === type);
-                  const typeLabel =
-                    type === "pillar" ? t("profile.badges_type_pillar")
-                    : type === "phase" ? t("profile.badges_type_phase")
-                    : type === "country" ? t("profile.badges_type_country")
-                    : t("profile.badges_type_ambassador");
-                  const TypeIcon =
-                    type === "pillar" ? Medal
-                    : type === "phase" ? Trophy
-                    : type === "country" ? Globe
-                    : Shield;
-                  return (
-                    <div key={type}>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <TypeIcon className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                          {typeLabel} {group.length > 1 ? `(${group.length})` : ""}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {group.map((badge) => (
-                          <div
-                            key={badge.slug}
-                            className="flex items-start gap-3 px-3 py-2.5 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
-                          >
-                            <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
-                              {type === "pillar" ? "🏅"
-                                : type === "phase" ? "🏆"
-                                : type === "country" ? "🌟"
-                                : "🎖️"}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-foreground leading-tight truncate">
-                                {badge.title}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug line-clamp-2">
-                                {badge.description}
-                              </p>
-                              {badge.awarded_at && (
-                                <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
-                                  {format(new Date(badge.awarded_at), "d MMM yyyy", { locale: dateFnsLocale })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
             </div>
           )}
         </CardContent>
@@ -2562,20 +2566,62 @@ function CollapsibleSection({
 }
 
 /**
- * Visual divider with title used inside Cursusinstellingen to separate
- * Doelstellingen / Culinaire interesses / Sferen subsections without the
- * heaviness of a separate Card wrapper. Inserted between content blocks.
+ * Collapsible subsection used inside the Cursusinstellingen card to group
+ * Doelstellingen / Culinaire interesses / Sferen as individually openable
+ * blocks WITHOUT giving them the weight of a separate Card. The header is
+ * always visible (with chevron + click to toggle); the body collapses.
+ * Open/closed state persists in localStorage under
+ * `profile_subsection_<storageKey>` so each user keeps their preference.
  */
-function SubsectionHeading({ icon, title, description }: { icon?: React.ReactNode; title: string; description?: string }) {
+function CollapsibleSubsection({
+  icon, title, description, storageKey, defaultOpen = false, children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  storageKey: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`profile_subsection_${storageKey}`);
+      if (stored === null) return defaultOpen;
+      return stored === "true";
+    } catch {
+      return defaultOpen;
+    }
+  });
+  function toggle() {
+    setIsOpen((v) => {
+      const next = !v;
+      try { localStorage.setItem(`profile_subsection_${storageKey}`, String(next)); } catch { /* noop */ }
+      return next;
+    });
+  }
   return (
-    <div className="pt-5 mt-2 border-t border-border/40 space-y-1">
-      <h3 className="font-serif text-base flex items-center gap-2 text-foreground">
-        {icon}
-        {title}
-      </h3>
-      {description && (
-        <p className="text-xs font-light text-muted-foreground/70">{description}</p>
-      )}
+    <div className="pt-5 mt-2 border-t border-border/40">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={isOpen}
+        className="w-full flex items-center justify-between gap-3 text-left group"
+      >
+        <div className="space-y-1 min-w-0">
+          <h3 className="font-serif text-base flex items-center gap-2 text-foreground group-hover:text-primary transition-colors">
+            {icon}
+            {title}
+          </h3>
+          {description && (
+            <p className="text-xs font-light text-muted-foreground/70">{description}</p>
+          )}
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+      {isOpen && <div className="mt-4 space-y-5">{children}</div>}
     </div>
   );
 }

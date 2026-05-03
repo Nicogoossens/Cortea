@@ -92,16 +92,16 @@ Deletion triggered by `DELETE /api/users/profile`:
 | `users` | Deleted | ✅ |
 | `noble_score_log` | Deleted (explicit query) | ✅ |
 | `zuil_voortgang` | Deleted (explicit query) | ✅ |
-| `user_badges` | TODO — add cascade delete | ⚠️ |
-| `companion_links` | TODO — add cascade delete | ⚠️ |
-| `invitations` | TODO — add cascade delete | ⚠️ |
-| `roleplay_completions` | TODO — add cascade delete | ⚠️ |
-| `roleplay_reflections` | TODO — add cascade delete | ⚠️ |
-| `learning_track_progress` | TODO — add cascade delete | ⚠️ |
-| `learning_track_attempts` | TODO — add cascade delete | ⚠️ |
-| `user_country_interests` | TODO — add cascade delete | ⚠️ |
+| `user_badges` | Deleted (FK ON DELETE CASCADE) | ✅ |
+| `companion_links` | Deleted (explicit query, both user_a_id and user_b_id) | ✅ |
+| `invitations` | Deleted (explicit query, both inviter_id and invitee_id) | ✅ |
+| `roleplay_completions` | Deleted (explicit query) | ✅ |
+| `roleplay_reflections` | Deleted (explicit query, both author_id and target_user_id) | ✅ |
+| `learning_track_progress` | Deleted (FK ON DELETE CASCADE) | ✅ |
+| `learning_track_attempts` | Deleted (FK ON DELETE CASCADE) | ✅ |
+| `user_country_interests` | Deleted (FK ON DELETE CASCADE) | ✅ |
 
-> **Action required:** Add `ON DELETE CASCADE` FK constraints (or explicit delete queries) for all ⚠️ tables above in the next schema migration.
+> All user-scoped tables are now fully erased on `DELETE /api/users/profile`, satisfying GDPR Art. 17 (Right to Erasure).
 
 ---
 
@@ -123,7 +123,6 @@ Deletion triggered by `DELETE /api/users/profile`:
 
 | Priority | Action | Owner | Target date |
 |----------|--------|-------|------------|
-| HIGH | Implement cascade deletes for all ⚠️ tables in §5 | Engineering | Next sprint |
 | HIGH | Fill in DPA link for e-mail provider once selected | Legal/Ops | Before launch |
 | MEDIUM | Formal DPO appointment or documented exemption | Legal | Before EU launch |
 | MEDIUM | Fill in KBO/BTW number and legal entity details in Privacy Policy | Legal | Before launch |

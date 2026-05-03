@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
-import { eq, and, ne, desc, isNull } from "drizzle-orm";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
+import { eq, and, or, ne, desc, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
@@ -529,8 +529,34 @@ router.delete("/users/profile", requireAuthUser, async (req, res) => {
       return res.status(404).json({ error: "Your profile has not yet been established." });
     }
 
+    // GDPR Art. 17 — Right to Erasure. Tables with ON DELETE CASCADE FK to
+    // users.id (user_badges, learning_track_progress, learning_track_attempts,
+    // user_country_interests) are removed automatically when the users row is
+    // deleted below. The remaining tables either store the user reference as
+    // a plain TEXT column without an FK constraint, or reference the user via
+    // multiple columns (sender/recipient, inviter/invitee, author/target),
+    // so we delete them explicitly here.
     await db.delete(nobleScoreLogTable).where(eq(nobleScoreLogTable.user_id, userId));
     await db.delete(zuil_voortgangTable).where(eq(zuil_voortgangTable.user_id, userId));
+    await db.delete(roleplayCompletionsTable).where(eq(roleplayCompletionsTable.user_id, userId));
+    await db.delete(roleplayReflectionsTable).where(
+      or(
+        eq(roleplayReflectionsTable.author_id, userId),
+        eq(roleplayReflectionsTable.target_user_id, userId),
+      ),
+    );
+    await db.delete(companionLinksTable).where(
+      or(
+        eq(companionLinksTable.user_a_id, userId),
+        eq(companionLinksTable.user_b_id, userId),
+      ),
+    );
+    await db.delete(invitationsTable).where(
+      or(
+        eq(invitationsTable.inviter_id, userId),
+        eq(invitationsTable.invitee_id, userId),
+      ),
+    );
     await db.delete(usersTable).where(eq(usersTable.id, userId));
 
     return res.json({ message: "Your profile has been gracefully removed from our records." });

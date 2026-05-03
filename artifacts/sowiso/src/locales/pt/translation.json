@@ -1032,5 +1032,8 @@
   "atelier.track.all_mastered_title": "Todas as lições disponíveis foram dominadas.",
   "atelier.track.all_mastered_desc": "Novo conteúdo para esta região será adicionado automaticamente quando disponível.",
   "atelier.track.advanced_toggle": "Escolha seu ponto de partida",
-  "atelier.track.level_label": "Nível"
+  "atelier.track.level_label": "Nível",
+  "atelier.track.locked_session": "Termine primeiro sua série atual — pilares e fases são desbloqueados à medida que você progride.",
+  "atelier.track.locked_progression": "Domine o nível anterior para desbloquear este.",
+  "atelier.track.locked_progression_hint": "Você pode rever tudo o que já dominou. Pilares e fases superiores são desbloqueados ao completar cada série."
 }

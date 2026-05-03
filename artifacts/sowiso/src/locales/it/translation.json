@@ -1032,5 +1032,8 @@
   "atelier.track.all_mastered_title": "Tutte le lezioni disponibili sono state completate.",
   "atelier.track.all_mastered_desc": "Nuovi contenuti per questa regione verranno aggiunti automaticamente non appena disponibili.",
   "atelier.track.advanced_toggle": "Scegli il tuo punto di partenza",
-  "atelier.track.level_label": "Livello"
+  "atelier.track.level_label": "Livello",
+  "atelier.track.locked_session": "Termina prima la serie attuale — i pilastri e le fasi si sbloccano man mano che progredisci.",
+  "atelier.track.locked_progression": "Padroneggia il livello precedente per sbloccare questo.",
+  "atelier.track.locked_progression_hint": "Puoi rivedere tutto ciò che hai già padroneggiato. I pilastri e le fasi superiori si sbloccano completando ogni serie."
 }

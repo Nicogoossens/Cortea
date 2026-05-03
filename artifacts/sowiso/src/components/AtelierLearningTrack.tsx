@@ -21,7 +21,7 @@ import { SOCIAL_CLASS_CONFIG } from "@/lib/social-class-config";
 import {
   BookOpen, RotateCcw, Trophy, ChevronRight,
   CheckCircle2, XCircle, AlertCircle, Sparkles, ArrowRight,
-  X, Compass,
+  X, Compass, Lock,
 } from "lucide-react";
 import type { RegionCode } from "@/lib/active-region";
 
@@ -367,6 +367,41 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     );
   }
 
+  // ── Progression gate ─────────────────────────────────────────────────────
+  // Students must follow the curve. They cannot jump to a phase or pillar
+  // beyond the auto-walk pointer (which always points at the next slot they
+  // have earned). While a batch is in progress, every other slot is also
+  // frozen so the student finishes their current 8 questions before picking
+  // anything else — otherwise badges and session scoring break down.
+  const PILLAR_ORDER = ["P1", "P2", "P3"];
+  const inProgressSession =
+    !!session?.has_questions &&
+    (((session as { answers_given?: number }).answers_given ?? 0) <
+      ((session as { total_questions?: number }).total_questions ?? 0));
+  const autoPhase = nextSlot?.phase ?? 1;
+  const autoPillarIdx = nextSlot?.research_pillar
+    ? PILLAR_ORDER.indexOf(nextSlot.research_pillar)
+    : 0;
+  const allComplete = !!nextSlot?.all_complete;
+
+  function isPhaseLocked(p: number): "session" | "progression" | null {
+    if (allComplete) return null;
+    if (inProgressSession && p !== phase) return "session";
+    if (p > autoPhase) return "progression";
+    return null;
+  }
+
+  function isPillarLocked(key: string): "session" | "progression" | null {
+    if (allComplete) return null;
+    if (inProgressSession && key !== researchPillar) return "session";
+    // If the currently selected phase is itself ahead of the auto-walk
+    // (shouldn't happen because the phase column blocks it, but guard
+    // anyway), every pillar is locked.
+    if (phase > autoPhase) return "progression";
+    if (phase < autoPhase) return null; // earlier phases are fully revisitable
+    return PILLAR_ORDER.indexOf(key) > autoPillarIdx ? "progression" : null;
+  }
+
   const currentPhaseName = register === "middle_class"
     ? (MIDDLE_CLASS_PHASES.find((p) => p.phase === phase)?.domainName ?? `Fase ${phase}`)
     : (ELITE_PILLARS.find((p) => p.pillar === phase)?.domainName ?? `Pillar ${phase}`);
@@ -513,28 +548,56 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
           {showAdvanced ? "− " : "+ "}{t("atelier.track.advanced_toggle")}
         </button>
         {showAdvanced && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2 border-t border-border/30">
+          <div className="space-y-3 pt-2 border-t border-border/30">
+            <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed flex items-start gap-2">
+              <Lock className="w-3 h-3 mt-0.5 flex-shrink-0 text-muted-foreground/60" aria-hidden="true" />
+              <span>
+                {inProgressSession
+                  ? t("atelier.track.locked_session")
+                  : t("atelier.track.locked_progression_hint")}
+              </span>
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 {register === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
               </p>
               <div className="space-y-1.5">
-                {phaseOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => handlePhaseChange(opt.value)}
-                    className={`w-full text-left px-3 py-2 rounded-sm border text-sm transition-all ${
-                      phase === opt.value
-                        ? "border-primary bg-primary/5 text-primary font-medium"
-                        : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/20"
-                    }`}
-                  >
-                    <span className="font-serif">{opt.label}</span>
-                    <span className="block text-[10px] font-mono text-muted-foreground/70 mt-0.5 truncate">
-                      {opt.subtitle}
-                    </span>
-                  </button>
-                ))}
+                {phaseOptions.map((opt) => {
+                  const lockReason = isPhaseLocked(opt.value);
+                  const isLocked = lockReason !== null;
+                  const isActive = phase === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => !isLocked && handlePhaseChange(opt.value)}
+                      disabled={isLocked}
+                      title={
+                        lockReason === "session"
+                          ? t("atelier.track.locked_session")
+                          : lockReason === "progression"
+                            ? t("atelier.track.locked_progression")
+                            : undefined
+                      }
+                      aria-disabled={isLocked}
+                      className={`w-full text-left px-3 py-2 rounded-sm border text-sm transition-all ${
+                        isActive
+                          ? "border-primary bg-primary/5 text-primary font-medium"
+                          : isLocked
+                            ? "border-border/30 text-muted-foreground/50 bg-muted/10 cursor-not-allowed"
+                            : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/20"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {isLocked && <Lock className="w-3 h-3 flex-shrink-0" aria-hidden="true" />}
+                        <span className="font-serif">{opt.label}</span>
+                      </span>
+                      <span className="block text-[10px] font-mono text-muted-foreground/70 mt-0.5 truncate">
+                        {opt.subtitle}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             {register === "middle_class" && (
@@ -547,18 +610,35 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                     const pp = getPillarProgress(key);
                     const level = pp?.current_level ?? 1;
                     const mastered = pp?.mastered ?? false;
+                    const lockReason = isPillarLocked(key);
+                    const isLocked = lockReason !== null;
+                    const isActive = researchPillar === key;
                     return (
                       <button
                         key={key}
-                        onClick={() => handlePillarChange(key)}
+                        onClick={() => !isLocked && handlePillarChange(key)}
+                        disabled={isLocked}
+                        title={
+                          lockReason === "session"
+                            ? t("atelier.track.locked_session")
+                            : lockReason === "progression"
+                              ? t("atelier.track.locked_progression")
+                              : undefined
+                        }
+                        aria-disabled={isLocked}
                         className={`w-full text-left px-3 py-2 rounded-sm border text-xs transition-all ${
-                          researchPillar === key
+                          isActive
                             ? "border-primary bg-primary/5 text-primary font-medium"
-                            : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground"
+                            : isLocked
+                              ? "border-border/30 text-muted-foreground/50 bg-muted/10 cursor-not-allowed"
+                              : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono font-semibold">{key}</span>
+                          <span className="font-mono font-semibold flex items-center gap-1.5">
+                            {isLocked && <Lock className="w-3 h-3 flex-shrink-0" aria-hidden="true" />}
+                            {key}
+                          </span>
                           {mastered ? (
                             <Trophy className="w-3 h-3 text-amber-500" aria-label="Mastered" />
                           ) : (
@@ -572,6 +652,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                 </div>
               </div>
             )}
+            </div>
           </div>
         )}
       </div>

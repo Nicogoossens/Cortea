@@ -1032,5 +1032,8 @@
   "atelier.track.all_mastered_title": "تم إتقان جميع الدروس المتاحة.",
   "atelier.track.all_mastered_desc": "سيتم إضافة محتوى جديد لهذه المنطقة تلقائيًا عند توفره.",
   "atelier.track.advanced_toggle": "اختر نقطة البداية بنفسك",
-  "atelier.track.level_label": "المستوى"
+  "atelier.track.level_label": "المستوى",
+  "atelier.track.locked_session": "أكمل دفعتك الحالية أولاً — تُفتح الركائز والمراحل مع تقدمك.",
+  "atelier.track.locked_progression": "أتقن المستوى السابق لفتح هذا المستوى.",
+  "atelier.track.locked_progression_hint": "يمكنك مراجعة كل ما أتقنته. تُفتح الركائز والمراحل الأعلى مع إتمام كل دفعة."
 }

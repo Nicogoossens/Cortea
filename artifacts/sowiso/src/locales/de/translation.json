@@ -1041,5 +1041,8 @@
   "atelier.track.all_mastered_title": "Alle verfügbaren Lektionen sind gemeistert.",
   "atelier.track.all_mastered_desc": "Neue Inhalte für diese Region werden automatisch hinzugefügt, sobald sie verfügbar sind.",
   "atelier.track.advanced_toggle": "Wählen Sie Ihren Startpunkt",
-  "atelier.track.level_label": "Stufe"
+  "atelier.track.level_label": "Stufe",
+  "atelier.track.locked_session": "Schließen Sie zuerst Ihre aktuelle Reihe ab — Säulen und Phasen werden mit Ihrem Fortschritt freigeschaltet.",
+  "atelier.track.locked_progression": "Meistern Sie zuerst die vorherige Stufe, um diese freizuschalten.",
+  "atelier.track.locked_progression_hint": "Sie können alles wiederholen, was Sie bereits gemeistert haben. Höhere Säulen und Phasen werden nach jeder abgeschlossenen Reihe freigeschaltet."
 }

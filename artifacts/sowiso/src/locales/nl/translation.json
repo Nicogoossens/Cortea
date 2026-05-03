@@ -1087,5 +1087,8 @@
   "atelier.track.all_mastered_title": "Alle beschikbare lessen zijn voltooid.",
   "atelier.track.all_mastered_desc": "Nieuwe inhoud voor deze regio wordt automatisch toegevoegd zodra die beschikbaar is.",
   "atelier.track.advanced_toggle": "Kies zelf je startpunt",
-  "atelier.track.level_label": "Niveau"
+  "atelier.track.level_label": "Niveau",
+  "atelier.track.locked_session": "Maak eerst uw huidige reeks af — pijlers en fasen worden vrijgespeeld naarmate u vordert.",
+  "atelier.track.locked_progression": "Behaal eerst het vorige niveau om dit te ontgrendelen.",
+  "atelier.track.locked_progression_hint": "U kunt alles terugkijken wat u al beheerst. Hogere pijlers en fasen ontgrendelen na elke voltooide reeks."
 }

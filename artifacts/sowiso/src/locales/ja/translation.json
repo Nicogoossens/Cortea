@@ -1032,5 +1032,8 @@
   "atelier.track.all_mastered_title": "利用可能なすべてのレッスンを習得しました。",
   "atelier.track.all_mastered_desc": "この地域の新しいコンテンツは利用可能になり次第、自動的に追加されます。",
   "atelier.track.advanced_toggle": "自分で開始地点を選ぶ",
-  "atelier.track.level_label": "レベル"
+  "atelier.track.level_label": "レベル",
+  "atelier.track.locked_session": "まず現在のバッチを完了してください — 進歩するにつれて柱とフェーズが解除されます。",
+  "atelier.track.locked_progression": "前のレベルをマスターして、このレベルを解除してください。",
+  "atelier.track.locked_progression_hint": "すでにマスターしたものはいつでも見直せます。より高い柱とフェーズは、各バッチを完了すると解除されます。"
 }

@@ -1172,5 +1172,8 @@
   "atelier.track.all_mastered_title": "All available lessons are mastered.",
   "atelier.track.all_mastered_desc": "New content for this region will be added automatically as it becomes available.",
   "atelier.track.advanced_toggle": "Choose your own starting point",
-  "atelier.track.level_label": "Level"
+  "atelier.track.level_label": "Level",
+  "atelier.track.locked_session": "Finish your current batch first — pillars and phases unlock as you progress.",
+  "atelier.track.locked_progression": "Master the previous level to unlock this one.",
+  "atelier.track.locked_progression_hint": "You can revisit anything you've already mastered. Higher pillars and phases unlock as you complete each batch."
 }

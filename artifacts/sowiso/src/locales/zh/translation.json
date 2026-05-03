@@ -1023,5 +1023,8 @@
   "atelier.track.all_mastered_title": "所有可用课程均已掌握。",
   "atelier.track.all_mastered_desc": "该地区的新内容一旦可用将自动添加。",
   "atelier.track.advanced_toggle": "选择自己的起点",
-  "atelier.track.level_label": "等级"
+  "atelier.track.level_label": "等级",
+  "atelier.track.locked_session": "请先完成当前批次——随着您的进步,支柱和阶段会逐步解锁。",
+  "atelier.track.locked_progression": "请先掌握上一级别以解锁此级别。",
+  "atelier.track.locked_progression_hint": "您可以重温已掌握的内容。更高的支柱和阶段将在您完成每个批次后解锁。"
 }

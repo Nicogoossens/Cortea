@@ -3,7 +3,7 @@
  *
  * After a successful OAuth callback (Replit OIDC or Google), a random opaque code
  * is placed here. The frontend exchanges it once via GET /api/auth/redeem?code=<code>
- * (defined in oidc.ts) to receive the session token.
+ * (defined in routes/oidc.ts) to receive the session token.
  *
  * Session tokens are NEVER placed in URL query parameters.
  */

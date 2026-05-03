@@ -188,22 +188,6 @@ export default function SignIn() {
           </div>
         )}
 
-        {/* Replit SSO */}
-        <button
-          type="button"
-          onClick={() => {
-            const base = import.meta.env.BASE_URL as string;
-            const returnTo = encodeURIComponent(`${base}replit-callback`.replace("//", "/"));
-            window.location.href = `${API_BASE}/api/login?returnTo=${returnTo}`;
-          }}
-          className="w-full flex items-center justify-center gap-2.5 h-11 rounded-sm border border-primary/30 bg-primary/5 hover:bg-primary/10 text-foreground/70 text-sm font-medium transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-            <rect width="100" height="100" rx="16" fill="currentColor" fillOpacity="0.1"/>
-            <path d="M30 25h40v15H45v10h25v15H45v10h25v15H30V25z" fill="currentColor"/>
-          </svg>
-          {t("auth.sso_signin")}
-        </button>
       </div>
 
       <div className="relative flex items-center gap-3">

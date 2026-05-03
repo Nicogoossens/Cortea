@@ -8,6 +8,23 @@ const router = Router();
 
 const DEFAULT_LOCALE = "en-GB";
 
+function resolveLocaleContent(
+  content: Record<string, Record<string, unknown>>,
+  locale: string,
+): Record<string, unknown> {
+  if (content[locale]) return content[locale];
+  const base = locale.split("-")[0].toLowerCase();
+  if (content[base]) return content[base];
+  const variantKey = Object.keys(content).find(
+    (k) => k.toLowerCase().startsWith(base + "-"),
+  );
+  if (variantKey) return content[variantKey];
+  if (content[DEFAULT_LOCALE]) return content[DEFAULT_LOCALE];
+  if (content["en"]) return content["en"];
+  const enKey = Object.keys(content).find((k) => k.toLowerCase().startsWith("en"));
+  return enKey ? content[enKey] : {};
+}
+
 interface MehrabianWeight {
   nonverbal: number;
   tone: number;
@@ -196,7 +213,7 @@ router.get("/culture/compass", async (req, res) => {
     const entries = rows.map((row) => {
       const content = (row.content as unknown as Record<string, Record<string, unknown>>);
       const has_content = Object.keys(content).length > 0;
-      const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
+      const localeContent = resolveLocaleContent(content, locale);
 
       // Determine which sphere keys actually have matching content in this specific region.
       // A sphere matches only when at least one of its mapped content fields is non-empty.
@@ -271,7 +288,7 @@ router.get("/culture/compass/:regionCode", async (req, res) => {
 
     const row = rows[0];
     const content = (row.content as unknown as Record<string, Record<string, unknown>>);
-    const localeContent = (content[locale] ?? content[DEFAULT_LOCALE] ?? {}) as Record<string, unknown>;
+    const localeContent = resolveLocaleContent(content, locale);
 
     const mehrabian = MEHRABIAN_WEIGHTS[regionCode] ?? null;
 

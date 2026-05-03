@@ -30,6 +30,7 @@ import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
 import { VenueCard } from "@/components/VenueCard";
+import { CountryProgressOverview } from "@/components/CountryProgressOverview";
 import { useSavedVenues } from "@/lib/saved-venues";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
@@ -1131,6 +1132,12 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Per-region learning progress ──
+          Surfaces the per-country progress the platform already tracks
+          silently. Placed directly under "Mijn badges" so the user sees
+          their full learning history before the personal-data block. */}
+      <CountryProgressOverview />
 
       {/* ── Personal Details + Preferences ── */}
       <div className="grid grid-cols-1 gap-6">

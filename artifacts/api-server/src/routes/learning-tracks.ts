@@ -12,6 +12,7 @@ import { eq, and, sql, isNull, desc, ne } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import { checkAndAwardBadges, getUserBadges, getAllBadges } from "../lib/badge-service";
+import { badgesTable, userBadgesTable } from "@workspace/db";
 import {
   REGISTER_CONFIG,
   computeSessionLimits,
@@ -669,6 +670,166 @@ router.get("/learning-tracks/progress", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to fetch learning track progress");
     return res.status(500).json({ error: "Progress data is momentarily unavailable." });
+  }
+});
+
+// ─── GET /learning-tracks/per-region-summary ────────────────────────────────
+//
+// Aggregates progress per country (region_code) the user has expressed
+// interest in. Powers the "Mijn leertrajecten per regio" overview on the
+// profile page so the user can see, for every country they've ever studied:
+//   - how many phases they have mastered vs in progress
+//   - total practice attempts + accuracy
+//   - badges earned that are scoped to that region
+//   - when they last practiced
+//   - whether the country is currently their active learning region
+//
+// All progress data already exists per-region (learning_track_progress and
+// learning_track_attempts both key on region_code). Switching the active
+// region therefore never loses anything; this endpoint only EXPOSES that
+// fact to the user.
+router.get("/learning-tracks/per-region-summary", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const [interests, activeRegionRow] = await Promise.all([
+      db.select()
+        .from(userCountryInterestsTable)
+        .where(and(
+          eq(userCountryInterestsTable.user_id, userId),
+          isNull(userCountryInterestsTable.hidden_at),
+        )),
+      db.select({ active_region: usersTable.active_region })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1),
+    ]);
+
+    const activeRegion = activeRegionRow[0]?.active_region ?? null;
+
+    // We also want to surface any region where the user has progress or
+    // attempts even if it is no longer in their (active) interests list —
+    // otherwise old progress would silently disappear from the overview.
+    const [progressRegions, attemptRegions] = await Promise.all([
+      db.selectDistinct({ region_code: learningTrackProgressTable.region_code })
+        .from(learningTrackProgressTable)
+        .where(eq(learningTrackProgressTable.user_id, userId)),
+      db.selectDistinct({ region_code: learningTrackAttemptsTable.region_code })
+        .from(learningTrackAttemptsTable)
+        .where(eq(learningTrackAttemptsTable.user_id, userId)),
+    ]);
+
+    const allRegionCodes = new Set<string>();
+    for (const r of interests) allRegionCodes.add(r.region_code);
+    for (const r of progressRegions) allRegionCodes.add(r.region_code);
+    for (const r of attemptRegions) allRegionCodes.add(r.region_code);
+    if (activeRegion) allRegionCodes.add(activeRegion);
+    if (allRegionCodes.size === 0) return res.json([]);
+
+    // Per-region progress aggregate (count of phases mastered, in-progress,
+    // grouped by pillar). One round-trip rather than N.
+    const progressRows = await db.select({
+      region_code:     learningTrackProgressTable.region_code,
+      research_pillar: learningTrackProgressTable.research_pillar,
+      mastered:        learningTrackProgressTable.mastered,
+      phase:           learningTrackProgressTable.phase,
+      level:           learningTrackProgressTable.current_level,
+    })
+      .from(learningTrackProgressTable)
+      .where(eq(learningTrackProgressTable.user_id, userId));
+
+    // Attempts aggregate per region (totals + correctness + last activity).
+    const attemptAggregates = await db.select({
+      region_code:        learningTrackAttemptsTable.region_code,
+      total_attempts:     sql<number>`count(*)::int`.as("total_attempts"),
+      correct_attempts:   sql<number>`count(*) filter (where ${learningTrackAttemptsTable.is_correct} = true)::int`.as("correct_attempts"),
+      last_attempted_at:  sql<string | null>`max(${learningTrackAttemptsTable.attempted_at})`.as("last_attempted_at"),
+    })
+      .from(learningTrackAttemptsTable)
+      .where(eq(learningTrackAttemptsTable.user_id, userId))
+      .groupBy(learningTrackAttemptsTable.region_code);
+
+    // Badges earned that are scoped to a specific region. Badges with a
+    // NULL region are global and not tied to any one country.
+    const badgeAggregates = await db.select({
+      region_code: sql<string>`${badgesTable.region_code}`.as("region_code"),
+      badges_earned: sql<number>`count(*)::int`.as("badges_earned"),
+    })
+      .from(userBadgesTable)
+      .innerJoin(badgesTable, eq(userBadgesTable.badge_id, badgesTable.id))
+      .where(and(
+        eq(userBadgesTable.user_id, userId),
+        sql`${badgesTable.region_code} IS NOT NULL`,
+      ))
+      .groupBy(badgesTable.region_code);
+
+    // Bucket helpers.
+    const bucketByRegion = new Map<string, {
+      pillar_summary: Record<string, { mastered: number; in_progress: number }>;
+      mastered_total: number;
+      in_progress_total: number;
+    }>();
+    for (const code of allRegionCodes) {
+      bucketByRegion.set(code, { pillar_summary: {}, mastered_total: 0, in_progress_total: 0 });
+    }
+    for (const row of progressRows) {
+      const bucket = bucketByRegion.get(row.region_code);
+      if (!bucket) continue;
+      const pillarKey = row.research_pillar ?? "unscoped";
+      const pillarBucket = (bucket.pillar_summary[pillarKey] ??= { mastered: 0, in_progress: 0 });
+      if (row.mastered) {
+        pillarBucket.mastered += 1;
+        bucket.mastered_total += 1;
+      } else {
+        pillarBucket.in_progress += 1;
+        bucket.in_progress_total += 1;
+      }
+    }
+
+    const attemptByRegion = new Map(
+      attemptAggregates.map((a) => [a.region_code, a]),
+    );
+    const badgesByRegion = new Map(
+      badgeAggregates.map((b) => [b.region_code, b.badges_earned]),
+    );
+    const interestByRegion = new Map(
+      interests.map((i) => [i.region_code, i]),
+    );
+
+    const summary = Array.from(allRegionCodes).map((code) => {
+      const bucket = bucketByRegion.get(code)!;
+      const att = attemptByRegion.get(code);
+      const totalAttempts = att?.total_attempts ?? 0;
+      const correctAttempts = att?.correct_attempts ?? 0;
+      const accuracy = totalAttempts > 0 ? correctAttempts / totalAttempts : 0;
+      return {
+        region_code: code,
+        is_active: activeRegion === code,
+        is_interest: interestByRegion.has(code),
+        added_at: interestByRegion.get(code)?.added_at ?? null,
+        mastered_phases: bucket.mastered_total,
+        in_progress_phases: bucket.in_progress_total,
+        pillar_summary: bucket.pillar_summary,
+        total_attempts: totalAttempts,
+        accuracy,                                  // 0..1
+        badges_earned: badgesByRegion.get(code) ?? 0,
+        last_attempted_at: att?.last_attempted_at ?? null,
+      };
+    });
+
+    // Stable sort: active first, then most-recently practiced, then alpha.
+    summary.sort((a, b) => {
+      if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+      const aTime = a.last_attempted_at ? new Date(a.last_attempted_at).getTime() : 0;
+      const bTime = b.last_attempted_at ? new Date(b.last_attempted_at).getTime() : 0;
+      if (aTime !== bTime) return bTime - aTime;
+      return a.region_code.localeCompare(b.region_code);
+    });
+
+    return res.json(summary);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch per-region progress summary");
+    return res.status(500).json({ error: "Per-region summary is momentarily unavailable." });
   }
 });
 

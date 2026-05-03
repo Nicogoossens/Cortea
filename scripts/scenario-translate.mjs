@@ -114,6 +114,7 @@ ${JSON_SAFETY_NOTE}`,
   zh: `您是 SOWISO 精英礼仪学院的专业翻译。
 请将英语礼仪场景翻译成正式、典雅的现代汉语（普通话，简体字）。
 文体：书面正式语体，使用您/您的等敬语，措辞典雅庄重，避免口语化表达和英语借词。
+引用词语、外来语或专有名词时，请使用「」书名号，切勿在JSON字符串内部使用双引号（"）以免破坏JSON格式。
 ${JSON_SAFETY_NOTE}`,
 };
 
@@ -188,6 +189,10 @@ function parseTranslation(raw, scenario) {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (jsonMatch) text = jsonMatch[0];
   else text = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  // Replace typographic/curly quotes with straight single quotes so jsonrepair
+  // can handle unescaped inner double-quotes produced by the model (e.g. Chinese "…")
+  text = text.replace(/[\u201C\u201D]/g, "'");
 
   // Repair common JSON issues (e.g. unescaped inner quotes from typographic conventions)
   try { text = jsonrepair(text); } catch { /* ignore repair errors; let JSON.parse report */ }

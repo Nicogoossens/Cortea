@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FlagEmoji, useActiveRegion, COMPASS_REGIONS } from "@/lib/active-region";
+import { useActiveRegion } from "@/lib/active-region";
 import { useLanguage } from "@/lib/i18n";
 import { SOCIAL_CLASS_CONFIG } from "@/lib/social-class-config";
 import {
@@ -87,23 +87,6 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   useEffect(() => {
     setShowStartCard(!localStorage.getItem(startCardKey(ambitionLevel)));
   }, [ambitionLevel]);
-
-  // ── Switchable focus list MUST come from the user's active interests,
-  // never from the broad COMPASS_REGIONS catalogue. Picking an unsupported
-  // country here would just hit a backend rejection on session start.
-  const [interestCodes, setInterestCodes] = useState<RegionCode[] | null>(null);
-  useEffect(() => {
-    const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
-    fetch(`${apiBase}/api/users/country-interests`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((rows: Array<{ region_code: string; hidden?: boolean | null }>) => {
-        const codes = (rows ?? [])
-          .filter((r) => !r.hidden)
-          .map((r) => r.region_code as RegionCode);
-        setInterestCodes(codes);
-      })
-      .catch(() => setInterestCodes([]));
-  }, []);
 
   function dismissStartCard() {
     localStorage.setItem(startCardKey(ambitionLevel), "1");
@@ -409,11 +392,6 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // Only show countries the user has actively opted into (excluding the one
   // currently in focus). Falls back to empty list while interests are loading
   // — the empty-state copy in the panel handles that gracefully.
-  const interestSet = new Set(interestCodes ?? []);
-  const activeRegionsList = COMPASS_REGIONS.filter(
-    (r) => interestSet.has(r.code) && r.code !== activeRegion,
-  );
-
   return (
     <div className="space-y-6">
       {/* ── "Jouw startpunt" personalized card ── */}
@@ -687,48 +665,25 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
             </Card>
           ) : !session?.has_questions ? (
             <Card className="border-dashed border-border/50 bg-card/40">
-              <CardContent className="py-10 space-y-5">
-                <div className="flex items-center gap-3">
-                  <BookOpen className="w-8 h-8 opacity-20 flex-shrink-0" aria-hidden="true" />
-                  <div>
-                    <p className="font-serif text-lg text-foreground/80">
-                      <span className="inline-flex items-center gap-1.5">
-                        <FlagEmoji code={activeRegion} size="sm" />
-                        <span>{getRegionName(activeRegion)}</span>
-                      </span>{" "}
-                      {t("atelier.track.no_content_suffix")}
+              <CardContent className="py-8 space-y-4">
+                <div className="flex items-start gap-3">
+                  <BookOpen className="w-6 h-6 opacity-30 flex-shrink-0 mt-1" aria-hidden="true" />
+                  <div className="space-y-1">
+                    <p className="font-serif text-base text-foreground/80">
+                      {t("atelier.track.no_content_suffix").replace(/^—\s*/, "")}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {t("atelier.track.no_content_desc")}
                     </p>
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                    {t("atelier.track.available_regions")}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {activeRegionsList.map((region) => (
-                      <button
-                        key={region.code}
-                        onClick={() => setActiveRegion(region.code)}
-                        title={getRegionName(region.code)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border/50 text-xs text-foreground/70 hover:border-primary/40 hover:text-foreground hover:bg-muted/20 transition-all"
-                      >
-                        <FlagEmoji code={region.code} size="sm" />
-                        <span className="font-mono">{region.code}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Link href="/profile">
-                  <Button variant="outline" size="sm" className="gap-2 font-serif text-xs">
-                    <Compass className="w-3.5 h-3.5" aria-hidden="true" />
-                    {t("atelier.track.change_region_profile")}
-                  </Button>
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(true)}
+                  className="text-xs font-mono uppercase tracking-widest text-primary/80 hover:text-primary transition-colors"
+                >
+                  ↑ {t("atelier.track.no_content_try_other")}
+                </button>
               </CardContent>
             </Card>
           ) : feedback?.mastered ? (

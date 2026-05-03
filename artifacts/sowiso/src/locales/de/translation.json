@@ -821,8 +821,8 @@
   "atelier.track.register_middle_class": "Mittelklasse",
   "atelier.track.register_elite": "Elite",
   "atelier.track.section_phase": "Phase",
-  "atelier.track.no_content_suffix": "— Inhalt folgt bald.",
-  "atelier.track.no_content_desc": "Lernpfade für diese Region sind in Vorbereitung.",
+  "atelier.track.no_content_suffix": "— noch keine Fragen für genau dieses Modul.",
+  "atelier.track.no_content_desc": "Diese spezifische Stufe ist noch nicht fertig, aber der Rest des Lehrplans für diese Region ist vollständig verfügbar. Nutzen Sie die Auswahl oben, um eine andere Säule, Phase oder Stufe zu wählen.",
   "atelier.track.available_regions": "Verfügbare Regionen",
   "atelier.track.change_region_profile": "Region im Profil ändern",
   "atelier.track.mastered_title": "Stufe abgeschlossen — Meisterschaft erreicht",
@@ -1044,5 +1044,6 @@
   "atelier.track.level_label": "Stufe",
   "atelier.track.locked_session": "Schließen Sie zuerst Ihre aktuelle Reihe ab — Säulen und Phasen werden mit Ihrem Fortschritt freigeschaltet.",
   "atelier.track.locked_progression": "Meistern Sie zuerst die vorherige Stufe, um diese freizuschalten.",
-  "atelier.track.locked_progression_hint": "Sie können alles wiederholen, was Sie bereits gemeistert haben. Höhere Säulen und Phasen werden nach jeder abgeschlossenen Reihe freigeschaltet."
+  "atelier.track.locked_progression_hint": "Sie können alles wiederholen, was Sie bereits gemeistert haben. Höhere Säulen und Phasen werden nach jeder abgeschlossenen Reihe freigeschaltet.",
+  "atelier.track.no_content_try_other": "Versuchen Sie eine andere Säule oder Stufe"
 }

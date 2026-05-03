@@ -812,8 +812,8 @@
   "atelier.track.register_middle_class": "Classe media",
   "atelier.track.register_elite": "Élite",
   "atelier.track.section_phase": "Fase",
-  "atelier.track.no_content_suffix": "— contenuto in arrivo.",
-  "atelier.track.no_content_desc": "I percorsi di apprendimento per questa regione sono in preparazione.",
+  "atelier.track.no_content_suffix": "— ancora nessuna domanda per questo modulo specifico.",
+  "atelier.track.no_content_desc": "Questo livello specifico non è ancora pronto, ma il resto del programma per questa regione è completamente disponibile. Usa il selettore sopra per cambiare pilastro, fase o registro.",
   "atelier.track.available_regions": "Regioni disponibili",
   "atelier.track.change_region_profile": "Cambia regione nel profilo",
   "atelier.track.mastered_title": "Livello completato — Padronanza raggiunta",
@@ -1035,5 +1035,6 @@
   "atelier.track.level_label": "Livello",
   "atelier.track.locked_session": "Termina prima la serie attuale — i pilastri e le fasi si sbloccano man mano che progredisci.",
   "atelier.track.locked_progression": "Padroneggia il livello precedente per sbloccare questo.",
-  "atelier.track.locked_progression_hint": "Puoi rivedere tutto ciò che hai già padroneggiato. I pilastri e le fasi superiori si sbloccano completando ogni serie."
+  "atelier.track.locked_progression_hint": "Puoi rivedere tutto ciò che hai già padroneggiato. I pilastri e le fasi superiori si sbloccano completando ogni serie.",
+  "atelier.track.no_content_try_other": "Prova un altro pilastro o registro"
 }

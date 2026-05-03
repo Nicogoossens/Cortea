@@ -1373,6 +1373,8 @@ components:
       properties:
         session_id:
           type: integer
+          nullable: true
+          description: Null when no questions are available for this slot — the backend deliberately does not persist an empty session row.
         is_remediation:
           type: boolean
         questions:

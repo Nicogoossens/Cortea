@@ -713,7 +713,12 @@ export const GetLearningTrackSessionQueryParams = zod.object({
 });
 
 export const GetLearningTrackSessionResponse = zod.object({
-  session_id: zod.number().optional(),
+  session_id: zod
+    .number()
+    .nullish()
+    .describe(
+      "Null when no questions are available for this slot — the backend deliberately does not persist an empty session row.",
+    ),
   is_remediation: zod.boolean().optional(),
   questions: zod.array(
     zod.object({

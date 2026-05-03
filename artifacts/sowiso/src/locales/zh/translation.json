@@ -803,8 +803,8 @@
   "atelier.track.register_middle_class": "中产阶级",
   "atelier.track.register_elite": "精英",
   "atelier.track.section_phase": "阶段",
-  "atelier.track.no_content_suffix": "——内容即将推出。",
-  "atelier.track.no_content_desc": "此地区的学习轨道正在准备中。",
+  "atelier.track.no_content_suffix": "— 此具体模块尚无题目。",
+  "atelier.track.no_content_desc": "此特定级别尚未准备好,但该地区其余的课程内容已完全开放。请使用上方选择器切换支柱、阶段或层级。",
   "atelier.track.available_regions": "可用地区",
   "atelier.track.change_region_profile": "在档案中更改地区",
   "atelier.track.mastered_title": "关卡完成——已达到精通",
@@ -1026,5 +1026,6 @@
   "atelier.track.level_label": "等级",
   "atelier.track.locked_session": "请先完成当前批次——随着您的进步,支柱和阶段会逐步解锁。",
   "atelier.track.locked_progression": "请先掌握上一级别以解锁此级别。",
-  "atelier.track.locked_progression_hint": "您可以重温已掌握的内容。更高的支柱和阶段将在您完成每个批次后解锁。"
+  "atelier.track.locked_progression_hint": "您可以重温已掌握的内容。更高的支柱和阶段将在您完成每个批次后解锁。",
+  "atelier.track.no_content_try_other": "尝试其他支柱或层级"
 }

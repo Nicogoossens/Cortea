@@ -812,8 +812,8 @@
   "atelier.track.register_middle_class": "الطبقة الوسطى",
   "atelier.track.register_elite": "النخبة",
   "atelier.track.section_phase": "المرحلة",
-  "atelier.track.no_content_suffix": "— المحتوى قادم قريباً.",
-  "atelier.track.no_content_desc": "مسارات التعلم لهذه المنطقة قيد الإعداد.",
+  "atelier.track.no_content_suffix": "— لا توجد أسئلة لهذه الوحدة بعد.",
+  "atelier.track.no_content_desc": "هذا المستوى المحدد ليس جاهزًا بعد، لكن بقية المنهج لهذه المنطقة متاح بالكامل. استخدم المحدد أعلاه لتغيير الركيزة أو المرحلة أو السجل.",
   "atelier.track.available_regions": "المناطق المتاحة",
   "atelier.track.change_region_profile": "تغيير المنطقة في الملف الشخصي",
   "atelier.track.mastered_title": "اكتمل المستوى — تم بلوغ الإتقان",
@@ -1035,5 +1035,6 @@
   "atelier.track.level_label": "المستوى",
   "atelier.track.locked_session": "أكمل دفعتك الحالية أولاً — تُفتح الركائز والمراحل مع تقدمك.",
   "atelier.track.locked_progression": "أتقن المستوى السابق لفتح هذا المستوى.",
-  "atelier.track.locked_progression_hint": "يمكنك مراجعة كل ما أتقنته. تُفتح الركائز والمراحل الأعلى مع إتمام كل دفعة."
+  "atelier.track.locked_progression_hint": "يمكنك مراجعة كل ما أتقنته. تُفتح الركائز والمراحل الأعلى مع إتمام كل دفعة.",
+  "atelier.track.no_content_try_other": "جرب ركيزة أو سجلًا آخر"
 }

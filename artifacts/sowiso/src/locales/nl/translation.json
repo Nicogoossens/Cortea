@@ -882,8 +882,8 @@
   "atelier.track.register_middle_class": "Middenklasse",
   "atelier.track.register_elite": "Elite",
   "atelier.track.section_phase": "Fase",
-  "atelier.track.no_content_suffix": "— inhoud volgt binnenkort.",
-  "atelier.track.no_content_desc": "Leertrajecten voor deze regio zijn in voorbereiding.",
+  "atelier.track.no_content_suffix": "— nog geen vragen voor exact dit onderdeel.",
+  "atelier.track.no_content_desc": "Dit specifieke niveau is nog niet klaar, maar de rest van het curriculum voor deze regio is volledig beschikbaar. Gebruik de keuzevelden hierboven om een andere pijler, fase of register te kiezen.",
   "atelier.track.available_regions": "Beschikbare regio's",
   "atelier.track.change_region_profile": "Regio wijzigen in profiel",
   "atelier.track.mastered_title": "Niveau voltooid — Meesterschap bereikt",
@@ -1090,5 +1090,6 @@
   "atelier.track.level_label": "Niveau",
   "atelier.track.locked_session": "Maak eerst uw huidige reeks af — pijlers en fasen worden vrijgespeeld naarmate u vordert.",
   "atelier.track.locked_progression": "Behaal eerst het vorige niveau om dit te ontgrendelen.",
-  "atelier.track.locked_progression_hint": "U kunt alles terugkijken wat u al beheerst. Hogere pijlers en fasen ontgrendelen na elke voltooide reeks."
+  "atelier.track.locked_progression_hint": "U kunt alles terugkijken wat u al beheerst. Hogere pijlers en fasen ontgrendelen na elke voltooide reeks.",
+  "atelier.track.no_content_try_other": "Probeer een andere pijler of register"
 }

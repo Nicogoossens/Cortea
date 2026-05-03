@@ -812,8 +812,8 @@
   "atelier.track.register_middle_class": "中産階級",
   "atelier.track.register_elite": "エリート",
   "atelier.track.section_phase": "フェーズ",
-  "atelier.track.no_content_suffix": "— コンテンツは近日公開。",
-  "atelier.track.no_content_desc": "このリージョンの学習トラックは準備中です。",
+  "atelier.track.no_content_suffix": "— このモジュールには質問はまだありません。",
+  "atelier.track.no_content_desc": "この特定のレベルはまだ準備中ですが、この地域の他のカリキュラムは完全に利用可能です。上のセレクタを使って柱、フェーズ、レジスターを切り替えてください。",
   "atelier.track.available_regions": "利用可能なリージョン",
   "atelier.track.change_region_profile": "プロフィールでリージョンを変更",
   "atelier.track.mastered_title": "レベル完了 — 習得達成",
@@ -1035,5 +1035,6 @@
   "atelier.track.level_label": "レベル",
   "atelier.track.locked_session": "まず現在のバッチを完了してください — 進歩するにつれて柱とフェーズが解除されます。",
   "atelier.track.locked_progression": "前のレベルをマスターして、このレベルを解除してください。",
-  "atelier.track.locked_progression_hint": "すでにマスターしたものはいつでも見直せます。より高い柱とフェーズは、各バッチを完了すると解除されます。"
+  "atelier.track.locked_progression_hint": "すでにマスターしたものはいつでも見直せます。より高い柱とフェーズは、各バッチを完了すると解除されます。",
+  "atelier.track.no_content_try_other": "別の柱またはレジスターを試す"
 }

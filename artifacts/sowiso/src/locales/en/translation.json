@@ -899,8 +899,8 @@
   "atelier.track.register_middle_class": "Middle Class",
   "atelier.track.register_elite": "Elite",
   "atelier.track.section_phase": "Phase",
-  "atelier.track.no_content_suffix": "— content coming soon.",
-  "atelier.track.no_content_desc": "Learning tracks for this region are in preparation.",
+  "atelier.track.no_content_suffix": "— no questions for this exact slot yet.",
+  "atelier.track.no_content_desc": "This specific level isn't ready, but the rest of the curriculum for this region is fully available. Use the picker above to switch pillar, phase or register.",
   "atelier.track.available_regions": "Available regions",
   "atelier.track.change_region_profile": "Change region in profile",
   "atelier.track.mastered_title": "Level completed — Mastery achieved",
@@ -1175,5 +1175,6 @@
   "atelier.track.level_label": "Level",
   "atelier.track.locked_session": "Finish your current batch first — pillars and phases unlock as you progress.",
   "atelier.track.locked_progression": "Master the previous level to unlock this one.",
-  "atelier.track.locked_progression_hint": "You can revisit anything you've already mastered. Higher pillars and phases unlock as you complete each batch."
+  "atelier.track.locked_progression_hint": "You can revisit anything you've already mastered. Higher pillars and phases unlock as you complete each batch.",
+  "atelier.track.no_content_try_other": "Try another pillar or register"
 }

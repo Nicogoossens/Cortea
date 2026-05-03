@@ -812,8 +812,8 @@
   "atelier.track.register_middle_class": "Clase media",
   "atelier.track.register_elite": "Élite",
   "atelier.track.section_phase": "Fase",
-  "atelier.track.no_content_suffix": "— contenido próximamente.",
-  "atelier.track.no_content_desc": "Los trayectos de aprendizaje para esta región están en preparación.",
+  "atelier.track.no_content_suffix": "— aún no hay preguntas para este módulo exacto.",
+  "atelier.track.no_content_desc": "Este nivel específico no está listo, pero el resto del plan de estudios para esta región está totalmente disponible. Use el selector de arriba para cambiar pilar, fase o registro.",
   "atelier.track.available_regions": "Regiones disponibles",
   "atelier.track.change_region_profile": "Cambiar región en el perfil",
   "atelier.track.mastered_title": "Nivel completado — Maestría alcanzada",
@@ -1035,5 +1035,6 @@
   "atelier.track.level_label": "Nivel",
   "atelier.track.locked_session": "Termine primero su serie actual — los pilares y fases se desbloquean a medida que avanza.",
   "atelier.track.locked_progression": "Domine el nivel anterior para desbloquear este.",
-  "atelier.track.locked_progression_hint": "Puede repasar todo lo que ya ha dominado. Los pilares y fases superiores se desbloquean a medida que completa cada serie."
+  "atelier.track.locked_progression_hint": "Puede repasar todo lo que ya ha dominado. Los pilares y fases superiores se desbloquean a medida que completa cada serie.",
+  "atelier.track.no_content_try_other": "Pruebe otro pilar o registro"
 }

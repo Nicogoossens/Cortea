@@ -294,6 +294,20 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           excludeIds: exhaustedIds,
         }, tx);
 
+        // Never persist an empty session — they become "phantom" rows that
+        // get reused on reload and surface a misleading "content coming soon"
+        // banner even when the region itself has plenty of curriculum in
+        // other slots. Return null and let the caller emit a clean
+        // has_questions=false response without a session row.
+        if (questions.length === 0) {
+          inlineQuestions = [];
+          inlineProgressRow = progressRow ?? null;
+          inlineCurrentLevel = currentLevel;
+          inlineDemographic = demographic;
+          inlineIsRemediation = isRemediation;
+          return null;
+        }
+
         const [created] = await tx.insert(learningTrackSessionsTable).values({
           user_id: userId,
           register,
@@ -337,6 +351,29 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           last_completed_at: limitDenial.lastCompletedAt,
         });
       }
+    }
+
+    // No-content path: the transaction found 0 questions for this slot and
+    // intentionally did NOT persist a session row. Return a clean
+    // has_questions=false response so the UI can show a slot-specific empty
+    // state without leaving a phantom session behind.
+    if (inlineQuestions && !session) {
+      const progressRow = inlineProgressRow;
+      return res.json({
+        session_id: null,
+        is_remediation: inlineIsRemediation,
+        current_level: inlineCurrentLevel,
+        mastered: progressRow?.mastered ?? false,
+        questions_done: progressRow?.questions_done ?? 0,
+        correct_streak: progressRow?.correct_streak ?? 0,
+        demographic: inlineDemographic,
+        repeat: inlineIsRemediation,
+        has_questions: false,
+        total_questions: 0,
+        answers_given: 0,
+        questions: [],
+        limits: await computeSessionLimits(userId, register),
+      });
     }
 
     // Newly-created path: emit using the in-memory question set built inside

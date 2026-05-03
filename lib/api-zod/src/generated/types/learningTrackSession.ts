@@ -9,7 +9,8 @@ import type { LearningTrackSessionQuestion } from "./learningTrackSessionQuestio
 import type { SessionLimitStatus } from "./sessionLimitStatus";
 
 export interface LearningTrackSession {
-  session_id?: number;
+  /** Null when no questions are available for this slot — the backend deliberately does not persist an empty session row. */
+  session_id?: number | null;
   is_remediation?: boolean;
   questions: LearningTrackSessionQuestion[];
   current_level: number;

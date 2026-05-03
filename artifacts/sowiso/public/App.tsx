@@ -31,7 +31,7 @@ import EmailVerify from "@/pages/EmailVerify";
 import Onboarding from "@/pages/Onboarding";
 import Admin from "@/pages/Admin";
 import Membership from "@/pages/Membership";
-import ReplitCallback from "@/pages/ReplitCallback";
+import OAuthCallback from "@/pages/OAuthCallback";
 import Mirror from "@/pages/Mirror";
 import Sensory from "@/pages/Sensory";
 import Navigator from "@/pages/Navigator";
@@ -152,9 +152,9 @@ function AppRouter() {
           <Onboarding />
         </Shell>
       </Route>
-      <Route path="/replit-callback">
+      <Route path="/oauth-callback">
         <Shell>
-          <ReplitCallback />
+          <OAuthCallback />
         </Shell>
       </Route>
 

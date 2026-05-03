@@ -154,7 +154,7 @@ export default function SignIn() {
             type="button"
             onClick={() => {
               const base = import.meta.env.BASE_URL as string;
-              const returnTo = encodeURIComponent(`${base}replit-callback`.replace("//", "/"));
+              const returnTo = encodeURIComponent(`${base}oauth-callback`.replace("//", "/"));
               window.location.href = `${API_BASE}/api/auth/google?returnTo=${returnTo}`;
             }}
             className="w-full flex items-center justify-center gap-2.5 h-11 rounded-sm border border-border/60 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors shadow-sm"

@@ -132,7 +132,7 @@ Disallow: /admin
 Disallow: /profile
 Disallow: /onboarding
 Disallow: /verify-email
-Disallow: /replit-callback
+Disallow: /oauth-callback
 Disallow: /companion
 Disallow: /__mockup
 

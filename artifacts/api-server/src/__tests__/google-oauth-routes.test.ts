@@ -131,7 +131,7 @@ function makeGoogleClaims(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function callbackCookies(returnTo = "/replit-callback") {
+function callbackCookies(returnTo = "/oauth-callback") {
   return {
     g_code_verifier: "verifier-abc",
     g_state: "mock-state",
@@ -236,12 +236,12 @@ describe("GET /api/auth/google — OAuth init route", () => {
     expect(buildArgs[1]).toMatchObject({ prompt: "select_account" });
   });
 
-  it("stores the returnTo path safely defaulting to /replit-callback", async () => {
+  it("stores the returnTo path safely defaulting to /oauth-callback", async () => {
     const req = makeReq({ url: "/api/auth/google", query: {} });
     const res = makeRes();
     await initHandler(req, res);
 
-    expect(res._cookies["g_return_to"]).toBe("/replit-callback");
+    expect(res._cookies["g_return_to"]).toBe("/oauth-callback");
   });
 
   it("honours an explicit returnTo query param", async () => {
@@ -252,12 +252,12 @@ describe("GET /api/auth/google — OAuth init route", () => {
     expect(res._cookies["g_return_to"]).toBe("/dashboard");
   });
 
-  it("rejects an unsafe returnTo value and falls back to /replit-callback", async () => {
+  it("rejects an unsafe returnTo value and falls back to /oauth-callback", async () => {
     const req = makeReq({ url: "/api/auth/google?returnTo=//evil.com", query: { returnTo: "//evil.com" } });
     const res = makeRes();
     await initHandler(req, res);
 
-    expect(res._cookies["g_return_to"]).toBe("/replit-callback");
+    expect(res._cookies["g_return_to"]).toBe("/oauth-callback");
   });
 
   it("builds the callback URL from APP_PUBLIC_URL when set", async () => {
@@ -352,7 +352,7 @@ describe("GET /api/auth/google/callback — new user (DB insert path)", () => {
     const res = makeRes();
     await callbackHandler(req, res);
 
-    expect(res._redirectUrl).toMatch(/\/replit-callback\?code=[0-9a-f]{32}$/);
+    expect(res._redirectUrl).toMatch(/\/oauth-callback\?code=[0-9a-f]{32}$/);
     const code = new URL(res._redirectUrl, "http://localhost").searchParams.get("code")!;
     const entry = redeemCodes.get(code);
     expect(entry?.isNewUser).toBe(true);
@@ -378,7 +378,7 @@ describe("GET /api/auth/google/callback — existing user (DB select hit)", () =
     const res = makeRes();
     await callbackHandler(req, res);
 
-    expect(res._redirectUrl).toMatch(/\/replit-callback\?code=[0-9a-f]{32}$/);
+    expect(res._redirectUrl).toMatch(/\/oauth-callback\?code=[0-9a-f]{32}$/);
     const code = new URL(res._redirectUrl, "http://localhost").searchParams.get("code")!;
     const entry = redeemCodes.get(code);
     expect(entry?.isNewUser).toBe(false);
@@ -436,7 +436,7 @@ describe("Full OAuth loop: init → callback", () => {
     });
 
     // Step 1: init route — user clicks "Sign in with Google"
-    const initReq = makeReq({ url: "/api/auth/google", query: { returnTo: "/replit-callback" } });
+    const initReq = makeReq({ url: "/api/auth/google", query: { returnTo: "/oauth-callback" } });
     const initRes = makeRes();
     await initHandler(initReq, initRes);
 
@@ -450,7 +450,7 @@ describe("Full OAuth loop: init → callback", () => {
     const cbRes = makeRes();
     await callbackHandler(cbReq, cbRes);
 
-    expect(cbRes._redirectUrl).toMatch(/\/replit-callback\?code=[0-9a-f]{32}$/);
+    expect(cbRes._redirectUrl).toMatch(/\/oauth-callback\?code=[0-9a-f]{32}$/);
     const code = new URL(cbRes._redirectUrl, "http://localhost").searchParams.get("code")!;
     const entry = redeemCodes.get(code);
     expect(entry?.isNewUser).toBe(true);
@@ -465,7 +465,7 @@ describe("Full OAuth loop: init → callback", () => {
     });
 
     // Step 1: init
-    const initReq = makeReq({ url: "/api/auth/google", query: { returnTo: "/replit-callback" } });
+    const initReq = makeReq({ url: "/api/auth/google", query: { returnTo: "/oauth-callback" } });
     const initRes = makeRes();
     await initHandler(initReq, initRes);
     const issuedCookies = initRes._cookies;

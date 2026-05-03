@@ -1,7 +1,7 @@
 /**
  * Shared short-lived one-time redemption code store.
  *
- * After a successful OAuth callback (Replit OIDC or Google), a random opaque code
+ * After a successful OAuth callback (Google), a random opaque code
  * is placed here. The frontend exchanges it once via GET /api/auth/redeem?code=<code>
  * (defined in routes/oidc.ts) to receive the session token.
  *

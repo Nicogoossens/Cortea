@@ -1,7 +1,7 @@
 /**
- * Tests for the ReplitCallback page — the client-side leg of the OAuth loop.
+ * Tests for the OAuthCallback page — the client-side leg of the OAuth loop.
  *
- * /replit-callback?code=<one-time-code>
+ * /oauth-callback?code=<one-time-code>
  *   → /api/auth/redeem  (exchange code for session cookie)
  *   → /api/users/profile (check onboarding status)
  *   → navigate to /onboarding (new user) or / (returning user)
@@ -17,7 +17,7 @@ import { render, waitFor } from "@testing-library/react";
 const mockSetLocation = vi.fn();
 
 vi.mock("wouter", () => ({
-  useLocation: () => ["/replit-callback", mockSetLocation],
+  useLocation: () => ["/oauth-callback", mockSetLocation],
 }));
 
 // ─── mock @/lib/auth ─────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ vi.mock("@/hooks/usePageTitle", () => ({
 }));
 
 // ─── import component after mocks ────────────────────────────────────────────
-import ReplitCallback from "../pages/ReplitCallback";
+import OAuthCallback from "../pages/OAuthCallback";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ function renderWithCode(search: string) {
     writable: true,
     value: { ...window.location, search },
   });
-  return render(React.createElement(ReplitCallback));
+  return render(React.createElement(OAuthCallback));
 }
 
 /**
@@ -117,7 +117,7 @@ afterEach(() => {
 
 // ─── Scenario 1: no ?code param ──────────────────────────────────────────────
 
-describe("ReplitCallback — no code in URL", () => {
+describe("OAuthCallback — no code in URL", () => {
   it("redirects to /signin?error=auth_failed when URL has no code param", async () => {
     renderWithCode(""); // no query string
 
@@ -131,7 +131,7 @@ describe("ReplitCallback — no code in URL", () => {
 
 // ─── Scenario 2: ?error param in URL ─────────────────────────────────────────
 
-describe("ReplitCallback — error param in URL", () => {
+describe("OAuthCallback — error param in URL", () => {
   it("redirects to /signin?error=auth_failed when ?error=auth_failed is present", async () => {
     renderWithCode("?error=auth_failed");
 
@@ -151,7 +151,7 @@ describe("ReplitCallback — error param in URL", () => {
 
 // ─── Scenario 3: redeem endpoint fails ───────────────────────────────────────
 
-describe("ReplitCallback — redeem API failure", () => {
+describe("OAuthCallback — redeem API failure", () => {
   it("redirects to /signin?error=auth_failed when /api/auth/redeem returns 401", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
@@ -178,7 +178,7 @@ describe("ReplitCallback — redeem API failure", () => {
 
 // ─── Scenario 4: new user → /onboarding ──────────────────────────────────────
 
-describe("ReplitCallback — new user flow (isNewUser: true)", () => {
+describe("OAuthCallback — new user flow (isNewUser: true)", () => {
   beforeEach(() => {
     vi.mocked(fetch)
       .mockResolvedValueOnce({
@@ -213,7 +213,7 @@ describe("ReplitCallback — new user flow (isNewUser: true)", () => {
 
 // ─── Scenario 5: existing user → / ───────────────────────────────────────────
 
-describe("ReplitCallback — existing user flow (isNewUser: false, onboarding complete)", () => {
+describe("OAuthCallback — existing user flow (isNewUser: false, onboarding complete)", () => {
   beforeEach(() => {
     vi.mocked(fetch)
       .mockResolvedValueOnce({
@@ -248,7 +248,7 @@ describe("ReplitCallback — existing user flow (isNewUser: false, onboarding co
 
 // ─── Scenario 6: incomplete onboarding fallback ───────────────────────────────
 
-describe("ReplitCallback — onboarding incomplete fallback", () => {
+describe("OAuthCallback — onboarding incomplete fallback", () => {
   it("navigates to / when isNewUser=false even if onboarding_completed=false (isNewUser wins)", async () => {
     // The ?? operator: `false ?? <anything>` = false. The server-supplied
     // isNewUser flag takes precedence over the profile-based fallback.
@@ -311,7 +311,7 @@ describe("ReplitCallback — onboarding incomplete fallback", () => {
 
 // ─── Invariant: redeem endpoint called with the correct code ──────────────────
 
-describe("ReplitCallback — redeem request format", () => {
+describe("OAuthCallback — redeem request format", () => {
   it("calls /api/auth/redeem with the code from the URL", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce({

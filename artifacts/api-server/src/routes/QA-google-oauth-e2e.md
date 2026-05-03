@@ -30,12 +30,12 @@ at the bottom). All 7 scenarios passed:
 
 | # | Scenario | Result |
 |---|----------|--------|
-| 1 | `/replit-callback?code=<valid, existing user>` → redirects to `/` | ✅ PASS |
-| 2 | `/replit-callback?code=<valid, isNewUser=true>` → redirects to `/onboarding` | ✅ PASS |
-| 3 | `/replit-callback?code=<expired/invalid>` → redirects to `/signin?error=auth_failed` | ✅ PASS |
+| 1 | `/oauth-callback?code=<valid, existing user>` → redirects to `/` | ✅ PASS |
+| 2 | `/oauth-callback?code=<valid, isNewUser=true>` → redirects to `/onboarding` | ✅ PASS |
+| 3 | `/oauth-callback?code=<expired/invalid>` → redirects to `/signin?error=auth_failed` | ✅ PASS |
 | 4 | `/signin?error=auth_failed` → shows non-empty `role=alert` error message | ✅ PASS |
 | 4b | `/signin?error=account_suspended` → shows non-empty `role=alert` error message | ✅ PASS |
-| 5 | `/replit-callback` (no code, no params) → redirects to `/signin` (no silent landing redirect) | ✅ PASS |
+| 5 | `/oauth-callback` (no code, no params) → redirects to `/signin` (no silent landing redirect) | ✅ PASS |
 | 6 | `/signin` → "Doorgaan met Google" button is active (no `disabled`, no "coming soon" badge) | ✅ PASS |
 | 7 | Clicking "Doorgaan met Google" → browser navigates to `https://accounts.google.com/...` | ✅ PASS |
 

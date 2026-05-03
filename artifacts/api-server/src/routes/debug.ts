@@ -13,7 +13,7 @@
  *   POST /api/debug/issue-redeem-code  — creates (or reuses) a test user
  *                                        and issues a one-time redeem code,
  *                                        allowing e2e tests to exercise the
- *                                        full /replit-callback?code=<code>
+ *                                        full /oauth-callback?code=<code>
  *                                        flow without going through OAuth.
  */
 import { Router, type IRouter, type Request, type Response } from "express";

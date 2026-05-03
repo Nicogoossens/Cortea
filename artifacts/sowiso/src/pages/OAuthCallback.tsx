@@ -8,7 +8,7 @@ import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
-export default function ReplitCallback() {
+export default function OAuthCallback() {
   usePageTitle("Signing In");
   const { login } = useAuth();
   const [, setLocation] = useLocation();

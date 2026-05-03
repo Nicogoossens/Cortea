@@ -60,7 +60,7 @@ function setSecureCookie(res: Response, name: string, value: string) {
 
 function getSafePath(value: unknown): string {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
-    return "/replit-callback";
+    return "/oauth-callback";
   }
   return value;
 }

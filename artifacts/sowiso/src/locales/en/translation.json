@@ -1165,5 +1165,12 @@
   "seo.inner_circle.title": "The Inner Circle — Ambassador Community",
   "seo.inner_circle.description": "Exclusive community for Cortéa Ambassador members. Connect with fellow cultural practitioners, share insights, and access your personalised calling card.",
   "seo.use_cases.title": "Use Case Library — Real-World Etiquette Scenarios",
-  "seo.use_cases.description": "Practise cultural etiquette through curated real-world situations. Track your readiness score across dining, professional, social, and travel scenarios."
+  "seo.use_cases.description": "Practise cultural etiquette through curated real-world situations. Track your readiness score across dining, professional, social, and travel scenarios.",
+  "atelier.track.next_up_label": "Up next",
+  "atelier.track.slots_mastered": "modules mastered",
+  "atelier.track.return_to_auto": "Return to recommended path",
+  "atelier.track.all_mastered_title": "All available lessons are mastered.",
+  "atelier.track.all_mastered_desc": "New content for this region will be added automatically as it becomes available.",
+  "atelier.track.advanced_toggle": "Choose your own starting point",
+  "atelier.track.level_label": "Level"
 }

@@ -1025,5 +1025,12 @@
   "seo.inner_circle.title": "インナーサークル — アンバサダーコミュニティ",
   "seo.inner_circle.description": "Cortéaアンバサダー会員のための限定コミュニティ。文化の実践者と繋がり、あなた専用の名刺にアクセスしましょう。",
   "seo.use_cases.title": "ユースケースライブラリ — 実世界のエチケットシナリオ",
-  "seo.use_cases.description": "厳選された実際の状況を通じて文化的エチケットを練習してください。食事、ビジネス、社交、旅行のシナリオで準備スコアを追跡できます。"
+  "seo.use_cases.description": "厳選された実際の状況を通じて文化的エチケットを練習してください。食事、ビジネス、社交、旅行のシナリオで準備スコアを追跡できます。",
+  "atelier.track.next_up_label": "次のレッスン",
+  "atelier.track.slots_mastered": "モジュール習得済み",
+  "atelier.track.return_to_auto": "おすすめパスに戻る",
+  "atelier.track.all_mastered_title": "利用可能なすべてのレッスンを習得しました。",
+  "atelier.track.all_mastered_desc": "この地域の新しいコンテンツは利用可能になり次第、自動的に追加されます。",
+  "atelier.track.advanced_toggle": "自分で開始地点を選ぶ",
+  "atelier.track.level_label": "レベル"
 }

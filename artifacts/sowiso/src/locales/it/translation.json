@@ -1025,5 +1025,12 @@
   "seo.inner_circle.title": "L'Inner Circle — Comunità degli Ambasciatori",
   "seo.inner_circle.description": "Comunità esclusiva per i membri Ambasciatori di Cortéa. Connettiti con colleghi culturali e accedi al tuo biglietto da visita personalizzato.",
   "seo.use_cases.title": "Libreria di Casi — Scenari di Etichetta Reali",
-  "seo.use_cases.description": "Pratica l'etichetta culturale attraverso situazioni reali. Monitora il tuo punteggio di prontezza in scenari di ristorazione, professionali e di viaggio."
+  "seo.use_cases.description": "Pratica l'etichetta culturale attraverso situazioni reali. Monitora il tuo punteggio di prontezza in scenari di ristorazione, professionali e di viaggio.",
+  "atelier.track.next_up_label": "Prossima lezione",
+  "atelier.track.slots_mastered": "moduli completati",
+  "atelier.track.return_to_auto": "Torna al percorso consigliato",
+  "atelier.track.all_mastered_title": "Tutte le lezioni disponibili sono state completate.",
+  "atelier.track.all_mastered_desc": "Nuovi contenuti per questa regione verranno aggiunti automaticamente non appena disponibili.",
+  "atelier.track.advanced_toggle": "Scegli il tuo punto di partenza",
+  "atelier.track.level_label": "Livello"
 }

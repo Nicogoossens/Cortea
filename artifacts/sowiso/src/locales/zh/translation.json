@@ -1016,5 +1016,12 @@
   "seo.inner_circle.title": "内圈 — 大使社区",
   "seo.inner_circle.description": "Cortéa大使会员的专属社区。与文化从业者建立联系，分享见解并访问您的个性化名片。",
   "seo.use_cases.title": "用例库 — 真实礼仪场景",
-  "seo.use_cases.description": "通过精心挑选的真实场景练习文化礼仪。跟踪您在用餐、专业、社交和旅行场景中的准备度分数。"
+  "seo.use_cases.description": "通过精心挑选的真实场景练习文化礼仪。跟踪您在用餐、专业、社交和旅行场景中的准备度分数。",
+  "atelier.track.next_up_label": "下一课",
+  "atelier.track.slots_mastered": "模块已掌握",
+  "atelier.track.return_to_auto": "返回推荐路径",
+  "atelier.track.all_mastered_title": "所有可用课程均已掌握。",
+  "atelier.track.all_mastered_desc": "该地区的新内容一旦可用将自动添加。",
+  "atelier.track.advanced_toggle": "选择自己的起点",
+  "atelier.track.level_label": "等级"
 }

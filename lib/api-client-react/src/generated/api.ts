@@ -29,6 +29,7 @@ import type {
   GetCultureCompassParams,
   GetCultureCompassRegionParams,
   GetCultureProtocolsParams,
+  GetLearningTrackNextParams,
   GetLearningTrackSessionParams,
   GetNobleScoreLogParams,
   GetProfileParams,
@@ -40,6 +41,7 @@ import type {
   LearningTrackAnswerBody,
   LearningTrackAnswerResult,
   LearningTrackLimits,
+  LearningTrackNextSlot,
   LearningTrackProgress,
   LearningTrackSession,
   MessageResponse,
@@ -1984,6 +1986,109 @@ export function useGetLearningTrackBadges<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetLearningTrackBadgesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Auto-derived next slot in the prescribed sequence
+ */
+export const getGetLearningTrackNextUrl = (
+  params: GetLearningTrackNextParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/learning-tracks/next?${stringifiedParams}`
+    : `/api/learning-tracks/next`;
+};
+
+export const getLearningTrackNext = async (
+  params: GetLearningTrackNextParams,
+  options?: RequestInit,
+): Promise<LearningTrackNextSlot> => {
+  return customFetch<LearningTrackNextSlot>(
+    getGetLearningTrackNextUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetLearningTrackNextQueryKey = (
+  params?: GetLearningTrackNextParams,
+) => {
+  return [`/api/learning-tracks/next`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetLearningTrackNextQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLearningTrackNext>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetLearningTrackNextParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getLearningTrackNext>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetLearningTrackNextQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getLearningTrackNext>>
+  > = ({ signal }) =>
+    getLearningTrackNext(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getLearningTrackNext>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetLearningTrackNextQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getLearningTrackNext>>
+>;
+export type GetLearningTrackNextQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Auto-derived next slot in the prescribed sequence
+ */
+
+export function useGetLearningTrackNext<
+  TData = Awaited<ReturnType<typeof getLearningTrackNext>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetLearningTrackNextParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getLearningTrackNext>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetLearningTrackNextQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

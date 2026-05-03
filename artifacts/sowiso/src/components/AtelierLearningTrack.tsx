@@ -4,9 +4,11 @@ import {
   useGetLearningTrackSession,
   usePostLearningTrackAnswer,
   useGetLearningTrackProgress,
+  useGetLearningTrackNext,
   getGetLearningTrackSessionQueryKey,
   getGetLearningTrackProgressQueryKey,
   getGetLearningTrackBadgesQueryKey,
+  getGetLearningTrackNextQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,8 +72,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   });
   const [researchPillar, setResearchPillar] = useState<string>("P1");
 
-  const hasAppliedAutoSelect = useRef(false);
   const hasManuallyChanged = useRef(false);
+  const lastAutoKey = useRef<string>("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
     () => !localStorage.getItem(startCardKey(ambitionLevel))
@@ -176,22 +179,31 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
 
   const { data: progressData } = useGetLearningTrackProgress();
 
-  useEffect(() => {
-    if (!progressData || hasAppliedAutoSelect.current || hasManuallyChanged.current) return;
-    hasAppliedAutoSelect.current = true;
+  // ── Auto-walk: /learning-tracks/next tells us which (phase, pillar) the
+  // student should attempt next given their progress in this register × region.
+  // The student no longer picks freely; the system walks them sequentially.
+  // Manual override is available behind the "Advanced" toggle below.
+  const nextSlotParams = { register, region_code: activeRegion };
+  const { data: nextSlot, refetch: refetchNextSlot } = useGetLearningTrackNext(nextSlotParams, {
+    query: {
+      queryKey: getGetLearningTrackNextQueryKey(nextSlotParams),
+      staleTime: 0,
+    },
+  });
 
-    if (ambitionLevel === "professional") {
-      const highestMastered = progressData
-        .filter((p) => p.mastered && p.register === "middle_class")
-        .reduce((max, p) => Math.max(max, p.phase), 0);
-      // Default minimum for professional is Fase 2, even without prior progress
-      const suggestedPhase = Math.min(Math.max(highestMastered + 1, 2), 5);
-      setPhase(suggestedPhase);
-    } else if (ambitionLevel === "diplomatic" && tier === "ambassador") {
-      // register already "elite" via useState initializer — nothing else needed
+  useEffect(() => {
+    if (!nextSlot || hasManuallyChanged.current) return;
+    // Each (register, region) yields its own auto-target; re-apply when it
+    // changes (e.g., after the student masters a slot and the server
+    // returns the next one).
+    const key = `${nextSlot.register}::${nextSlot.region_code}::${nextSlot.phase}::${nextSlot.research_pillar ?? ""}`;
+    if (lastAutoKey.current === key) return;
+    lastAutoKey.current = key;
+    setPhase(nextSlot.phase);
+    if (nextSlot.research_pillar) {
+      setResearchPillar(nextSlot.research_pillar);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progressData]);
+  }, [nextSlot]);
 
   const { mutate: submitAnswer, isPending: submitting } = usePostLearningTrackAnswer({
     mutation: {
@@ -218,6 +230,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         });
         setAnswered(true);
         queryClient.invalidateQueries({ queryKey: getGetLearningTrackProgressQueryKey() });
+        // Refresh the auto-walk pointer: when the student masters this slot,
+        // the next call to /learning-tracks/next will return the next pillar
+        // (or next phase) and the effect above will advance the UI.
+        queryClient.invalidateQueries({ queryKey: getGetLearningTrackNextQueryKey({ register, region_code: activeRegion }) });
         if (r.mastered && (r.new_badges ?? []).length > 0) {
           queryClient.invalidateQueries({ queryKey: getGetLearningTrackBadgesQueryKey() });
         }
@@ -398,78 +414,146 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Left: Phase / Pillar selector ── */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-              {register === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
-            </p>
-            <div className="space-y-1.5">
-              {phaseOptions.map((opt) => (
+      {/* ── Auto-walk header: "Next up" + progress + reset-to-auto link ──
+          When the user is on the auto-recommended path the header reflects
+          whatever /next returned. When they manually override, it reflects
+          their current selection so the header always describes the slot
+          actually loaded into the question card. */}
+      {nextSlot && !nextSlot.all_complete && (() => {
+        const onAutoPath = !hasManuallyChanged.current;
+        const headerPhase = onAutoPath ? nextSlot.phase : phase;
+        const headerPillar = onAutoPath ? nextSlot.research_pillar : (register === "middle_class" ? researchPillar : null);
+        const headerPhaseName = register === "middle_class"
+          ? (MIDDLE_CLASS_PHASES.find((p) => p.phase === headerPhase)?.domainName ?? `Phase ${headerPhase}`)
+          : (ELITE_PILLARS.find((p) => p.pillar === headerPhase)?.domainName ?? `Pillar ${headerPhase}`);
+        const headerLevel = onAutoPath ? nextSlot.current_level : (currentProgress?.current_level ?? 1);
+        return (
+          <div className="rounded-sm border border-primary/20 bg-primary/[0.03] px-5 py-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="space-y-1">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {t("atelier.track.next_up_label")}
+                </p>
+                <p className="font-serif text-base text-foreground">
+                  {headerPhaseName}
+                  {register === "middle_class" && headerPillar && (
+                    <span className="text-muted-foreground"> · {RESEARCH_PILLARS[headerPillar] ?? headerPillar}</span>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("atelier.track.level_label")} {headerLevel}/5
+                  {nextSlot.total_slots > 0 && (
+                    <> · {nextSlot.completed_slots}/{nextSlot.total_slots} {t("atelier.track.slots_mastered")}</>
+                  )}
+                </p>
+              </div>
+              {!onAutoPath && (
                 <button
-                  key={opt.value}
-                  onClick={() => handlePhaseChange(opt.value)}
-                  className={`w-full text-left px-3 py-2.5 rounded-sm border text-sm transition-all ${
-                    phase === opt.value
-                      ? "border-primary bg-primary/5 text-primary font-medium"
-                      : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/20"
-                  }`}
+                  onClick={() => {
+                    hasManuallyChanged.current = false;
+                    lastAutoKey.current = "";
+                    refetchNextSlot();
+                    resetQuestion();
+                  }}
+                  className="text-xs text-primary underline underline-offset-2 hover:text-primary/80"
                 >
-                  <span className="font-serif">{opt.label}</span>
-                  <span className="block text-[10px] font-mono text-muted-foreground/70 mt-0.5 truncate">
-                    {opt.subtitle}
-                  </span>
+                  {t("atelier.track.return_to_auto")}
                 </button>
-              ))}
+              )}
             </div>
           </div>
+        );
+      })()}
 
-          {register === "middle_class" && (
+      {/* ── All-mastered celebration ── */}
+      {nextSlot?.all_complete && (
+        <div className="rounded-sm border border-amber-300/50 bg-amber-50/30 dark:bg-amber-950/10 px-5 py-6 text-center space-y-2">
+          <Trophy className="w-8 h-8 mx-auto text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <p className="font-serif text-lg text-foreground">
+            {t("atelier.track.all_mastered_title")}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t("atelier.track.all_mastered_desc")}
+          </p>
+        </div>
+      )}
+
+      {/* ── Advanced override (default closed) ── */}
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((s) => !s)}
+          className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground/70 hover:text-foreground transition-colors"
+        >
+          {showAdvanced ? "− " : "+ "}{t("atelier.track.advanced_toggle")}
+        </button>
+        {showAdvanced && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2 border-t border-border/30">
             <div className="space-y-2">
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                {t("atelier.track.section_pillar")}
+                {register === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
               </p>
               <div className="space-y-1.5">
-                {pillarEntries.map(([key, label]) => {
-                  const pp = getPillarProgress(key);
-                  const level = pp?.current_level ?? 1;
-                  const mastered = pp?.mastered ?? false;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => handlePillarChange(key)}
-                      className={`w-full text-left px-3 py-2 rounded-sm border text-xs transition-all ${
-                        researchPillar === key && register === "middle_class"
-                          ? "border-primary bg-primary/5 text-primary font-medium"
-                          : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono font-semibold">{key}</span>
-                        {mastered ? (
-                          <Trophy className="w-3 h-3 text-amber-500" aria-label="Mastered" />
-                        ) : (
-                          <span className="text-[10px] text-muted-foreground/60">Lvl {level}/5</span>
-                        )}
-                      </div>
-                      <span className="font-light text-muted-foreground/80 truncate">{label}</span>
-                      <div className="mt-1.5 h-1 bg-border/30 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${mastered ? "bg-amber-500" : "bg-primary/60"}`}
-                          style={{ width: `${mastered ? 100 : ((level - 1) / 5) * 100}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
+                {phaseOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handlePhaseChange(opt.value)}
+                    className={`w-full text-left px-3 py-2 rounded-sm border text-sm transition-all ${
+                      phase === opt.value
+                        ? "border-primary bg-primary/5 text-primary font-medium"
+                        : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/20"
+                    }`}
+                  >
+                    <span className="font-serif">{opt.label}</span>
+                    <span className="block text-[10px] font-mono text-muted-foreground/70 mt-0.5 truncate">
+                      {opt.subtitle}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+            {register === "middle_class" && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {t("atelier.track.section_pillar")}
+                </p>
+                <div className="space-y-1.5">
+                  {Object.entries(RESEARCH_PILLARS).map(([key, label]) => {
+                    const pp = getPillarProgress(key);
+                    const level = pp?.current_level ?? 1;
+                    const mastered = pp?.mastered ?? false;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => handlePillarChange(key)}
+                        className={`w-full text-left px-3 py-2 rounded-sm border text-xs transition-all ${
+                          researchPillar === key
+                            ? "border-primary bg-primary/5 text-primary font-medium"
+                            : "border-border/40 text-foreground/70 hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-mono font-semibold">{key}</span>
+                          {mastered ? (
+                            <Trophy className="w-3 h-3 text-amber-500" aria-label="Mastered" />
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/60">Lvl {level}/5</span>
+                          )}
+                        </div>
+                        <span className="font-light text-muted-foreground/80 truncate">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-        {/* ── Right: Question card ── */}
-        <div className="lg:col-span-2 space-y-4">
+      {/* ── Question card (full width) ── */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-4">
           {sessionLoading ? (
             <div className="space-y-3">
               <Skeleton className="h-6 w-48" />

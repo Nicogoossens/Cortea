@@ -1025,5 +1025,12 @@
   "seo.inner_circle.title": "الدائرة الداخلية — مجتمع السفراء",
   "seo.inner_circle.description": "مجتمع حصري لأعضاء السفراء في Cortéa. تواصل مع زملاء الثقافيين وادخل إلى بطاقة عملك الشخصية.",
   "seo.use_cases.title": "مكتبة حالات الاستخدام — سيناريوهات بروتوكول من الواقع",
-  "seo.use_cases.description": "تدرب على آداب السلوك الثقافي من خلال مواقف حقيقية. تتبع درجة استعدادك عبر سيناريوهات تناول الطعام والعمل والسفر."
+  "seo.use_cases.description": "تدرب على آداب السلوك الثقافي من خلال مواقف حقيقية. تتبع درجة استعدادك عبر سيناريوهات تناول الطعام والعمل والسفر.",
+  "atelier.track.next_up_label": "الدرس التالي",
+  "atelier.track.slots_mastered": "وحدات مُتقَنة",
+  "atelier.track.return_to_auto": "العودة إلى المسار الموصى به",
+  "atelier.track.all_mastered_title": "تم إتقان جميع الدروس المتاحة.",
+  "atelier.track.all_mastered_desc": "سيتم إضافة محتوى جديد لهذه المنطقة تلقائيًا عند توفره.",
+  "atelier.track.advanced_toggle": "اختر نقطة البداية بنفسك",
+  "atelier.track.level_label": "المستوى"
 }

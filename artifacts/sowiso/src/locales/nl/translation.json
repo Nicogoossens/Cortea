@@ -1080,5 +1080,12 @@
   "seo.inner_circle.title": "De Inner Circle — Ambassadeurgemeenschap",
   "seo.inner_circle.description": "Exclusieve gemeenschap voor Cortéa Ambassadeurs. Verbind met mede-cultuurpractici, deel inzichten en benader uw gepersonaliseerde visitekaartje.",
   "seo.use_cases.title": "Gebruiksscenario's — Etiquette in de Praktijk",
-  "seo.use_cases.description": "Oefen culturele etiquette aan de hand van samengestelde praktijksituaties. Volg uw gereeddheidscore in dineersituaties, professioneel en reizen."
+  "seo.use_cases.description": "Oefen culturele etiquette aan de hand van samengestelde praktijksituaties. Volg uw gereeddheidscore in dineersituaties, professioneel en reizen.",
+  "atelier.track.next_up_label": "Volgende les",
+  "atelier.track.slots_mastered": "onderdelen voltooid",
+  "atelier.track.return_to_auto": "Terug naar aanbevolen pad",
+  "atelier.track.all_mastered_title": "Alle beschikbare lessen zijn voltooid.",
+  "atelier.track.all_mastered_desc": "Nieuwe inhoud voor deze regio wordt automatisch toegevoegd zodra die beschikbaar is.",
+  "atelier.track.advanced_toggle": "Kies zelf je startpunt",
+  "atelier.track.level_label": "Niveau"
 }

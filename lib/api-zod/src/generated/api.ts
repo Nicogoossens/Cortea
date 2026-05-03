@@ -839,6 +839,27 @@ export const GetLearningTrackBadgesResponse = zod.array(
 );
 
 /**
+ * @summary Auto-derived next slot in the prescribed sequence
+ */
+export const GetLearningTrackNextQueryParams = zod.object({
+  register: zod.enum(["middle_class", "elite"]),
+  region_code: zod.coerce.string(),
+});
+
+export const GetLearningTrackNextResponse = zod.object({
+  register: zod.string(),
+  region_code: zod.string(),
+  phase: zod.number(),
+  research_pillar: zod.string().nullish(),
+  current_level: zod.number(),
+  questions_done: zod.number(),
+  correct_streak: zod.number(),
+  total_slots: zod.number(),
+  completed_slots: zod.number(),
+  all_complete: zod.boolean(),
+});
+
+/**
  * @summary Daily limit and cooldown status for both registers
  */
 export const GetLearningTrackLimitsResponse = zod.object({

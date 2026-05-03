@@ -16,6 +16,7 @@ import { badgesTable, userBadgesTable } from "@workspace/db";
 import {
   REGISTER_CONFIG,
   computeSessionLimits,
+  computeNextSlot,
   deriveDemographic,
   evaluatePassWindow,
   findOpenSession,
@@ -51,6 +52,61 @@ function tierAllows(register: Register, tier: string): boolean {
   if (register === "elite" && tier !== "ambassador") return false;
   return true;
 }
+
+// ─── GET /learning-tracks/next ───────────────────────────────────────────────
+// Returns the next prescribed slot (phase + research_pillar) the student
+// should attempt for the given register × region. Drives the auto-walk UI:
+// the frontend uses this to render a single "Continue training" CTA without
+// asking the user to pick a phase or pillar.
+const NextSlotQuerySchema = z.object({
+  register: z.enum(["middle_class", "elite"]),
+  region_code: z.string().min(1).max(10),
+});
+
+router.get("/learning-tracks/next", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const parsed = NextSlotQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid query.", errors: parsed.error.issues });
+    }
+    const { register, region_code } = parsed.data;
+    const regionCode = region_code.toUpperCase();
+
+    const [user] = await db.select({ subscription_tier: usersTable.subscription_tier })
+      .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) return res.status(404).json({ error: "Profile not found." });
+    if (!tierAllows(register, user.subscription_tier ?? "guest")) {
+      return res.status(403).json({
+        error: register === "elite"
+          ? "The elite learning track requires an Ambassador subscription."
+          : "Learning tracks require a Traveller or Ambassador subscription.",
+      });
+    }
+
+    // Mirror the region-membership guard used by /session so the two
+    // endpoints can never disagree: /next must not recommend a region
+    // that /session would refuse to serve.
+    const interests = await db.select({ region_code: userCountryInterestsTable.region_code })
+      .from(userCountryInterestsTable)
+      .where(and(
+        eq(userCountryInterestsTable.user_id, userId),
+        isNull(userCountryInterestsTable.hidden_at),
+      ));
+    if (interests.length > 0 && !interests.some((r) => r.region_code === regionCode)) {
+      return res.status(403).json({
+        code: "REGION_NOT_IN_INTERESTS",
+        error: "Add this country to your interests before studying it.",
+      });
+    }
+
+    const slot = await computeNextSlot(userId, register, regionCode);
+    return res.json(slot);
+  } catch (err) {
+    req.log.error({ err }, "Failed to compute next slot");
+    return res.status(500).json({ error: "Next-slot data is momentarily unavailable." });
+  }
+});
 
 // ─── GET /learning-tracks/limits ─────────────────────────────────────────────
 router.get("/learning-tracks/limits", requireAuthUser, async (req, res) => {

@@ -567,6 +567,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserBadge"
 
+  /learning-tracks/next:
+    get:
+      operationId: getLearningTrackNext
+      tags: [culture]
+      summary: Auto-derived next slot in the prescribed sequence
+      parameters:
+        - name: register
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [middle_class, elite]
+        - name: region_code
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Next prescribed slot for this user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningTrackNextSlot"
+
   /learning-tracks/limits:
     get:
       operationId: getLearningTrackLimits
@@ -1461,6 +1486,41 @@ components:
         - correct_streak
         - current_level
         - new_badges
+
+    LearningTrackNextSlot:
+      type: object
+      properties:
+        register:
+          type: string
+        region_code:
+          type: string
+        phase:
+          type: integer
+        research_pillar:
+          type: string
+          nullable: true
+        current_level:
+          type: integer
+        questions_done:
+          type: integer
+        correct_streak:
+          type: integer
+        total_slots:
+          type: integer
+        completed_slots:
+          type: integer
+        all_complete:
+          type: boolean
+      required:
+        - register
+        - region_code
+        - phase
+        - current_level
+        - questions_done
+        - correct_streak
+        - total_slots
+        - completed_slots
+        - all_complete
 
     LearningTrackLimits:
       type: object

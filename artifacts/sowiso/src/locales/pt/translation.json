@@ -1025,5 +1025,12 @@
   "seo.inner_circle.title": "O Inner Circle — Comunidade de Embaixadores",
   "seo.inner_circle.description": "Comunidade exclusiva para membros Embaixadores da Cortéa. Conecte-se com companheiros culturais e acesse seu cartão de visita personalizado.",
   "seo.use_cases.title": "Biblioteca de Casos — Cenários de Etiqueta do Mundo Real",
-  "seo.use_cases.description": "Pratique a etiqueta cultural através de situações do mundo real. Acompanhe a sua pontuação de prontidão em cenários de restauração, profissionais e de viagem."
+  "seo.use_cases.description": "Pratique a etiqueta cultural através de situações do mundo real. Acompanhe a sua pontuação de prontidão em cenários de restauração, profissionais e de viagem.",
+  "atelier.track.next_up_label": "Próxima lição",
+  "atelier.track.slots_mastered": "módulos dominados",
+  "atelier.track.return_to_auto": "Voltar ao caminho recomendado",
+  "atelier.track.all_mastered_title": "Todas as lições disponíveis foram dominadas.",
+  "atelier.track.all_mastered_desc": "Novo conteúdo para esta região será adicionado automaticamente quando disponível.",
+  "atelier.track.advanced_toggle": "Escolha seu ponto de partida",
+  "atelier.track.level_label": "Nível"
 }

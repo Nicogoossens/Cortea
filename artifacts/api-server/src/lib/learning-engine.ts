@@ -12,8 +12,19 @@
  * always return values, leaving HTTP error mapping to the route layer.
  */
 
-import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable } from "@workspace/db";
+import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable, learningTrackProgressTable } from "@workspace/db";
 import { and, eq, sql, desc, gte, ne, isNull, inArray, notInArray } from "drizzle-orm";
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Prescribed progression order — used by computeNextSlot to walk the student
+// through the curriculum sequentially (lowest unmastered slot first).
+
+/** Middle Class: 5 phases × 4 research pillars = 20 slots, walked in order. */
+export const MIDDLE_CLASS_PILLAR_ORDER = ["P1", "P2", "P3", "P4"] as const;
+export const MIDDLE_CLASS_PHASE_ORDER = [1, 2, 3, 4, 5] as const;
+
+/** Elite: 5 phases (each phase = one pillar), no research_pillar. */
+export const ELITE_PHASE_ORDER = [1, 2, 3, 4, 5] as const;
 
 /**
  * Executor type — either the global Drizzle `db` handle or a transaction
@@ -661,4 +672,147 @@ export async function lastFailedSession(
     .orderBy(desc(learningTrackSessionsTable.completed_at))
     .limit(1);
   return row ?? null;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Sequential-walk helper — Task: phase-by-phase auto progression.
+//
+// Given (user, register, region) we return the FIRST unmastered slot
+// (phase + research_pillar) in the prescribed curriculum order, plus a
+// progress summary. The frontend uses this to drive a single "Continue
+// training" CTA — no more free-pick of phase/pillar.
+//
+// Slots that have zero seeded questions for the (region, register, phase,
+// pillar) combination are skipped — there is nothing to study, so they
+// cannot block progression. The skip is decided per-region, so a country
+// with no Phase 2 content yet still lets the user finish Phase 1 and then
+// surfaces "all_complete=true" until content is seeded.
+
+export interface NextSlot {
+  register: Register;
+  region_code: string;
+  phase: number;
+  research_pillar: string | null;
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  /** Total slots in the prescribed sequence that actually have questions. */
+  total_slots: number;
+  /** Slots fully mastered so far. */
+  completed_slots: number;
+  /** True iff every slot with questions is mastered — UI shows celebration. */
+  all_complete: boolean;
+}
+
+export async function computeNextSlot(
+  userId: string,
+  register: Register,
+  regionCode: string,
+): Promise<NextSlot> {
+  // 1. Which (phase, pillar) combos actually have questions for this region?
+  const availableRows = await db
+    .select({
+      phase: learningTrackQuestionsTable.phase,
+      research_pillar: learningTrackQuestionsTable.research_pillar,
+    })
+    .from(learningTrackQuestionsTable)
+    .where(and(
+      eq(learningTrackQuestionsTable.region_code, regionCode),
+      eq(learningTrackQuestionsTable.register, register),
+    ))
+    .groupBy(
+      learningTrackQuestionsTable.phase,
+      learningTrackQuestionsTable.research_pillar,
+    );
+
+  const available = new Set(
+    availableRows.map((r) => `${r.phase}::${r.research_pillar ?? ""}`),
+  );
+
+  // 2. Load all progress rows for this user × register × region.
+  const progressRows = await db
+    .select({
+      phase: learningTrackProgressTable.phase,
+      research_pillar: learningTrackProgressTable.research_pillar,
+      current_level: learningTrackProgressTable.current_level,
+      questions_done: learningTrackProgressTable.questions_done,
+      correct_streak: learningTrackProgressTable.correct_streak,
+      mastered: learningTrackProgressTable.mastered,
+    })
+    .from(learningTrackProgressTable)
+    .where(and(
+      eq(learningTrackProgressTable.user_id, userId),
+      eq(learningTrackProgressTable.register, register),
+      eq(learningTrackProgressTable.region_code, regionCode),
+    ));
+
+  const progressByKey = new Map<string, typeof progressRows[number]>();
+  for (const p of progressRows) {
+    progressByKey.set(`${p.phase}::${p.research_pillar ?? ""}`, p);
+  }
+
+  // 3. Build the prescribed slot sequence for the register.
+  const slots: Array<{ phase: number; research_pillar: string | null }> = [];
+  if (register === "middle_class") {
+    for (const ph of MIDDLE_CLASS_PHASE_ORDER) {
+      for (const pl of MIDDLE_CLASS_PILLAR_ORDER) {
+        slots.push({ phase: ph, research_pillar: pl });
+      }
+    }
+  } else {
+    for (const ph of ELITE_PHASE_ORDER) {
+      slots.push({ phase: ph, research_pillar: null });
+    }
+  }
+
+  // 4. Walk the sequence; first slot that (a) has questions and (b) is not
+  // mastered is the "next" one. Track totals along the way.
+  let totalSlots = 0;
+  let completedSlots = 0;
+  let nextSlot: { phase: number; research_pillar: string | null } | null = null;
+  let nextProgress: typeof progressRows[number] | undefined;
+
+  for (const s of slots) {
+    const key = `${s.phase}::${s.research_pillar ?? ""}`;
+    if (!available.has(key)) continue;
+    totalSlots += 1;
+    const prog = progressByKey.get(key);
+    if (prog?.mastered) {
+      completedSlots += 1;
+      continue;
+    }
+    if (!nextSlot) {
+      nextSlot = s;
+      nextProgress = prog;
+    }
+  }
+
+  if (!nextSlot) {
+    // Everything available is mastered — or nothing is seeded yet.
+    return {
+      register,
+      region_code: regionCode,
+      phase: 1,
+      research_pillar: register === "middle_class" ? "P1" : null,
+      current_level: 1,
+      questions_done: 0,
+      correct_streak: 0,
+      total_slots: totalSlots,
+      completed_slots: completedSlots,
+      all_complete: totalSlots > 0,
+    };
+  }
+
+  return {
+    register,
+    region_code: regionCode,
+    phase: nextSlot.phase,
+    research_pillar: nextSlot.research_pillar,
+    current_level: nextProgress?.current_level ?? 1,
+    questions_done: nextProgress?.questions_done ?? 0,
+    correct_streak: nextProgress?.correct_streak ?? 0,
+    total_slots: totalSlots,
+    completed_slots: completedSlots,
+    all_complete: false,
+  };
 }

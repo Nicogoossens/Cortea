@@ -449,6 +449,19 @@ export interface LearningTrackAnswerResult {
   next_action?: LearningTrackAnswerResultNextAction;
 }
 
+export interface LearningTrackNextSlot {
+  register: string;
+  region_code: string;
+  phase: number;
+  research_pillar?: string | null;
+  current_level: number;
+  questions_done: number;
+  correct_streak: number;
+  total_slots: number;
+  completed_slots: number;
+  all_complete: boolean;
+}
+
 export interface LearningTrackLimits {
   middle_class: SessionLimitStatus;
   elite: SessionLimitStatus;
@@ -629,6 +642,19 @@ export type GetLearningTrackSessionRegister =
   (typeof GetLearningTrackSessionRegister)[keyof typeof GetLearningTrackSessionRegister];
 
 export const GetLearningTrackSessionRegister = {
+  middle_class: "middle_class",
+  elite: "elite",
+} as const;
+
+export type GetLearningTrackNextParams = {
+  register: GetLearningTrackNextRegister;
+  region_code: string;
+};
+
+export type GetLearningTrackNextRegister =
+  (typeof GetLearningTrackNextRegister)[keyof typeof GetLearningTrackNextRegister];
+
+export const GetLearningTrackNextRegister = {
   middle_class: "middle_class",
   elite: "elite",
 } as const;

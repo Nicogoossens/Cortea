@@ -1034,5 +1034,12 @@
   "seo.inner_circle.title": "L'Inner Circle — Communauté des Ambassadeurs",
   "seo.inner_circle.description": "Communauté exclusive pour les membres Ambassadeurs de Cortéa. Connectez-vous avec des praticiens culturels et accédez à votre carte de visite personnalisée.",
   "seo.use_cases.title": "Bibliothèque de Scénarios — Situations Culturelles Réelles",
-  "seo.use_cases.description": "Pratiquez l'étiquette culturelle à travers des situations réelles. Suivez votre score de préparation dans des scénarios de restauration, professionnels et de voyage."
+  "seo.use_cases.description": "Pratiquez l'étiquette culturelle à travers des situations réelles. Suivez votre score de préparation dans des scénarios de restauration, professionnels et de voyage.",
+  "atelier.track.next_up_label": "Prochaine leçon",
+  "atelier.track.slots_mastered": "modules maîtrisés",
+  "atelier.track.return_to_auto": "Revenir au parcours recommandé",
+  "atelier.track.all_mastered_title": "Toutes les leçons disponibles sont maîtrisées.",
+  "atelier.track.all_mastered_desc": "De nouveaux contenus pour cette région seront ajoutés automatiquement dès qu'ils seront disponibles.",
+  "atelier.track.advanced_toggle": "Choisir votre point de départ",
+  "atelier.track.level_label": "Niveau"
 }

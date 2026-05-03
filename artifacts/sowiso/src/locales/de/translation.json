@@ -1034,5 +1034,12 @@
   "seo.inner_circle.title": "Der Inner Circle — Botschafter-Gemeinschaft",
   "seo.inner_circle.description": "Exklusive Gemeinschaft für Cortéa-Botschafter-Mitglieder. Vernetzen Sie sich mit Kulturpraktikern und greifen Sie auf Ihre personalisierte Visitenkarte zu.",
   "seo.use_cases.title": "Fallbeispiele — Etikette im Alltag",
-  "seo.use_cases.description": "Üben Sie Kulturetikette anhand von kuratierten Alltagssituationen. Verfolgen Sie Ihren Bereitschafts-Score in Ess-, Berufs- und Reiseszenarien."
+  "seo.use_cases.description": "Üben Sie Kulturetikette anhand von kuratierten Alltagssituationen. Verfolgen Sie Ihren Bereitschafts-Score in Ess-, Berufs- und Reiseszenarien.",
+  "atelier.track.next_up_label": "Nächste Lektion",
+  "atelier.track.slots_mastered": "Module gemeistert",
+  "atelier.track.return_to_auto": "Zurück zum empfohlenen Pfad",
+  "atelier.track.all_mastered_title": "Alle verfügbaren Lektionen sind gemeistert.",
+  "atelier.track.all_mastered_desc": "Neue Inhalte für diese Region werden automatisch hinzugefügt, sobald sie verfügbar sind.",
+  "atelier.track.advanced_toggle": "Wählen Sie Ihren Startpunkt",
+  "atelier.track.level_label": "Stufe"
 }

@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import {
-  companionLinksTable, usersTable, zuil_voortgangTable,
+  companionLinksTable, companionMessagesTable, usersTable, zuil_voortgangTable,
   nobleScoreLogTable, roleplayCompletionsTable,
 } from "@workspace/db";
-import { eq, or, and, desc } from "drizzle-orm";
+import { eq, or, and, desc, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 
@@ -113,12 +113,102 @@ router.delete("/companion", requireAuthUser, async (req, res) => {
     const link = await getCompanionLink(userId);
     if (!link) return res.status(404).json({ error: "No companion link found." });
 
+    await db.delete(companionMessagesTable).where(eq(companionMessagesTable.link_id, link.id));
     await db.delete(companionLinksTable).where(eq(companionLinksTable.id, link.id));
 
     return res.json({ message: "Companion connection dissolved." });
   } catch (err) {
     req.log.error({ err }, "Failed to dissolve companion link");
     return res.status(500).json({ error: "Unable to dissolve companion connection." });
+  }
+});
+
+// ---------- Companion notes / messages ----------
+
+const SendMessageSchema = z.object({
+  body: z.string().trim().min(1).max(2000),
+});
+
+router.get("/companion/messages", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const link = await getCompanionLink(userId);
+    if (!link) return res.status(404).json({ error: "No companion link found." });
+
+    const messages = await db.select().from(companionMessagesTable)
+      .where(eq(companionMessagesTable.link_id, link.id))
+      .orderBy(desc(companionMessagesTable.created_at))
+      .limit(100);
+
+    return res.json({ messages });
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch companion messages");
+    return res.status(500).json({ error: "Unable to load notes." });
+  }
+});
+
+router.get("/companion/messages/unread-count", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const link = await getCompanionLink(userId);
+    if (!link) return res.json({ unread: 0 });
+
+    const rows = await db.select({ count: sql<number>`count(*)::int` })
+      .from(companionMessagesTable)
+      .where(and(
+        eq(companionMessagesTable.recipient_id, userId),
+        eq(companionMessagesTable.link_id, link.id),
+        isNull(companionMessagesTable.read_at),
+      ));
+    return res.json({ unread: rows[0]?.count ?? 0 });
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch unread count");
+    return res.status(500).json({ error: "Unable to load unread count." });
+  }
+});
+
+router.post("/companion/messages", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const parsed = SendMessageSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Invalid note body." });
+
+    const link = await getCompanionLink(userId);
+    if (!link) return res.status(404).json({ error: "No companion link found." });
+
+    const recipientId = link.user_a_id === userId ? link.user_b_id : link.user_a_id;
+
+    const [inserted] = await db.insert(companionMessagesTable).values({
+      link_id: link.id,
+      sender_id: userId,
+      recipient_id: recipientId,
+      body: parsed.data.body,
+    }).returning();
+
+    return res.status(201).json({ message: inserted });
+  } catch (err) {
+    req.log.error({ err }, "Failed to send companion message");
+    return res.status(500).json({ error: "Unable to send note." });
+  }
+});
+
+router.post("/companion/messages/mark-read", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const link = await getCompanionLink(userId);
+    if (!link) return res.json({ ok: true });
+
+    await db.update(companionMessagesTable)
+      .set({ read_at: new Date() })
+      .where(and(
+        eq(companionMessagesTable.recipient_id, userId),
+        eq(companionMessagesTable.link_id, link.id),
+        isNull(companionMessagesTable.read_at),
+      ));
+    return res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to mark messages read");
+    return res.status(500).json({ error: "Unable to mark notes as read." });
   }
 });
 

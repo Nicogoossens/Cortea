@@ -197,6 +197,18 @@
         "note": "correction_style_i18n jsonb column added to scenarios. Stores per-language translations of the bespoke correction_style mentor tip used by /api/noble-score/submit. English fallback remains the canonical correction_style column. Backfilled all 3 existing rows × 9 languages (27 translations) via scripts/correction-style-translate.mjs. Renumbered from 0014 during rebase because upstream main also added a 0014."
       },
       "status": "applied"
+    },
+    {
+      "id": "0016_companion_messages",
+      "file": "lib/db/migrations/0016_companion_messages.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='companion_messages' ORDER BY ordinal_position",
+      "verificationResult": {
+        "rowCount": 7,
+        "note": "companion_messages table created with columns id, link_id, sender_id, recipient_id, body, read_at, created_at. Indexes on recipient_id and link_id. Supports task-204 freeform notes between linked companions."
+      },
+      "status": "applied"
     }
   ]
 }

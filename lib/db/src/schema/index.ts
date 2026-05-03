@@ -20,6 +20,7 @@ export * from "./quests";
 export * from "./cultural_origins";
 export * from "./invitations";
 export * from "./companion_links";
+export * from "./companion_messages";
 export * from "./roleplay_scenarios";
 export * from "./roleplay_completions";
 export * from "./roleplay_reflections";

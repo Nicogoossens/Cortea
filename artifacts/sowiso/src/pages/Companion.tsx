@@ -4,10 +4,11 @@ import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  Users, Trophy, Shield, BarChart3, Eye, EyeOff, Unlink, RefreshCw, Link2, Copy as CopyIcon, CheckCircle2, Loader2,
+  Users, Trophy, Shield, BarChart3, Eye, EyeOff, Unlink, RefreshCw, Link2, Copy as CopyIcon, CheckCircle2, Loader2, MessageSquare, Send,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -43,6 +44,162 @@ interface CompanionData {
   companion_share_enabled?: boolean;
   me?: CompanionUser;
   companion?: CompanionUser;
+}
+
+interface CompanionMessage {
+  id: number;
+  link_id: number;
+  sender_id: string;
+  recipient_id: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+function CompanionNotes({
+  myId,
+  companionName,
+}: { myId: string; companionName: string }) {
+  const [messages, setMessages] = useState<CompanionMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      const res = await fetch(`${API_BASE}/api/companion/messages`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json() as { messages: CompanionMessage[] };
+      setMessages(data.messages);
+      // Mark as read once fetched (any unread arriving for me will be cleared).
+      await fetch(`${API_BASE}/api/companion/messages/mark-read`, {
+        method: "POST",
+        credentials: "include",
+      });
+      window.dispatchEvent(new CustomEvent("companion-messages-read"));
+    } catch {
+      setError("Could not load notes.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function send() {
+    const body = draft.trim();
+    if (!body) return;
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/companion/messages`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json() as { message: CompanionMessage };
+      setMessages((prev) => [data.message, ...prev]);
+      setDraft("");
+    } catch {
+      setError("Could not send your note. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            Notes with {companionName}
+          </CardTitle>
+        </div>
+        <CardDescription className="text-xs">
+          Private notes shared only between the two of you.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={`Write a note to ${companionName}…`}
+            rows={3}
+            maxLength={2000}
+            className="resize-none text-sm"
+            disabled={sending}
+          />
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground font-mono">
+              {draft.length}/2000
+            </span>
+            <Button
+              size="sm"
+              onClick={send}
+              disabled={sending || draft.trim().length === 0}
+              className="font-mono uppercase tracking-widest text-xs gap-2"
+            >
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              {sending ? "Sending…" : "Send Note"}
+            </Button>
+          </div>
+          {error && <p className="text-xs text-destructive font-mono">{error}</p>}
+        </div>
+
+        <div className="border-t border-border/40 pt-4">
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12 rounded-sm" />
+              <Skeleton className="h-12 rounded-sm" />
+            </div>
+          ) : messages.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic text-center py-4">
+              No notes yet. Be the first to send one.
+            </p>
+          ) : (
+            <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+              {messages.map((m) => {
+                const mine = m.sender_id === myId;
+                return (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${mine ? "items-end" : "items-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-sm px-3 py-2 text-sm whitespace-pre-wrap break-words ${
+                        mine
+                          ? "bg-primary/10 text-foreground border border-primary/20"
+                          : "bg-muted/40 text-foreground border border-border/40"
+                      }`}
+                    >
+                      {m.body}
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground mt-1">
+                      {mine ? "You" : companionName} ·{" "}
+                      {new Date(m.created_at).toLocaleString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 const PILLAR_NAMES: Record<number, string> = {
@@ -423,6 +580,8 @@ export default function Companion() {
           </CardContent>
         </Card>
       </div>
+
+      <CompanionNotes myId={me.id} companionName={companion.name} />
 
       <div className="border-t border-border/40 pt-6">
         <Link href="/atelier">

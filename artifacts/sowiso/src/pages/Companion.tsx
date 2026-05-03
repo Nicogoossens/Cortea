@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  Users, Trophy, Shield, BarChart3, Eye, EyeOff, Unlink, RefreshCw, Link2,
+  Users, Trophy, Shield, BarChart3, Eye, EyeOff, Unlink, RefreshCw, Link2, Copy as CopyIcon, CheckCircle2, Loader2,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -123,6 +123,104 @@ function RoleplayHistory({ completions }: { completions: CompletionData[] }) {
   );
 }
 
+function UnlinkedView() {
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function generateInvite() {
+    setGenerating(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/generate`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json() as { token: string };
+      setInviteLink(`${window.location.origin}${import.meta.env.BASE_URL}invite/${data.token}`);
+    } catch {
+      setError("Kon geen uitnodiging aanmaken. Probeer het opnieuw.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function copyLink() {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // ignore
+    }
+  }
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-2 max-w-2xl">
+        <h1 className="text-4xl font-serif text-foreground">Companion</h1>
+        <p className="text-muted-foreground text-lg font-light leading-relaxed">
+          Connect with another member to share your refinement journey and explore roleplay scenarios together.
+        </p>
+      </div>
+      <div className="border border-border/40 rounded-sm p-10 space-y-6 bg-muted/10 max-w-lg">
+        <div className="flex justify-center">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+            <Link2 className="w-7 h-7 text-primary" aria-hidden="true" />
+          </div>
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="font-serif text-xl text-foreground">No companion linked</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Generate an invitation link and share it with a trusted colleague to connect as companions.
+          </p>
+        </div>
+
+        {!inviteLink ? (
+          <div className="flex flex-col items-center gap-3">
+            <Button
+              onClick={generateInvite}
+              disabled={generating}
+              className="font-mono uppercase tracking-widest text-xs gap-2"
+            >
+              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {generating ? "Bezig…" : "Nieuwe uitnodiging aanmaken"}
+            </Button>
+            <Link href="/profile">
+              <Button variant="ghost" size="sm" className="font-mono uppercase tracking-widest text-xs text-muted-foreground">
+                Beheer uitnodigingen in profiel
+              </Button>
+            </Link>
+            {error && <p className="text-xs text-destructive font-mono">{error}</p>}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider text-center">
+              Uw nieuwe uitnodigingslink
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-xs bg-background border border-border/40 rounded-sm px-3 py-2 truncate select-all text-foreground/80">
+                {inviteLink}
+              </code>
+              <Button variant="outline" size="sm" onClick={copyLink} className="shrink-0 font-mono text-xs">
+                {copied
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                  : <CopyIcon className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground/60 font-light text-center">
+              Geldig voor 7 dagen.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Companion() {
   usePageTitle("Companion Dashboard");
   const { isAuthenticated } = useAuth();
@@ -201,35 +299,7 @@ export default function Companion() {
   }
 
   if (!data?.linked) {
-    return (
-      <div className="space-y-8 animate-in fade-in duration-500">
-        <div className="space-y-2 max-w-2xl">
-          <h1 className="text-4xl font-serif text-foreground">Companion</h1>
-          <p className="text-muted-foreground text-lg font-light leading-relaxed">
-            Connect with another member to share your refinement journey and explore roleplay scenarios together.
-          </p>
-        </div>
-        <div className="border border-border/40 rounded-sm p-10 text-center space-y-6 bg-muted/10 max-w-lg">
-          <div className="flex justify-center">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <Link2 className="w-7 h-7 text-primary" aria-hidden="true" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="font-serif text-xl text-foreground">No companion linked</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Generate an invitation link from your profile and share it with a trusted colleague
-              or associate to connect as companions.
-            </p>
-          </div>
-          <Link href="/profile">
-            <Button className="font-mono uppercase tracking-widest text-xs">
-              Go to Profile to Invite
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <UnlinkedView />;
   }
 
   const me = data.me!;

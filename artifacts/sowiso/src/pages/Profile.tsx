@@ -1991,6 +1991,7 @@ export default function Profile() {
       </Card>
 
       {/* ── Companion & Invitation ── */}
+      <IncomingInvitationSection />
       <CompanionInviteSection />
 
       {/* ── Password ── */}
@@ -2252,11 +2253,182 @@ function DetailRow({ label, value, locked }: { label: string; value: string; loc
   );
 }
 
+function IncomingInvitationSection() {
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem("pending_invite_token");
+  });
+  const [details, setDetails] = useState<{ inviter_name: string; expires_at: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    fetch(`${API_BASE}/api/invitations/${token}`)
+      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+      .then(({ ok, data }) => {
+        if (ok) {
+          setDetails({ inviter_name: data.inviter_name, expires_at: data.expires_at });
+        } else {
+          setError(data.error ?? "Deze uitnodiging is niet meer beschikbaar.");
+          sessionStorage.removeItem("pending_invite_token");
+        }
+      })
+      .catch(() => setError("Kon de uitnodiging niet ophalen."))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  async function handleAccept() {
+    if (!token) return;
+    setAccepting(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/redeem`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.removeItem("pending_invite_token");
+        setAccepted(true);
+      } else {
+        setError(data.error ?? "Kon de uitnodiging niet accepteren.");
+      }
+    } catch {
+      setError("Kon de uitnodiging niet accepteren.");
+    } finally {
+      setAccepting(false);
+    }
+  }
+
+  function handleDecline() {
+    sessionStorage.removeItem("pending_invite_token");
+    setToken(null);
+    setDetails(null);
+  }
+
+  if (!token) return null;
+
+  return (
+    <Card className="bg-card border-primary/30 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2">
+          <Users2Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+          Uitnodiging ontvangen
+        </CardTitle>
+        <CardDescription className="font-light">
+          U heeft een uitnodiging ontvangen om met iemand als companions verbonden te worden.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading && <Skeleton className="h-12 w-full rounded-sm" />}
+
+        {!loading && accepted && (
+          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+            <span>U bent nu verbonden als companions.</span>
+            <Link href="/companion" className="underline underline-offset-2 ml-auto text-xs font-mono uppercase tracking-wider">
+              Naar dashboard
+            </Link>
+          </div>
+        )}
+
+        {!loading && !accepted && error && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleDecline} className="font-mono text-xs uppercase tracking-wider">
+              Sluiten
+            </Button>
+          </div>
+        )}
+
+        {!loading && !accepted && !error && details && (
+          <div className="space-y-3">
+            <div className="border border-border/40 rounded-sm p-3 bg-muted/10 space-y-1.5">
+              <p className="text-sm text-foreground">
+                <span className="font-medium">{details.inviter_name}</span>{" "}
+                heeft u uitgenodigd om als companions verbonden te worden.
+              </p>
+              <p className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1.5">
+                <Clock className="w-3 h-3" aria-hidden="true" />
+                Verloopt {new Date(details.expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleAccept}
+                disabled={accepting}
+                size="sm"
+                className="font-mono uppercase tracking-widest text-xs gap-2"
+              >
+                {accepting
+                  ? <Loader2Icon className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                  : <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                {accepting ? "Bezig…" : "Accepteer & verbind"}
+              </Button>
+              <Button
+                onClick={handleDecline}
+                disabled={accepting}
+                variant="ghost"
+                size="sm"
+                className="font-mono uppercase tracking-widest text-xs text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
+                Weiger
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface SentInvitation {
+  id: number;
+  token: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+  invitee_name: string | null;
+}
+
 function CompanionInviteSection() {
   const { t } = useLanguage();
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [sent, setSent] = useState<SentInvitation[]>([]);
+  const [sentLoading, setSentLoading] = useState(true);
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  async function loadSent() {
+    setSentLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/sent`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json() as { invitations: SentInvitation[] };
+        setSent(data.invitations ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSentLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSent();
+  }, []);
 
   async function handleGenerate() {
     setInviteState("loading");
@@ -2270,20 +2442,58 @@ function CompanionInviteSection() {
       const url = `${window.location.origin}${import.meta.env.BASE_URL}invite/${data.token}`;
       setInviteLink(url);
       setInviteState("done");
+      loadSent();
     } catch {
       setInviteState("error");
     }
   }
 
-  async function handleCopy() {
-    if (!inviteLink) return;
+  async function handleCopy(value: string, key: string) {
     try {
-      await navigator.clipboard.writeText(inviteLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      setTimeout(() => setCopied((c) => (c === key ? null : c)), 2500);
     } catch {
       // fallback: select the text
     }
+  }
+
+  async function handleRevoke(token: string) {
+    setRevoking(token);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/${token}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        loadSent();
+        if (inviteLink && inviteLink.endsWith(`/invite/${token}`)) {
+          setInviteLink(null);
+          setInviteState("idle");
+        }
+      }
+    } finally {
+      setRevoking(null);
+    }
+  }
+
+  function buildLink(token: string) {
+    return `${window.location.origin}${import.meta.env.BASE_URL}invite/${token}`;
+  }
+
+  function statusBadge(status: string) {
+    const map: Record<string, { label: string; cls: string }> = {
+      pending: { label: "In afwachting", cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/40" },
+      accepted: { label: "Geaccepteerd", cls: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800/40" },
+      expired: { label: "Verlopen", cls: "bg-muted text-muted-foreground border-border" },
+      revoked: { label: "Ingetrokken", cls: "bg-muted text-muted-foreground border-border" },
+    };
+    const v = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground border-border" };
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-[10px] font-mono uppercase tracking-wider ${v.cls}`}>
+        {v.label}
+      </span>
+    );
   }
 
   return (
@@ -2323,10 +2533,10 @@ function CompanionInviteSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCopy}
+                onClick={() => handleCopy(inviteLink, "current")}
                 className="shrink-0 font-mono text-xs"
               >
-                {copied ? (
+                {copied === "current" ? (
                   <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                 ) : (
                   <CopyIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -2341,6 +2551,84 @@ function CompanionInviteSection() {
         {inviteState === "error" && (
           <p className="text-xs text-destructive font-mono">Kon geen uitnodigingslink aanmaken. Probeer het opnieuw.</p>
         )}
+
+        <div className="pt-3 border-t border-border/40 space-y-3">
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+            Verzonden uitnodigingen
+          </p>
+          {sentLoading ? (
+            <Skeleton className="h-12 w-full rounded-sm" />
+          ) : sent.length === 0 ? (
+            <p className="text-xs text-muted-foreground/60 font-light italic">
+              U heeft nog geen uitnodigingen verzonden.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {sent.slice(0, 6).map((inv) => {
+                const link = buildLink(inv.token);
+                const copyKey = `sent-${inv.token}`;
+                const dateLabel = inv.status === "pending"
+                  ? `Verloopt ${new Date(inv.expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                  : `Verstuurd ${new Date(inv.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+                return (
+                  <li
+                    key={inv.id}
+                    className="border border-border/40 rounded-sm p-3 bg-muted/10 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {statusBadge(inv.status)}
+                        <span className="text-xs text-foreground/80 truncate">
+                          {inv.invitee_name ? (
+                            <>met <span className="font-medium">{inv.invitee_name}</span></>
+                          ) : (
+                            <span className="text-muted-foreground italic">nog niet geclaimd</span>
+                          )}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground/60 uppercase tracking-wider">
+                        {dateLabel}
+                      </span>
+                    </div>
+                    {inv.status === "pending" && (
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-[11px] bg-background border border-border/40 rounded-sm px-2 py-1 truncate select-all text-foreground/70">
+                          {link}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCopy(link, copyKey)}
+                          className="shrink-0 font-mono text-xs h-7 px-2"
+                          title="Kopieer link"
+                        >
+                          {copied === copyKey ? (
+                            <CheckCircle2 className="w-3 h-3 text-green-500" aria-hidden="true" />
+                          ) : (
+                            <CopyIcon className="w-3 h-3" aria-hidden="true" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRevoke(inv.token)}
+                          disabled={revoking === inv.token}
+                          className="shrink-0 font-mono text-xs h-7 px-2 text-muted-foreground hover:text-destructive"
+                          title="Trek uitnodiging in"
+                        >
+                          {revoking === inv.token
+                            ? <Loader2Icon className="w-3 h-3 animate-spin" aria-hidden="true" />
+                            : <X className="w-3 h-3" aria-hidden="true" />}
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         <div className="pt-2 border-t border-border/40">
           <Link
             href="/companion"

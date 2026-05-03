@@ -153,7 +153,7 @@ export default function InviteLanding() {
                 disabled={redeeming}
                 className="w-full font-mono uppercase tracking-widest text-xs"
               >
-                {redeeming ? "Accepting…" : isAuthenticated ? "Accept Invitation" : "Register & Accept"}
+                {redeeming ? "Accepting…" : isAuthenticated ? "Accept & Link" : "Register & Accept"}
               </Button>
               {!isAuthenticated && (
                 <p className="text-xs text-muted-foreground">

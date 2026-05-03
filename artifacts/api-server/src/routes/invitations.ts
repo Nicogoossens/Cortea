@@ -1,12 +1,74 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { invitationsTable, companionLinksTable, usersTable } from "@workspace/db";
-import { eq, or, and } from "drizzle-orm";
+import { eq, or, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import crypto from "crypto";
 
 const router = Router();
+
+router.get("/invitations/sent", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const rows = await db
+      .select({
+        id: invitationsTable.id,
+        token: invitationsTable.token,
+        status: invitationsTable.status,
+        expires_at: invitationsTable.expires_at,
+        created_at: invitationsTable.created_at,
+        invitee_id: invitationsTable.invitee_id,
+        invitee_name: usersTable.full_name,
+        invitee_username: usersTable.username,
+      })
+      .from(invitationsTable)
+      .leftJoin(usersTable, eq(usersTable.id, invitationsTable.invitee_id))
+      .where(eq(invitationsTable.inviter_id, userId))
+      .orderBy(desc(invitationsTable.created_at));
+
+    const now = new Date();
+    const invitations = rows.map((r) => {
+      let status = r.status;
+      if (status === "pending" && r.expires_at && now > r.expires_at) status = "expired";
+      return {
+        id: r.id,
+        token: r.token,
+        status,
+        expires_at: r.expires_at,
+        created_at: r.created_at,
+        invitee_name: r.invitee_name ?? r.invitee_username ?? null,
+      };
+    });
+
+    return res.json({ invitations });
+  } catch (err) {
+    req.log.error({ err }, "Failed to list sent invitations");
+    return res.status(500).json({ error: "Unable to load invitations." });
+  }
+});
+
+router.delete("/invitations/:token", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const { token } = req.params;
+
+    const [invitation] = await db.select().from(invitationsTable).where(eq(invitationsTable.token, token)).limit(1);
+    if (!invitation) return res.status(404).json({ error: "Invitation not found." });
+    if (invitation.inviter_id !== userId) return res.status(403).json({ error: "You may only revoke your own invitations." });
+    if (invitation.status !== "pending") return res.status(400).json({ error: "Only pending invitations can be revoked." });
+
+    await db.update(invitationsTable)
+      .set({ status: "revoked" })
+      .where(eq(invitationsTable.token, token));
+
+    return res.json({ message: "Invitation revoked." });
+  } catch (err) {
+    req.log.error({ err }, "Failed to revoke invitation");
+    return res.status(500).json({ error: "Unable to revoke invitation." });
+  }
+});
 
 router.post("/invitations/generate", requireAuthUser, async (req, res) => {
   try {

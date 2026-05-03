@@ -20,4 +20,6 @@ export interface CultureCompassDetail {
   dos: string[];
   donts: string[];
   mehrabian_weight?: CultureCompassDetailMehrabianWeight;
+  /** Compass field names that include sphere-specific highlight content for the requested situational interests (e.g. dining_etiquette, dress_code). */
+  sphere_highlights?: string[];
 }

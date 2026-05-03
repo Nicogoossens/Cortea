@@ -207,6 +207,8 @@ export interface CultureCompassEntry {
   flag_emoji: string;
   /** True when this region has at least one locale of compass content ready. */
   has_content: boolean;
+  /** Situational interest spheres (e.g. business, leisure) for which this region currently has dedicated highlight content. */
+  sphere_highlights?: string[];
 }
 
 export type CultureCompassDetailMehrabianWeight = {
@@ -229,6 +231,8 @@ export interface CultureCompassDetail {
   dos: string[];
   donts: string[];
   mehrabian_weight?: CultureCompassDetailMehrabianWeight;
+  /** Compass field names that include sphere-specific highlight content for the requested situational interests (e.g. dining_etiquette, dress_code). */
+  sphere_highlights?: string[];
 }
 
 export interface ScenarioOption {

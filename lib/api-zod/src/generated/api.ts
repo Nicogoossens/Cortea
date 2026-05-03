@@ -388,6 +388,12 @@ export const GetCultureCompassResponseItem = zod.object({
     .describe(
       "True when this region has at least one locale of compass content ready.",
     ),
+  sphere_highlights: zod
+    .array(zod.string())
+    .optional()
+    .describe(
+      "Situational interest spheres (e.g. business, leisure) for which this region currently has dedicated highlight content.",
+    ),
 });
 export const GetCultureCompassResponse = zod.array(
   GetCultureCompassResponseItem,
@@ -429,6 +435,12 @@ export const GetCultureCompassRegionResponse = zod.object({
       note: zod.string().optional(),
     })
     .optional(),
+  sphere_highlights: zod
+    .array(zod.string())
+    .optional()
+    .describe(
+      "Compass field names that include sphere-specific highlight content for the requested situational interests (e.g. dining_etiquette, dress_code).",
+    ),
 });
 
 /**

@@ -984,6 +984,11 @@ components:
         has_content:
           type: boolean
           description: "True when this region has at least one locale of compass content ready."
+        sphere_highlights:
+          type: array
+          description: "Situational interest spheres (e.g. business, leisure) for which this region currently has dedicated highlight content."
+          items:
+            type: string
       required:
         - region_code
         - region_name
@@ -1036,6 +1041,11 @@ components:
             - nonverbal
             - tone
             - words
+        sphere_highlights:
+          type: array
+          description: "Compass field names that include sphere-specific highlight content for the requested situational interests (e.g. dining_etiquette, dress_code)."
+          items:
+            type: string
       required:
         - region_code
         - region_name

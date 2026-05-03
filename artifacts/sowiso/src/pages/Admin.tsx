@@ -11,7 +11,7 @@ import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
   BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check, Plus, Pencil, X,
-  Briefcase, BarChart3, Tag, Languages, Vote,
+  Briefcase, BarChart3, Tag, Languages, Vote, Mail, ArrowRight,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -3220,6 +3220,22 @@ export default function Admin() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
 
+  const [waitlistCounts, setWaitlistCounts] = useState<{ claimed: number; total: number } | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/api/admin/waitlist`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { founderClaimed: number; founderTotal: number } | null) => {
+        if (!cancelled && d) {
+          setWaitlistCounts({ claimed: d.founderClaimed, total: d.founderTotal });
+        }
+      })
+      .catch(() => { /* silent */ });
+    return () => { cancelled = true; };
+  }, [isAdmin]);
+
   const fetchUsers = useCallback(async (q: string, page = 1) => {
     setLoading(true);
     try {
@@ -3301,6 +3317,35 @@ export default function Admin() {
         </div>
         <p className="text-muted-foreground font-light text-sm">{t("admin.subtitle")}</p>
       </div>
+
+      {/* Quick links */}
+      <Link href="/admin/waitlist" className="block group no-underline">
+        <Card className="bg-card border-border hover:border-primary/60 transition-colors cursor-pointer">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Mail className="w-5 h-5 text-primary" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-serif text-foreground">Waitlist</div>
+              <div className="text-xs text-muted-foreground font-light">Founder signups & invitations</div>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="font-serif text-foreground">
+                {waitlistCounts ? (
+                  <>
+                    <span className="text-lg text-primary">{waitlistCounts.claimed}</span>
+                    <span className="text-xs text-muted-foreground"> / {waitlistCounts.total}</span>
+                  </>
+                ) : (
+                  <span className="text-xs font-mono text-muted-foreground">…</span>
+                )}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Founders</div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" aria-hidden="true" />
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-x-1 gap-y-0 border-b border-border/50">

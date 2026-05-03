@@ -1,39 +1,35 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "wouter";
 import { useLocale, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
-import { useActiveRegion, FlagEmoji, COMPASS_REGIONS } from "@/lib/active-region";
-import { X, ChevronDown } from "lucide-react";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
+import { ChevronDown } from "lucide-react";
 
 export function ActiveContextChips() {
-  const { locale, setLocale } = useLocale();
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
+  const { locale, setLocale, t } = useLocale();
+  const { activeRegion, getRegionName } = useActiveRegion();
+  const langLabel = t("context.active_language");
+  const regionLabel = t("context.active_region");
 
   const [showLangPicker, setShowLangPicker] = useState(false);
-  const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   const langChipRef = useRef<HTMLButtonElement>(null);
-  const regionChipRef = useRef<HTMLButtonElement>(null);
 
   const allLocales = LOCALE_GROUPS.flatMap((g) => g.locales);
   const currentLocale = allLocales.find((l) => l.locale === locale);
   const languageLabel = currentLocale?.languageLabel ?? "English";
 
   useEffect(() => {
-    if (!showLangPicker && !showRegionPicker) return;
+    if (!showLangPicker) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        if (showLangPicker) {
-          setShowLangPicker(false);
-          langChipRef.current?.focus();
-        } else if (showRegionPicker) {
-          setShowRegionPicker(false);
-          regionChipRef.current?.focus();
-        }
+        setShowLangPicker(false);
+        langChipRef.current?.focus();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [showLangPicker, showRegionPicker]);
+  }, [showLangPicker]);
 
   const chipBase =
     "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono transition-colors";
@@ -47,12 +43,13 @@ export function ActiveContextChips() {
         <button
           ref={langChipRef}
           type="button"
-          onClick={() => { setShowLangPicker((v) => !v); setShowRegionPicker(false); }}
+          onClick={() => setShowLangPicker((v) => !v)}
           className={`${chipBase} ${showLangPicker ? chipOpen : chipIdle}`}
-          aria-label={`Language: ${languageLabel}. Click to change.`}
+          aria-label={`${langLabel}: ${languageLabel}. Click to change.`}
           aria-expanded={showLangPicker}
           aria-haspopup="listbox"
         >
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{langLabel}:</span>
           <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
           <span>{languageLabel}</span>
           <ChevronDown
@@ -61,22 +58,20 @@ export function ActiveContextChips() {
           />
         </button>
 
-        <button
-          ref={regionChipRef}
-          type="button"
-          onClick={() => { setShowRegionPicker((v) => !v); setShowLangPicker(false); }}
-          className={`${chipBase} ${showRegionPicker ? chipOpen : chipIdle}`}
-          aria-label={`Region: ${getRegionName(activeRegion)}. Click to change.`}
-          aria-expanded={showRegionPicker}
-          aria-haspopup="listbox"
+        {/* The region chip is intentionally a read-only link to the profile.
+            Inline switching from non-profile pages was causing accidental
+            region changes (and downstream content pollution) when users only
+            wanted to glance at their active region. The profile page is the
+            single canonical place to change it. */}
+        <Link
+          href="/profile?focus=region"
+          className={`${chipBase} ${chipIdle}`}
+          aria-label={`${regionLabel}: ${getRegionName(activeRegion)}. Open profile to change.`}
         >
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{regionLabel}:</span>
           <FlagEmoji code={activeRegion} size="sm" />
           <span>{getRegionName(activeRegion)}</span>
-          <ChevronDown
-            className={`w-3 h-3 opacity-50 transition-transform duration-150 ${showRegionPicker ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-        </button>
+        </Link>
       </div>
 
       {showLangPicker && (
@@ -108,42 +103,6 @@ export function ActiveContextChips() {
         </div>
       )}
 
-      {showRegionPicker && (
-        <div
-          role="listbox"
-          aria-label="Choose region"
-          className="flex flex-wrap gap-1.5 animate-in fade-in duration-150 pt-1"
-        >
-          {COMPASS_REGIONS.map((region) => {
-            const isSelected = region.code === activeRegion;
-            return (
-              <button
-                key={region.code}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => { setActiveRegion(region.code); setShowRegionPicker(false); regionChipRef.current?.focus(); }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
-                }`}
-              >
-                <FlagEmoji code={region.flag} size="sm" />
-                {getRegionName(region.code)}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => { setShowRegionPicker(false); regionChipRef.current?.focus(); }}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs border border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30 transition-all"
-          >
-            <X className="w-3 h-3" aria-hidden="true" />
-            Close
-          </button>
-        </div>
-      )}
     </div>
   );
 }

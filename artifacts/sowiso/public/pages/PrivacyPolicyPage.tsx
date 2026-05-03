@@ -202,7 +202,6 @@ export default function PrivacyPolicyPage() {
     setLocale(entry.defaultLocale);
   };
 
-
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Header bar */}

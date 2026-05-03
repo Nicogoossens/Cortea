@@ -182,7 +182,7 @@ export default function Atelier() {
             }`}
           >
             <LayoutList className="w-3.5 h-3.5" aria-hidden="true" />
-            {t("atelier.tab_scenarios", "Scenario's")}
+            {t("atelier.tab_scenarios")}
           </button>
           {hasFullAccess && (
             <button
@@ -196,7 +196,7 @@ export default function Atelier() {
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
-              {t("atelier.tab_learning_tracks", "Leertrajecten")}
+              {t("atelier.tab_learning_tracks")}
             </button>
           )}
           <button
@@ -357,7 +357,12 @@ export default function Atelier() {
                     {getRegionName(activeRegion)}
                   </span>.
                 </p>
-                <Link href="/compass">
+                {/* Region changes must happen on the profile page so the
+                    user's persisted preference is updated, not the volatile
+                    session region. Linking to /compass here previously sent
+                    the user to a screen that could not actually change the
+                    active region from this empty state. */}
+                <Link href="/profile?focus=region">
                   <button className="text-sm underline underline-offset-2 text-primary/70 hover:text-primary transition-colors">
                     {t("atelier.change_region")}
                   </button>

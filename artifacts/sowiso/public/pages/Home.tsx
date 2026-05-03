@@ -114,6 +114,11 @@ export default function Home() {
         .slice(0, 3)
     : undefined;
 
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(false);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [alertTrips, setAlertTrips] = useState<NavigatorTrip[]>([]);
   const [allTrips, setAllTrips] = useState<NavigatorTrip[]>([]);
   const [tripAlertDismissed, setTripAlertDismissed] = useState(false);

@@ -11,10 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
-  Layers, MapPin, ArrowRight, UtensilsCrossed,
+  Layers, MapPin, ArrowRight, UtensilsCrossed, Bookmark, BookOpen,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
@@ -27,6 +29,8 @@ import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
+import { VenueCard } from "@/components/VenueCard";
+import { useSavedVenues } from "@/lib/saved-venues";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -125,6 +129,27 @@ interface EnrichedLogEntry {
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+interface PurchasedGuide {
+  id: string;
+  title: string;
+  description: string | null;
+  pillar: string;
+  region_code: string | null;
+  price_cents: number;
+  tier_required: string | null;
+  purchased_at: string;
+}
+
+const GUIDE_PILLAR_LABEL_KEYS: Record<string, string> = {
+  internship: "guides.pillar.internship",
+  exchange: "guides.pillar.exchange",
+  dining: "guides.pillar.dining",
+  interview: "guides.pillar.interview",
+  networking: "guides.pillar.networking",
+  travel: "guides.pillar.travel",
+  business: "guides.pillar.business",
+};
 
 interface UseCaseWithRating {
   id: number;
@@ -368,10 +393,15 @@ export default function Profile() {
   const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [avatarSave, setAvatarSave] = useState<SaveState>("idle");
 
-  // Birth year & gender — editable once, then locked
-  const [birthYearInput, setBirthYearInput] = useState("");
-  const [birthYearSave, setBirthYearSave] = useState<SaveState>("idle");
-  const [genderSave, setGenderSave] = useState<SaveState>("idle");
+  // "Complete your profile" flow — for users missing full_name, birth_year,
+  // or gender_identity (e.g. legacy / social sign-in accounts). Each field is
+  // set-once, so we only render inputs for fields not yet populated.
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [completeProfileSave, setCompleteProfileSave] = useState<SaveState>("idle");
+  const [completeProfileError, setCompleteProfileError] = useState<string | null>(null);
+  const [cpFullName, setCpFullName] = useState("");
+  const [cpBirthYear, setCpBirthYear] = useState("");
+  const [cpGender, setCpGender] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Ambition level
@@ -409,7 +439,6 @@ export default function Profile() {
         setFullNameInput(data?.full_name ?? "");
         setCountryInput(data?.country_of_origin ?? "");
         setCountryInputCourse(data?.country_of_origin ?? "");
-        setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
         if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
       })
@@ -419,11 +448,52 @@ export default function Profile() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
+  // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
+  // from the Atelier "Wijzig uw actieve regio" link or the read-only region
+  // chip), force-open the Cursusinstellingen card, scroll it into view, and
+  // briefly highlight the leerregio dropdown so the user immediately sees
+  // what to change. The flag auto-clears after the highlight animation so
+  // a refresh does not keep flashing.
+  const [focusRegion, setFocusRegion] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") !== "region") return;
+    setFocusRegion(true);
+    // Scroll & highlight after the section has had a chance to expand.
+    // We target the leerregio dropdown ANCHOR specifically (not the card
+    // top) and use block:"center" so the control lands in the middle of
+    // the viewport — otherwise the card opens but the dropdown sits below
+    // the fold and the user does not see what to click.
+    const timer = window.setTimeout(() => {
+      const el =
+        document.getElementById("focus-region-anchor") ??
+        document.getElementById("course-settings-card");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
+    // Clear the highlight ring after a few seconds.
+    const clearTimer = window.setTimeout(() => setFocusRegion(false), 4000);
+    return () => { window.clearTimeout(timer); window.clearTimeout(clearTimer); };
+  }, []);
+
   const { data: nobleScore, isLoading: scoreLoading } = useGetNobleScore({ query: { queryKey: getGetNobleScoreQueryKey() } });
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
   const { data: earnedBadges } = useGetLearningTrackBadges({
     query: { enabled: !!userId, staleTime: 30_000 },
+  });
+
+  const { data: purchasedGuides, isLoading: purchasedGuidesLoading } = useQuery<PurchasedGuide[]>({
+    queryKey: ["purchased-guides", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE}/api/guides/purchased`, {
+        credentials: "include",
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: useCasesData } = useQuery<UseCaseWithRating[]>({
@@ -541,14 +611,50 @@ export default function Profile() {
     if (ok) setEditingFullName(false);
   }
 
-  async function handleBirthYearSubmit() {
-    const year = parseInt(birthYearInput, 10);
-    if (isNaN(year) || year < 1900 || year > new Date().getFullYear() - 5) return;
-    await patchProfile({ birth_year: year }, setBirthYearSave);
+  function openCompleteProfile() {
+    setCpFullName(profileData?.full_name ?? "");
+    setCpBirthYear(profileData?.birth_year ? String(profileData.birth_year) : "");
+    setCpGender(profileData?.gender_identity ?? "");
+    setCompleteProfileError(null);
+    setCompleteProfileSave("idle");
+    setShowCompleteProfile(true);
   }
 
-  async function handleGenderSelect(value: string) {
-    await patchProfile({ gender_identity: value }, setGenderSave);
+  async function handleCompleteProfileSubmit() {
+    const body: Record<string, unknown> = {};
+    const currentYear = new Date().getFullYear();
+
+    // Only include fields that are still missing on the profile (set-once
+    // semantics — once populated they are locked server-side too).
+    if (!profileData?.full_name) {
+      const trimmed = cpFullName.trim();
+      if (!trimmed) {
+        setCompleteProfileError(t("profile.complete_error_full_name"));
+        return;
+      }
+      body.full_name = trimmed;
+    }
+    if (!profileData?.birth_year) {
+      const year = parseInt(cpBirthYear, 10);
+      if (isNaN(year) || year < 1900 || year > currentYear - 5) {
+        setCompleteProfileError(t("profile.complete_error_birth_year"));
+        return;
+      }
+      body.birth_year = year;
+    }
+    if (!profileData?.gender_identity && cpGender) {
+      body.gender_identity = cpGender;
+    }
+
+    if (Object.keys(body).length === 0) {
+      setShowCompleteProfile(false);
+      return;
+    }
+
+    const ok = await patchProfile(body, setCompleteProfileSave, setCompleteProfileError);
+    if (ok) {
+      setTimeout(() => setShowCompleteProfile(false), 600);
+    }
   }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -918,35 +1024,19 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Subscription Status ── */}
-      {subscriptionStatus && subscriptionStatus.tier !== "guest" && (
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm ${
-          subscriptionStatus.paymentFailed
-            ? "border-amber-500/30 bg-amber-500/5"
-            : "border-border/40 bg-card"
-        }`}>
+      {/* ── Subscription Status ──
+          The standalone "Lidmaatschap actief" row was removed because the
+          tier badge in the user header above (TRAVELLER / AMBASSADOR / …)
+          already communicates membership status. We keep a slim row here
+          ONLY when payment has failed, since that warrants a prominent
+          banner the user must see and act on. */}
+      {subscriptionStatus && subscriptionStatus.tier !== "guest" && subscriptionStatus.paymentFailed && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm border-amber-500/30 bg-amber-500/5">
           <div className="flex items-center gap-3">
-            {subscriptionStatus.paymentFailed ? (
-              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
-            ) : (
-              <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden="true" />
-            )}
-            <div>
-              {subscriptionStatus.paymentFailed ? (
-                <p className="text-amber-500 font-light">
-                  {t("subscription.profile_payment_failed")}
-                </p>
-              ) : subscriptionStatus.renewalDate ? (
-                <p className="text-muted-foreground font-light">
-                  {t("subscription.profile_renews")}{" "}
-                  <span className="text-foreground">
-                    {format(new Date(subscriptionStatus.renewalDate), "d LLLL yyyy", { locale: dateFnsLocale })}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-muted-foreground font-light">{t("subscription.profile_active")}</p>
-              )}
-            </div>
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+            <p className="text-amber-500 font-light">
+              {t("subscription.profile_payment_failed")}
+            </p>
           </div>
           <Link
             href="/membership"
@@ -958,8 +1048,92 @@ export default function Profile() {
         </div>
       )}
 
+      {/* ── Badges ──
+          Hier verplaatst (was eerder verder onderaan de pagina) zodat de
+          gebruiker meteen na het identiteitsblok zijn behaalde
+          onderscheidingen ziet, vóór de persoonlijke gegevens. */}
+      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
+            <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
+            {t("profile.badges_title")}
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-light">
+            {t("profile.badges_desc")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!earnedBadges || earnedBadges.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground/60">
+              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
+              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
+              <Link href="/atelier">
+                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Group badges by type */}
+              {(["pillar", "phase", "country", "ambassador"] as const)
+                .filter((type) => earnedBadges.some((b) => b.badge_type === type))
+                .map((type) => {
+                  const group = earnedBadges.filter((b) => b.badge_type === type);
+                  const typeLabel =
+                    type === "pillar" ? t("profile.badges_type_pillar")
+                    : type === "phase" ? t("profile.badges_type_phase")
+                    : type === "country" ? t("profile.badges_type_country")
+                    : t("profile.badges_type_ambassador");
+                  const TypeIcon =
+                    type === "pillar" ? Medal
+                    : type === "phase" ? Trophy
+                    : type === "country" ? Globe
+                    : Shield;
+                  return (
+                    <div key={type}>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <TypeIcon className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
+                          {typeLabel} {group.length > 1 ? `(${group.length})` : ""}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {group.map((badge) => (
+                          <div
+                            key={badge.slug}
+                            className="flex items-start gap-3 px-3 py-2.5 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
+                          >
+                            <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
+                              {type === "pillar" ? "🏅"
+                                : type === "phase" ? "🏆"
+                                : type === "country" ? "🌟"
+                                : "🎖️"}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-foreground leading-tight truncate">
+                                {badge.title}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug line-clamp-2">
+                                {badge.description}
+                              </p>
+                              {badge.awarded_at && (
+                                <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
+                                  {format(new Date(badge.awarded_at), "d MMM yyyy", { locale: dateFnsLocale })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* ── Personal Details + Preferences ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
 
         {/* Personal Details */}
         <Card className="bg-card border-border shadow-sm">
@@ -972,7 +1146,10 @@ export default function Profile() {
           <CardContent className="space-y-4">
             {/* Read-only display of identity fields. Editing of these is
                 handled during onboarding; here we present them as a static
-                "ID card" view so the user can verify what is on file. */}
+                "ID card" view so the user can verify what is on file.
+                Users who registered without these fields (legacy / social
+                sign-ins) can still set them via the "Complete profile" button
+                rendered below the panel. */}
             <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} locked={!!profileData?.full_name} />
 
             {/* Email is masked (e.g. j••••@domain) so the local-part is never
@@ -1085,26 +1262,16 @@ export default function Profile() {
                 <span className="text-xs text-muted-foreground/40 italic font-light">{t("profile.phone_coming_soon")}</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Preferences */}
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="font-serif text-lg flex items-center gap-2">
-              <Languages className="w-4 h-4 text-primary/60" aria-hidden="true" />
-              {t("profile.preferences")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Language — labelled <select> dropdown of the supported base
-                languages. Selecting an option PATCHes the user profile and
-                immediately switches the UI locale. */}
-            <div className="space-y-2">
+            {/* Preferred language — moved out of the standalone "Preferences"
+                card so users see it alongside their other personal data.
+                Selecting an option PATCHes the user profile and immediately
+                switches the UI locale. */}
+            <div className="pt-3 border-t border-border/50 space-y-2">
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="profile-language-select"
-                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground"
+                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70"
                 >
                   {t("profile.pref_language")}
                 </label>
@@ -1129,65 +1296,49 @@ export default function Profile() {
               </select>
             </div>
 
-            {/* Region */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t("profile.pref_region_label")}</label>
-                <SaveIndicator state={regionSave} t={t} />
-              </div>
-              <div className="relative">
-                <button
-                  onClick={() => setShowRegionPicker((v) => !v)}
-                  onBlur={() => setTimeout(() => setShowRegionPicker(false), 150)}
-                  aria-haspopup="listbox"
-                  aria-expanded={showRegionPicker}
-                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border/60 hover:border-primary/40 hover:bg-muted/30 transition-all text-sm w-full text-left"
+            {/* Complete profile — visible only when one or more of the
+                set-once identity fields (full name, birth year, gender) is
+                still missing. Opens a modal that lets the user fill in
+                whatever is absent. Once saved, the field is locked. */}
+            {profileData && (!profileData.full_name || !profileData.birth_year || !profileData.gender_identity) && (
+              <div className="pt-3 border-t border-border/50">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full font-mono text-xs uppercase tracking-wider"
+                  onClick={openCompleteProfile}
                 >
-                  <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-                  <FlagEmoji code={activeRegion} size="sm" />
-                  <span className="font-medium flex-1">{getRegionName(activeRegion)}</span>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showRegionPicker ? "rotate-180" : ""}`} aria-hidden="true" />
-                </button>
-                {showRegionPicker && (
-                  <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
-                    {COMPASS_REGIONS.map((region) => {
-                      const isSelected = region.code === activeRegion;
-                      return (
-                        <button
-                          key={region.code}
-                          role="option"
-                          aria-selected={isSelected}
-                          onMouseDown={() => handleRegionChange(region.code as RegionCode)}
-                          className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm transition-colors ${
-                            isSelected
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                          }`}
-                        >
-                          <FlagEmoji code={region.flag} size="sm" />
-                          {getRegionName(region.code)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                  <Pencil className="w-3 h-3 mr-2" aria-hidden="true" />
+                  {t("profile.complete_profile_cta")}
+                </Button>
+                <p className="text-xs text-muted-foreground/60 font-light mt-2 leading-snug">
+                  {t("profile.complete_profile_hint")}
+                </p>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* The standalone "Preferences" card was removed: language now lives
+            inside Personal Details (above) and learning region is managed
+            from the Course Settings panel below. This eliminates the
+            duplicate region picker that confused users. */}
       </div>
 
-      {/* ── Course Settings (Cursinstellingen) ── */}
-      <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2">
-            <Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />
-            {t("profile.course_settings_title")}
-          </CardTitle>
-          <CardDescription className="text-xs font-light text-muted-foreground/70 mt-0.5">
-            {t("profile.course_settings_desc")}
-          </CardDescription>
-        </CardHeader>
+      {/* ── Course Settings (Cursusinstellingen) ──
+          Converted from a static Card to a CollapsibleSection so it stacks
+          uniformly with Interesses, Culinaire Interesses and Sferen below.
+          Together they read as one grouped "Cursus & Voorkeuren" set of
+          accordions, while each retains its own collapsible state. */}
+      <CollapsibleSection
+        id="course-settings-card"
+        title={t("profile.course_settings_title")}
+        icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.course_settings_desc")}
+        storageKey="course_settings"
+        forceOpen={focusRegion}
+      >
         <CardContent className="space-y-5">
 
           {/* Warning banner */}
@@ -1241,11 +1392,22 @@ export default function Profile() {
           </div>
 
           {/* Learning region dropdown */}
-          <div className="space-y-1.5">
+          <div
+            id="focus-region-anchor"
+            className={`scroll-mt-32 space-y-1.5 rounded-sm transition-all ${focusRegion ? "ring-2 ring-primary/60 ring-offset-4 ring-offset-card animate-pulse" : ""}`}
+          >
             <div className="flex items-center justify-between">
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.pref_region_label")}</label>
               <SaveIndicator state={regionSave} t={t} />
             </div>
+            {focusRegion && (
+              <p className="text-xs font-light text-primary/80 italic">
+                {/* Inline hint shown only when the user arrived via a "wijzig
+                    regio" deep-link, so they know exactly which control to
+                    use. Disappears together with the highlight ring. */}
+                Wijzig hieronder uw actieve leerregio. Uw aanpassing wordt automatisch opgeslagen.
+              </p>
+            )}
             <div className="relative">
               <button
                 onClick={() => setCourseRegionDropdownOpen((v) => !v)}
@@ -1377,138 +1539,133 @@ export default function Profile() {
             );
           })()}
 
-        </CardContent>
-      </Card>
+          {/* ── Inline subsections merged into Cursusinstellingen ──
+              Doelstellingen, Interesses, Culinaire interesses en Sferen
+              waren voorheen losse kaarten. Alles wat de cursus en
+              aanbevelingen stuurt hoort thuis in dit ene vak; visueel
+              gescheiden door subkoppen, niet door extra kaarten. */}
 
-      {/* ── Interests & Objectives ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.interests_title")}
-        icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        description={t("profile.interests_subtitle")}
-        storageKey="interests"
-      >
-        <CardContent className="space-y-6">
-
-          {/* Objectives */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.objectives_label")}</label>
-              <SaveIndicator state={objectivesSave} t={t} />
+          <CollapsibleSubsection
+            icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.interests_title")}
+            description={t("profile.interests_subtitle")}
+            storageKey="interests"
+          >
+            {/* Objectives */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.objectives_label")}</label>
+                <SaveIndicator state={objectivesSave} t={t} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
+                  const isActive = (profileData?.objectives ?? []).includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleObjectiveToggle(key)}
+                      disabled={objectivesSave === "saving"}
+                      className={`text-left px-4 py-3 rounded-sm border text-sm transition-all ${
+                        isActive
+                          ? "bg-primary/10 border-primary/40 text-primary font-medium"
+                          : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                      }`}
+                    >
+                      {t(labelKey)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {OBJECTIVE_OPTIONS.map(({ key, labelKey }) => {
-                const isActive = (profileData?.objectives ?? []).includes(key);
+
+            {/* Sports & Leisure */}
+            <InterestSelector
+              label={t("profile.sports_leisure_label")}
+              presets={INTEREST_PRESETS.sports}
+              tags={profileData?.interests_sports ?? []}
+              saveState={sportsSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_sports ?? []).includes(v);
+                if (active) handleTagRemove("sports", v);
+                else handleTagAdd("sports", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("sports", v)}
+              t={t}
+            />
+
+            {/* Dress Code Preferences */}
+            <InterestSelector
+              label={t("profile.dress_code_prefs_label")}
+              presets={INTEREST_PRESETS.dress_code}
+              tags={profileData?.interests_dress_code ?? []}
+              saveState={dressCodeSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_dress_code ?? []).includes(v);
+                if (active) handleTagRemove("dress_code", v);
+                else handleTagAdd("dress_code", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("dress_code", v)}
+              t={t}
+            />
+          </CollapsibleSubsection>
+
+          <CollapsibleSubsection
+            icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.culinary_interests_label")}
+            storageKey="culinary"
+          >
+            <InterestSelector
+              label={t("profile.culinary_interests_label")}
+              presets={INTEREST_PRESETS.cuisine}
+              tags={profileData?.interests_cuisine ?? []}
+              saveState={cuisineSave}
+              onTogglePreset={(v) => {
+                const active = (profileData?.interests_cuisine ?? []).includes(v);
+                if (active) handleTagRemove("cuisine", v);
+                else handleTagAdd("cuisine", v, () => {});
+              }}
+              onRemove={(v) => handleTagRemove("cuisine", v)}
+              t={t}
+            />
+          </CollapsibleSubsection>
+
+          <CollapsibleSubsection
+            icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.spheres_title")}
+            description={t("profile.spheres_subtitle")}
+            storageKey="spheres"
+          >
+            <div className="flex flex-wrap gap-2">
+              {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
+                const isActive = (profileData?.situational_interests ?? []).includes(key);
                 return (
                   <button
                     key={key}
-                    onClick={() => handleObjectiveToggle(key)}
-                    disabled={objectivesSave === "saving"}
-                    className={`text-left px-4 py-3 rounded-sm border text-sm transition-all ${
+                    onClick={() => handleSphereToggle(key)}
+                    disabled={spheresSave === "saving"}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all ${
                       isActive
-                        ? "bg-primary/10 border-primary/40 text-primary font-medium"
-                        : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                        ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                        : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
                     }`}
                   >
+                    <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
                     {t(labelKey)}
                   </button>
                 );
               })}
             </div>
-          </div>
+            <div className="mt-3 flex items-center gap-2 h-4">
+              <SaveIndicator state={spheresSave} t={t} />
+              {spheresSave === "idle" && (profileData?.situational_interests ?? []).length > 0 && (
+                <span className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40" aria-hidden="true" />
+                  {t("profile.spheres_onboarding_hint")}
+                </span>
+              )}
+            </div>
+          </CollapsibleSubsection>
 
-          {/* Sports & Leisure */}
-          <InterestSelector
-            label={t("profile.sports_leisure_label")}
-            presets={INTEREST_PRESETS.sports}
-            tags={profileData?.interests_sports ?? []}
-            saveState={sportsSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_sports ?? []).includes(v);
-              if (active) handleTagRemove("sports", v);
-              else handleTagAdd("sports", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("sports", v)}
-            t={t}
-          />
-
-          {/* Dress Code Preferences */}
-          <InterestSelector
-            label={t("profile.dress_code_prefs_label")}
-            presets={INTEREST_PRESETS.dress_code}
-            tags={profileData?.interests_dress_code ?? []}
-            saveState={dressCodeSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_dress_code ?? []).includes(v);
-              if (active) handleTagRemove("dress_code", v);
-              else handleTagAdd("dress_code", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("dress_code", v)}
-            t={t}
-          />
-
-        </CardContent>
-      </CollapsibleSection>
-
-      {/* ── Culinaire Interesses ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.culinary_interests_label")}
-        icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        storageKey="culinary"
-      >
-        <CardContent>
-          <InterestSelector
-            label={t("profile.culinary_interests_label")}
-            presets={INTEREST_PRESETS.cuisine}
-            tags={profileData?.interests_cuisine ?? []}
-            saveState={cuisineSave}
-            onTogglePreset={(v) => {
-              const active = (profileData?.interests_cuisine ?? []).includes(v);
-              if (active) handleTagRemove("cuisine", v);
-              else handleTagAdd("cuisine", v, () => {});
-            }}
-            onRemove={(v) => handleTagRemove("cuisine", v)}
-            t={t}
-          />
-        </CardContent>
-      </CollapsibleSection>
-
-      {/* ── Jouw Sferen ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.spheres_title")}
-        icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        description={t("profile.spheres_subtitle")}
-        storageKey="spheres"
-      >
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
-              const isActive = (profileData?.situational_interests ?? []).includes(key);
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleSphereToggle(key)}
-                  disabled={spheresSave === "saving"}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all ${
-                    isActive
-                      ? "bg-primary/10 text-primary border-primary/35 font-medium"
-                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  {t(labelKey)}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex items-center gap-2 h-4">
-            <SaveIndicator state={spheresSave} t={t} />
-            {spheresSave === "idle" && (profileData?.situational_interests ?? []).length > 0 && (
-              <span className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40" aria-hidden="true" />
-                {t("profile.spheres_onboarding_hint")}
-              </span>
-            )}
-          </div>
         </CardContent>
       </CollapsibleSection>
 
@@ -1909,88 +2066,75 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* ── Badges ── */}
-      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+      {/* ── My Guides ── */}
+      <Card id="my-guides" className="border-border/40 bg-card shadow-sm scroll-mt-20">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
-            <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
-            {t("profile.badges_title")}
+            <BookOpen className="w-4 h-4 text-primary/60" aria-hidden="true" />
+            {t("profile.my_guides_title")}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground font-light">
-            {t("profile.badges_desc")}
+            {t("profile.my_guides_desc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!earnedBadges || earnedBadges.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground/60">
-              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
-              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
-              <Link href="/atelier">
-                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
+          {purchasedGuidesLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-16 rounded-sm" />
+              <Skeleton className="h-16 rounded-sm" />
+            </div>
+          ) : !purchasedGuides || purchasedGuides.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground/70">
+              <BookOpen className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
+              <p className="font-serif text-sm">{t("profile.my_guides_empty")}</p>
+              <Link href="/guides">
+                <p className="text-xs mt-2 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">
+                  {t("profile.my_guides_empty_cta")}
+                </p>
               </Link>
             </div>
           ) : (
-            <div className="space-y-5">
-              {/* Group badges by type */}
-              {(["pillar", "phase", "country", "ambassador"] as const)
-                .filter((type) => earnedBadges.some((b) => b.badge_type === type))
-                .map((type) => {
-                  const group = earnedBadges.filter((b) => b.badge_type === type);
-                  const typeLabel =
-                    type === "pillar" ? t("profile.badges_type_pillar")
-                    : type === "phase" ? t("profile.badges_type_phase")
-                    : type === "country" ? t("profile.badges_type_country")
-                    : t("profile.badges_type_ambassador");
-                  const TypeIcon =
-                    type === "pillar" ? Medal
-                    : type === "phase" ? Trophy
-                    : type === "country" ? Globe
-                    : Shield;
-                  return (
-                    <div key={type}>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <TypeIcon className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
-                          {typeLabel} {group.length > 1 ? `(${group.length})` : ""}
-                        </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {purchasedGuides.map((guide) => (
+                <Link key={guide.id} href={`/guides#${guide.id}`} aria-label={t("profile.my_guides_open") + ": " + guide.title}>
+                  <div className="flex items-start gap-3 px-3 py-3 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 transition-colors cursor-pointer group">
+                    <BookOpen className="w-4 h-4 text-primary/60 shrink-0 mt-0.5" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground leading-tight truncate">
+                        {guide.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <Badge variant="outline" className="text-[10px] font-mono uppercase tracking-wider rounded-[2px]">
+                          {t(GUIDE_PILLAR_LABEL_KEYS[guide.pillar] ?? "", guide.pillar)}
+                        </Badge>
+                        {guide.region_code && (
+                          <Badge variant="secondary" className="text-[10px] font-mono rounded-[2px]">
+                            {guide.region_code}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {group.map((badge) => (
-                          <div
-                            key={badge.slug}
-                            className="flex items-start gap-3 px-3 py-2.5 rounded-sm border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors"
-                          >
-                            <span className="text-lg shrink-0 mt-0.5" aria-hidden="true">
-                              {type === "pillar" ? "🏅"
-                                : type === "phase" ? "🏆"
-                                : type === "country" ? "🌟"
-                                : "🎖️"}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-foreground leading-tight truncate">
-                                {badge.title}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-snug line-clamp-2">
-                                {badge.description}
-                              </p>
-                              {badge.awarded_at && (
-                                <p className="text-[10px] text-muted-foreground/50 mt-1 font-mono">
-                                  {format(new Date(badge.awarded_at), "d MMM yyyy", { locale: dateFnsLocale })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {guide.purchased_at && (
+                        <p className="text-[10px] text-muted-foreground/60 mt-1.5 font-mono">
+                          {t("profile.my_guides_purchased_on", {
+                            date: format(new Date(guide.purchased_at), "d MMM yyyy", { locale: dateFnsLocale }),
+                          })}
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
+                    <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 group-hover:text-primary transition-colors shrink-0 mt-1">
+                      {t("profile.my_guides_open")}
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* ── Companion & Invitation ── */}
+      <IncomingInvitationSection />
       <CompanionInviteSection />
 
       {/* ── Password ── */}
@@ -2101,7 +2245,184 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* ── My Venues (saved from The Local) ── */}
+      <MyVenuesSection isAuthenticated={isAuthenticated} t={t} />
+      {/* ── Complete profile dialog ──────────────────────────────────────────
+          Lets users with missing identity fields (full name, birth year, or
+          gender) fill them in. Only renders inputs for fields that are not
+          yet on the profile — once a field is set the server locks it. */}
+      <Dialog open={showCompleteProfile} onOpenChange={setShowCompleteProfile}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">{t("profile.complete_profile_title")}</DialogTitle>
+            <DialogDescription className="font-light">
+              {t("profile.complete_profile_description")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {!profileData?.full_name && (
+              <div className="space-y-1.5">
+                <label htmlFor="cp_full_name" className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.full_name_label")}
+                </label>
+                <Input
+                  id="cp_full_name"
+                  value={cpFullName}
+                  onChange={(e) => { setCpFullName(e.target.value); setCompleteProfileError(null); }}
+                  placeholder="Jane Doe"
+                  maxLength={150}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {!profileData?.birth_year && (
+              <div className="space-y-1.5">
+                <label htmlFor="cp_birth_year" className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.birth_year_label")}
+                </label>
+                <Input
+                  id="cp_birth_year"
+                  type="number"
+                  inputMode="numeric"
+                  value={cpBirthYear}
+                  onChange={(e) => { setCpBirthYear(e.target.value); setCompleteProfileError(null); }}
+                  placeholder="1990"
+                  min={1900}
+                  max={new Date().getFullYear() - 5}
+                />
+              </div>
+            )}
+
+            {!profileData?.gender_identity && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.gender_label")}
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GENDER_OPTIONS.map((opt) => {
+                    const active = cpGender === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setCpGender(opt.value); setCompleteProfileError(null); }}
+                        className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
+                          active
+                            ? "bg-primary/10 text-primary border-primary/40 font-medium"
+                            : "border-border/50 text-muted-foreground/80 hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        {t(opt.labelKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground/60 font-light leading-snug flex items-start gap-1.5">
+              <Lock className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
+              {t("profile.complete_profile_lock_notice")}
+            </p>
+
+            {completeProfileError && (
+              <p className="text-xs text-destructive font-mono">{completeProfileError}</p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCompleteProfile(false)}
+              disabled={completeProfileSave === "saving"}
+              className="font-mono"
+            >
+              {t("profile.delete_cancel")}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCompleteProfileSubmit}
+              disabled={completeProfileSave === "saving"}
+              className="font-mono gap-1.5"
+              aria-busy={completeProfileSave === "saving"}
+            >
+              {completeProfileSave === "saving" ? "…" : (
+                <>
+                  <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                  {t("profile.complete_profile_save")}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
+  );
+}
+
+interface MyVenuesSectionProps {
+  isAuthenticated: boolean;
+  t: (k: string, fallback?: string) => string;
+}
+
+/**
+ * Lists every venue the caller has bookmarked across all regions.
+ * Re-uses the standard VenueCard so the bookmark icon stays interactive
+ * (a click here unsaves the venue and removes it from the list).
+ */
+function MyVenuesSection({ isAuthenticated, t }: MyVenuesSectionProps) {
+  const { savedVenues, loading, pendingId, toggleSave } = useSavedVenues(isAuthenticated);
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2">
+          <Bookmark className="w-4 h-4 text-primary/60" aria-hidden="true" />
+          {t("profile.my_venues_title", "My Venues")}
+          {savedVenues.length > 0 && (
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 border border-border/40 rounded-[2px] px-1.5 py-0.5 ml-1">
+              {savedVenues.length}
+            </span>
+          )}
+        </CardTitle>
+        <CardDescription className="text-xs font-light text-muted-foreground/70 mt-0.5">
+          {t("profile.my_venues_subtitle", "Your personal shortlist of venues bookmarked from The Local.")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => <Skeleton key={i} className="h-36 w-full" />)}
+          </div>
+        ) : savedVenues.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-sm">
+            <Bookmark className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
+            <p>{t("profile.my_venues_empty", "You haven't saved any venues yet.")}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              {t("profile.my_venues_hint", "Tap the bookmark icon on any venue under The Local to add it here.")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {savedVenues.map((venue) => (
+              <VenueCard
+                key={venue.id}
+                venue={venue}
+                isSaved={true}
+                saving={pendingId === venue.id}
+                onToggleSave={toggleSave}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -2183,7 +2504,7 @@ function InterestSelector({
  * unavailable (e.g. private browsing).
  */
 function CollapsibleSection({
-  title, icon, description, className, storageKey, children,
+  title, icon, description, className, storageKey, children, id, forceOpen,
 }: {
   title: string;
   icon?: React.ReactNode;
@@ -2191,8 +2512,15 @@ function CollapsibleSection({
   className?: string;
   storageKey?: string;
   children: React.ReactNode;
+  id?: string;
+  /** When set to true, the section is forced open regardless of stored
+   *  preference. Used by the deep-link focus mechanism (e.g. when arriving
+   *  from "Wijzig uw actieve regio") so the user immediately sees the
+   *  controls they came to change. */
+  forceOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(() => {
+    if (forceOpen) return true;
     if (!storageKey) return false;
     try {
       const stored = localStorage.getItem(`profile_section_${storageKey}`);
@@ -2201,6 +2529,12 @@ function CollapsibleSection({
       return false;
     }
   });
+
+  // Re-open whenever forceOpen flips to true (e.g. user navigates again
+  // with ?focus=region while the section is closed).
+  useEffect(() => {
+    if (forceOpen) setIsOpen(true);
+  }, [forceOpen]);
 
   function toggle() {
     setIsOpen((v) => {
@@ -2212,7 +2546,7 @@ function CollapsibleSection({
     });
   }
   return (
-    <Card className={`bg-card border-border shadow-sm ${className ?? ""}`}>
+    <Card id={id} className={`bg-card border-border shadow-sm ${className ?? ""}`}>
       <CardHeader
         className="pb-3 cursor-pointer select-none"
         onClick={toggle}
@@ -2240,6 +2574,67 @@ function CollapsibleSection({
   );
 }
 
+/**
+ * Collapsible subsection used inside the Cursusinstellingen card to group
+ * Doelstellingen / Culinaire interesses / Sferen as individually openable
+ * blocks WITHOUT giving them the weight of a separate Card. The header is
+ * always visible (with chevron + click to toggle); the body collapses.
+ * Open/closed state persists in localStorage under
+ * `profile_subsection_<storageKey>` so each user keeps their preference.
+ */
+function CollapsibleSubsection({
+  icon, title, description, storageKey, defaultOpen = false, children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  storageKey: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem(`profile_subsection_${storageKey}`);
+      if (stored === null) return defaultOpen;
+      return stored === "true";
+    } catch {
+      return defaultOpen;
+    }
+  });
+  function toggle() {
+    setIsOpen((v) => {
+      const next = !v;
+      try { localStorage.setItem(`profile_subsection_${storageKey}`, String(next)); } catch { /* noop */ }
+      return next;
+    });
+  }
+  return (
+    <div className="pt-5 mt-2 border-t border-border/40">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={isOpen}
+        className="w-full flex items-center justify-between gap-3 text-left group"
+      >
+        <div className="space-y-1 min-w-0">
+          <h3 className="font-serif text-base flex items-center gap-2 text-foreground group-hover:text-primary transition-colors">
+            {icon}
+            {title}
+          </h3>
+          {description && (
+            <p className="text-xs font-light text-muted-foreground/70">{description}</p>
+          )}
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+      {isOpen && <div className="mt-4 space-y-5">{children}</div>}
+    </div>
+  );
+}
+
 function DetailRow({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
   return (
     <div className="flex justify-between items-baseline gap-2 border-b border-border/40 pb-2 last:border-0">
@@ -2252,11 +2647,182 @@ function DetailRow({ label, value, locked }: { label: string; value: string; loc
   );
 }
 
+function IncomingInvitationSection() {
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem("pending_invite_token");
+  });
+  const [details, setDetails] = useState<{ inviter_name: string; expires_at: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    fetch(`${API_BASE}/api/invitations/${token}`)
+      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+      .then(({ ok, data }) => {
+        if (ok) {
+          setDetails({ inviter_name: data.inviter_name, expires_at: data.expires_at });
+        } else {
+          setError(data.error ?? "Deze uitnodiging is niet meer beschikbaar.");
+          sessionStorage.removeItem("pending_invite_token");
+        }
+      })
+      .catch(() => setError("Kon de uitnodiging niet ophalen."))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  async function handleAccept() {
+    if (!token) return;
+    setAccepting(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/redeem`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.removeItem("pending_invite_token");
+        setAccepted(true);
+      } else {
+        setError(data.error ?? "Kon de uitnodiging niet accepteren.");
+      }
+    } catch {
+      setError("Kon de uitnodiging niet accepteren.");
+    } finally {
+      setAccepting(false);
+    }
+  }
+
+  function handleDecline() {
+    sessionStorage.removeItem("pending_invite_token");
+    setToken(null);
+    setDetails(null);
+  }
+
+  if (!token) return null;
+
+  return (
+    <Card className="bg-card border-primary/30 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2">
+          <Users2Icon className="w-4 h-4 text-primary" aria-hidden="true" />
+          Uitnodiging ontvangen
+        </CardTitle>
+        <CardDescription className="font-light">
+          U heeft een uitnodiging ontvangen om met iemand als companions verbonden te worden.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading && <Skeleton className="h-12 w-full rounded-sm" />}
+
+        {!loading && accepted && (
+          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+            <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+            <span>U bent nu verbonden als companions.</span>
+            <Link href="/companion" className="underline underline-offset-2 ml-auto text-xs font-mono uppercase tracking-wider">
+              Naar dashboard
+            </Link>
+          </div>
+        )}
+
+        {!loading && !accepted && error && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleDecline} className="font-mono text-xs uppercase tracking-wider">
+              Sluiten
+            </Button>
+          </div>
+        )}
+
+        {!loading && !accepted && !error && details && (
+          <div className="space-y-3">
+            <div className="border border-border/40 rounded-sm p-3 bg-muted/10 space-y-1.5">
+              <p className="text-sm text-foreground">
+                <span className="font-medium">{details.inviter_name}</span>{" "}
+                heeft u uitgenodigd om als companions verbonden te worden.
+              </p>
+              <p className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1.5">
+                <Clock className="w-3 h-3" aria-hidden="true" />
+                Verloopt {new Date(details.expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleAccept}
+                disabled={accepting}
+                size="sm"
+                className="font-mono uppercase tracking-widest text-xs gap-2"
+              >
+                {accepting
+                  ? <Loader2Icon className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                  : <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />}
+                {accepting ? "Bezig…" : "Accepteer & verbind"}
+              </Button>
+              <Button
+                onClick={handleDecline}
+                disabled={accepting}
+                variant="ghost"
+                size="sm"
+                className="font-mono uppercase tracking-widest text-xs text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
+                Weiger
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface SentInvitation {
+  id: number;
+  token: string;
+  status: string;
+  expires_at: string;
+  created_at: string;
+  invitee_name: string | null;
+}
+
 function CompanionInviteSection() {
   const { t } = useLanguage();
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteState, setInviteState] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [sent, setSent] = useState<SentInvitation[]>([]);
+  const [sentLoading, setSentLoading] = useState(true);
+  const [revoking, setRevoking] = useState<string | null>(null);
+
+  async function loadSent() {
+    setSentLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/sent`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json() as { invitations: SentInvitation[] };
+        setSent(data.invitations ?? []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSentLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSent();
+  }, []);
 
   async function handleGenerate() {
     setInviteState("loading");
@@ -2270,20 +2836,58 @@ function CompanionInviteSection() {
       const url = `${window.location.origin}${import.meta.env.BASE_URL}invite/${data.token}`;
       setInviteLink(url);
       setInviteState("done");
+      loadSent();
     } catch {
       setInviteState("error");
     }
   }
 
-  async function handleCopy() {
-    if (!inviteLink) return;
+  async function handleCopy(value: string, key: string) {
     try {
-      await navigator.clipboard.writeText(inviteLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      setTimeout(() => setCopied((c) => (c === key ? null : c)), 2500);
     } catch {
       // fallback: select the text
     }
+  }
+
+  async function handleRevoke(token: string) {
+    setRevoking(token);
+    try {
+      const res = await fetch(`${API_BASE}/api/invitations/${token}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        loadSent();
+        if (inviteLink && inviteLink.endsWith(`/invite/${token}`)) {
+          setInviteLink(null);
+          setInviteState("idle");
+        }
+      }
+    } finally {
+      setRevoking(null);
+    }
+  }
+
+  function buildLink(token: string) {
+    return `${window.location.origin}${import.meta.env.BASE_URL}invite/${token}`;
+  }
+
+  function statusBadge(status: string) {
+    const map: Record<string, { label: string; cls: string }> = {
+      pending: { label: "In afwachting", cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/40" },
+      accepted: { label: "Geaccepteerd", cls: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800/40" },
+      expired: { label: "Verlopen", cls: "bg-muted text-muted-foreground border-border" },
+      revoked: { label: "Ingetrokken", cls: "bg-muted text-muted-foreground border-border" },
+    };
+    const v = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground border-border" };
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-[10px] font-mono uppercase tracking-wider ${v.cls}`}>
+        {v.label}
+      </span>
+    );
   }
 
   return (
@@ -2323,10 +2927,10 @@ function CompanionInviteSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCopy}
+                onClick={() => handleCopy(inviteLink, "current")}
                 className="shrink-0 font-mono text-xs"
               >
-                {copied ? (
+                {copied === "current" ? (
                   <CheckCircle2 className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
                 ) : (
                   <CopyIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -2341,6 +2945,84 @@ function CompanionInviteSection() {
         {inviteState === "error" && (
           <p className="text-xs text-destructive font-mono">Kon geen uitnodigingslink aanmaken. Probeer het opnieuw.</p>
         )}
+
+        <div className="pt-3 border-t border-border/40 space-y-3">
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+            Verzonden uitnodigingen
+          </p>
+          {sentLoading ? (
+            <Skeleton className="h-12 w-full rounded-sm" />
+          ) : sent.length === 0 ? (
+            <p className="text-xs text-muted-foreground/60 font-light italic">
+              U heeft nog geen uitnodigingen verzonden.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {sent.slice(0, 6).map((inv) => {
+                const link = buildLink(inv.token);
+                const copyKey = `sent-${inv.token}`;
+                const dateLabel = inv.status === "pending"
+                  ? `Verloopt ${new Date(inv.expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                  : `Verstuurd ${new Date(inv.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+                return (
+                  <li
+                    key={inv.id}
+                    className="border border-border/40 rounded-sm p-3 bg-muted/10 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {statusBadge(inv.status)}
+                        <span className="text-xs text-foreground/80 truncate">
+                          {inv.invitee_name ? (
+                            <>met <span className="font-medium">{inv.invitee_name}</span></>
+                          ) : (
+                            <span className="text-muted-foreground italic">nog niet geclaimd</span>
+                          )}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground/60 uppercase tracking-wider">
+                        {dateLabel}
+                      </span>
+                    </div>
+                    {inv.status === "pending" && (
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-[11px] bg-background border border-border/40 rounded-sm px-2 py-1 truncate select-all text-foreground/70">
+                          {link}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCopy(link, copyKey)}
+                          className="shrink-0 font-mono text-xs h-7 px-2"
+                          title="Kopieer link"
+                        >
+                          {copied === copyKey ? (
+                            <CheckCircle2 className="w-3 h-3 text-green-500" aria-hidden="true" />
+                          ) : (
+                            <CopyIcon className="w-3 h-3" aria-hidden="true" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRevoke(inv.token)}
+                          disabled={revoking === inv.token}
+                          className="shrink-0 font-mono text-xs h-7 px-2 text-muted-foreground hover:text-destructive"
+                          title="Trek uitnodiging in"
+                        >
+                          {revoking === inv.token
+                            ? <Loader2Icon className="w-3 h-3 animate-spin" aria-hidden="true" />
+                            : <X className="w-3 h-3" aria-hidden="true" />}
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
         <div className="pt-2 border-t border-border/40">
           <Link
             href="/companion"

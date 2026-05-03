@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon, FileText } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon, FileText, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useGetProfile } from "@workspace/api-client-react";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 
 const NAVIGATOR_KEY = "sowiso_navigator_trips";
@@ -58,6 +59,32 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const isAmbassador = isAuthenticated;
   const navigatorAlertCount = getNavigatorAlertCount(isAmbassador);
+  const [companionUnread, setCompanionUnread] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setCompanionUnread(0); return; }
+    let cancelled = false;
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    async function fetchUnread() {
+      try {
+        const res = await fetch(`${base}/api/companion/messages/unread-count`, { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json() as { unread: number };
+        if (!cancelled) setCompanionUnread(data.unread ?? 0);
+      } catch {
+        // ignore
+      }
+    }
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    const onRead = () => setCompanionUnread(0);
+    window.addEventListener("companion-messages-read", onRead);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("companion-messages-read", onRead);
+    };
+  }, [isAuthenticated, location]);
 
   const allNavigation = [
     { key: "nav.dashboard",   href: "/",            icon: Landmark, authOnly: true  },
@@ -69,8 +96,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.sensory",      href: "/sensory",      icon: Ear,         adminOnly: true       },
     { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
     { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
-    { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   authOnly: true        },
+    { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   adminOnly: true       },
     { key: "nav.privacy",      href: "/privacy",      icon: ShieldCheck, authOnly: true        },
+    { key: "nav.companion",    href: "/companion",    icon: MessageSquare, adminOnly: true     },
     { key: "nav.profile",      href: "/profile",      icon: User,        authOnly: true        },
     { key: "nav.membership",  href: "/membership",  icon: Crown    },
   ];
@@ -80,6 +108,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
     if ("authOnly" in item && item.authOnly && !isAuthenticated) return false;
     return true;
   });
+
+  const { data: profile } = useGetProfile();
+  const currentTier = (profile?.subscription_tier ?? "guest") as string;
+  const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador";
+  const showUpgradePill = (href: string) => href === "/membership" && !isPremium;
 
   const MAIN_CONTENT_ID = "main-content";
 
@@ -127,6 +160,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
               const isGolden = item.href === "/membership" || ("ambassadorOnly" in item && item.ambassadorOnly);
               const showBadge = item.href === "/navigator" && navigatorAlertCount > 0;
+              const showCompanionBadge = item.href === "/companion" && companionUnread > 0;
               return (
                 <Link key={item.key} href={item.href}>
                   <div
@@ -148,6 +182,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     {showBadge && (
                       <span className="ml-auto text-[10px] font-mono bg-amber-500/20 text-amber-700 rounded-full px-1.5 py-0.5 leading-none" aria-label={`${navigatorAlertCount} active`}>
                         {navigatorAlertCount}
+                      </span>
+                    )}
+                    {showCompanionBadge && (
+                      <span className="ml-auto text-[10px] font-mono bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none" aria-label={`${companionUnread} unread notes`}>
+                        {companionUnread}
                       </span>
                     )}
                   </div>
@@ -222,6 +261,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             const isGolden = item.href === "/membership" || ("ambassadorOnly" in item && item.ambassadorOnly);
             const showBadge = item.href === "/navigator" && navigatorAlertCount > 0;
+            const showCompanionBadge = item.href === "/companion" && companionUnread > 0;
             return (
               <Link key={item.key} href={item.href} className="block">
                 <div
@@ -241,6 +281,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   {showBadge && (
                     <span className="ml-auto text-[10px] font-mono bg-amber-500/20 text-amber-700 rounded-full px-1.5 py-0.5 leading-none" aria-label={`${navigatorAlertCount} active`}>
                       {navigatorAlertCount}
+                    </span>
+                  )}
+                  {showCompanionBadge && (
+                    <span className="ml-auto text-[10px] font-mono bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none" aria-label={`${companionUnread} unread notes`}>
+                      {companionUnread}
+                    </span>
+                  )}
+                  {showUpgradePill(item.href) && (
+                    <span
+                      data-testid="badge-nav-upgrade"
+                      className="ml-auto text-[9px] font-mono uppercase tracking-widest bg-amber-500/20 text-amber-700 rounded-[2px] border border-amber-500/30 px-1.5 py-0.5 leading-none"
+                    >
+                      {t("nav.upgrade_pill")}
                     </span>
                   )}
                 </div>

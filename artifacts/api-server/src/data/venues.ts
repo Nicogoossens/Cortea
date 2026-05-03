@@ -569,11 +569,12 @@ export const VENUES: Venue[] = [
 import { EXTRA_VENUES } from "./venues-extra.js";
 import { EXTRA_VENUES2 } from "./venues-extra2.js";
 import { EXTRA_VENUES3 } from "./venues-extra3.js";
+import { EXTRA_VENUES4 } from "./venues-extra4.js";
 // Merge with later sources overriding earlier ones on duplicate id, so the most
-// recent curated database (database4 → EXTRA_VENUES3) wins over older stub data.
+// recent curated database (database5 → EXTRA_VENUES4) wins over older stub data.
 {
   const merged = new Map<string, Venue>();
-  for (const v of [...VENUES, ...EXTRA_VENUES, ...EXTRA_VENUES2, ...EXTRA_VENUES3]) {
+  for (const v of [...VENUES, ...EXTRA_VENUES, ...EXTRA_VENUES2, ...EXTRA_VENUES3, ...EXTRA_VENUES4]) {
     merged.set(v.id, v);
   }
   VENUES.length = 0;

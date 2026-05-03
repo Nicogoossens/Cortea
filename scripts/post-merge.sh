@@ -10,7 +10,7 @@ echo "--- Applying schema additions (idempotent) ---"
 psql "$DATABASE_URL" -c "ALTER TABLE culture_protocols ADD COLUMN IF NOT EXISTS reviewed_by text;" 2>/dev/null || true
 psql "$DATABASE_URL" -c "ALTER TABLE culture_protocols ADD COLUMN IF NOT EXISTS reviewed_at timestamptz;" 2>/dev/null || true
 psql "$DATABASE_URL" -c "ALTER TABLE users ADD COLUMN IF NOT EXISTS profiling_consent boolean NOT NULL DEFAULT true;" 2>/dev/null || true
-psql "$DATABASE_URL" -c "ALTER TABLE users ADD CONSTRAINT users_ambition_level_check CHECK (ambition_level IN ('casual', 'professional', 'diplomatic'));" 2>/dev/null || true
+psql "$DATABASE_URL" -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'users'::regclass AND conname = 'users_ambition_level_check') THEN ALTER TABLE users ADD CONSTRAINT users_ambition_level_check CHECK (ambition_level IN ('casual', 'professional', 'diplomatic')); END IF; END \$\$;"
 
 echo "--- Seeding Atelier scenarios (idempotent upsert) ---"
 pnpm --filter @workspace/db tsx src/seed.ts

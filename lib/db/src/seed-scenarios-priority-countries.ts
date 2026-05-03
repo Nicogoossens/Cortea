@@ -2134,4 +2134,123 @@ export const priorityCountryScenarios: (typeof scenariosTable.$inferInsert)[] = 
       ]
     }
   },
+
+  // FR — business (previously missing)
+  {
+    title: "The Meeting Start Time in France",
+    pillar: 3, region_code: "FR", age_group: "25-55", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 6,
+    content_json: {
+      situation: "You have a 10 h 00 meeting at a Paris office. You arrive at 09 h 58. The French colleague who scheduled it walks in at 10 h 12, greets the room warmly, and begins without apologising for the delay.",
+      question: "How should you interpret and respond to this situation?",
+      options: [
+        { text: "Note the tardiness and mention it politely to signal that punctuality matters to you.", correct: false, explanation: "Raising the delay would embarrass your host and signal cultural inflexibility. In French professional culture a few minutes' grace is standard; the warm greeting is the real opening ritual." },
+        { text: "Greet your colleague warmly, engage in brief pleasantries, and allow the meeting to begin at the colleague's pace.", correct: true, explanation: "Correct. French business culture places high value on relationship-building before diving into substance. A warm, unhurried opening — regardless of the clock — sets the right collaborative tone and signals cultural fluency." },
+        { text: "Begin presenting your agenda immediately to show that you value the group's time.", correct: false, explanation: "Launching into a formal agenda before the pleasantries are complete is considered abrupt and signals that you prioritise efficiency over relationship — a poor start in a French business context." },
+        { text: "Reschedule — a 12-minute delay shows disrespect for an international guest.", correct: false, explanation: "Rescheduling over a 12-minute start would be a serious overreaction. This is well within the normal flow of a French meeting opening." },
+      ]
+    }
+  },
+
+  // IT — business (previously missing)
+  {
+    title: "Exchanging Business Cards in Italy",
+    pillar: 3, region_code: "IT", age_group: "25-55", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 6,
+    content_json: {
+      situation: "At a first business meeting in Milan, your Italian counterpart presents you with their business card using both hands and makes brief eye contact. You have your own card in your jacket pocket.",
+      question: "What is the correct response?",
+      options: [
+        { text: "Accept the card with your right hand only, glance at it, and pocket it immediately.", correct: false, explanation: "Pocketing the card immediately without acknowledgement signals indifference. In Italian business culture the card is an extension of the person's professional identity and deserves a moment of attention." },
+        { text: "Accept the card with both hands or your right hand, read it attentively for a moment, and then present your own card in return.", correct: true, explanation: "Correct. Receiving a card with visible interest — reading the name, title, and company — communicates respect. Presenting yours immediately in return completes the reciprocal ritual and enables introductions to move naturally into conversation." },
+        { text: "Accept the card, write a note on it to help you remember the meeting, and thank your counterpart.", correct: false, explanation: "Writing on someone's business card in their presence is considered disrespectful in Italian business culture, as it defaces what is seen as a personal document." },
+        { text: "Explain you have forgotten your cards and suggest connecting on LinkedIn instead.", correct: false, explanation: "While LinkedIn is used professionally in Italy, having no card at a first meeting creates a poor impression of preparation. Always carry cards to formal first meetings." },
+      ]
+    }
+  },
+
+  // ES — business (previously missing)
+  {
+    title: "Lunch as a Business Tool in Spain",
+    pillar: 4, region_code: "ES", age_group: "25-55", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 6,
+    content_json: {
+      situation: "Your Spanish business partner invites you to a two-hour lunch at 14 h 00. After an hour of excellent food and conversation, business has not yet been discussed. You have a call at 16 h 00.",
+      question: "What is the appropriate way to manage this situation?",
+      options: [
+        { text: "Steer the conversation to business matters at the earliest polite opportunity to ensure there is time to cover everything.", correct: false, explanation: "In Spain, the business lunch is primarily a relationship-building occasion. Steering to business too early signals impatience and undermines the trust the lunch is designed to build." },
+        { text: "Enjoy the lunch fully and trust that business will arise naturally; if needed, quietly arrange to reschedule your 16 h 00 call.", correct: true, explanation: "Correct. The Spanish business lunch is a long-form social ritual. Being fully present — and flexible enough to protect the time — demonstrates that you value the relationship over a rigid schedule, which is exactly what your partner is assessing." },
+        { text: "Excuse yourself at 15 h 45 and apologise for the constraint — efficiency must be maintained.", correct: false, explanation: "Leaving early without strong justification signals that the relationship is less important than your schedule, which can damage trust in a Spanish business context." },
+        { text: "Order only a light dish so the meal finishes faster and business can begin.", correct: false, explanation: "Ordering minimally at a Spanish lunch is rude and signals disengagement. Full participation — food, wine, and conversation — is expected and appreciated." },
+      ]
+    }
+  },
+
+  // BR — business (previously missing)
+  {
+    title: "Relationship First in Brazilian Business",
+    pillar: 3, region_code: "BR", age_group: "25-55", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 7,
+    content_json: {
+      situation: "You are attending a first business meeting in São Paulo. After introductions, your Brazilian counterpart spends twenty minutes asking about your trip, your family, and whether you have visited Brazil before. Your prepared agenda is waiting.",
+      question: "How should you handle this opening phase of the meeting?",
+      options: [
+        { text: "Engage warmly with their questions and share openly; allow business topics to emerge naturally when the relationship warm-up feels complete.", correct: true, explanation: "Correct. Brazilian business culture operates on jeitinho and strong personal rapport before formal business. This opening phase — called conversa — is not small talk; it is a trust-building ritual that determines whether the meeting will be productive. Investing in it fully pays dividends throughout the relationship." },
+        { text: "Answer briefly and redirect to the agenda to respect everyone's time.", correct: false, explanation: "Redirecting to the agenda signals that you view the relationship as transactional. In Brazil this can close doors that would otherwise have opened easily. Patience and warmth during conversa is the correct posture." },
+        { text: "Match their warmth but keep answers brief to signal efficiency.", correct: false, explanation: "Brevity in this context reads as coolness or disinterest. Open, expansive conversation signals genuine engagement and is the right tone." },
+        { text: "Propose setting the agenda before personal topics go too far off track.", correct: false, explanation: "Proposing a formal agenda during conversa in a Brazilian first meeting is seen as stiff and transactional. Allow the relationship to develop first." },
+      ]
+    }
+  },
+
+  // ZA — business (previously missing)
+  {
+    title: "Ubuntu in the South African Boardroom",
+    pillar: 3, region_code: "ZA", age_group: "25-55", gender_applicability: "all",
+    context: "business", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 7,
+    content_json: {
+      situation: "In a mixed South African business meeting, a proposal you champion receives quiet nods but no enthusiastic agreement. The senior person present says, 'We must consult more broadly before deciding.' You had hoped for a decision today.",
+      question: "What does this response signal and how should you proceed?",
+      options: [
+        { text: "Accept the response respectfully; broader consultation is a cultural expectation rooted in Ubuntu — collective harmony matters more than speed.", correct: true, explanation: "Correct. Ubuntu — 'I am because we are' — underpins South African professional culture, especially in Black African business contexts. Decisions that affect the group should include the group. Respecting this process and returning with a decision built on wider input will generate stronger, more durable buy-in." },
+        { text: "Politely push for a decision in the room to avoid project delays.", correct: false, explanation: "Pressing for a decision against explicit deferral signals that your timeline outweighs the group's process. This damages trust and can result in a no that might otherwise have been a yes after consultation." },
+        { text: "Interpret the quiet nods as informal approval and proceed on that basis.", correct: false, explanation: "Interpreting silence or nodding as consent without explicit agreement is a serious cultural misstep. An explicit collective agreement must be sought." },
+        { text: "Offer a counter-proposal with a 24-hour decision deadline to manage urgency.", correct: false, explanation: "Imposing a deadline on a consultation process your hosts have defined shows disrespect for their decision-making culture and will likely backfire." },
+      ]
+    }
+  },
+
+  // AE — dining (previously missing)
+  {
+    title: "Dining During Ramadan in the UAE",
+    pillar: 4, region_code: "AE", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 2, estimated_minutes: 3, noble_score_impact: 7,
+    content_json: {
+      situation: "You are visiting Dubai during Ramadan for a week of business meetings. It is 13 h 00 and you are feeling hungry. You walk past a café.",
+      question: "What is the correct approach to eating and drinking during daylight hours in a public space in the UAE during Ramadan?",
+      options: [
+        { text: "Eat and drink freely — cafés are open and the fast only applies to Muslims.", correct: false, explanation: "While the fast is a religious obligation for Muslims, the UAE requires that eating, drinking, and smoking in public during Ramadan daylight hours be avoided out of respect. Violations can result in fines. Screen-off areas or hotel rooms are the appropriate places to eat during the day." },
+        { text: "Eat discreetly at an indoor restaurant with screens — avoid eating or drinking anything in view of the public.", correct: true, explanation: "Correct. During Ramadan in the UAE, non-Muslims are expected to refrain from eating, drinking, or smoking in public during daylight hours as a mark of respect. Most hotels and restaurants set up screened areas for non-fasting guests. Observing this demonstrates cultural sensitivity and is legally required." },
+        { text: "Eat quietly at an outdoor table — international visitors are exempt from Ramadan rules.", correct: false, explanation: "There is no visitor exemption for public eating during Ramadan in the UAE. Eating in public during fasting hours is disrespectful and subject to legal consequences." },
+        { text: "Ask a local Muslim colleague if eating in public is acceptable — rules vary by emirate.", correct: false, explanation: "The rule applies across all seven emirates. Placing a colleague in the position of permitting behaviour that violates social norms is also uncomfortable for them." },
+      ]
+    }
+  },
+
+  // NL — dining (previously missing)
+  {
+    title: "Splitting the Bill in the Netherlands",
+    pillar: 4, region_code: "NL", age_group: "all", gender_applicability: "all",
+    context: "dining", difficulty_level: 1, estimated_minutes: 2, noble_score_impact: 5,
+    content_json: {
+      situation: "You have had a relaxed dinner with three Dutch colleagues in Amsterdam. The bill arrives at the table. One colleague reaches for it and says, 'Shall we just go Dutch?'",
+      question: "What does 'going Dutch' mean in this context and how should you respond?",
+      options: [
+        { text: "Each person pays for exactly what they ordered — split individually. Agree and calculate your share accurately.", correct: true, explanation: "Correct. 'Going Dutch' — splitting costs equally or by what each person ordered — is the entirely normal, egalitarian Dutch dining convention. There is no expectation that one person will treat the group. Accepting and calculating your share promptly and accurately is the right and expected response." },
+        { text: "The most senior person should pay — offer to take the whole bill to show generosity.", correct: false, explanation: "In Dutch dining culture, neither seniority nor generosity typically overrides the preference for equal, fair splitting. Insisting on paying the whole bill can even feel uncomfortable or patronising." },
+        { text: "Suggest the company expenses it — business dinners should not come from personal funds.", correct: false, explanation: "Attempting to redirect a collegial dinner to company expenses when it hasn't been arranged that way in advance is awkward and inappropriate." },
+        { text: "Agree but subtly round your payment up — generosity is universally appreciated.", correct: false, explanation: "While rounding up slightly as a tip is fine, 'going Dutch' specifically signals a preference for fairness over generosity displays. Simply paying your precise share is the correct social signal." },
+      ]
+    }
+  },
 ];

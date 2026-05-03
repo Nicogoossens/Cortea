@@ -1,8 +1,8 @@
 import { Router } from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { db, counselQualityLogTable, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, counselQualityLogTable, usersTable, culturalOriginsTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { extractToken } from "../lib/auth-middleware";
 import { getVenuesForCounsel } from "../data/venues";
 import { resolvePrompt } from "../lib/register-quality-prompts";
@@ -173,10 +173,37 @@ router.post("/counsel", async (req, res) => {
 
   const venueContext = getVenuesForCounsel(region);
 
+  let originsContext = "";
+  try {
+    const originConditions = [eq(culturalOriginsTable.region_code, region)];
+    if (domain) {
+      originConditions.push(eq(culturalOriginsTable.domain, domain));
+    }
+    const originRows = await db
+      .select()
+      .from(culturalOriginsTable)
+      .where(and(...originConditions))
+      .orderBy(culturalOriginsTable.id)
+      .limit(domain ? 4 : 6);
+
+    if (originRows.length > 0) {
+      const formatted = originRows
+        .map((o) => {
+          const influences = (o.influences ?? []).filter(Boolean).join(", ");
+          const influencesPart = influences ? ` Influences: ${influences}.` : "";
+          return `- ${o.tradition} (${o.era}): ${o.origin_summary} Connected rule: ${o.connected_rule}.${influencesPart}`;
+        })
+        .join("\n");
+      originsContext = `\n\nHistorical & cultural origins for ${region} (draw on these only when the user's question genuinely intersects with one of these traditions — weave the historical background naturally into your guidance to add depth and authority; never list them, never cite all of them, and never force a connection that is not present):\n${formatted}`;
+    }
+  } catch (err) {
+    console.error("Failed to load cultural origins for counsel:", err);
+  }
+
   const systemPrompt = `You are a discreet and highly cultured etiquette mentor in the tradition of the finest European finishing schools and diplomatic corps. Your register is elevated, composed, and reassuring — never preachy, never verbose.
 
 Regional context: ${regionContext}
-${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}${venueContext ? `\n\nCurated venues for ${region} (use these to give specific, concrete recommendations when the question concerns shopping, dining, accommodation, activities or transport — mention venue names naturally, never in a list):\n${venueContext}` : ""}
+${mehrabian ? `\nTone and nonverbal calibration: ${mehrabian}` : ""}${objectiveContext}${sphereContext}${situation ? `\nPre-session context: The person is preparing for the following situation — "${situation}". Calibrate your guidance specifically to this setting and its social expectations.` : ""}${venueContext ? `\n\nCurated venues for ${region} (use these to give specific, concrete recommendations when the question concerns shopping, dining, accommodation, activities or transport — mention venue names naturally, never in a list):\n${venueContext}` : ""}${originsContext}
 Your guidance must follow this three-part structure — written as flowing prose, never as numbered steps or bullets:
 First, acknowledge the social difficulty with composed empathy. Then, illuminate the cultural expectation or principle at play with quiet authority. Finally, offer a precise, actionable recommendation for what one should do or say.
 

@@ -7,9 +7,11 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { Badge } from "@/components/ui/badge";
-import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList, Users2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList, Users2, Play, Sparkles, Flame } from "lucide-react";
+import { startSession, loadSession, clearSession, type AtelierSession } from "@/lib/atelier-session";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { TierGate } from "@/components/TierGate";
@@ -51,8 +53,20 @@ export default function Atelier() {
   const { t, locale } = useLanguage();
   const { isAuthenticated } = useAuth();
   const { activeRegion, getRegionName } = useActiveRegion();
+  const [, setLocation] = useLocation();
+  const search = useSearch();
+  const showSummary = new URLSearchParams(search).get("session_summary") === "1";
+  const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
   const [view, setView] = useState<AtelierView>("scenarios");
+
+  useEffect(() => {
+    if (showSummary) {
+      setSummarySession(loadSession());
+    } else {
+      setSummarySession(null);
+    }
+  }, [showSummary]);
   const [roleplayScenarios, setRoleplayScenarios] = useState<RoleplayScenarioSummary[]>([]);
   const [roleplayLoading, setRoleplayLoading] = useState(false);
 
@@ -309,12 +323,129 @@ export default function Atelier() {
         </div>
       )}
 
+      {/* Session summary card — shown after a session ends or is stopped */}
+      {showSummary && summarySession && summarySession.answered > 0 && (
+        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader>
+            <CardTitle className="font-serif text-2xl flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
+              {t("atelier.session.summary_title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="border border-border/50 rounded-sm p-4 bg-card/50">
+                <div className="text-xs uppercase tracking-widest font-mono text-muted-foreground mb-1">
+                  {t("atelier.session.summary_answered")}
+                </div>
+                <div className="text-2xl font-serif">{summarySession.answered}</div>
+              </div>
+              <div className="border border-border/50 rounded-sm p-4 bg-card/50">
+                <div className="text-xs uppercase tracking-widest font-mono text-muted-foreground mb-1">
+                  {t("atelier.session.summary_correct")}
+                </div>
+                <div className="text-2xl font-serif">
+                  <span className="text-green-700 dark:text-green-400">{summarySession.correct}</span>
+                  <span className="text-muted-foreground"> · </span>
+                  <span className="text-red-700 dark:text-red-400">{summarySession.incorrect}</span>
+                </div>
+              </div>
+              <div className="border border-border/50 rounded-sm p-4 bg-card/50">
+                <div className="text-xs uppercase tracking-widest font-mono text-muted-foreground mb-1">
+                  {t("atelier.session.summary_accuracy")}
+                </div>
+                <div className="text-2xl font-serif">
+                  {Math.round((summarySession.correct / summarySession.answered) * 100)}%
+                </div>
+              </div>
+            </div>
+
+            {summarySession.unlocks.length > 0 && (
+              <div className="border border-amber-500/40 bg-amber-500/5 rounded-sm p-4">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-mono text-amber-700 dark:text-amber-400 mb-2">
+                  <Sparkles className="w-3 h-3" aria-hidden="true" />
+                  {t("atelier.session.summary_unlocks")}
+                </div>
+                <ul className="space-y-1">
+                  {summarySession.unlocks.map((u) => (
+                    <li key={u.id} className="font-serif text-foreground">{u.name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {summarySession.streakMilestone && (
+              <div className="border border-orange-500/40 bg-orange-500/5 rounded-sm p-4 flex items-center gap-3">
+                <Flame className="w-5 h-5 text-orange-700 dark:text-orange-400" aria-hidden="true" />
+                <span className="font-serif text-foreground">
+                  {t("atelier.session.summary_streak", { days: summarySession.streakMilestone })}
+                </span>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-wrap gap-3 justify-end border-t border-border/50 bg-background/30 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                clearSession();
+                setSummarySession(null);
+                setLocation("/atelier");
+              }}
+              className="font-serif"
+            >
+              {t("atelier.session.summary_overview")}
+            </Button>
+            <Button
+              onClick={() => {
+                if (!accessibleScenarios || accessibleScenarios.length === 0) return;
+                const ids = accessibleScenarios.map((s) => s.id);
+                startSession(ids, selectedPillar);
+                setLocation(`/atelier/${ids[0]}?session=1`);
+              }}
+              disabled={!accessibleScenarios || accessibleScenarios.length === 0}
+              className="font-serif"
+            >
+              <Play className="w-4 h-4 mr-2" aria-hidden="true" />
+              {t("atelier.session.summary_new")}
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+
       {view === "scenarios" && (isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-label={t("common.loading")} aria-live="polite">
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-64 rounded-sm" />)}
         </div>
       ) : (
         <div className="space-y-8">
+          {/* Start Session — sequentiële scenario-sessie */}
+          {!isVisitor && (
+            accessibleScenarios && accessibleScenarios.length > 0 ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 border border-primary/30 bg-primary/5 rounded-sm">
+                <div className="space-y-1">
+                  <p className="font-serif text-lg text-foreground">{t("atelier.session.start")}</p>
+                  <p className="text-sm text-muted-foreground">{t("atelier.session.start_hint")}</p>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    const ids = accessibleScenarios.map((s) => s.id);
+                    startSession(ids, selectedPillar);
+                    setLocation(`/atelier/${ids[0]}?session=1`);
+                  }}
+                  className="font-serif tracking-wide"
+                >
+                  <Play className="w-4 h-4 mr-2" aria-hidden="true" />
+                  {t("atelier.session.start")}
+                </Button>
+              </div>
+            ) : (
+              <div className="px-5 py-4 border border-border/40 bg-muted/20 rounded-sm text-sm text-muted-foreground">
+                {t("atelier.session.empty_hint")}
+              </div>
+            )
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {accessibleScenarios?.map((scenario) => (
               <Link key={scenario.id} href={`/atelier/${scenario.id}`} aria-label={scenario.title}>

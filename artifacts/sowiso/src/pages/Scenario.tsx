@@ -1,5 +1,6 @@
 import { useGetScenario, useSubmitScenarioAnswer, getGetScenarioQueryKey } from "@workspace/api-client-react";
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, useLocation, useSearch, Link } from "wouter";
+import { loadSession, recordAnswer, advanceSession, isLastQuestion, clearSession, type AtelierSession } from "@/lib/atelier-session";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,10 +29,23 @@ export default function Scenario() {
   usePageTitle("Practice Scenario");
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const { t, locale } = useLanguage();
   const { toast } = useToast();
   const scenarioId = parseInt(id || "0", 10);
   const lang = locale.split("-")[0];
+
+  const sessionMode = new URLSearchParams(search).get("session") === "1";
+  const [session, setSession] = useState<AtelierSession | null>(() => sessionMode ? loadSession() : null);
+
+  useEffect(() => {
+    if (sessionMode) setSession(loadSession());
+    else setSession(null);
+  }, [sessionMode, scenarioId]);
+
+  const inSession = sessionMode && !!session && session.ids.includes(scenarioId);
+  const sessionTotal = session?.ids.length ?? 0;
+  const sessionPosition = session ? session.ids.indexOf(scenarioId) + 1 : 0;
 
   const { data: scenario, isLoading } = useGetScenario(scenarioId, { lang }, {
     query: { enabled: !!scenarioId, queryKey: getGetScenarioQueryKey(scenarioId, { lang }), staleTime: 0 }
@@ -109,6 +123,24 @@ export default function Scenario() {
       {
         onSuccess: (data) => {
           setResult(data);
+          if (inSession && session) {
+            const wasCorrect = scenario?.content_json.options[selectedOption!]?.correct ?? false;
+            const updated = recordAnswer(
+              session,
+              scenarioId,
+              wasCorrect,
+              data.new_unlock
+                ? {
+                    id: data.new_unlock.id,
+                    name: data.new_unlock.name,
+                    region: data.new_unlock.region,
+                    pillar: data.new_unlock.pillar,
+                  }
+                : null,
+              data.streak_milestone ?? null,
+            );
+            setSession(updated);
+          }
           if (data.new_unlock) {
             toast({
               title: t("scenario.unlock_toast_title"),
@@ -129,13 +161,59 @@ export default function Scenario() {
   const regionCode = scenario.region_code?.toUpperCase() ?? "";
   const hasOriginsForRegion = REGIONS_WITH_ORIGINS.includes(regionCode);
 
+  const handleStopSession = () => {
+    if (session && session.answered > 0) {
+      setLocation("/atelier?session_summary=1");
+    } else {
+      clearSession();
+      setLocation("/atelier");
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (!session) return;
+    if (isLastQuestion(session)) {
+      setLocation("/atelier?session_summary=1");
+      return;
+    }
+    const updated = advanceSession(session);
+    const nextId = updated.ids[updated.index];
+    setLocation(`/atelier/${nextId}?session=1`);
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+      {inSession && session && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border border-primary/30 bg-primary/5 rounded-sm sticky top-2 z-10 backdrop-blur-sm">
+          <div className="text-xs font-mono uppercase tracking-widest text-primary">
+            {session.pillar > 0
+              ? t("atelier.session.progress", { current: sessionPosition, total: sessionTotal, pillar: session.pillar })
+              : t("atelier.session.progress_all", { current: sessionPosition, total: sessionTotal })}
+            <span className="ml-3 text-muted-foreground normal-case tracking-normal font-sans">
+              {session.correct}/{session.answered}
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleStopSession} className="font-mono text-xs uppercase tracking-widest">
+            {t("atelier.session.stop")}
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-4 mb-4">
-        <Link href="/atelier" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-          {t("scenario.return_atelier")}
-        </Link>
+        {inSession ? (
+          <button
+            onClick={handleStopSession}
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+            {t("atelier.session.stop")}
+          </button>
+        ) : (
+          <Link href="/atelier" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+            {t("scenario.return_atelier")}
+          </Link>
+        )}
 
         <div className="inline-flex items-center rounded-sm border border-border/60 p-0.5 bg-muted/20" role="tablist" aria-label={t("scenario.story_mode")}>
           <button
@@ -335,10 +413,16 @@ export default function Scenario() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="bg-background/50 border-t border-border/50 py-4 flex justify-end">
-              <Button variant="outline" onClick={() => setLocation("/atelier")} className="font-serif">
-                {t("scenario.return_atelier")}
-              </Button>
+            <CardFooter className="bg-background/50 border-t border-border/50 py-4 flex justify-end gap-3">
+              {inSession ? (
+                <Button onClick={handleNextQuestion} className="font-serif">
+                  {session && isLastQuestion(session) ? t("atelier.session.summary_title") : t("atelier.session.next")}
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => setLocation("/atelier")} className="font-serif">
+                  {t("scenario.return_atelier")}
+                </Button>
+              )}
             </CardFooter>
           </Card>
 

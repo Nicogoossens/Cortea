@@ -1201,5 +1201,6 @@
   "atelier.track.session_next_remediation": "Revoyez les bases avec une session de révision.",
   "atelier.track.start_next_session": "Démarrer la session suivante",
   "atelier.track.start_remediation": "Démarrer la révision",
-  "atelier.track.next_session_cooldown_hint": "Pause de réflexion — la prochaine session s'ouvre dans environ 5 minutes."
+  "atelier.track.next_session_cooldown_hint": "Pause de réflexion — la prochaine session s'ouvre dans environ 5 minutes.",
+  "home.greeting_named": "Bonne journée, {{name}}."
 }

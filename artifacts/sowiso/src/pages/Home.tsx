@@ -360,7 +360,7 @@ export default function Home() {
 
       <div className="space-y-2">
         <h1 className="text-4xl md:text-5xl font-serif text-foreground">
-          {t("home.greeting")}
+          {firstName ? t("home.greeting_named", { name: firstName }) : t("home.greeting")}
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl font-light">
           {t("home.continue_studies")}

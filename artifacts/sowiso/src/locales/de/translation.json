@@ -1201,5 +1201,6 @@
   "atelier.track.session_next_remediation": "Frischen Sie die Grundlagen mit einer Wiederholungssitzung auf.",
   "atelier.track.start_next_session": "Nächste Sitzung starten",
   "atelier.track.start_remediation": "Wiederholung starten",
-  "atelier.track.next_session_cooldown_hint": "Reflexionspause — die nächste Sitzung öffnet in etwa 5 Minuten."
+  "atelier.track.next_session_cooldown_hint": "Reflexionspause — die nächste Sitzung öffnet in etwa 5 Minuten.",
+  "home.greeting_named": "Guten Tag, {{name}}."
 }

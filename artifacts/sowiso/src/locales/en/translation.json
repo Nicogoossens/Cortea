@@ -1201,5 +1201,6 @@
   "atelier.track.session_next_remediation": "Revisit the basics with a remediation session.",
   "atelier.track.start_next_session": "Start next session",
   "atelier.track.start_remediation": "Start remediation",
-  "atelier.track.next_session_cooldown_hint": "Reflection pause — the next session opens in about 5 minutes."
+  "atelier.track.next_session_cooldown_hint": "Reflection pause — the next session opens in about 5 minutes.",
+  "home.greeting_named": "Good day, {{name}}."
 }

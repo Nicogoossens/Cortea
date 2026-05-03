@@ -95,7 +95,7 @@ function loadRegisterConfig(): Record<Register, RegisterConfig> {
     middle_class: {
       sessionSize: envInt("LEARNING_MIDDLE_CLASS_SESSION_SIZE", 8),
       dailyLimit: envInt("LEARNING_MIDDLE_CLASS_DAILY_LIMIT", 3),
-      cooldownMinutes: envInt("LEARNING_MIDDLE_CLASS_COOLDOWN_MINUTES", 30),
+      cooldownMinutes: envInt("LEARNING_MIDDLE_CLASS_COOLDOWN_MINUTES", 5),
       crossDemographicFromLevel: envInt("LEARNING_MIDDLE_CLASS_CROSS_FROM_LEVEL", 3),
       passThresholds: {
         1: [10, 70], 2: [10, 70], 3: [12, 75], 4: [12, 75], 5: [15, 75],
@@ -105,7 +105,7 @@ function loadRegisterConfig(): Record<Register, RegisterConfig> {
     elite: {
       sessionSize: envInt("LEARNING_ELITE_SESSION_SIZE", 5),
       dailyLimit: envInt("LEARNING_ELITE_DAILY_LIMIT", 2),
-      cooldownMinutes: envInt("LEARNING_ELITE_COOLDOWN_MINUTES", 60),
+      cooldownMinutes: envInt("LEARNING_ELITE_COOLDOWN_MINUTES", 5),
       crossDemographicFromLevel: envInt("LEARNING_ELITE_CROSS_FROM_LEVEL", 2),
       passThresholds: {
         1: [10, 75], 2: [10, 75], 3: [15, 80], 4: [18, 80], 5: [20, 80],

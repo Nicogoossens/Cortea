@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "次のレベルを獲得しました — 新しいセッションを始めましょう。",
   "atelier.track.session_next_remediation": "復習セッションで基礎を見直しましょう。",
   "atelier.track.start_next_session": "次のセッションを開始",
-  "atelier.track.start_remediation": "復習を開始"
+  "atelier.track.start_remediation": "復習を開始",
+  "atelier.track.next_session_cooldown_hint": "内省の小休止 — 次のセッションは約5分後に開きます。"
 }

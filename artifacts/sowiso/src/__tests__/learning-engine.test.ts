@@ -101,14 +101,15 @@ describe("session limits — 429 enforcement", () => {
   });
 
   it("blocks back-to-back sessions inside the cooldown window", () => {
-    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 1, 5))
+    // Default cooldown is 5 min for both registers (relaxed for member UX).
+    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 1, 1))
       .toEqual({ allowed: false, reason: "cooldown" });
-    expect(isSessionAllowed(REGISTER_CONFIG.elite, 1, 30))
+    expect(isSessionAllowed(REGISTER_CONFIG.elite, 1, 4))
       .toEqual({ allowed: false, reason: "cooldown" });
   });
 
   it("permits a session once both daily count and cooldown allow it", () => {
-    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 1, 31).allowed).toBe(true);
+    expect(isSessionAllowed(REGISTER_CONFIG.middle_class, 1, 6).allowed).toBe(true);
     expect(isSessionAllowed(REGISTER_CONFIG.elite, 0, 999).allowed).toBe(true);
   });
 });

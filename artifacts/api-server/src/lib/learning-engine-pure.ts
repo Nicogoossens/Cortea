@@ -20,8 +20,8 @@ export interface PureRegisterConfig {
 
 /** Default knobs (env overrides are applied in `learning-engine.ts`). */
 export const DEFAULT_REGISTER_CONFIG: Record<Register, PureRegisterConfig> = {
-  middle_class: { sessionSize: 8, dailyLimit: 3, cooldownMinutes: 30, crossDemographicFromLevel: 3, maxLevel: 5 },
-  elite:        { sessionSize: 5, dailyLimit: 2, cooldownMinutes: 60, crossDemographicFromLevel: 2, maxLevel: 5 },
+  middle_class: { sessionSize: 8, dailyLimit: 3, cooldownMinutes: 5, crossDemographicFromLevel: 3, maxLevel: 5 },
+  elite:        { sessionSize: 5, dailyLimit: 2, cooldownMinutes: 5, crossDemographicFromLevel: 2, maxLevel: 5 },
 };
 
 /** Cross-demographic reservation = floor(size/4), gated by level + non-common demographic. */

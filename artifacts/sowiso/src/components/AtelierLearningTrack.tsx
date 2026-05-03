@@ -1109,6 +1109,12 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                         <ArrowRight className="w-4 h-4" aria-hidden="true" />
                       </Button>
                     </div>
+                    {/* Inform the user up-front about the 5-minute reflection
+                        pause so a 429 cooldown response on the next session
+                        start does not feel like a bug. */}
+                    <p className="text-xs text-muted-foreground/80 italic max-w-sm mx-auto pt-1">
+                      {t("atelier.track.next_session_cooldown_hint")}
+                    </p>
                   </CardContent>
                 </Card>
               )}

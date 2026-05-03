@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "Sie haben die nächste Stufe verdient — starten Sie eine neue Sitzung.",
   "atelier.track.session_next_remediation": "Frischen Sie die Grundlagen mit einer Wiederholungssitzung auf.",
   "atelier.track.start_next_session": "Nächste Sitzung starten",
-  "atelier.track.start_remediation": "Wiederholung starten"
+  "atelier.track.start_remediation": "Wiederholung starten",
+  "atelier.track.next_session_cooldown_hint": "Reflexionspause — die nächste Sitzung öffnet in etwa 5 Minuten."
 }

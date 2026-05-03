@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "حققت المستوى التالي — ابدأ جلسة جديدة.",
   "atelier.track.session_next_remediation": "راجع الأساسيات بجلسة مراجعة.",
   "atelier.track.start_next_session": "ابدأ الجلسة التالية",
-  "atelier.track.start_remediation": "ابدأ المراجعة"
+  "atelier.track.start_remediation": "ابدأ المراجعة",
+  "atelier.track.next_session_cooldown_hint": "فترة تأمل — تُفتح الجلسة التالية خلال 5 دقائق تقريباً."
 }

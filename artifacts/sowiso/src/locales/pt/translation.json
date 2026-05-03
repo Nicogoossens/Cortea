@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "Conquistou o próximo nível — inicie uma nova sessão.",
   "atelier.track.session_next_remediation": "Reveja os fundamentos com uma sessão de revisão.",
   "atelier.track.start_next_session": "Iniciar próxima sessão",
-  "atelier.track.start_remediation": "Iniciar revisão"
+  "atelier.track.start_remediation": "Iniciar revisão",
+  "atelier.track.next_session_cooldown_hint": "Pausa de reflexão — a próxima sessão abre em cerca de 5 minutos."
 }

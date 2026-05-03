@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "U heeft het volgende niveau verdiend — start een nieuwe sessie.",
   "atelier.track.session_next_remediation": "Frist u de basis op met een herhalingssessie.",
   "atelier.track.start_next_session": "Volgende sessie starten",
-  "atelier.track.start_remediation": "Herhaling starten"
+  "atelier.track.start_remediation": "Herhaling starten",
+  "atelier.track.next_session_cooldown_hint": "Reflectiepauze — de volgende sessie opent over ongeveer 5 minuten."
 }

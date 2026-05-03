@@ -1200,5 +1200,6 @@
   "atelier.track.session_next_level_up": "您已获得下一级 — 开始新的练习。",
   "atelier.track.session_next_remediation": "通过复习练习巩固基础。",
   "atelier.track.start_next_session": "开始下一个练习",
-  "atelier.track.start_remediation": "开始复习"
+  "atelier.track.start_remediation": "开始复习",
+  "atelier.track.next_session_cooldown_hint": "沉思间歇 — 下一个练习将在约5分钟后开放。"
 }

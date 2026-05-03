@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShirtIcon, Lock, ArrowLeft, Star } from "lucide-react";
 import { levelKey } from "@/lib/content-labels";
+import { GarmentAvatar, GarmentThumbnail } from "@/components/GarmentAvatar";
 
 interface WardrobeItem {
   id: string;
@@ -43,14 +44,24 @@ const REGION_FLAGS: Record<string, string> = {
   DE: "🇩🇪",
 };
 
-function AvatarDisplay({ avatarState, streak }: { avatarState?: AvatarState | null; streak: number }) {
+function AvatarDisplay({
+  avatarState,
+  streak,
+  unlockedIds,
+  recentlyUnlockedId,
+}: {
+  avatarState?: AvatarState | null;
+  streak: number;
+  unlockedIds: Set<string>;
+  recentlyUnlockedId: string | null;
+}) {
   const tier = avatarState?.style_tier ?? 1;
-  const tierColors = [
-    "from-stone-200 to-stone-300",
-    "from-teal-100 to-teal-200",
-    "from-violet-100 to-violet-200",
-    "from-amber-100 to-amber-200",
-    "from-rose-100 to-rose-200",
+  const tierGradients = [
+    "from-stone-100 to-stone-200",
+    "from-teal-50 to-teal-100",
+    "from-violet-50 to-violet-100",
+    "from-amber-50 to-amber-100",
+    "from-rose-50 to-rose-100",
   ];
   const ringColors = [
     "ring-stone-300",
@@ -60,13 +71,18 @@ function AvatarDisplay({ avatarState, streak }: { avatarState?: AvatarState | nu
     "ring-rose-400",
   ];
 
-  const tierColor = tierColors[Math.min(tier - 1, 4)];
+  const tierGradient = tierGradients[Math.min(tier - 1, 4)];
   const ringColor = ringColors[Math.min(tier - 1, 4)];
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className={`relative w-28 h-28 rounded-full bg-gradient-to-br ${tierColor} ring-2 ${ringColor} flex items-center justify-center shadow-md`}>
-        <ShirtIcon className="w-12 h-12 text-foreground/30" aria-hidden="true" />
+      <div className={`relative rounded-full bg-gradient-to-br ${tierGradient} ring-2 ${ringColor} flex items-center justify-center shadow-md p-3`}>
+        <GarmentAvatar
+          unlockedIds={unlockedIds}
+          size="lg"
+          recentlyUnlockedId={recentlyUnlockedId}
+          ariaLabel={avatarState?.rank_badge ?? "Social Avatar"}
+        />
         {tier >= 3 && (
           <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-sm">
             <Star className="w-3.5 h-3.5 text-primary-foreground fill-primary-foreground" aria-hidden="true" />
@@ -93,6 +109,16 @@ export default function Wardrobe() {
   const avatarState: AvatarState | null = (profile as { avatar_state?: AvatarState | null } | undefined)?.avatar_state ?? null;
   const streak: number = (profile as { daily_streak?: number } | undefined)?.daily_streak ?? 0;
   const unlockedIds = new Set(wardrobeItems.map((w) => w.id));
+  const recentlyUnlockedId: string | null = (() => {
+    if (wardrobeItems.length === 0) return null;
+    const sorted = [...wardrobeItems].sort(
+      (a, b) => new Date(b.unlocked_at).getTime() - new Date(a.unlocked_at).getTime(),
+    );
+    const newest = sorted[0];
+    if (!newest) return null;
+    const ageMs = Date.now() - new Date(newest.unlocked_at).getTime();
+    return ageMs < 1000 * 60 * 60 * 24 ? newest.id : null;
+  })();
 
   if (isLoading) {
     return (
@@ -122,7 +148,12 @@ export default function Wardrobe() {
       </div>
 
       <div className="flex items-center justify-center py-8 border border-border/50 rounded-sm bg-card">
-        <AvatarDisplay avatarState={avatarState} streak={streak} />
+        <AvatarDisplay
+          avatarState={avatarState}
+          streak={streak}
+          unlockedIds={unlockedIds}
+          recentlyUnlockedId={recentlyUnlockedId}
+        />
       </div>
 
       <div className="space-y-6">
@@ -175,6 +206,10 @@ export default function Wardrobe() {
                         {t("wardrobe.unlocked")}
                       </span>
                     )}
+                  </div>
+
+                  <div className={`flex items-center justify-center h-24 rounded-sm ${isUnlocked ? "bg-muted/20" : "bg-muted/10"}`}>
+                    <GarmentThumbnail id={item.id} unlocked={isUnlocked} size={88} />
                   </div>
 
                   <div className="space-y-1">

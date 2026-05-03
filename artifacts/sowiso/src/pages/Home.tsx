@@ -11,6 +11,7 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
+import { GarmentAvatar } from "@/components/GarmentAvatar";
 
 import { NAVIGATOR_KEY, NavigatorTrip, daysUntil } from "@/lib/navigator-utils";
 
@@ -296,7 +297,9 @@ export default function Home() {
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
   const levelLabel = t(levelKey(nobleScore?.level_name));
 
-  const wardrobeCount = ((profile as { wardrobe_unlocks?: unknown[] } | undefined)?.wardrobe_unlocks ?? []).length;
+  const wardrobeUnlocks = ((profile as { wardrobe_unlocks?: Array<{ id: string }> } | undefined)?.wardrobe_unlocks ?? []);
+  const wardrobeCount = wardrobeUnlocks.length;
+  const wardrobeUnlockedIds = new Set(wardrobeUnlocks.map((w) => w.id));
   const avatarTier = ((profile as { avatar_state?: { style_tier?: number } } | undefined)?.avatar_state?.style_tier) ?? 1;
 
   if (isLoading) {
@@ -501,15 +504,29 @@ export default function Home() {
               )}
 
               {isAuthenticated && (
-                <div className="flex items-center justify-between pt-2 border-t border-border/30">
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <ShirtIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span className="font-mono uppercase tracking-wider">{t("home.avatar_rank")}</span>
+                <Link href="/wardrobe" className="flex items-center justify-between gap-3 pt-2 border-t border-border/30 group/avatar">
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0 rounded-full bg-muted/30 ring-1 ring-border/40 p-1 transition-all group-hover/avatar:ring-primary/40">
+                      <GarmentAvatar
+                        unlockedIds={wardrobeUnlockedIds}
+                        size="sm"
+                        ariaLabel={t("home.avatar_rank")}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <ShirtIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span className="font-mono uppercase tracking-wider">{t("home.avatar_rank")}</span>
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/60 font-mono uppercase tracking-widest">
+                        {t("home.avatar_tier", { tier: avatarTier })}
+                      </span>
+                    </div>
                   </div>
-                  <Link href="/wardrobe" className="text-xs text-primary/70 hover:text-primary font-mono uppercase tracking-widest transition-colors">
-                    {wardrobeCount > 0 ? `${wardrobeCount} items` : t("home.avatar_wardrobe")}
-                  </Link>
-                </div>
+                  <span className="text-xs text-primary/70 group-hover/avatar:text-primary font-mono uppercase tracking-widest transition-colors">
+                    {wardrobeCount > 0 ? t("home.avatar_items", { count: wardrobeCount }) : t("home.avatar_wardrobe")}
+                  </span>
+                </Link>
               )}
             </div>
           </CardContent>

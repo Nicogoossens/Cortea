@@ -858,9 +858,12 @@ router.get("/learning-tracks/per-region-summary", requireAuthUser, async (req, r
       ))
       .groupBy(badgesTable.region_code);
 
-    // Bucket helpers.
+    // Bucket helpers. The `level` field is the user's highest current_level
+    // observed for that pillar across all phases — feeds the 5-dot progress
+    // ladder shown on the profile + dashboard ("anchor points" UX).
+    const PILLAR_MAX_LEVEL = 5;
     const bucketByRegion = new Map<string, {
-      pillar_summary: Record<string, { mastered: number; in_progress: number }>;
+      pillar_summary: Record<string, { mastered: number; in_progress: number; level: number; max_level: number }>;
       mastered_total: number;
       in_progress_total: number;
     }>();
@@ -871,13 +874,19 @@ router.get("/learning-tracks/per-region-summary", requireAuthUser, async (req, r
       const bucket = bucketByRegion.get(row.region_code);
       if (!bucket) continue;
       const pillarKey = row.research_pillar ?? "unscoped";
-      const pillarBucket = (bucket.pillar_summary[pillarKey] ??= { mastered: 0, in_progress: 0 });
+      const pillarBucket = (bucket.pillar_summary[pillarKey] ??= {
+        mastered: 0, in_progress: 0, level: 0, max_level: PILLAR_MAX_LEVEL,
+      });
       if (row.mastered) {
         pillarBucket.mastered += 1;
         bucket.mastered_total += 1;
+        pillarBucket.level = PILLAR_MAX_LEVEL;
       } else {
         pillarBucket.in_progress += 1;
         bucket.in_progress_total += 1;
+        // Keep the highest in-progress level so the ladder reflects best progress
+        const lvl = Math.min(row.level ?? 1, PILLAR_MAX_LEVEL);
+        if (lvl > pillarBucket.level) pillarBucket.level = lvl;
       }
     }
 

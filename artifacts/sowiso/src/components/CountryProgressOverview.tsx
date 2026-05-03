@@ -20,7 +20,7 @@ interface RegionSummary {
   added_at: string | null;
   mastered_phases: number;
   in_progress_phases: number;
-  pillar_summary: Record<string, { mastered: number; in_progress: number }>;
+  pillar_summary: Record<string, { mastered: number; in_progress: number; level?: number; max_level?: number }>;
   total_attempts: number;
   accuracy: number; // 0..1
   badges_earned: number;
@@ -216,19 +216,46 @@ export function CountryProgressOverview() {
                       <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">
                         {t("country_progress.per_pillar")}
                       </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
                         {Object.entries(row.pillar_summary)
                           .sort(([a], [b]) => a.localeCompare(b))
-                          .map(([pillarKey, stats]) => (
-                            <div key={pillarKey} className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground/80 truncate">
-                                {pillarLabel(pillarKey, t)}
-                              </span>
-                              <span className="font-mono text-[11px] text-foreground/80 shrink-0">
-                                {stats.mastered}/{stats.mastered + stats.in_progress}
-                              </span>
-                            </div>
-                          ))}
+                          .map(([pillarKey, stats]) => {
+                            // Anchor-point ladder: 5 dots per pillar, filled
+                            // up to the user's current level. Mastery shows a
+                            // crown instead of the last dot.
+                            const maxLevel = stats.max_level ?? 5;
+                            const level = Math.min(stats.level ?? 0, maxLevel);
+                            const mastered = stats.mastered > 0;
+                            return (
+                              <div key={pillarKey} className="flex items-center justify-between gap-2 text-xs">
+                                <span className="text-muted-foreground/80 truncate">
+                                  {pillarLabel(pillarKey, t)}
+                                </span>
+                                <span className="flex items-center gap-1 shrink-0" aria-label={`${level}/${maxLevel}`}>
+                                  {Array.from({ length: maxLevel }).map((_, i) => {
+                                    const filled = i < level;
+                                    const isLastAndMastered = mastered && i === maxLevel - 1;
+                                    return (
+                                      <span
+                                        key={i}
+                                        className={
+                                          isLastAndMastered
+                                            ? "h-1.5 w-1.5 rounded-full bg-amber-500 ring-1 ring-amber-300"
+                                            : filled
+                                              ? "h-1.5 w-1.5 rounded-full bg-foreground/70"
+                                              : "h-1.5 w-1.5 rounded-full border border-muted-foreground/30"
+                                        }
+                                        aria-hidden="true"
+                                      />
+                                    );
+                                  })}
+                                  <span className="font-mono text-[10px] text-muted-foreground/60 ml-1 tabular-nums">
+                                    {level}/{maxLevel}
+                                  </span>
+                                </span>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   )}

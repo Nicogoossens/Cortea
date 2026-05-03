@@ -1358,5 +1358,10 @@
   "landing.waitlist_cta": "Reserve sua posição",
   "home.votes_eyebrow": "Emita seu voto",
   "home.votes_title": "Qual país deveria ser o próximo?",
-  "home.votes_description": "Escolha até 5 países por mês — seus votos decidem quais cursos construiremos em primeiro lugar."
+  "home.votes_description": "Escolha até 5 países por mês — seus votos decidem quais cursos construiremos em primeiro lugar.",
+  "register.closed_title": "A adesão é por convite",
+  "register.closed_body": "Cortéa encontra-se presentemente em fase beta fechada enquanto o Founding 100 se constitui. As novas contas reabrirão uma vez que a coorte fundadora esteja completa.",
+  "register.closed_join_waitlist": "Reserve o seu lugar fundador",
+  "register.closed_already_member": "Já possuo uma conta — iniciar sessão",
+  "signin.join_waitlist": "Aderir à lista de espera do Founding 100"
 }

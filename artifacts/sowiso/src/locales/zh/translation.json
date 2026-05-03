@@ -1358,5 +1358,10 @@
   "landing.waitlist_cta": "预留您的席位",
   "home.votes_eyebrow": "投出您的一票",
   "home.votes_title": "下一个应当为哪个国家服务？",
-  "home.votes_description": "每月最多选择5个国家——您的投票决定我们优先开发哪些课程。"
+  "home.votes_description": "每月最多选择5个国家——您的投票决定我们优先开发哪些课程。",
+  "register.closed_title": "会员资格凭邀请而得",
+  "register.closed_body": "Cortéa 目前处于闭合测试阶段，创始百人团队正在组建中。待创始群体完成后，新账户注册将重新开放。",
+  "register.closed_join_waitlist": "预留您的创始位置",
+  "register.closed_already_member": "我已拥有账户——登录",
+  "signin.join_waitlist": "加入创始百人等候列表"
 }

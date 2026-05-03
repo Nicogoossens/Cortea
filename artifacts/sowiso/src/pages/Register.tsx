@@ -10,7 +10,8 @@ import { ALL_LOCALES, LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-loca
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { WORLD_COUNTRIES } from "@/lib/world-countries";
 import { useAuth } from "@/lib/auth";
-import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical } from "lucide-react";
+import { useRegistrationStatus, getInviteFromUrl } from "@/hooks/useRegistrationStatus";
+import { UserPlus, Loader2, Eye, EyeOff, CheckCircle2, Send, FlaskConical, Lock } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -30,6 +31,9 @@ export default function Register() {
   const { activeRegion } = useActiveRegion();
   const { login } = useAuth();
   const [, navigate] = useLocation();
+  const { closed_beta: closedBeta } = useRegistrationStatus();
+  const [inviteCode] = useState<string | null>(() => getInviteFromUrl());
+  const accessGranted = !closedBeta || !!inviteCode;
 
   const [homeCountry, setHomeCountry] = useState("");
 
@@ -114,7 +118,10 @@ export default function Register() {
       };
       if (form.password) body.password = form.password;
 
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
+      if (inviteCode) body.invite = inviteCode;
+
+      const inviteQs = inviteCode ? `?invite=${encodeURIComponent(inviteCode)}` : "";
+      const res = await fetch(`${API_BASE}/api/auth/register${inviteQs}`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -168,6 +175,36 @@ export default function Register() {
 
   const formComplete = form.email.trim() && form.full_name.trim() && form.birth_year;
   const currentLocaleDef = getLocaleDefinition(locale);
+
+  if (!accessGranted) {
+    return (
+      <div className="max-w-md mx-auto space-y-10 animate-in fade-in duration-500 py-8">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-primary/5 rounded-full flex items-center justify-center mb-6">
+            <Lock className="w-8 h-8 text-primary" aria-hidden="true" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif text-foreground">
+            {t("register.closed_title")}
+          </h1>
+          <p className="text-muted-foreground text-lg font-light leading-relaxed">
+            {t("register.closed_body")}
+          </p>
+        </div>
+        <div className="space-y-3">
+          <Link href="/waitlist">
+            <Button className="w-full font-mono text-xs gap-2">
+              {t("register.closed_join_waitlist")}
+            </Button>
+          </Link>
+          <Link href="/signin">
+            <Button variant="outline" className="w-full font-mono text-xs">
+              {t("register.closed_already_member")}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (sent) {
     return (

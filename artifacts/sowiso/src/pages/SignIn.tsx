@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useRegistrationStatus } from "@/hooks/useRegistrationStatus";
 import { LogIn, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -14,6 +15,7 @@ export default function SignIn() {
   usePageTitle("Sign In");
   const { t } = useLanguage();
   const { login } = useAuth();
+  const { registration_open: registrationOpen } = useRegistrationStatus();
   const [, navigate] = useLocation();
 
   const [email, setEmail] = useState("");
@@ -349,12 +351,21 @@ export default function SignIn() {
         )}
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        {t("signin.no_account")}{" "}
-        <Link href="/register" className="text-primary hover:underline underline-offset-2">
-          {t("register.title")}
-        </Link>
-      </p>
+      {registrationOpen ? (
+        <p className="text-center text-sm text-muted-foreground">
+          {t("signin.no_account")}{" "}
+          <Link href="/register" className="text-primary hover:underline underline-offset-2">
+            {t("register.title")}
+          </Link>
+        </p>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground">
+          {t("signin.no_account")}{" "}
+          <Link href="/waitlist" className="text-primary hover:underline underline-offset-2">
+            {t("signin.join_waitlist")}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

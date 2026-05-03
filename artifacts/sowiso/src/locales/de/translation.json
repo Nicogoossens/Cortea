@@ -1358,5 +1358,10 @@
   "landing.waitlist_cta": "Reservieren Sie Ihren Platz",
   "home.votes_eyebrow": "Geben Sie Ihre Stimme ab",
   "home.votes_title": "Welches Land sollte als nächstes folgen?",
-  "home.votes_description": "Wählen Sie bis zu 5 Länder pro Monat — Ihre Stimmen bestimmen, welche Kurse wir zuerst entwickeln."
+  "home.votes_description": "Wählen Sie bis zu 5 Länder pro Monat — Ihre Stimmen bestimmen, welche Kurse wir zuerst entwickeln.",
+  "register.closed_title": "Die Mitgliedschaft erfolgt ausschließlich auf Einladung",
+  "register.closed_body": "Cortéa befindet sich gegenwärtig in der geschlossenen Betaphase, während sich die Gründungsgruppe der 100 konstituiert. Neue Konten werden eröffnet, sobald die Gründungskohorte vollständig ist.",
+  "register.closed_join_waitlist": "Reservieren Sie Ihren Gründungsplatz",
+  "register.closed_already_member": "Ich verfüge bereits über ein Konto — anmelden",
+  "signin.join_waitlist": "Treten Sie der Warteliste der Gründenden 100 bei"
 }

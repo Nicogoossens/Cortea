@@ -15,6 +15,7 @@ import {
 import { ContextBar } from "@/components/context-bar";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useRegistrationStatus } from "@/hooks/useRegistrationStatus";
 import { useGetProfile } from "@workspace/api-client-react";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 
@@ -54,6 +55,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin, userName, logout } = useAuth();
+  const { registration_open: registrationOpen } = useRegistrationStatus();
   const { activeRegion } = useActiveRegion();
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
@@ -257,12 +259,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       <span className="text-sm font-medium">{t("signin.title")}</span>
                     </div>
                   </Link>
-                  <Link href="/register">
-                    <div onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
-                      <UserPlus className="h-4 w-4" aria-hidden="true" />
-                      <span className="text-sm font-medium">{t("register.title")}</span>
-                    </div>
-                  </Link>
+                  {registrationOpen && (
+                    <Link href="/register">
+                      <div onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-sm text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors cursor-pointer">
+                        <UserPlus className="h-4 w-4" aria-hidden="true" />
+                        <span className="text-sm font-medium">{t("register.title")}</span>
+                      </div>
+                    </Link>
+                  )}
                 </>
               )}
             </div>
@@ -369,12 +373,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   <span className="font-mono tracking-wide">{t("signin.title")}</span>
                 </div>
               </Link>
-              <Link href="/register" className="block">
-                <div className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
-                  <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
-                  <span className="font-mono tracking-wide">{t("register.title")}</span>
-                </div>
-              </Link>
+              {registrationOpen && (
+                <Link href="/register" className="block">
+                  <div className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-sm text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/30 transition-colors cursor-pointer">
+                    <UserPlus className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+                    <span className="font-mono tracking-wide">{t("register.title")}</span>
+                  </div>
+                </Link>
+              )}
             </>
           )}
           <Link href="/privacy-policy" className="block">

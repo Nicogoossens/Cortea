@@ -5,6 +5,7 @@ import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-locales";
 import { FlagEmoji } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
+import { useRegistrationStatus } from "@/hooks/useRegistrationStatus";
 
 // Optimised for the light landing-page header background — saturated text on
 // soft tinted backgrounds with a visible border.
@@ -126,6 +127,7 @@ export function LandingLayout({
   const { t } = useLanguage();
   const [location] = useLocation();
   const isAuthPage = AUTH_PATHS.has(location);
+  const { registration_open: registrationOpen } = useRegistrationStatus();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -164,9 +166,14 @@ export function LandingLayout({
           {authLink !== null && (
             <>
               <div className="w-px h-4 bg-border/60" aria-hidden="true" />
-              <Link href={authLink === "register" ? "/register" : "/signin"}>
+              {/* In closed-beta mode we never expose /register here; force the
+                  link to /signin so visitors see the open sign-in path and the
+                  Founding-100 waitlist as the only public route to an account. */}
+              <Link href={authLink === "register" && registrationOpen ? "/register" : "/signin"}>
                 <span className="text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  {authLink === "register" ? t("register.title") : t("landing.signin_link")}
+                  {authLink === "register" && registrationOpen
+                    ? t("register.title")
+                    : t("landing.signin_link")}
                 </span>
               </Link>
             </>

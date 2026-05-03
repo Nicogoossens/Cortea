@@ -65,6 +65,26 @@ const RegisterBodySchema = z.object({
 
 router.post("/auth/register", async (req, res) => {
   try {
+    // Closed-beta gate: when CLOSED_BETA=true, require BETA_INVITE_CODE either
+    // as ?invite=… query param or as `invite` field in the JSON body. This lets
+    // the team keep developing while public registration is hidden behind the
+    // Founding-100 waitlist.
+    const closedBeta = (process.env.CLOSED_BETA ?? "").toLowerCase() === "true";
+    if (closedBeta) {
+      const requiredCode = (process.env.BETA_INVITE_CODE ?? "").trim();
+      const submittedCode = (
+        (req.query?.invite as string | undefined) ??
+        (req.body?.invite as string | undefined) ??
+        ""
+      ).toString().trim();
+      if (!requiredCode || submittedCode !== requiredCode) {
+        return res.status(403).json({
+          error: "Public registration is currently closed. Please join the Founding 100 waitlist.",
+          closed_beta: true,
+        });
+      }
+    }
+
     const parsed = RegisterBodySchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({

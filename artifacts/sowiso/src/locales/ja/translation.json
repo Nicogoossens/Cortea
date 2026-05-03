@@ -1358,5 +1358,10 @@
   "landing.waitlist_cta": "お席のご予約",
   "home.votes_eyebrow": "ご投票ください",
   "home.votes_title": "次はどの国を選びますか",
-  "home.votes_description": "毎月最大5か国をお選びください——お客様のご投票により、最初に開設いたします講座が決定されます。"
+  "home.votes_description": "毎月最大5か国をお選びください——お客様のご投票により、最初に開設いたします講座が決定されます。",
+  "register.closed_title": "会員資格は招待制です",
+  "register.closed_body": "Cortéaは現在、創設100名の構成を進めている間、クローズドベータ版として運用されております。創設メンバーの確定後、新規アカウント登録を再開いたします。",
+  "register.closed_join_waitlist": "創設メンバーの地位をお確保ください",
+  "register.closed_already_member": "既にアカウントをお持ちです — サインイン",
+  "signin.join_waitlist": "創設100名の待機リストにご参加ください"
 }

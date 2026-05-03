@@ -1358,5 +1358,10 @@
   "landing.waitlist_cta": "Reserve su lugar",
   "home.votes_eyebrow": "Emita su voto",
   "home.votes_title": "¿Cuál debería ser el próximo país?",
-  "home.votes_description": "Seleccione hasta 5 países por mes — sus votos determinan cuáles cursos construimos en primer lugar."
+  "home.votes_description": "Seleccione hasta 5 países por mes — sus votos determinan cuáles cursos construimos en primer lugar.",
+  "register.closed_title": "La afiliación requiere invitación",
+  "register.closed_body": "Cortéa se encuentra actualmente en fase beta cerrada mientras los Cien Fundadores se constituyen. Las nuevas cuentas se reabrirán una vez que la cohorte fundadora esté completa.",
+  "register.closed_join_waitlist": "Reserve su lugar fundador",
+  "register.closed_already_member": "Ya poseo una cuenta — iniciar sesión",
+  "signin.join_waitlist": "Únase a la lista de espera de los Cien Fundadores"
 }

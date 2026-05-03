@@ -118,3 +118,9 @@ channel = "stable-25_05"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-311b79c7-9f4b-42a0-9b23-3623379fc65e"
+
+[userenv]
+
+[userenv.shared]
+CLOSED_BETA = "true"
+BETA_INVITE_CODE = "DEV-BDA41371471CA2C7"

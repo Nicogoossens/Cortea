@@ -1073,5 +1073,13 @@
   "compass.local.save": "Save venue",
   "compass.local.unsave": "Remove from saved",
   "compass.local.save_aria": "Save {{name}} to your venues",
-  "compass.local.unsave_aria": "Remove {{name}} from your venues"
+  "compass.local.unsave_aria": "Remove {{name}} from your venues",
+"profile.complete_profile_title": "Complete Your Profile",
+  "profile.complete_profile_description": "Add the missing details below. Once saved, these fields are permanent — please review carefully before confirming.",
+  "profile.complete_profile_cta": "Complete profile",
+  "profile.complete_profile_hint": "Some details are still missing. Add them once and they'll stay locked on your record.",
+  "profile.complete_profile_save": "Save",
+  "profile.complete_profile_lock_notice": "These fields can only be set once. Once saved, they cannot be changed.",
+  "profile.complete_error_full_name": "Please enter your full name.",
+  "profile.complete_error_birth_year": "Please enter a valid year of birth."
 }

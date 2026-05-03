@@ -976,5 +976,14 @@
   "subscription.profile_active": "メンバーシップ有効",
   "subscription.profile_payment_failed": "お支払いに問題が発生しました。メンバーシップをご確認ください。",
   "subscription.profile_manage": "メンバーシップを管理",
-  "membership.upgrade_success": "メンバーシップが更新されました。新しいステータスへようこそ。"
+  "membership.upgrade_success": "メンバーシップが更新されました。新しいステータスへようこそ。",
+"membership.upgrade_success": "メンバーシップが更新されました。新しいステータスへようこそ。",
+  "profile.complete_profile_title": "プロフィールを完成させる",
+  "profile.complete_profile_description": "下記の不足情報を追加してください。保存後はこれらの項目を変更できません。内容をよくご確認ください。",
+  "profile.complete_profile_cta": "プロフィールを完成",
+  "profile.complete_profile_hint": "一部の情報が未入力です。一度入力すると、アカウントに固定されます。",
+  "profile.complete_profile_save": "保存",
+  "profile.complete_profile_lock_notice": "これらの項目は一度のみ設定でき、保存後は変更できません。",
+  "profile.complete_error_full_name": "氏名を入力してください。",
+  "profile.complete_error_birth_year": "有効な生年を入力してください。"
 }

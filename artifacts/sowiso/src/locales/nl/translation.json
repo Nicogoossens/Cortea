@@ -991,5 +991,14 @@
   "subscription.profile_active": "Lidmaatschap actief",
   "subscription.profile_payment_failed": "Er is een betalingsprobleem geconstateerd. Bekijk uw lidmaatschap.",
   "subscription.profile_manage": "Lidmaatschap beheren",
-  "membership.upgrade_success": "Uw lidmaatschap is bijgewerkt. Welkom bij uw nieuwe status."
+  "membership.upgrade_success": "Uw lidmaatschap is bijgewerkt. Welkom bij uw nieuwe status.",
+"membership.upgrade_success": "Uw lidmaatschap is bijgewerkt. Welkom bij uw nieuwe status.",
+  "profile.complete_profile_title": "Vervolledig je profiel",
+  "profile.complete_profile_description": "Vul hieronder de ontbrekende gegevens aan. Na het opslaan zijn deze velden definitief — controleer ze zorgvuldig.",
+  "profile.complete_profile_cta": "Profiel vervolledigen",
+  "profile.complete_profile_hint": "Enkele gegevens ontbreken nog. Vul ze één keer in en ze blijven vergrendeld op je account.",
+  "profile.complete_profile_save": "Opslaan",
+  "profile.complete_profile_lock_notice": "Deze velden kunnen slechts één keer worden ingesteld. Na opslaan zijn ze niet meer aanpasbaar.",
+  "profile.complete_error_full_name": "Voer alstublieft uw volledige naam in.",
+  "profile.complete_error_birth_year": "Voer een geldig geboortejaar in."
 }

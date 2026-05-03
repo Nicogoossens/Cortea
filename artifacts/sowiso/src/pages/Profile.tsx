@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
@@ -392,10 +393,15 @@ export default function Profile() {
   const [fullNameError, setFullNameError] = useState<string | null>(null);
   const [avatarSave, setAvatarSave] = useState<SaveState>("idle");
 
-  // Birth year & gender — editable once, then locked
-  const [birthYearInput, setBirthYearInput] = useState("");
-  const [birthYearSave, setBirthYearSave] = useState<SaveState>("idle");
-  const [genderSave, setGenderSave] = useState<SaveState>("idle");
+  // "Complete your profile" flow — for users missing full_name, birth_year,
+  // or gender_identity (e.g. legacy / social sign-in accounts). Each field is
+  // set-once, so we only render inputs for fields not yet populated.
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [completeProfileSave, setCompleteProfileSave] = useState<SaveState>("idle");
+  const [completeProfileError, setCompleteProfileError] = useState<string | null>(null);
+  const [cpFullName, setCpFullName] = useState("");
+  const [cpBirthYear, setCpBirthYear] = useState("");
+  const [cpGender, setCpGender] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Ambition level
@@ -433,7 +439,6 @@ export default function Profile() {
         setFullNameInput(data?.full_name ?? "");
         setCountryInput(data?.country_of_origin ?? "");
         setCountryInputCourse(data?.country_of_origin ?? "");
-        setBirthYearInput(data?.birth_year ? String(data.birth_year) : "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
         if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
       })
@@ -578,14 +583,50 @@ export default function Profile() {
     if (ok) setEditingFullName(false);
   }
 
-  async function handleBirthYearSubmit() {
-    const year = parseInt(birthYearInput, 10);
-    if (isNaN(year) || year < 1900 || year > new Date().getFullYear() - 5) return;
-    await patchProfile({ birth_year: year }, setBirthYearSave);
+  function openCompleteProfile() {
+    setCpFullName(profileData?.full_name ?? "");
+    setCpBirthYear(profileData?.birth_year ? String(profileData.birth_year) : "");
+    setCpGender(profileData?.gender_identity ?? "");
+    setCompleteProfileError(null);
+    setCompleteProfileSave("idle");
+    setShowCompleteProfile(true);
   }
 
-  async function handleGenderSelect(value: string) {
-    await patchProfile({ gender_identity: value }, setGenderSave);
+  async function handleCompleteProfileSubmit() {
+    const body: Record<string, unknown> = {};
+    const currentYear = new Date().getFullYear();
+
+    // Only include fields that are still missing on the profile (set-once
+    // semantics — once populated they are locked server-side too).
+    if (!profileData?.full_name) {
+      const trimmed = cpFullName.trim();
+      if (!trimmed) {
+        setCompleteProfileError(t("profile.complete_error_full_name"));
+        return;
+      }
+      body.full_name = trimmed;
+    }
+    if (!profileData?.birth_year) {
+      const year = parseInt(cpBirthYear, 10);
+      if (isNaN(year) || year < 1900 || year > currentYear - 5) {
+        setCompleteProfileError(t("profile.complete_error_birth_year"));
+        return;
+      }
+      body.birth_year = year;
+    }
+    if (!profileData?.gender_identity && cpGender) {
+      body.gender_identity = cpGender;
+    }
+
+    if (Object.keys(body).length === 0) {
+      setShowCompleteProfile(false);
+      return;
+    }
+
+    const ok = await patchProfile(body, setCompleteProfileSave, setCompleteProfileError);
+    if (ok) {
+      setTimeout(() => setShowCompleteProfile(false), 600);
+    }
   }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1009,7 +1050,10 @@ export default function Profile() {
           <CardContent className="space-y-4">
             {/* Read-only display of identity fields. Editing of these is
                 handled during onboarding; here we present them as a static
-                "ID card" view so the user can verify what is on file. */}
+                "ID card" view so the user can verify what is on file.
+                Users who registered without these fields (legacy / social
+                sign-ins) can still set them via the "Complete profile" button
+                rendered below the panel. */}
             <DetailRow label={t("profile.full_name_label")} value={profileData?.full_name ?? "—"} locked={!!profileData?.full_name} />
 
             {/* Email is masked (e.g. j••••@domain) so the local-part is never
@@ -1122,6 +1166,28 @@ export default function Profile() {
                 <span className="text-xs text-muted-foreground/40 italic font-light">{t("profile.phone_coming_soon")}</span>
               </div>
             </div>
+
+            {/* Complete profile — visible only when one or more of the
+                set-once identity fields (full name, birth year, gender) is
+                still missing. Opens a modal that lets the user fill in
+                whatever is absent. Once saved, the field is locked. */}
+            {profileData && (!profileData.full_name || !profileData.birth_year || !profileData.gender_identity) && (
+              <div className="pt-3 border-t border-border/50">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full font-mono text-xs uppercase tracking-wider"
+                  onClick={openCompleteProfile}
+                >
+                  <Pencil className="w-3 h-3 mr-2" aria-hidden="true" />
+                  {t("profile.complete_profile_cta")}
+                </Button>
+                <p className="text-xs text-muted-foreground/60 font-light mt-2 leading-snug">
+                  {t("profile.complete_profile_hint")}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -2208,6 +2274,118 @@ export default function Profile() {
 
       {/* ── My Venues (saved from The Local) ── */}
       <MyVenuesSection isAuthenticated={isAuthenticated} t={t} />
+      {/* ── Complete profile dialog ──────────────────────────────────────────
+          Lets users with missing identity fields (full name, birth year, or
+          gender) fill them in. Only renders inputs for fields that are not
+          yet on the profile — once a field is set the server locks it. */}
+      <Dialog open={showCompleteProfile} onOpenChange={setShowCompleteProfile}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif">{t("profile.complete_profile_title")}</DialogTitle>
+            <DialogDescription className="font-light">
+              {t("profile.complete_profile_description")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {!profileData?.full_name && (
+              <div className="space-y-1.5">
+                <label htmlFor="cp_full_name" className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.full_name_label")}
+                </label>
+                <Input
+                  id="cp_full_name"
+                  value={cpFullName}
+                  onChange={(e) => { setCpFullName(e.target.value); setCompleteProfileError(null); }}
+                  placeholder="Jane Doe"
+                  maxLength={150}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {!profileData?.birth_year && (
+              <div className="space-y-1.5">
+                <label htmlFor="cp_birth_year" className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.birth_year_label")}
+                </label>
+                <Input
+                  id="cp_birth_year"
+                  type="number"
+                  inputMode="numeric"
+                  value={cpBirthYear}
+                  onChange={(e) => { setCpBirthYear(e.target.value); setCompleteProfileError(null); }}
+                  placeholder="1990"
+                  min={1900}
+                  max={new Date().getFullYear() - 5}
+                />
+              </div>
+            )}
+
+            {!profileData?.gender_identity && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/80">
+                  {t("profile.gender_label")}
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GENDER_OPTIONS.map((opt) => {
+                    const active = cpGender === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setCpGender(opt.value); setCompleteProfileError(null); }}
+                        className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
+                          active
+                            ? "bg-primary/10 text-primary border-primary/40 font-medium"
+                            : "border-border/50 text-muted-foreground/80 hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        {t(opt.labelKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground/60 font-light leading-snug flex items-start gap-1.5">
+              <Lock className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
+              {t("profile.complete_profile_lock_notice")}
+            </p>
+
+            {completeProfileError && (
+              <p className="text-xs text-destructive font-mono">{completeProfileError}</p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCompleteProfile(false)}
+              disabled={completeProfileSave === "saving"}
+              className="font-mono"
+            >
+              {t("profile.delete_cancel")}
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCompleteProfileSubmit}
+              disabled={completeProfileSave === "saving"}
+              className="font-mono gap-1.5"
+              aria-busy={completeProfileSave === "saving"}
+            >
+              {completeProfileSave === "saving" ? "…" : (
+                <>
+                  <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                  {t("profile.complete_profile_save")}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

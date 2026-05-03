@@ -976,5 +976,14 @@
   "subscription.profile_active": "Membresía activa",
   "subscription.profile_payment_failed": "Se ha detectado un problema de pago. Por favor revisa tu membresía.",
   "subscription.profile_manage": "Gestionar membresía",
-  "membership.upgrade_success": "Tu membresía se ha actualizado. Bienvenido a tu nuevo nivel."
+  "membership.upgrade_success": "Tu membresía se ha actualizado. Bienvenido a tu nuevo nivel.",
+"membership.upgrade_success": "Tu membresía se ha actualizado. Bienvenido a tu nuevo nivel.",
+  "profile.complete_profile_title": "Completa tu perfil",
+  "profile.complete_profile_description": "Añade los datos que faltan a continuación. Una vez guardados, estos campos son permanentes — revísalos con atención.",
+  "profile.complete_profile_cta": "Completar perfil",
+  "profile.complete_profile_hint": "Aún faltan algunos datos. Introdúcelos una vez y quedarán bloqueados en tu cuenta.",
+  "profile.complete_profile_save": "Guardar",
+  "profile.complete_profile_lock_notice": "Estos campos solo pueden establecerse una vez. Una vez guardados, no podrán modificarse.",
+  "profile.complete_error_full_name": "Por favor, introduce tu nombre completo.",
+  "profile.complete_error_birth_year": "Por favor, introduce un año de nacimiento válido."
 }

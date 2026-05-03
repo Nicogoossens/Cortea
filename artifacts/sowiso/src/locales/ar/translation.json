@@ -976,5 +976,14 @@
   "subscription.profile_active": "العضوية نشطة",
   "subscription.profile_payment_failed": "تم تسجيل مشكلة في الدفع. يُرجى مراجعة عضويتك.",
   "subscription.profile_manage": "إدارة العضوية",
-  "membership.upgrade_success": "تم تحديث عضويتك. مرحبًا بك في مكانتك الجديدة."
+  "membership.upgrade_success": "تم تحديث عضويتك. مرحبًا بك في مكانتك الجديدة.",
+"membership.upgrade_success": "تم تحديث عضويتك. مرحبًا بك في مكانتك الجديدة.",
+  "profile.complete_profile_title": "أكمل ملفك الشخصي",
+  "profile.complete_profile_description": "أضف التفاصيل الناقصة أدناه. بعد الحفظ، تصبح هذه الحقول دائمة — يرجى المراجعة بعناية.",
+  "profile.complete_profile_cta": "إكمال الملف الشخصي",
+  "profile.complete_profile_hint": "لا تزال بعض التفاصيل ناقصة. أضفها مرة واحدة وستبقى مثبّتة في حسابك.",
+  "profile.complete_profile_save": "حفظ",
+  "profile.complete_profile_lock_notice": "يمكن تعيين هذه الحقول مرة واحدة فقط. بعد الحفظ لا يمكن تغييرها.",
+  "profile.complete_error_full_name": "يرجى إدخال اسمك الكامل.",
+  "profile.complete_error_birth_year": "يرجى إدخال سنة ميلاد صحيحة."
 }

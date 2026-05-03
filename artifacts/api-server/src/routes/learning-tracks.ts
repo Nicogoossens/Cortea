@@ -843,6 +843,28 @@ router.get("/learning-tracks/badges", requireAuthUser, async (req, res) => {
   }
 });
 
+// Public popularity (counts of opted-in users per region) — used by the
+// landing page region picker to surface "most chosen" countries without
+// requiring authentication. Returns at most one row per region_code.
+router.get("/regions/popularity", async (_req, res) => {
+  try {
+    const rows = await db
+      .select({
+        region_code: userCountryInterestsTable.region_code,
+        learners: sql<number>`count(distinct ${userCountryInterestsTable.user_id})`.as("learners"),
+      })
+      .from(userCountryInterestsTable)
+      .where(isNull(userCountryInterestsTable.hidden_at))
+      .groupBy(userCountryInterestsTable.region_code);
+    return res.json({
+      regions: rows.map((r) => ({ region_code: r.region_code, learners: Number(r.learners) || 0 })),
+    });
+  } catch (err) {
+    _req.log.error({ err }, "Failed to load region popularity");
+    return res.json({ regions: [] });
+  }
+});
+
 router.get("/learning-tracks/badges/available", async (req, res) => {
   try {
     const badges = await getAllBadges();

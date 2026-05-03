@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ScanFace, ArrowLeft, Briefcase, Globe, Star, User, Crown } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ArrowLeft, Briefcase, Globe, Star, User, Crown, TrendingUp, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LandingLayout } from "@/components/layout/LandingLayout";
+
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type Phase = "hero" | "quiz" | "result";
 
@@ -33,11 +36,52 @@ const QUESTION_KEYS = [
   },
 ];
 
-const FEATURED_REGIONS: RegionCode[] = ["GB", "US", "AU", "CN", "JP", "FR", "DE", "IT", "BE", "CH", "SG", "IN", "MX", "BR", "ES", "CO", "AE"];
+type LandingSortMode = "popular" | "available_first" | "az" | "za";
 
 function RegionPicker() {
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
+  const { activeRegion, setActiveRegion, getRegionName, getCurrentRegion } = useActiveRegion();
   const { t } = useLanguage();
+  const [sortMode, setSortMode] = useState<LandingSortMode>("popular");
+  const [popularity, setPopularity] = useState<Record<string, number>>({});
+  const [topPopular, setTopPopular] = useState<RegionCode[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/regions/popularity`)
+      .then((r) => (r.ok ? r.json() : { regions: [] }))
+      .then((data: { regions: { region_code: string; learners: number }[] }) => {
+        if (cancelled) return;
+        const map: Record<string, number> = {};
+        for (const r of data.regions) map[r.region_code] = r.learners;
+        setPopularity(map);
+        const top = [...COMPASS_REGIONS]
+          .filter((r) => isRegionActive(r.code))
+          .sort((a, b) => (map[b.code] || 0) - (map[a.code] || 0))
+          .slice(0, 3)
+          .map((r) => r.code);
+        setTopPopular(top);
+      })
+      .catch(() => { /* no-op: keep alphabetical fallback */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const sorted = [...COMPASS_REGIONS].sort((a, b) => {
+    const aAvail = isRegionActive(a.code) ? 1 : 0;
+    const bAvail = isRegionActive(b.code) ? 1 : 0;
+    if (sortMode === "available_first" && aAvail !== bAvail) return bAvail - aAvail;
+    if (sortMode === "popular") {
+      // Available always before unavailable in popular mode too.
+      if (aAvail !== bAvail) return bAvail - aAvail;
+      const diff = (popularity[b.code] || 0) - (popularity[a.code] || 0);
+      if (diff !== 0) return diff;
+    }
+    const an = getRegionName(a.code);
+    const bn = getRegionName(b.code);
+    return sortMode === "za" ? bn.localeCompare(an) : an.localeCompare(bn);
+  });
+
+  const current = getCurrentRegion();
+  const currentLearners = popularity[current.code];
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-500" style={{ animationDelay: "200ms" }}>
@@ -50,33 +94,95 @@ function RegionPicker() {
       <p className="text-xs text-muted-foreground/50 font-light">
         {t("landing.region_intro")}
       </p>
-      <div
-        className="flex flex-wrap gap-2"
-        role="listbox"
-        aria-label={t("landing.your_region")}
-      >
-        {FEATURED_REGIONS.map((code) => {
-          const region = COMPASS_REGIONS.find((r) => r.code === code);
-          if (!region) return null;
-          const isSelected = activeRegion === code;
-          return (
-            <button
-              key={code}
-              role="option"
-              aria-selected={isSelected}
-              onClick={() => setActiveRegion(code)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-mono transition-all duration-200 ${
-                isSelected
-                  ? "border-primary bg-primary/10 text-primary font-semibold scale-105"
-                  : "border-border/50 bg-card text-foreground/60 hover:border-primary/40 hover:text-foreground hover:bg-primary/5"
-              }`}
-            >
-              <FlagEmoji code={code} size="sm" />
-              <span className="hidden sm:inline">{getRegionName(code)}</span>
-              <span className="sm:hidden">{code}</span>
-            </button>
-          );
-        })}
+
+      {topPopular.length > 0 && sortMode === "popular" && (
+        <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-amber-700/70 bg-amber-500/5 border border-amber-500/20 rounded-sm px-3 py-2">
+          <TrendingUp className="w-3 h-3 shrink-0" aria-hidden="true" />
+          <span className="text-amber-800/80 font-medium">{t("landing.popularity_eyebrow", "Vandaag het meest gekozen")}:</span>
+          <span className="flex items-center gap-2 flex-wrap">
+            {topPopular.map((code, i) => (
+              <span key={code} className="flex items-center gap-1 normal-case font-sans text-foreground/75">
+                <FlagEmoji code={code} size="sm" />
+                {getRegionName(code)}
+                {i < topPopular.length - 1 ? <span className="text-muted-foreground/40">·</span> : null}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select value={activeRegion} onValueChange={(v) => setActiveRegion(v as RegionCode)}>
+          <SelectTrigger className="flex-1 h-11 text-sm">
+            <SelectValue>
+              <span className="flex items-center gap-2">
+                <FlagEmoji code={current.code} size="sm" />
+                <span className="font-medium">{getRegionName(current.code)}</span>
+                {typeof currentLearners === "number" && currentLearners > 0 ? (
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground ml-1">
+                    {currentLearners.toLocaleString()} {t("landing.learners_short", "leerlingen")}
+                  </span>
+                ) : null}
+              </span>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[360px]">
+            {sorted.map((region) => {
+              const available = isRegionActive(region.code);
+              const learners = popularity[region.code] || 0;
+              const isTop = topPopular.includes(region.code);
+              return (
+                <SelectItem
+                  key={region.code}
+                  value={region.code}
+                  disabled={!available}
+                  className={!available ? "opacity-50" : ""}
+                >
+                  <span className="flex items-center gap-2 w-full">
+                    <FlagEmoji code={region.code} size="sm" />
+                    <span className={available ? "" : "line-through decoration-muted-foreground/40"}>
+                      {getRegionName(region.code)}
+                    </span>
+                    {isTop && available ? (
+                      <TrendingUp className="w-3 h-3 text-amber-600/70 shrink-0" aria-hidden="true" />
+                    ) : null}
+                    {available && learners > 0 ? (
+                      <span className="ml-auto text-[10px] font-mono text-muted-foreground/70 tabular-nums">
+                        {learners.toLocaleString()}
+                      </span>
+                    ) : null}
+                    {!available ? (
+                      <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">
+                        {t("landing.region_soon", "binnenkort")}
+                      </span>
+                    ) : null}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={sortMode} onValueChange={(v) => setSortMode(v as LandingSortMode)}>
+          <SelectTrigger className="sm:w-[210px] h-11 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popular">
+              <span className="flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-600/70" aria-hidden="true" />
+                {t("landing.sort_popular", "Meest gekozen")}
+              </span>
+            </SelectItem>
+            <SelectItem value="available_first">
+              <span className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
+                {t("landing.sort_available", "Beschikbaar eerst")}
+              </span>
+            </SelectItem>
+            <SelectItem value="az">{t("landing.sort_az", "Naam A → Z")}</SelectItem>
+            <SelectItem value="za">{t("landing.sort_za", "Naam Z → A")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
@@ -182,7 +288,6 @@ export default function Welcome() {
               { icon: BookOpen,  labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc", href: "/atelier" },
               { icon: Shield,    labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc", href: "/counsel" },
               { icon: Compass,   labelKey: "nav.compass", descKey: "welcome.module_compass_desc", href: "/compass" },
-              { icon: ScanFace,  labelKey: "nav.mirror",  descKey: "welcome.module_mirror_desc",  href: "/mirror"  },
             ].map(({ icon: Icon, labelKey, descKey, href }) => (
               <Link key={labelKey} href={href}>
                 <div className="flex items-start gap-4 p-5 rounded-sm border border-transparent hover:border-border/40 hover:bg-card/60 transition-all duration-200 group cursor-pointer">

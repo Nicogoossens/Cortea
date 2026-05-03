@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "既にアカウントをお持ちです — サインイン",
   "signin.join_waitlist": "創設100名の待機リストにご参加ください",
   "signin.error_auth_failed": "サインインに失敗しました。もう一度お試しください。",
-  "signin.error_account_suspended": "アカウントが一時的に停止されています。"
+  "signin.error_account_suspended": "アカウントが一時的に停止されています。",
+  "profile.badges_type_compass": "羅針盤"
 }

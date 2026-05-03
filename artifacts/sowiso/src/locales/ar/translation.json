@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "أملك حساباً بالفعل — الدخول",
   "signin.join_waitlist": "الانضمام إلى قائمة انتظار المؤسسين المئة",
   "signin.error_auth_failed": "فشل تسجيل الدخول. يُرجى المحاولة مجدداً.",
-  "signin.error_account_suspended": "تم تعليق حسابك مؤقتاً."
+  "signin.error_account_suspended": "تم تعليق حسابك مؤقتاً.",
+  "profile.badges_type_compass": "البوصلة"
 }

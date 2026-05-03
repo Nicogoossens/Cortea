@@ -18,7 +18,7 @@ import {
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
   Layers, MapPin, ArrowRight, UtensilsCrossed, Bookmark, BookOpen,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
-  Trophy, Medal, Shield, Download, ToggleLeft, ToggleRight, Info,
+  Trophy, Medal, Shield, Compass, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
@@ -1091,7 +1091,7 @@ export default function Profile() {
           ) : (
             <div className="space-y-5">
               {/* Group badges by type */}
-              {(["pillar", "phase", "country", "ambassador"] as const)
+              {(["pillar", "phase", "country", "ambassador", "compass"] as const)
                 .filter((type) => earnedBadges.some((b) => b.badge_type === type))
                 .map((type) => {
                   const group = earnedBadges.filter((b) => b.badge_type === type);
@@ -1099,11 +1099,13 @@ export default function Profile() {
                     type === "pillar" ? t("profile.badges_type_pillar")
                     : type === "phase" ? t("profile.badges_type_phase")
                     : type === "country" ? t("profile.badges_type_country")
+                    : type === "compass" ? t("profile.badges_type_compass")
                     : t("profile.badges_type_ambassador");
                   const TypeIcon =
                     type === "pillar" ? Medal
                     : type === "phase" ? Trophy
                     : type === "country" ? Globe
+                    : type === "compass" ? Compass
                     : Shield;
                   return (
                     <div key={type}>

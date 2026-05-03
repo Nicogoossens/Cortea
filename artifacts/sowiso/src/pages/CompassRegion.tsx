@@ -371,6 +371,14 @@ export default function CompassRegion() {
   const { data: profile } = useGetProfile();
   const regionCode = code || "";
 
+  useEffect(() => {
+    if (!isAuthenticated || !regionCode) return;
+    fetch(`${API_BASE}/api/compass/${regionCode}/visited`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => {});
+  }, [isAuthenticated, regionCode]);
+
   const spheres = profile?.situational_interests ?? [];
   const spheresParam = spheres.length > 0 ? spheres.join(",") : undefined;
 

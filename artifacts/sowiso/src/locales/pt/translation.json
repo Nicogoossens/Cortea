@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "Já possuo uma conta — iniciar sessão",
   "signin.join_waitlist": "Aderir à lista de espera do Founding 100",
   "signin.error_auth_failed": "O início de sessão falhou. Por favor, tente novamente.",
-  "signin.error_account_suspended": "A sua conta foi temporariamente suspensa."
+  "signin.error_account_suspended": "A sua conta foi temporariamente suspensa.",
+  "profile.badges_type_compass": "The Compass"
 }

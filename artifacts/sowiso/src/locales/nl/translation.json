@@ -897,6 +897,7 @@
   "profile.badges_type_phase": "Fase",
   "profile.badges_type_country": "Land",
   "profile.badges_type_ambassador": "Ambassadeur",
+  "profile.badges_type_compass": "Compas",
   "profile.password_title": "Wachtwoord instellen",
   "profile.password_desc": "Stel een wachtwoord in om direct in te loggen zonder link.",
   "profile.password_current_label": "Huidig wachtwoord",

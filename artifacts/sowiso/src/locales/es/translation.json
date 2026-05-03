@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "Ya poseo una cuenta — iniciar sesión",
   "signin.join_waitlist": "Únase a la lista de espera de los Cien Fundadores",
   "signin.error_auth_failed": "El inicio de sesión ha fallado. Por favor, inténtelo de nuevo.",
-  "signin.error_account_suspended": "Su cuenta ha sido suspendida temporalmente."
+  "signin.error_account_suspended": "Su cuenta ha sido suspendida temporalmente.",
+  "profile.badges_type_compass": "The Compass"
 }

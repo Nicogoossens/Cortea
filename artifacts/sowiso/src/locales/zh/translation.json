@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "我已拥有账户——登录",
   "signin.join_waitlist": "加入创始百人等候列表",
   "signin.error_auth_failed": "登录失败，请重试。",
-  "signin.error_account_suspended": "您的账户已被暂时停用。"
+  "signin.error_account_suspended": "您的账户已被暂时停用。",
+  "profile.badges_type_compass": "罗盘"
 }

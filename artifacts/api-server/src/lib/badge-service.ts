@@ -189,6 +189,17 @@ export async function awardSessionMasterBadge(userId: string): Promise<AwardedBa
 }
 
 /**
+ * Awards the Compass badge for a country when the user visits its Compass
+ * region page. Register-agnostic. Idempotent — returns null if already held.
+ */
+export async function awardCompassBadge(
+  userId: string,
+  regionCode: string,
+): Promise<AwardedBadge | null> {
+  return awardBadgeBySlug(userId, `compass-${regionCode.toLowerCase()}`);
+}
+
+/**
  * Fetches all badges awarded to a user, ordered by most recent first.
  */
 export async function getUserBadges(userId: string): Promise<AwardedBadge[]> {

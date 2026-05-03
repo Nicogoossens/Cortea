@@ -1365,5 +1365,6 @@
   "register.closed_already_member": "Ich verfüge bereits über ein Konto — anmelden",
   "signin.join_waitlist": "Treten Sie der Warteliste der Gründenden 100 bei",
   "signin.error_auth_failed": "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-  "signin.error_account_suspended": "Ihr Konto wurde vorübergehend gesperrt."
+  "signin.error_account_suspended": "Ihr Konto wurde vorübergehend gesperrt.",
+  "profile.badges_type_compass": "The Compass"
 }

@@ -952,6 +952,7 @@
   "profile.badges_type_phase": "Phase",
   "profile.badges_type_country": "Country",
   "profile.badges_type_ambassador": "Ambassador",
+  "profile.badges_type_compass": "Compass",
   "profile.password_title": "Set Password",
   "profile.password_desc": "Set a password to sign in directly without a link.",
   "profile.password_current_label": "Current password",

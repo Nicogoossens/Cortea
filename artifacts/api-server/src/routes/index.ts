@@ -31,6 +31,7 @@ import culturesPublicRouter from "./cultures-public";
 import waitlistRouter from "./waitlist";
 import systemConfigRouter from "./system-config";
 import debugRouter from "./debug";
+import compassBadgeRouter from "./compass-badge";
 
 const router: IRouter = Router();
 
@@ -66,5 +67,6 @@ router.use(culturesPublicRouter);
 router.use(waitlistRouter);
 router.use(systemConfigRouter);
 router.use(debugRouter);
+router.use(compassBadgeRouter);
 
 export default router;

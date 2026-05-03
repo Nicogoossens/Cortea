@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "Fahren Sie als The Guest fort. Sie können Ihren Weg jederzeit über Ihr Profil wählen.",
   "landing.waitlist_eyebrow": "Sanfte Markteinführung — Gründende 100",
   "landing.waitlist_title": "Treten Sie den Gründenden 100 bei",
-  "landing.waitlist_cta": "Reservieren Sie Ihren Platz"
+  "landing.waitlist_cta": "Reservieren Sie Ihren Platz",
+  "home.votes_eyebrow": "Geben Sie Ihre Stimme ab",
+  "home.votes_title": "Welches Land sollte als nächstes folgen?",
+  "home.votes_description": "Wählen Sie bis zu 5 Länder pro Monat — Ihre Stimmen bestimmen, welche Kurse wir zuerst entwickeln."
 }

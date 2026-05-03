@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "Poursuivez en tant que The Guest. Vous pourrez choisir votre voie à partir de votre profil à tout moment.",
   "landing.waitlist_eyebrow": "Lancement en phase discrète — Les 100 Fondateurs",
   "landing.waitlist_title": "Rejoignez les 100 Fondateurs",
-  "landing.waitlist_cta": "Réservez votre place"
+  "landing.waitlist_cta": "Réservez votre place",
+  "home.votes_eyebrow": "Exprimez votre suffrage",
+  "home.votes_title": "Quel pays devrait être le suivant ?",
+  "home.votes_description": "Sélectionnez jusqu'à cinq pays par mois — vos suffrages déterminent lesquels de nos cours seront élaborés en premier."
 }

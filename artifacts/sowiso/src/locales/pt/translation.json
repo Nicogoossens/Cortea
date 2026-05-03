@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "Prossiga como convidado. O senhor poderá escolher o seu caminho no seu perfil a qualquer momento.",
   "landing.waitlist_eyebrow": "Lançamento Restrito — Cem Fundadores",
   "landing.waitlist_title": "Integre-se aos Cem Fundadores",
-  "landing.waitlist_cta": "Reserve sua posição"
+  "landing.waitlist_cta": "Reserve sua posição",
+  "home.votes_eyebrow": "Emita seu voto",
+  "home.votes_title": "Qual país deveria ser o próximo?",
+  "home.votes_description": "Escolha até 5 países por mês — seus votos decidem quais cursos construiremos em primeiro lugar."
 }

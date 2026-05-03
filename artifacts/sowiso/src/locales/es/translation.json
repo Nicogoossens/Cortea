@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "Continúe como The Guest. Podrá elegir su camino desde su perfil en cualquier momento.",
   "landing.waitlist_eyebrow": "Lanzamiento restringido — Los 100 Fundadores",
   "landing.waitlist_title": "Únase a los 100 Fundadores",
-  "landing.waitlist_cta": "Reserve su lugar"
+  "landing.waitlist_cta": "Reserve su lugar",
+  "home.votes_eyebrow": "Emita su voto",
+  "home.votes_title": "¿Cuál debería ser el próximo país?",
+  "home.votes_description": "Seleccione hasta 5 países por mes — sus votos determinan cuáles cursos construimos en primer lugar."
 }

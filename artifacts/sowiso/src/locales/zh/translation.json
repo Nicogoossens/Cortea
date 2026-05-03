@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "以The Guest身份继续。阁下得于任何时刻从个人档案中择其路而行。",
   "landing.waitlist_eyebrow": "柔性上线——创始百人",
   "landing.waitlist_title": "加入创始百人之列",
-  "landing.waitlist_cta": "预留您的席位"
+  "landing.waitlist_cta": "预留您的席位",
+  "home.votes_eyebrow": "投出您的一票",
+  "home.votes_title": "下一个应当为哪个国家服务？",
+  "home.votes_description": "每月最多选择5个国家——您的投票决定我们优先开发哪些课程。"
 }

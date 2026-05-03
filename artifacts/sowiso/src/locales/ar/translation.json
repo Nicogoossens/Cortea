@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "استمرّ كضيف. يمكنك اختيار مسارك من ملفك الشخصي في أي وقت.",
   "landing.waitlist_eyebrow": "الإطلاق الأولي — المائة الؤسسون",
   "landing.waitlist_title": "انضم إلى المائة المؤسسين",
-  "landing.waitlist_cta": "احجز مقعدك"
+  "landing.waitlist_cta": "احجز مقعدك",
+  "home.votes_eyebrow": "أدلِ برأيك",
+  "home.votes_title": "أي دولة ينبغي أن تكون التالية؟",
+  "home.votes_description": "اختر ما يصل إلى خمس دول شهريًا — تقرّر أصواتكم أي من المقررات الدراسية سنشرع في بنائه أولًا."
 }

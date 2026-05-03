@@ -1355,5 +1355,8 @@
   "onboarding.plan_skip_subtitle": "The Guest としてご継続いただけます。プロフィールからいつでもご自身の道程をお選びになれます。",
   "landing.waitlist_eyebrow": "ソフトローンチ — 創業初期メンバー100名",
   "landing.waitlist_title": "創業初期メンバー100名へのご参加",
-  "landing.waitlist_cta": "お席のご予約"
+  "landing.waitlist_cta": "お席のご予約",
+  "home.votes_eyebrow": "ご投票ください",
+  "home.votes_title": "次はどの国を選びますか",
+  "home.votes_description": "毎月最大5か国をお選びください——お客様のご投票により、最初に開設いたします講座が決定されます。"
 }

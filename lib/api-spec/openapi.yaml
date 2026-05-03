@@ -790,6 +790,11 @@ components:
         created_at:
           type: string
           format: date-time
+        calling_card_tagline:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Optional personalised tagline shown on the Ambassador's Digital Calling Card
       required:
         - id
         - email_verified
@@ -860,6 +865,11 @@ components:
         subscription_tier:
           type: string
           enum: [guest, traveller, ambassador]
+        calling_card_tagline:
+          type: string
+          nullable: true
+          maxLength: 100
+          description: Optional personalised tagline shown on the Ambassador's Digital Calling Card
 
     UpdateRegionBody:
       type: object

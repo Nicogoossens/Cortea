@@ -63,6 +63,11 @@ export interface UserProfile {
   payment_customer_id?: string | null;
   trial_ends_at?: string | null;
   created_at: string;
+  /**
+   * Optional personalised tagline shown on the Ambassador's Digital Calling Card
+   * @maxLength 100
+   */
+  calling_card_tagline?: string | null;
 }
 
 export type CreateProfileBodyAmbitionLevel =
@@ -113,6 +118,11 @@ export interface UpdateProfileBody {
   language_code?: string;
   active_region?: string;
   subscription_tier?: UpdateProfileBodySubscriptionTier;
+  /**
+   * Optional personalised tagline shown on the Ambassador's Digital Calling Card
+   * @maxLength 100
+   */
+  calling_card_tagline?: string | null;
 }
 
 export interface UpdateRegionBody {

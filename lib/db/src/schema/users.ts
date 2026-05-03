@@ -104,6 +104,8 @@ export const usersTable = pgTable("users", {
   last_activity_date: text("last_activity_date"),
   avatar_state: json("avatar_state").$type<AvatarState>(),
   wardrobe_unlocks: json("wardrobe_unlocks").$type<WardrobeItem[]>().notNull().default([]),
+  // Digital Calling Card personalisation
+  calling_card_tagline: text("calling_card_tagline"),
 }, (t) => [
   check("users_ambition_level_check", sql`${t.ambition_level} IN ('casual', 'professional', 'diplomatic')`),
 ]);

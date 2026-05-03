@@ -128,6 +128,7 @@ const UpdateProfileBodySchema = z.object({
     "business", "gastronomy", "arts_culture",
     "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality",
   ])).optional(),
+  calling_card_tagline: z.string().max(100).optional().nullable(),
 });
 
 async function handleUpdateProfile(req: Request, res: Response): Promise<Response | void> {
@@ -227,6 +228,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
         ...(data.interests_dress_code !== undefined && { interests_dress_code: data.interests_dress_code }),
         ...(data.onboarding_completed !== undefined && { onboarding_completed: data.onboarding_completed }),
         ...(data.situational_interests !== undefined && { situational_interests: data.situational_interests }),
+        ...(data.calling_card_tagline !== undefined && { calling_card_tagline: data.calling_card_tagline }),
       })
       .where(eq(usersTable.id, userId))
       .returning();

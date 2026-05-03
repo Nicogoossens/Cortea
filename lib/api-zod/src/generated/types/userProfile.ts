@@ -40,4 +40,9 @@ export interface UserProfile {
   payment_customer_id?: string | null;
   trial_ends_at?: Date | null;
   created_at: Date;
+  /**
+   * Optional personalised tagline shown on the Ambassador's Digital Calling Card
+   * @maxLength 100
+   */
+  calling_card_tagline?: string | null;
 }

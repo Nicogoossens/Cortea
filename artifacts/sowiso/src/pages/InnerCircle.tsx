@@ -1,17 +1,19 @@
 import { useMemo, useRef, useState, useCallback } from "react";
-import { useGetProfile } from "@workspace/api-client-react";
+import { useGetProfile, useUpdateProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TierGate } from "@/components/TierGate";
 import { LockOverlay } from "@/components/LockOverlay";
 import { useAuth } from "@/lib/auth";
 import { useLanguage } from "@/lib/i18n";
-import { Users, Globe, Link2, Download, Check } from "lucide-react";
+import { Users, Globe, Link2, Download, Check, Pencil, X } from "lucide-react";
 import { toPng } from "html-to-image";
 
-function DownloadCard({ name, memberSince, nobleScore }: { name: string; memberSince: string; nobleScore?: number }) {
+function DownloadCard({ name, memberSince, nobleScore, tagline }: { name: string; memberSince: string; nobleScore?: number; tagline?: string | null }) {
   const CARD_W = 480;
   const CARD_H = 280;
   const GOLD = "#b8965a";
@@ -154,6 +156,11 @@ function DownloadCard({ name, memberSince, nobleScore }: { name: string; memberS
         </div>
 
         <div>
+          {tagline && (
+            <div style={{ fontSize: 11, color: TEXT_GOLD, fontStyle: "italic", fontFamily: "'Georgia', serif", marginBottom: 12, lineHeight: 1.4, opacity: 0.9 }}>
+              "{tagline}"
+            </div>
+          )}
           <div style={{ height: 1, background: `linear-gradient(90deg, ${GOLD_MUTED} 0%, transparent 100%)`, marginBottom: 16 }} />
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div style={{ fontSize: 8, color: TEXT_MUTED, fontFamily: "'Arial', sans-serif", letterSpacing: "0.12em", maxWidth: 260, lineHeight: 1.6 }}>
@@ -278,12 +285,46 @@ export default function InnerCircle() {
   const { data: profile } = useGetProfile();
   const { isAuthenticated } = useAuth();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const { mutate: updateProfile } = useUpdateProfile();
   const downloadCardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [editingTagline, setEditingTagline] = useState(false);
+  const [taglineDraft, setTaglineDraft] = useState("");
+  const [savingTagline, setSavingTagline] = useState(false);
 
   const tier = profile?.subscription_tier ?? "guest";
   const hasAccess = isAuthenticated && tier === "ambassador";
+
+  const handleEditTagline = useCallback(() => {
+    setTaglineDraft(profile?.calling_card_tagline ?? "");
+    setEditingTagline(true);
+  }, [profile?.calling_card_tagline]);
+
+  const handleCancelTagline = useCallback(() => {
+    setEditingTagline(false);
+    setTaglineDraft("");
+  }, []);
+
+  const handleSaveTagline = useCallback(() => {
+    if (savingTagline) return;
+    setSavingTagline(true);
+    const trimmed = taglineDraft.trim().slice(0, 100);
+    updateProfile(
+      { data: { calling_card_tagline: trimmed || null } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+          setEditingTagline(false);
+          setSavingTagline(false);
+        },
+        onError: () => {
+          setSavingTagline(false);
+        },
+      },
+    );
+  }, [savingTagline, taglineDraft, updateProfile, queryClient]);
 
   const handleCopyLink = useCallback(() => {
     if (copied) return;
@@ -372,7 +413,7 @@ export default function InnerCircle() {
         }}
       >
         <div ref={downloadCardRef}>
-          <DownloadCard name={name} memberSince={memberSince} nobleScore={profile?.noble_score} />
+          <DownloadCard name={name} memberSince={memberSince} nobleScore={profile?.noble_score} tagline={profile?.calling_card_tagline} />
         </div>
       </div>
 
@@ -454,6 +495,13 @@ export default function InnerCircle() {
                 </div>
               </div>
 
+              {profile?.calling_card_tagline && (
+                <div className="pt-2 border-t border-amber-400/20">
+                  <p className="text-xs uppercase tracking-widest text-amber-700/60 font-semibold mb-1">Note</p>
+                  <p className="text-sm font-light italic text-foreground/80 leading-snug">{profile.calling_card_tagline}</p>
+                </div>
+              )}
+
               <div className="pt-3 border-t border-border/30">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Globe className="h-3.5 w-3.5 flex-shrink-0" />
@@ -473,6 +521,47 @@ export default function InnerCircle() {
 
             </CardContent>
           </Card>
+
+          {editingTagline ? (
+            <div className="flex flex-col gap-2 p-3 rounded-sm border border-amber-400/20 bg-amber-50/20 dark:bg-amber-900/10">
+              <p className="text-xs uppercase tracking-widest text-amber-700/70 font-semibold">Personal tagline</p>
+              <Input
+                value={taglineDraft}
+                onChange={(e) => setTaglineDraft(e.target.value.slice(0, 100))}
+                placeholder="A short note to distinguish your card…"
+                className="text-sm h-8 border-amber-400/30 bg-transparent focus-visible:ring-amber-400/30"
+                maxLength={100}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveTagline();
+                  if (e.key === "Escape") handleCancelTagline();
+                }}
+                autoFocus
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-mono">{taglineDraft.length}/100</span>
+                <div className="flex gap-1.5">
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={handleCancelTagline} disabled={savingTagline}>
+                    <X className="h-3 w-3" />
+                    Cancel
+                  </Button>
+                  <Button size="sm" className="h-7 px-3 text-xs gap-1 bg-amber-600 hover:bg-amber-700 text-white" onClick={handleSaveTagline} disabled={savingTagline}>
+                    <Check className="h-3 w-3" />
+                    {savingTagline ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full gap-1.5 text-xs text-muted-foreground hover:text-amber-700 border border-dashed border-border/40 hover:border-amber-400/40"
+              onClick={handleEditTagline}
+            >
+              <Pencil className="h-3 w-3" />
+              {profile?.calling_card_tagline ? "Edit tagline" : "Add a personal tagline"}
+            </Button>
+          )}
 
           <div className="flex gap-2">
             <Button

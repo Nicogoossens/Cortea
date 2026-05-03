@@ -25,6 +25,8 @@ export const GetProfileQueryParams = zod.object({
     .describe("Optional user identifier; bearer token is the source of truth."),
 });
 
+export const getProfileResponseCallingCardTaglineMax = 100;
+
 export const GetProfileResponse = zod.object({
   id: zod.string(),
   full_name: zod.string().nullish(),
@@ -58,6 +60,13 @@ export const GetProfileResponse = zod.object({
   payment_customer_id: zod.string().nullish(),
   trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
+  calling_card_tagline: zod
+    .string()
+    .max(getProfileResponseCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
 
 /**
@@ -71,6 +80,8 @@ export const CreateProfileBody = zod.object({
   language_code: zod.string().optional(),
   active_region: zod.string().optional(),
 });
+
+export const createProfileResponseCallingCardTaglineMax = 100;
 
 export const CreateProfileResponse = zod.object({
   id: zod.string(),
@@ -105,11 +116,20 @@ export const CreateProfileResponse = zod.object({
   payment_customer_id: zod.string().nullish(),
   trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
+  calling_card_tagline: zod
+    .string()
+    .max(createProfileResponseCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
 
 /**
  * @summary Update user profile fields
  */
+export const updateProfileBodyCallingCardTaglineMax = 100;
+
 export const UpdateProfileBody = zod.object({
   birth_year: zod.number().nullish(),
   gender_identity: zod.string().nullish(),
@@ -118,7 +138,16 @@ export const UpdateProfileBody = zod.object({
   language_code: zod.string().optional(),
   active_region: zod.string().optional(),
   subscription_tier: zod.enum(["guest", "traveller", "ambassador"]).optional(),
+  calling_card_tagline: zod
+    .string()
+    .max(updateProfileBodyCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
+
+export const updateProfileResponseCallingCardTaglineMax = 100;
 
 export const UpdateProfileResponse = zod.object({
   id: zod.string(),
@@ -153,6 +182,13 @@ export const UpdateProfileResponse = zod.object({
   payment_customer_id: zod.string().nullish(),
   trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
+  calling_card_tagline: zod
+    .string()
+    .max(updateProfileResponseCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
 
 /**
@@ -174,6 +210,8 @@ export const PatchProfilePreferencesBody = zod.object({
     .optional()
     .describe("ISO 3166-1 alpha-2 region code (e.g. GB, NL, US)."),
 });
+
+export const patchProfilePreferencesResponseCallingCardTaglineMax = 100;
 
 export const PatchProfilePreferencesResponse = zod.object({
   id: zod.string(),
@@ -208,6 +246,13 @@ export const PatchProfilePreferencesResponse = zod.object({
   payment_customer_id: zod.string().nullish(),
   trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
+  calling_card_tagline: zod
+    .string()
+    .max(patchProfilePreferencesResponseCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
 
 /**
@@ -223,6 +268,8 @@ export const DeleteProfileResponse = zod.object({
 export const UpdateActiveRegionBody = zod.object({
   region_code: zod.string(),
 });
+
+export const updateActiveRegionResponseCallingCardTaglineMax = 100;
 
 export const UpdateActiveRegionResponse = zod.object({
   id: zod.string(),
@@ -257,6 +304,13 @@ export const UpdateActiveRegionResponse = zod.object({
   payment_customer_id: zod.string().nullish(),
   trial_ends_at: zod.coerce.date().nullish(),
   created_at: zod.coerce.date(),
+  calling_card_tagline: zod
+    .string()
+    .max(updateActiveRegionResponseCallingCardTaglineMax)
+    .nullish()
+    .describe(
+      "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
+    ),
 });
 
 /**

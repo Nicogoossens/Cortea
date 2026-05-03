@@ -18,6 +18,7 @@
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
     "seed": "tsx src/seed.ts",
     "seed-translations": "tsx src/seed-translations.ts",
+    "seed-mentor-translations": "tsx src/seed-mentor-translations.ts",
     "seed-compass": "tsx src/seed-compass.ts",
     "seed-use-cases": "tsx src/seed-use-cases.ts",
     "seed-world-stubs": "tsx src/seed-world-stubs.ts",

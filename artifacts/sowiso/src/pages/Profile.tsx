@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Award, Calendar, Globe, Target, Clock, CheckCircle2, AlertTriangle,
   ExternalLink, ChevronRight, ChevronDown, User, Languages, Trash2, X, Lock, Camera, Pencil, Check,
-  Layers, MapPin, ArrowRight, UtensilsCrossed,
+  Layers, MapPin, ArrowRight, UtensilsCrossed, Bookmark,
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
@@ -27,6 +27,8 @@ import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode } from "@/lib/active-region";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
+import { VenueCard } from "@/components/VenueCard";
+import { useSavedVenues } from "@/lib/saved-venues";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -2102,7 +2104,72 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* ── My Venues (saved from The Local) ── */}
+      <MyVenuesSection isAuthenticated={isAuthenticated} t={t} />
+
     </div>
+  );
+}
+
+interface MyVenuesSectionProps {
+  isAuthenticated: boolean;
+  t: (k: string, fallback?: string) => string;
+}
+
+/**
+ * Lists every venue the caller has bookmarked across all regions.
+ * Re-uses the standard VenueCard so the bookmark icon stays interactive
+ * (a click here unsaves the venue and removes it from the list).
+ */
+function MyVenuesSection({ isAuthenticated, t }: MyVenuesSectionProps) {
+  const { savedVenues, loading, pendingId, toggleSave } = useSavedVenues(isAuthenticated);
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <Card className="bg-card border-border shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-serif text-lg flex items-center gap-2">
+          <Bookmark className="w-4 h-4 text-primary/60" aria-hidden="true" />
+          {t("profile.my_venues_title", "My Venues")}
+          {savedVenues.length > 0 && (
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 border border-border/40 rounded-[2px] px-1.5 py-0.5 ml-1">
+              {savedVenues.length}
+            </span>
+          )}
+        </CardTitle>
+        <CardDescription className="text-xs font-light text-muted-foreground/70 mt-0.5">
+          {t("profile.my_venues_subtitle", "Your personal shortlist of venues bookmarked from The Local.")}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2].map((i) => <Skeleton key={i} className="h-36 w-full" />)}
+          </div>
+        ) : savedVenues.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border/40 rounded-sm">
+            <Bookmark className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
+            <p>{t("profile.my_venues_empty", "You haven't saved any venues yet.")}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              {t("profile.my_venues_hint", "Tap the bookmark icon on any venue under The Local to add it here.")}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {savedVenues.map((venue) => (
+              <VenueCard
+                key={venue.id}
+                venue={venue}
+                isSaved={true}
+                saving={pendingId === venue.id}
+                onToggleSave={toggleSave}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

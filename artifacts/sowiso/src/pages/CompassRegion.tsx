@@ -20,6 +20,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useState, useEffect } from "react";
 import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
 import { isCompassRegionDetailLocked } from "@/lib/tier-access";
+import { useSavedVenues } from "@/lib/saved-venues";
 
 type PillarCode = "Z1" | "Z2" | "Z3" | "Z4" | "Z5";
 
@@ -61,11 +62,13 @@ const OCCASION_LABEL_KEYS: Record<OccasionTag, string> = {
 };
 
 function TheLocalSection({ regionCode }: { regionCode: string }) {
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<VenueCategory>("shops");
   const [occasionFilter, setOccasionFilter] = useState<OccasionTag | null>(null);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLocale();
+  const { savedIds, pendingId, toggleSave } = useSavedVenues(isAuthenticated);
 
   useEffect(() => {
     setLoading(true);
@@ -189,7 +192,13 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredVenues.map((venue) => (
-              <VenueCard key={venue.id} venue={venue} />
+              <VenueCard
+                key={venue.id}
+                venue={venue}
+                isSaved={savedIds.has(venue.id)}
+                saving={pendingId === venue.id}
+                onToggleSave={isAuthenticated ? toggleSave : undefined}
+              />
             ))}
           </div>
         )}

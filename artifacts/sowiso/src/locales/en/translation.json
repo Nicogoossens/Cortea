@@ -1058,5 +1058,9 @@
   "compass.local.empty": "No venues found for this selection.",
   "compass.local.etiquette_tip": "Etiquette tip",
   "compass.local.etiquette": "Etiquette",
-  "compass.local.occasion_tags_aria": "Occasion tags"
+  "compass.local.occasion_tags_aria": "Occasion tags",
+  "compass.local.save": "Save venue",
+  "compass.local.unsave": "Remove from saved",
+  "compass.local.save_aria": "Save {{name}} to your venues",
+  "compass.local.unsave_aria": "Remove {{name}} from your venues"
 }

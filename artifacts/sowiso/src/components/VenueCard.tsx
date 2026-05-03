@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Star, MapPin } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronUp, Loader2, MapPin, Star } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 
 export type VenueCategory = "shops" | "dining" | "activities" | "accommodations" | "transport";
@@ -33,9 +33,15 @@ const OCCASION_COLORS: Record<OccasionTag, string> = {
 
 interface VenueCardProps {
   venue: Venue;
+  /** When true, renders a filled bookmark icon. */
+  isSaved?: boolean;
+  /** When provided, the bookmark button is shown and toggling fires the handler. */
+  onToggleSave?: (venue: Venue) => void | Promise<void>;
+  /** Disables the bookmark control while a save is in flight. */
+  saving?: boolean;
 }
 
-export function VenueCard({ venue }: VenueCardProps) {
+export function VenueCard({ venue, isSaved = false, onToggleSave, saving = false }: VenueCardProps) {
   const [tipOpen, setTipOpen] = useState(false);
   const { t } = useLocale();
 
@@ -58,6 +64,34 @@ export function VenueCard({ venue }: VenueCardProps) {
               {venue.name}
             </h4>
           </div>
+
+          {onToggleSave && (
+            <button
+              type="button"
+              onClick={() => { if (!saving) void onToggleSave(venue); }}
+              disabled={saving}
+              aria-pressed={isSaved}
+              aria-label={isSaved
+                ? t("compass.local.unsave_aria", { name: venue.name })
+                : t("compass.local.save_aria", { name: venue.name })}
+              title={isSaved ? t("compass.local.unsave", "Remove from saved") : t("compass.local.save", "Save venue")}
+              className={`flex-shrink-0 p-1.5 rounded-sm border transition-colors disabled:opacity-50 ${
+                isSaved
+                  ? "border-primary/40 text-primary bg-primary/10 hover:bg-primary/15"
+                  : "border-border/40 text-muted-foreground/60 hover:text-primary hover:border-primary/30"
+              }`}
+            >
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Bookmark
+                  className="w-3.5 h-3.5"
+                  fill={isSaved ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          )}
         </div>
 
         {/* Description */}

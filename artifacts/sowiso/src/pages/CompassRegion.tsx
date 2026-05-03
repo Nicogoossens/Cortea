@@ -11,7 +11,7 @@ import {
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen, ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, Shirt, Zap, MapPin, ShoppingBag, Dumbbell, Hotel, Car, LifeBuoy, BookOpen, ChevronDown, ChevronUp, Search, X, Landmark, Users, Crown, ArrowRight } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
@@ -886,6 +886,171 @@ export default function CompassRegion() {
 
       {/* The Local — curated venues */}
       <TheLocalSection regionCode={regionCode} />
+
+      {/* Region History — currently only Belgium has authored content. */}
+      {regionCode === "BE" && <BelgianHistorySection t={t} />}
     </div>
+  );
+}
+
+/**
+ * BelgianHistorySection
+ * --------------------
+ * Curated, foreigner-oriented historical context for Belgium.
+ * Content is intentionally hard-coded in English (English is the working
+ * default of the platform per product decision) so it does not depend on the
+ * translation pipeline. UI chrome (titles / CTAs) IS translated so it slots
+ * cleanly into the rest of the page.
+ *
+ * Three blocks:
+ *  1. A general "A Brief History of Belgium" — read-only narrative.
+ *  2. "Everyday Heritage & Folk Culture" — links to The Atelier in the
+ *     middle_class register.
+ *  3. "Statecraft, Court & Diplomacy" — links to The Atelier in the elite
+ *     register (subscription-gated; the link still navigates so the user sees
+ *     what's behind the paywall).
+ */
+function BelgianHistorySection({
+  t,
+}: {
+  t: (k: string, v?: Record<string, string | number> | string) => string;
+}) {
+  return (
+    <section className="pt-12 space-y-6" aria-labelledby="region-history-heading">
+      <header className="space-y-1">
+        <h2
+          id="region-history-heading"
+          className="font-serif text-2xl text-foreground flex items-center gap-2"
+        >
+          <Landmark className="w-5 h-5 text-primary" aria-hidden="true" />
+          {t("compass.history.heading")}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {t("compass.history.subtitle")}
+        </p>
+      </header>
+
+      {/* 1. Brief overview — neutral narrative */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-primary" aria-hidden="true" />
+            {t("compass.history.brief.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            Belgium is a young country built on very old land. The territory
+            sat for centuries at the crossroads of Latin and Germanic Europe,
+            governed in turn by the Dukes of Burgundy, the Spanish and Austrian
+            Habsburgs, revolutionary France and, briefly, the Kingdom of the
+            Netherlands. Independence was declared in 1830 after a Brussels
+            uprising and recognised by the Great Powers in 1839 on the
+            condition of perpetual neutrality — a clause Germany violated in
+            1914.
+          </p>
+          <p>
+            The country's prosperity was forged in the 19th century: Belgium
+            was the first nation on the European mainland to industrialise,
+            with coal and steel from Wallonia and textiles from Ghent. That
+            wealth, and the controversial colonial enterprise in the Congo
+            (1885–1960, personal property of King Leopold II until 1908), still
+            shape contemporary debates about heritage, monuments and
+            restitution.
+          </p>
+          <p>
+            Two world wars left deep marks — Ypres, the Ardennes, Bastogne —
+            and pushed Belgium to become a founding architect of European
+            cooperation. Brussels hosts the European Commission, the Council
+            and NATO; the country is officially trilingual (Dutch, French,
+            German) and federalised since 1993 into Regions and Communities.
+            Visitors quickly notice that "Belgian" identity is layered:
+            Flemish, Walloon, Brusseler and Belgian all coexist, and switching
+            language at the right moment is itself an act of etiquette.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 2. Everyday heritage → middle_class register */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" aria-hidden="true" />
+            {t("compass.history.everyday.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            Day-to-day Belgian culture is shaped by the guild towns of Flanders
+            and the mining valleys of Wallonia. The famous love of beer, fries,
+            chocolate and chips-with-mussels is not folklore tourism: it
+            descends directly from monastic brewing traditions, the Trappist
+            abbeys, and the working-class kitchens of Liège and Charleroi.
+            Cycling, brass bands, neighbourhood ducasses, carnival in Binche
+            and Aalst, and the Ommegang in Brussels are still living rituals,
+            not museum pieces.
+          </p>
+          <p>
+            Civic life runs on a quiet code: understated dress, first-name
+            informality only after invitation, three kisses on the cheek among
+            friends in most regions (one in parts of West Flanders), and a
+            strong preference for compromise over confrontation — the national
+            sport of "Belgian compromise" was perfected in centuries of
+            negotiating between languages, faiths and trades.
+          </p>
+          <p className="pt-1">
+            <Link
+              href="/atelier?register=middle_class"
+              className="inline-flex items-center gap-1.5 text-primary hover:underline underline-offset-4 font-medium"
+            >
+              {t("compass.history.everyday.cta")}
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 3. Elite history → elite register (subscription-gated downstream) */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-lg flex items-center gap-2">
+            <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            {t("compass.history.elite.title")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <p>
+            Above the everyday register sits a second, older Belgium: that of
+            the court, the diplomatic corps and the great houses. The Belgian
+            monarchy (Saxe-Coburg-Gotha, since 1831) is constitutional but
+            ceremonially active — royal audiences, the Te Deum on the National
+            Day, and the king's New Year addresses to the diplomatic corps and
+            the constituted bodies remain set-piece occasions with their own
+            dress codes and forms of address.
+          </p>
+          <p>
+            Brussels' role as the de-facto capital of Europe and the seat of
+            NATO means that diplomatic protocol is a working language here.
+            Knowing how to title a baron, how to seat a chef de mission, when
+            to switch from French to English, and how to behave at a reception
+            at the Palais d'Egmont or the Cercle de Lorraine is not snobbery —
+            it is the operating system of a small country that has long
+            punched above its weight by being unfailingly correct.
+          </p>
+          <p className="text-xs italic text-muted-foreground/80">
+            {t("compass.history.elite.locked_hint")}
+          </p>
+          <p className="pt-1">
+            <Link
+              href="/atelier?register=elite"
+              className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:underline underline-offset-4 font-medium"
+            >
+              {t("compass.history.elite.cta")}
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </section>
   );
 }

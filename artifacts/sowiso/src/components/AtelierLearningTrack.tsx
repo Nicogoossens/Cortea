@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import {
   useGetLearningTrackSession,
   usePostLearningTrackAnswer,
@@ -62,10 +62,20 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const { t } = useLanguage();
   const { setActiveRegion, getRegionName } = useActiveRegion();
 
+  const urlSearch = useSearch();
   const [register, setRegister] = useState<Register>(() => {
+    const urlRegister = new URLSearchParams(urlSearch).get("register");
+    if (urlRegister === "elite" || urlRegister === "middle_class") return urlRegister;
     if (ambitionLevel === "diplomatic" && tier === "ambassador") return "elite";
     return "middle_class";
   });
+
+  useEffect(() => {
+    const urlRegister = new URLSearchParams(urlSearch).get("register");
+    if (urlRegister === "elite" || urlRegister === "middle_class") {
+      setRegister(urlRegister);
+    }
+  }, [urlSearch]);
   const [phase, setPhase] = useState<number>(() => {
     if (ambitionLevel === "professional") return 2;
     return 1;

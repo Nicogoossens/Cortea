@@ -362,7 +362,7 @@ export default function Atelier() {
                     session region. Linking to /compass here previously sent
                     the user to a screen that could not actually change the
                     active region from this empty state. */}
-                <Link href="/profile">
+                <Link href="/profile?focus=region">
                   <button className="text-sm underline underline-offset-2 text-primary/70 hover:text-primary transition-colors">
                     {t("atelier.change_region")}
                   </button>

@@ -448,6 +448,28 @@ export default function Profile() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
+  // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
+  // from the Atelier "Wijzig uw actieve regio" link or the read-only region
+  // chip), force-open the Cursusinstellingen card, scroll it into view, and
+  // briefly highlight the leerregio dropdown so the user immediately sees
+  // what to change. The flag auto-clears after the highlight animation so
+  // a refresh does not keep flashing.
+  const [focusRegion, setFocusRegion] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") !== "region") return;
+    setFocusRegion(true);
+    // Scroll & highlight after the section has had a chance to expand.
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById("course-settings-card");
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
+    // Clear the highlight ring after a few seconds.
+    const clearTimer = window.setTimeout(() => setFocusRegion(false), 4000);
+    return () => { window.clearTimeout(timer); window.clearTimeout(clearTimer); };
+  }, []);
+
   const { data: nobleScore, isLoading: scoreLoading } = useGetNobleScore({ query: { queryKey: getGetNobleScoreQueryKey() } });
   const { data: pillars, isLoading: pillarsLoading } = useGetPillarProgress({ query: { queryKey: getGetPillarProgressQueryKey() } });
   const { data: rawLogs, isLoading: logsLoading } = useGetNobleScoreLog({ limit: 10 }, { query: { queryKey: getGetNobleScoreLogQueryKey({ limit: 10 }) } });
@@ -1220,10 +1242,12 @@ export default function Profile() {
           Together they read as one grouped "Cursus & Voorkeuren" set of
           accordions, while each retains its own collapsible state. */}
       <CollapsibleSection
+        id="course-settings-card"
         title={t("profile.course_settings_title")}
         icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.course_settings_desc")}
         storageKey="course_settings"
+        forceOpen={focusRegion}
       >
         <CardContent className="space-y-5">
 
@@ -1278,11 +1302,19 @@ export default function Profile() {
           </div>
 
           {/* Learning region dropdown */}
-          <div className="space-y-1.5">
+          <div className={`space-y-1.5 rounded-sm transition-all ${focusRegion ? "ring-2 ring-primary/60 ring-offset-4 ring-offset-card animate-pulse" : ""}`}>
             <div className="flex items-center justify-between">
               <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{t("profile.pref_region_label")}</label>
               <SaveIndicator state={regionSave} t={t} />
             </div>
+            {focusRegion && (
+              <p className="text-xs font-light text-primary/80 italic">
+                {/* Inline hint shown only when the user arrived via a "wijzig
+                    regio" deep-link, so they know exactly which control to
+                    use. Disappears together with the highlight ring. */}
+                Wijzig hieronder uw actieve leerregio. Uw aanpassing wordt automatisch opgeslagen.
+              </p>
+            )}
             <div className="relative">
               <button
                 onClick={() => setCourseRegionDropdownOpen((v) => !v)}
@@ -1414,17 +1446,17 @@ export default function Profile() {
             );
           })()}
 
-        </CardContent>
-      </CollapsibleSection>
+          {/* ── Inline subsections merged into Cursusinstellingen ──
+              Doelstellingen, Interesses, Culinaire interesses en Sferen
+              waren voorheen losse kaarten. Alles wat de cursus en
+              aanbevelingen stuurt hoort thuis in dit ene vak; visueel
+              gescheiden door subkoppen, niet door extra kaarten. */}
 
-      {/* ── Interests & Objectives ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.interests_title")}
-        icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        description={t("profile.interests_subtitle")}
-        storageKey="interests"
-      >
-        <CardContent className="space-y-6">
+          <SubsectionHeading
+            icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.interests_title")}
+            description={t("profile.interests_subtitle")}
+          />
 
           {/* Objectives */}
           <div className="space-y-2.5">
@@ -1483,16 +1515,11 @@ export default function Profile() {
             t={t}
           />
 
-        </CardContent>
-      </CollapsibleSection>
+          <SubsectionHeading
+            icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.culinary_interests_label")}
+          />
 
-      {/* ── Culinaire Interesses ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.culinary_interests_label")}
-        icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        storageKey="culinary"
-      >
-        <CardContent>
           <InterestSelector
             label={t("profile.culinary_interests_label")}
             presets={INTEREST_PRESETS.cuisine}
@@ -1506,46 +1533,45 @@ export default function Profile() {
             onRemove={(v) => handleTagRemove("cuisine", v)}
             t={t}
           />
-        </CardContent>
-      </CollapsibleSection>
 
-      {/* ── Jouw Sferen ── collapsible ── */}
-      <CollapsibleSection
-        title={t("profile.spheres_title")}
-        icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-        description={t("profile.spheres_subtitle")}
-        storageKey="spheres"
-      >
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
-              const isActive = (profileData?.situational_interests ?? []).includes(key);
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleSphereToggle(key)}
-                  disabled={spheresSave === "saving"}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all ${
-                    isActive
-                      ? "bg-primary/10 text-primary border-primary/35 font-medium"
-                      : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  {t(labelKey)}
-                </button>
-              );
-            })}
+          <SubsectionHeading
+            icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+            title={t("profile.spheres_title")}
+            description={t("profile.spheres_subtitle")}
+          />
+
+          <div>
+            <div className="flex flex-wrap gap-2">
+              {SPHERE_OPTIONS.map(({ key, icon: Icon, labelKey }) => {
+                const isActive = (profileData?.situational_interests ?? []).includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleSphereToggle(key)}
+                    disabled={spheresSave === "saving"}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-sm border text-sm transition-all ${
+                      isActive
+                        ? "bg-primary/10 text-primary border-primary/35 font-medium"
+                        : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    {t(labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex items-center gap-2 h-4">
+              <SaveIndicator state={spheresSave} t={t} />
+              {spheresSave === "idle" && (profileData?.situational_interests ?? []).length > 0 && (
+                <span className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40" aria-hidden="true" />
+                  {t("profile.spheres_onboarding_hint")}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="mt-3 flex items-center gap-2 h-4">
-            <SaveIndicator state={spheresSave} t={t} />
-            {spheresSave === "idle" && (profileData?.situational_interests ?? []).length > 0 && (
-              <span className="text-xs text-muted-foreground/70 font-mono flex items-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary/40" aria-hidden="true" />
-                {t("profile.spheres_onboarding_hint")}
-              </span>
-            )}
-          </div>
+
         </CardContent>
       </CollapsibleSection>
 
@@ -2465,7 +2491,7 @@ function InterestSelector({
  * unavailable (e.g. private browsing).
  */
 function CollapsibleSection({
-  title, icon, description, className, storageKey, children,
+  title, icon, description, className, storageKey, children, id, forceOpen,
 }: {
   title: string;
   icon?: React.ReactNode;
@@ -2473,8 +2499,15 @@ function CollapsibleSection({
   className?: string;
   storageKey?: string;
   children: React.ReactNode;
+  id?: string;
+  /** When set to true, the section is forced open regardless of stored
+   *  preference. Used by the deep-link focus mechanism (e.g. when arriving
+   *  from "Wijzig uw actieve regio") so the user immediately sees the
+   *  controls they came to change. */
+  forceOpen?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(() => {
+    if (forceOpen) return true;
     if (!storageKey) return false;
     try {
       const stored = localStorage.getItem(`profile_section_${storageKey}`);
@@ -2483,6 +2516,12 @@ function CollapsibleSection({
       return false;
     }
   });
+
+  // Re-open whenever forceOpen flips to true (e.g. user navigates again
+  // with ?focus=region while the section is closed).
+  useEffect(() => {
+    if (forceOpen) setIsOpen(true);
+  }, [forceOpen]);
 
   function toggle() {
     setIsOpen((v) => {
@@ -2494,7 +2533,7 @@ function CollapsibleSection({
     });
   }
   return (
-    <Card className={`bg-card border-border shadow-sm ${className ?? ""}`}>
+    <Card id={id} className={`bg-card border-border shadow-sm ${className ?? ""}`}>
       <CardHeader
         className="pb-3 cursor-pointer select-none"
         onClick={toggle}
@@ -2519,6 +2558,25 @@ function CollapsibleSection({
       </CardHeader>
       {isOpen && <>{children}</>}
     </Card>
+  );
+}
+
+/**
+ * Visual divider with title used inside Cursusinstellingen to separate
+ * Doelstellingen / Culinaire interesses / Sferen subsections without the
+ * heaviness of a separate Card wrapper. Inserted between content blocks.
+ */
+function SubsectionHeading({ icon, title, description }: { icon?: React.ReactNode; title: string; description?: string }) {
+  return (
+    <div className="pt-5 mt-2 border-t border-border/40 space-y-1">
+      <h3 className="font-serif text-base flex items-center gap-2 text-foreground">
+        {icon}
+        {title}
+      </h3>
+      {description && (
+        <p className="text-xs font-light text-muted-foreground/70">{description}</p>
+      )}
+    </div>
   );
 }
 

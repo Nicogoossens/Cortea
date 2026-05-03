@@ -61,7 +61,7 @@ export function ActiveContextChips() {
             wanted to glance at their active region. The profile page is the
             single canonical place to change it. */}
         <Link
-          href="/profile"
+          href="/profile?focus=region"
           className={`${chipBase} ${chipIdle}`}
           aria-label={`Region: ${getRegionName(activeRegion)}. Open profile to change.`}
         >

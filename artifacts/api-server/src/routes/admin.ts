@@ -1755,6 +1755,228 @@ router.delete("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Verified CC records: edit / unverify / delete ─────────────────────────────
+//
+// Once a CC-extracted record is approved (verified=true) the regular
+// PATCH/DELETE endpoints refuse to touch it. These two endpoints give
+// editorial reviewers a way to (a) correct mistakes after approval,
+// (b) push a record back to the pending queue, or (c) permanently remove
+// a verified record. All paths are admin-only and audit-logged via the
+// existing ccProtocolRemovalsTable on hard delete.
+
+const PatchVerifiedCCBodySchema = z.object({
+  rule_cc: z.string().min(1).optional(),
+  subcategory: z.string().min(1).optional(),
+  urgency: z.number().int().min(1).max(3).optional(),
+  region_code: z.string().min(2).max(10).optional(),
+  unverify: z.boolean().optional(),
+});
+
+/** PATCH /admin/cc-protocols/:id/verified — correct fields on or unverify a verified CC record */
+router.patch("/admin/cc-protocols/:id/verified", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
+
+    const parsed = PatchVerifiedCCBodySchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request body.", details: parsed.error.flatten().fieldErrors });
+    }
+    const body = parsed.data;
+    const requesterId = (req as Request & { resolvedUserId: string }).resolvedUserId;
+
+    const [existing] = await db
+      .select({
+        id: cultureProtocolsTable.id,
+        verified: cultureProtocolsTable.verified,
+        source_book: cultureProtocolsTable.source_book,
+        pillar_code: cultureProtocolsTable.pillar_code,
+        subcategory: cultureProtocolsTable.subcategory,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        urgency: cultureProtocolsTable.urgency,
+        region_code: cultureProtocolsTable.region_code,
+      })
+      .from(cultureProtocolsTable)
+      .where(eq(cultureProtocolsTable.id, id))
+      .limit(1);
+
+    if (!existing) return res.status(404).json({ error: "Record not found." });
+    if (!existing.source_book) {
+      return res.status(409).json({ error: "This record is not a CC-extracted record." });
+    }
+    if (!existing.verified) {
+      return res.status(409).json({ error: "Record is not verified — use the pending endpoint instead." });
+    }
+
+    const updatePayload: Record<string, unknown> = {};
+    if (body.rule_cc !== undefined) updatePayload.rule_cc = body.rule_cc;
+    if (body.subcategory !== undefined) updatePayload.subcategory = body.subcategory;
+    if (body.urgency !== undefined) updatePayload.urgency = body.urgency;
+    if (body.region_code !== undefined) updatePayload.region_code = body.region_code.toUpperCase();
+    if (body.unverify === true) {
+      updatePayload.verified = false;
+      updatePayload.reviewed_by = null;
+      updatePayload.reviewed_at = null;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      return res.status(400).json({ error: "No updatable fields were provided." });
+    }
+
+    const [updated] = await db
+      .update(cultureProtocolsTable)
+      .set(updatePayload)
+      .where(and(
+        eq(cultureProtocolsTable.id, id),
+        sql`source_book IS NOT NULL`,
+        eq(cultureProtocolsTable.verified, true),
+      ))
+      .returning({
+        id: cultureProtocolsTable.id,
+        verified: cultureProtocolsTable.verified,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        subcategory: cultureProtocolsTable.subcategory,
+        urgency: cultureProtocolsTable.urgency,
+        region_code: cultureProtocolsTable.region_code,
+      });
+
+    if (!updated) {
+      return res.status(409).json({ error: "Record not found or no longer verified." });
+    }
+
+    // Audit trail: emit a structured log entry for every verified-record mutation.
+    // Captures who acted, what changed (before/after), and whether the record
+    // was sent back to the pending queue. Searchable via pino's JSON output.
+    req.log?.info(
+      {
+        ccId: id,
+        actor: requesterId,
+        action: body.unverify === true ? "verified.unverify" : "verified.correct",
+        before: {
+          rule_cc: existing.rule_cc,
+          subcategory: existing.subcategory,
+          urgency: existing.urgency,
+          region_code: existing.region_code,
+        },
+        after: {
+          rule_cc: updated.rule_cc,
+          subcategory: updated.subcategory,
+          urgency: updated.urgency,
+          region_code: updated.region_code,
+          verified: updated.verified,
+        },
+      },
+      "Admin: verified CC protocol mutated",
+    );
+
+    // Re-translate + re-calibrate when rule_cc changed (mirrors the pending PATCH path).
+    if (body.rule_cc !== undefined && updated.rule_cc) {
+      const ccId = updated.id;
+      const newRuleCc: string = updated.rule_cc;
+      const pillarCode = existing.pillar_code ?? "Z1";
+      const subcat = updated.subcategory ?? existing.subcategory ?? "general";
+      void (async () => {
+        try {
+          const fresh = await translateRuleCc(newRuleCc, pillarCode, subcat, req);
+          if (Object.keys(fresh).length === 0) return;
+          await db
+            .update(cultureProtocolsTable)
+            .set({ rule_cc_i18n: fresh })
+            .where(eq(cultureProtocolsTable.id, ccId));
+          const cal = await calibrateI18nMap(fresh, "standard");
+          if (cal.changed) {
+            await db
+              .update(cultureProtocolsTable)
+              .set({ rule_cc_i18n: cal.calibrated })
+              .where(eq(cultureProtocolsTable.id, ccId));
+          }
+          req.log?.info({ ccId }, "Verified CC: re-translation + register calibration completed");
+        } catch (e) {
+          req.log?.warn({ e, ccId }, "Verified CC: re-translation/calibration failed");
+        }
+      })();
+    }
+
+    return res.json({ ok: true, ...updated });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to update verified CC protocol");
+    return res.status(500).json({ error: "A difficulty arose updating the record." });
+  }
+});
+
+/** DELETE /admin/cc-protocols/:id/verified — permanently remove a verified CC record */
+router.delete("/admin/cc-protocols/:id/verified", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid record ID." });
+
+    const requesterId = (req as Request & { resolvedUserId: string }).resolvedUserId;
+
+    const [existing] = await db
+      .select({
+        id: cultureProtocolsTable.id,
+        verified: cultureProtocolsTable.verified,
+        source_book: cultureProtocolsTable.source_book,
+        source_page: cultureProtocolsTable.source_page,
+        region_code: cultureProtocolsTable.region_code,
+        pillar_code: cultureProtocolsTable.pillar_code,
+        subcategory: cultureProtocolsTable.subcategory,
+        rule_cc: cultureProtocolsTable.rule_cc,
+        rule_raw: cultureProtocolsTable.rule_raw,
+        urgency: cultureProtocolsTable.urgency,
+      })
+      .from(cultureProtocolsTable)
+      .where(eq(cultureProtocolsTable.id, id))
+      .limit(1);
+
+    if (!existing) return res.status(404).json({ error: "Record not found." });
+    if (!existing.source_book) {
+      return res.status(409).json({ error: "This record is not a CC-extracted record." });
+    }
+    if (!existing.verified) {
+      return res.status(409).json({ error: "Record is not verified — use the pending endpoint instead." });
+    }
+
+    let deletedId: number | null = null;
+    await db.transaction(async (tx) => {
+      await tx.insert(ccProtocolRemovalsTable).values({
+        protocol_id: existing.id,
+        removed_by: requesterId,
+        removed_at: new Date(),
+        region_code: existing.region_code,
+        pillar_code: existing.pillar_code,
+        subcategory: existing.subcategory,
+        rule_cc: existing.rule_cc,
+        rule_raw: existing.rule_raw,
+        urgency: existing.urgency,
+        source_book: existing.source_book,
+        source_page: existing.source_page,
+      });
+
+      const [row] = await tx
+        .delete(cultureProtocolsTable)
+        .where(and(
+          eq(cultureProtocolsTable.id, id),
+          sql`source_book IS NOT NULL`,
+          eq(cultureProtocolsTable.verified, true),
+        ))
+        .returning({ id: cultureProtocolsTable.id });
+
+      if (!row) throw new Error("RACE_CONDITION");
+      deletedId = row.id;
+    });
+
+    if (!deletedId) {
+      return res.status(409).json({ error: "Record not found or no longer verified." });
+    }
+
+    return res.json({ ok: true, message: "Verified record permanently removed." });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: failed to delete verified CC protocol");
+    return res.status(500).json({ error: "A difficulty arose deleting the record." });
+  }
+});
+
 // ── Use Cases CRUD ────────────────────────────────────────────────────────────
 
 const UseCaseCreateSchema = z.object({

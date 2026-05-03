@@ -1548,13 +1548,319 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
   );
 }
 
+function VerifiedRecordRow({
+  record,
+  onChanged,
+  onRemoved,
+  onUnverified,
+}: {
+  record: VerifiedCCRecord;
+  onChanged: (updated: Partial<VerifiedCCRecord> & { id: number }) => void;
+  onRemoved: (id: number) => void;
+  onUnverified: (id: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [saveState, setSaveState] = useState<ActionState>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [unverifyState, setUnverifyState] = useState<ActionState>("idle");
+  const [showUnverifyConfirm, setShowUnverifyConfirm] = useState(false);
+  const [deleteState, setDeleteState] = useState<ActionState>("idle");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const [editRuleCc, setEditRuleCc] = useState(record.rule_cc ?? "");
+  const [editSubcategory, setEditSubcategory] = useState(record.subcategory ?? "");
+  const [editUrgency, setEditUrgency] = useState<number>(record.urgency ?? 1);
+  const [editRegionCode, setEditRegionCode] = useState(record.region_code ?? "");
+
+  const [baseline, setBaseline] = useState({
+    rule_cc: record.rule_cc ?? "",
+    subcategory: record.subcategory ?? "",
+    urgency: record.urgency ?? 1,
+    region_code: record.region_code ?? "",
+  });
+
+  const pillarCode = record.pillar_code ?? "";
+  const subcategoryOptions = CC_SUBCATEGORIES[pillarCode] ?? [];
+
+  const isDirty =
+    editRuleCc !== baseline.rule_cc ||
+    editSubcategory !== baseline.subcategory ||
+    editUrgency !== baseline.urgency ||
+    editRegionCode !== baseline.region_code;
+
+  async function handleSave() {
+    setSaveState("loading");
+    setSaveError(null);
+    try {
+      const payload: Record<string, unknown> = {};
+      if (editRuleCc !== baseline.rule_cc) payload.rule_cc = editRuleCc;
+      if (editSubcategory !== baseline.subcategory) payload.subcategory = editSubcategory;
+      if (editUrgency !== baseline.urgency) payload.urgency = editUrgency;
+      if (editRegionCode !== baseline.region_code) payload.region_code = editRegionCode;
+
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const next = { rule_cc: editRuleCc, subcategory: editSubcategory, urgency: editUrgency, region_code: editRegionCode };
+        setBaseline(next);
+        onChanged({ id: record.id, ...next });
+        setSaveState("done");
+        setTimeout(() => setSaveState("idle"), 2000);
+      } else {
+        const data = await res.json().catch(() => ({} as { error?: string }));
+        setSaveError(data.error ?? "Opslaan mislukt.");
+        setSaveState("error");
+        setTimeout(() => setSaveState("idle"), 3000);
+      }
+    } catch {
+      setSaveError("Verbinding mislukt.");
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
+
+  async function handleUnverify() {
+    setUnverifyState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unverify: true }),
+      });
+      if (res.ok) {
+        setUnverifyState("done");
+        setTimeout(() => onUnverified(record.id), 600);
+      } else {
+        setUnverifyState("error");
+        setTimeout(() => setUnverifyState("idle"), 2500);
+      }
+    } catch {
+      setUnverifyState("error");
+      setTimeout(() => setUnverifyState("idle"), 2500);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleteState("loading");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setDeleteState("done");
+        setTimeout(() => onRemoved(record.id), 400);
+      } else {
+        setDeleteState("error");
+        setTimeout(() => setDeleteState("idle"), 2500);
+      }
+    } catch {
+      setDeleteState("error");
+      setTimeout(() => setDeleteState("idle"), 2500);
+    }
+  }
+
+  return (
+    <div className="border border-green-200/60 bg-green-50/20 rounded-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-start gap-3 p-3 text-left hover:bg-muted/20 transition-colors"
+      >
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono font-medium text-foreground">
+              {record.pillar_code ?? "—"} · {editSubcategory || "—"}
+            </span>
+            <UrgencyBadge urgency={editUrgency} />
+            <span className="text-[10px] font-mono text-muted-foreground border border-border/50 px-1.5 py-0.5 rounded-sm">
+              {editRegionCode}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground font-light truncate">
+            {editRuleCc ? editRuleCc.slice(0, 120) + (editRuleCc.length > 120 ? "…" : "") : "—"}
+          </p>
+          <p className="text-[10px] font-mono text-green-700/80">
+            Beoordeeld door <span className="font-semibold">{record.reviewer_name ?? "onbekend"}</span>
+            {record.reviewed_at ? (
+              <> op {new Date(record.reviewed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}</>
+            ) : null}
+          </p>
+        </div>
+        <div className="shrink-0 pt-0.5">
+          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-green-200/40 space-y-3 animate-in fade-in duration-150">
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</label>
+            <textarea
+              value={editRuleCc}
+              onChange={(e) => setEditRuleCc(e.target.value)}
+              rows={3}
+              className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs font-light leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Subcategorie</label>
+              <select
+                value={editSubcategory}
+                onChange={(e) => setEditSubcategory(e.target.value)}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
+              >
+                {subcategoryOptions.length > 0 ? (
+                  subcategoryOptions.map((s) => <option key={s} value={s}>{s}</option>)
+                ) : (
+                  <option value={editSubcategory}>{editSubcategory || "—"}</option>
+                )}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Urgentie</label>
+              <select
+                value={editUrgency}
+                onChange={(e) => setEditUrgency(Number(e.target.value))}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
+              >
+                <option value={1}>1 — Nice-to-know</option>
+                <option value={2}>2 — Belangrijk</option>
+                <option value={3}>3 — Kritisch</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Regiocode</label>
+              <input
+                type="text"
+                value={editRegionCode}
+                onChange={(e) => setEditRegionCode(e.target.value.toUpperCase())}
+                maxLength={10}
+                className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary/40"
+              />
+            </div>
+          </div>
+
+          <div className="text-[10px] font-mono text-muted-foreground space-x-4">
+            <span>ID: {record.id}</span>
+            <span>Bron: {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
+            <span>Toegevoegd: {new Date(record.created_at).toLocaleDateString()}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-green-200/30">
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-mono text-xs gap-1.5"
+              disabled={!isDirty || saveState === "loading" || unverifyState === "loading" || deleteState === "loading"}
+              onClick={handleSave}
+              data-testid={`button-verified-save-${record.id}`}
+            >
+              {saveState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Correctie opslaan
+            </Button>
+            {saveState === "done" && (
+              <span className="text-xs text-green-600 font-mono flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Opgeslagen — vertalingen worden vernieuwd op de achtergrond.
+              </span>
+            )}
+            {saveState === "error" && saveError && (
+              <span className="text-xs text-red-600 font-mono">{saveError}</span>
+            )}
+
+            {!showUnverifyConfirm ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-amber-400/60 text-amber-700 hover:bg-amber-50"
+                disabled={isDirty || saveState === "loading" || unverifyState === "loading" || deleteState === "loading"}
+                title={isDirty ? "Sla eerst je wijzigingen op of annuleer ze" : "Stuur dit record terug naar de wachtrij voor opnieuw te beoordelen"}
+                onClick={() => setShowUnverifyConfirm(true)}
+                data-testid={`button-verified-unverify-${record.id}`}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Terug naar wachtrij
+              </Button>
+            ) : (
+              <div className="flex gap-2 items-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs gap-1.5 border-amber-500 bg-amber-500 text-white hover:bg-amber-600"
+                  disabled={unverifyState === "loading"}
+                  onClick={async () => { setShowUnverifyConfirm(false); await handleUnverify(); }}
+                >
+                  {unverifyState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Bevestig terugzetten
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs"
+                  onClick={() => setShowUnverifyConfirm(false)}
+                >
+                  Annuleren
+                </Button>
+              </div>
+            )}
+
+            {!showDeleteConfirm ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs gap-1.5 border-red-300/60 text-red-600/70 hover:bg-red-50 hover:text-red-700"
+                disabled={saveState === "loading" || unverifyState === "loading" || deleteState === "loading"}
+                onClick={() => setShowDeleteConfirm(true)}
+                data-testid={`button-verified-delete-${record.id}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Verwijderen
+              </Button>
+            ) : (
+              <div className="flex gap-2 items-center">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs gap-1.5 border-red-500 bg-red-600 text-white hover:bg-red-700"
+                  disabled={deleteState === "loading"}
+                  onClick={handleDelete}
+                >
+                  {deleteState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Bevestig verwijdering
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Annuleren
+                </Button>
+              </div>
+            )}
+
+            {unverifyState === "error" && <span className="text-xs text-red-600 font-mono">Terugzetten mislukt.</span>}
+            {deleteState === "error" && <span className="text-xs text-red-600 font-mono">Verwijderen mislukt.</span>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [records, setRecords] = useState<VerifiedCCRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [expanded, setExpanded] = useState<number | null>(null);
 
   const fetchVerified = useCallback(async (p = 1) => {
     setLoading(true);
@@ -1574,39 +1880,52 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
 
   useEffect(() => { fetchVerified(1); }, [fetchVerified]);
 
+  function handleLocalUpdate(updated: Partial<VerifiedCCRecord> & { id: number }) {
+    setRecords((rows) => rows.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)));
+  }
+
+  function handleRemoved(id: number) {
+    const next = records.filter((r) => r.id !== id);
+    const newTotal = Math.max(0, total - 1);
+    setRecords(next);
+    setTotal(newTotal);
+    if (next.length === 0 && newTotal > 0) {
+      fetchVerified(page > 1 ? page - 1 : 1);
+    }
+  }
+
   return (
     <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
-          <BadgeCheck className="w-4 h-4 text-green-600" />
-          Geverifieerde records
-          {total > 0 && (
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-green-300 bg-green-50 text-green-700 font-mono">
-              {total} geverifieerd
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+            <BadgeCheck className="w-4 h-4 text-green-600" />
+            Geverifieerde records
+            <span className="text-[10px] text-muted-foreground/60 font-mono normal-case tracking-normal">
+              · {loading && total === 0 ? "…" : `${total} record${total === 1 ? "" : "s"}`}
             </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground font-light">
-          Goedgekeurde CC-records met informatie over wie en wanneer de review heeft plaatsgevonden.
-        </p>
-
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-mono text-muted-foreground">
-            {loading ? "Laden…" : `${total} geverifieerd record${total !== 1 ? "s" : ""}`}
-          </p>
+          </CardTitle>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="font-mono text-xs gap-1.5"
+            className="font-mono text-xs gap-1.5 h-8 text-muted-foreground hover:text-foreground"
             onClick={() => fetchVerified(page)}
             disabled={loading}
+            data-testid="button-verified-refresh"
+            aria-label="Vernieuwen"
           >
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
             Vernieuwen
           </Button>
         </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground font-light">
+          Goedgekeurde CC-records. Je kunt fouten <span className="font-medium text-foreground/80">corrigeren</span>,
+          een record <span className="font-medium text-foreground/80">terug naar de wachtrij</span> sturen voor herziening,
+          of het volledig <span className="font-medium text-foreground/80">verwijderen</span>.
+          Bij elke tekstcorrectie worden de vertalingen in alle talen automatisch ververst.
+        </p>
 
         {loading && records.length === 0 ? (
           <div className="space-y-2">
@@ -1620,61 +1939,13 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
         ) : (
           <div className="space-y-2">
             {records.map((r) => (
-              <div key={r.id} className="border border-green-200/60 bg-green-50/20 rounded-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setExpanded(expanded === r.id ? null : r.id)}
-                  className="w-full flex items-start gap-3 p-3 text-left hover:bg-muted/20 transition-colors"
-                >
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono font-medium text-foreground">
-                        {r.pillar_code ?? "—"} · {r.subcategory ?? "—"}
-                      </span>
-                      <UrgencyBadge urgency={r.urgency} />
-                      <span className="text-[10px] font-mono text-muted-foreground border border-border/50 px-1.5 py-0.5 rounded-sm">
-                        {r.region_code}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-light truncate">
-                      {r.rule_cc ? r.rule_cc.slice(0, 120) + (r.rule_cc.length > 120 ? "…" : "") : "—"}
-                    </p>
-                    <p className="text-[10px] font-mono text-green-700">
-                      Beoordeeld door{" "}
-                      <span className="font-semibold">{r.reviewer_name ?? "onbekend"}</span>
-                      {r.reviewed_at ? (
-                        <> op {new Date(r.reviewed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}</>
-                      ) : null}
-                    </p>
-                  </div>
-                  <div className="shrink-0 pt-0.5">
-                    {expanded === r.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </div>
-                </button>
-
-                {expanded === r.id && (
-                  <div className="px-3 pb-3 pt-1 border-t border-green-200/40 space-y-2 animate-in fade-in duration-150">
-                    {r.rule_cc && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
-                        <p className="text-xs font-light leading-relaxed bg-muted/30 rounded-sm px-2 py-1.5">{r.rule_cc}</p>
-                      </div>
-                    )}
-                    <div className="text-[10px] font-mono text-muted-foreground space-x-4">
-                      <span>ID: {r.id}</span>
-                      <span>Bron: {r.source_reference ?? `${r.source_book}:${r.source_page}`}</span>
-                      <span>Toegevoegd: {new Date(r.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="text-[10px] font-mono text-green-700 flex items-center gap-1.5 pt-1">
-                      <BadgeCheck className="w-3 h-3" />
-                      Reviewer: <span className="font-semibold">{r.reviewer_name ?? r.reviewed_by ?? "—"}</span>
-                      {r.reviewed_at && (
-                        <> · {new Date(r.reviewed_at).toLocaleString("nl-NL")}</>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <VerifiedRecordRow
+                key={r.id}
+                record={r}
+                onChanged={handleLocalUpdate}
+                onRemoved={handleRemoved}
+                onUnverified={handleRemoved}
+              />
             ))}
           </div>
         )}

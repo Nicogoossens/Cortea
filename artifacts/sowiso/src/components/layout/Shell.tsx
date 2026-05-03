@@ -114,6 +114,28 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador";
   const showUpgradePill = (href: string) => href === "/membership" && !isPremium;
 
+  const tierBadgeClasses: Record<string, string> = {
+    guest:      "bg-stone-500/15 text-stone-600 border-stone-400/30",
+    basic:      "bg-sky-500/15 text-sky-700 border-sky-400/30",
+    student:    "bg-emerald-500/15 text-emerald-700 border-emerald-400/30",
+    traveller:  "bg-indigo-500/15 text-indigo-700 border-indigo-400/30",
+    ambassador: "bg-amber-500/20 text-amber-700 border-amber-400/40",
+    elite:      "bg-violet-500/15 text-violet-700 border-violet-400/40",
+  };
+  const tierBadgeLabel = currentTier.toUpperCase();
+  const tierBadgeClass = tierBadgeClasses[currentTier] ?? tierBadgeClasses.guest;
+  const tierBadgeAria = `${t("nav.tier_label" as Parameters<typeof t>[0]) || "Tier"}: ${tierBadgeLabel}`;
+  const TierBadge = ({ className = "" }: { className?: string }) => (
+    <span
+      data-testid="badge-current-tier"
+      aria-label={tierBadgeAria}
+      title={tierBadgeAria}
+      className={`inline-flex items-center text-[9px] font-mono uppercase tracking-widest rounded-[2px] border px-1.5 py-0.5 leading-none ${tierBadgeClass} ${className}`}
+    >
+      {tierBadgeLabel}
+    </span>
+  );
+
   const MAIN_CONTENT_ID = "main-content";
 
   return (
@@ -136,6 +158,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </span>
           </span>
         </Link>
+        <div className="flex items-center gap-2">
+          <TierBadge />
         <Button
           variant="ghost"
           size="icon"
@@ -147,6 +171,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </Button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -248,12 +273,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
         className="hidden md:flex w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border sticky top-0 h-screen"
         aria-label="Application sidebar"
       >
-        <div className="p-8 flex items-center justify-center border-b border-sidebar-border/50">
+        <div className="p-8 flex flex-col items-center gap-3 border-b border-sidebar-border/50">
           <Link href="/">
             <span className="font-serif text-3xl tracking-widest text-sidebar-primary uppercase cursor-pointer hover:opacity-80 transition-opacity">
               {t("app.name")}
             </span>
           </Link>
+          <TierBadge />
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto" aria-label={t("nav.aria_label")}>

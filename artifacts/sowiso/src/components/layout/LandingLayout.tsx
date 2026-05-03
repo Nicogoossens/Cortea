@@ -4,6 +4,33 @@ import { Globe, ChevronDown, Check } from "lucide-react";
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-locales";
 import { FlagEmoji } from "@/lib/active-region";
+import { useGetProfile } from "@workspace/api-client-react";
+
+const TIER_BADGE_CLASSES: Record<string, string> = {
+  guest:      "bg-stone-500/15 text-stone-600 border-stone-400/30",
+  basic:      "bg-sky-500/15 text-sky-700 border-sky-400/30",
+  student:    "bg-emerald-500/15 text-emerald-700 border-emerald-400/30",
+  traveller:  "bg-indigo-500/15 text-indigo-700 border-indigo-400/30",
+  ambassador: "bg-amber-500/20 text-amber-700 border-amber-400/40",
+  elite:      "bg-violet-500/15 text-violet-700 border-violet-400/40",
+};
+
+function LandingTierBadge() {
+  const { data: profile } = useGetProfile();
+  const tier = (profile?.subscription_tier ?? "guest") as string;
+  const cls = TIER_BADGE_CLASSES[tier] ?? TIER_BADGE_CLASSES.guest;
+  const label = tier.toUpperCase();
+  return (
+    <span
+      data-testid="badge-current-tier-landing"
+      aria-label={`Tier: ${label}`}
+      title={`Tier: ${label}`}
+      className={`inline-flex items-center text-[9px] font-mono uppercase tracking-widest rounded-[2px] border px-1.5 py-0.5 leading-none ${cls}`}
+    >
+      {label}
+    </span>
+  );
+}
 
 function LandingLanguageSwitcher() {
   const { locale, setLocale, t } = useLanguage();
@@ -130,6 +157,7 @@ export function LandingLayout({
         )}
 
         <div className="flex items-center gap-4">
+          <LandingTierBadge />
           <LandingLanguageSwitcher />
           {authLink !== null && (
             <>

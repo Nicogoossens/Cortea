@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}} aún no está en sus intereses",
   "atelier.track.region_locked_desc": "Añada {{region}} a sus países de interés para estudiar su etiqueta.",
   "atelier.track.region_locked_cta": "Gestionar países de interés",
-  "nav.tier_label": "Nivel"
+  "nav.tier_label": "Nivel",
+  "atelier.track.cooldown_title": "Una breve pausa para reflexionar",
+  "atelier.track.cooldown_desc": "Tómese un respiro. La próxima sesión se abre en unos {{minutes}} minuto(s).",
+  "atelier.track.daily_limit_title": "Su práctica de hoy ha terminado",
+  "atelier.track.daily_limit_desc": "Ha completado {{sessions}}/{{limit}} sesiones hoy. Continúe mañana con una mirada fresca.",
+  "atelier.track.session_failed": "Esta sesión necesita otro intento",
+  "atelier.track.session_in_progress": "Sesión en curso",
+  "atelier.track.session_passed": "Sesión superada",
+  "atelier.track.session_passed_level_up": "Promovido al nivel {{level}}",
+  "atelier.track.session_remediation_title": "Momento de repaso",
+  "atelier.track.session_next_continue": "Continúe en el mismo nivel.",
+  "atelier.track.session_next_keep_going": "Siga adelante para terminar esta sesión.",
+  "atelier.track.session_next_level_up": "Ha ganado el siguiente nivel — inicie una nueva sesión.",
+  "atelier.track.session_next_remediation": "Repase los fundamentos con una sesión de repaso.",
+  "atelier.track.start_next_session": "Iniciar siguiente sesión",
+  "atelier.track.start_remediation": "Iniciar repaso"
 }

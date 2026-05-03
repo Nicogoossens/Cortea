@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}} ne fait pas encore partie de vos intérêts",
   "atelier.track.region_locked_desc": "Ajoutez {{region}} à vos pays d'intérêt pour étudier son étiquette.",
   "atelier.track.region_locked_cta": "Gérer mes pays d'intérêt",
-  "nav.tier_label": "Niveau"
+  "nav.tier_label": "Niveau",
+  "atelier.track.cooldown_title": "Une courte pause pour la réflexion",
+  "atelier.track.cooldown_desc": "Prenez le temps de respirer. La prochaine session s'ouvre dans environ {{minutes}} minute(s).",
+  "atelier.track.daily_limit_title": "Votre pratique d'aujourd'hui est terminée",
+  "atelier.track.daily_limit_desc": "Vous avez terminé {{sessions}}/{{limit}} sessions aujourd'hui. Reprenez demain avec un regard neuf.",
+  "atelier.track.session_failed": "Cette session demande une nouvelle tentative",
+  "atelier.track.session_in_progress": "Session en cours",
+  "atelier.track.session_passed": "Session réussie",
+  "atelier.track.session_passed_level_up": "Promu au niveau {{level}}",
+  "atelier.track.session_remediation_title": "Le moment de la révision",
+  "atelier.track.session_next_continue": "Continuez au même niveau.",
+  "atelier.track.session_next_keep_going": "Continuez pour terminer cette session.",
+  "atelier.track.session_next_level_up": "Vous avez gagné le niveau suivant — démarrez une nouvelle session.",
+  "atelier.track.session_next_remediation": "Revoyez les bases avec une session de révision.",
+  "atelier.track.start_next_session": "Démarrer la session suivante",
+  "atelier.track.start_remediation": "Démarrer la révision"
 }

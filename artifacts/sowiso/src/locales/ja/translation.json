@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}}はまだ興味リストに含まれていません",
   "atelier.track.region_locked_desc": "{{region}}を興味のある国に追加して、その国のエチケットを学びましょう。",
   "atelier.track.region_locked_cta": "興味のある国を管理",
-  "nav.tier_label": "ティア"
+  "nav.tier_label": "ティア",
+  "atelier.track.cooldown_title": "短い内省のひととき",
+  "atelier.track.cooldown_desc": "ひと呼吸おきましょう。次のセッションは約{{minutes}}分後に開きます。",
+  "atelier.track.daily_limit_title": "本日の稽古は完了しました",
+  "atelier.track.daily_limit_desc": "本日は{{sessions}}/{{limit}}セッションを修了しました。明日、新たな視点で続けましょう。",
+  "atelier.track.session_failed": "このセッションはもう一度挑戦が必要です",
+  "atelier.track.session_in_progress": "セッション進行中",
+  "atelier.track.session_passed": "セッション合格",
+  "atelier.track.session_passed_level_up": "レベル{{level}}に昇級しました",
+  "atelier.track.session_remediation_title": "復習の時間",
+  "atelier.track.session_next_continue": "同じレベルで続けてください。",
+  "atelier.track.session_next_keep_going": "このセッションを最後までお進めください。",
+  "atelier.track.session_next_level_up": "次のレベルを獲得しました — 新しいセッションを始めましょう。",
+  "atelier.track.session_next_remediation": "復習セッションで基礎を見直しましょう。",
+  "atelier.track.start_next_session": "次のセッションを開始",
+  "atelier.track.start_remediation": "復習を開始"
 }

@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}} gehört noch nicht zu Ihren Interessen",
   "atelier.track.region_locked_desc": "Fügen Sie {{region}} Ihren Länderinteressen hinzu, um die Etikette zu studieren.",
   "atelier.track.region_locked_cta": "Länderinteressen verwalten",
-  "nav.tier_label": "Stufe"
+  "nav.tier_label": "Stufe",
+  "atelier.track.cooldown_title": "Eine kurze Pause zum Nachdenken",
+  "atelier.track.cooldown_desc": "Atmen Sie durch. Die nächste Sitzung öffnet in etwa {{minutes}} Minute(n).",
+  "atelier.track.daily_limit_title": "Ihre heutige Übung ist abgeschlossen",
+  "atelier.track.daily_limit_desc": "Sie haben heute {{sessions}}/{{limit}} Sitzungen absolviert. Setzen Sie morgen mit frischem Blick fort.",
+  "atelier.track.session_failed": "Diese Sitzung braucht einen weiteren Versuch",
+  "atelier.track.session_in_progress": "Sitzung läuft",
+  "atelier.track.session_passed": "Sitzung bestanden",
+  "atelier.track.session_passed_level_up": "Auf Stufe {{level}} befördert",
+  "atelier.track.session_remediation_title": "Zeit für Wiederholung",
+  "atelier.track.session_next_continue": "Auf demselben Niveau fortfahren.",
+  "atelier.track.session_next_keep_going": "Bringen Sie die Sitzung zu Ende.",
+  "atelier.track.session_next_level_up": "Sie haben die nächste Stufe verdient — starten Sie eine neue Sitzung.",
+  "atelier.track.session_next_remediation": "Frischen Sie die Grundlagen mit einer Wiederholungssitzung auf.",
+  "atelier.track.start_next_session": "Nächste Sitzung starten",
+  "atelier.track.start_remediation": "Wiederholung starten"
 }

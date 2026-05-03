@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}} ليست ضمن اهتماماتك بعد",
   "atelier.track.region_locked_desc": "أضِف {{region}} إلى بلدان اهتمامك لدراسة آدابها.",
   "atelier.track.region_locked_cta": "إدارة بلدان الاهتمام",
-  "nav.tier_label": "المستوى"
+  "nav.tier_label": "المستوى",
+  "atelier.track.cooldown_title": "فترة قصيرة للتأمل",
+  "atelier.track.cooldown_desc": "خذ نفساً عميقاً. تُفتح الجلسة التالية خلال {{minutes}} دقيقة تقريباً.",
+  "atelier.track.daily_limit_title": "اكتمل تدريب اليوم",
+  "atelier.track.daily_limit_desc": "أنجزت {{sessions}}/{{limit}} جلسات اليوم. تابع غداً بنظرة منعشة.",
+  "atelier.track.session_failed": "تحتاج هذه الجلسة إلى محاولة أخرى",
+  "atelier.track.session_in_progress": "الجلسة قيد التقدّم",
+  "atelier.track.session_passed": "اجتزت الجلسة",
+  "atelier.track.session_passed_level_up": "تمت ترقيتك إلى المستوى {{level}}",
+  "atelier.track.session_remediation_title": "وقت المراجعة",
+  "atelier.track.session_next_continue": "تابع على المستوى نفسه.",
+  "atelier.track.session_next_keep_going": "استمر لإكمال هذه الجلسة.",
+  "atelier.track.session_next_level_up": "حققت المستوى التالي — ابدأ جلسة جديدة.",
+  "atelier.track.session_next_remediation": "راجع الأساسيات بجلسة مراجعة.",
+  "atelier.track.start_next_session": "ابدأ الجلسة التالية",
+  "atelier.track.start_remediation": "ابدأ المراجعة"
 }

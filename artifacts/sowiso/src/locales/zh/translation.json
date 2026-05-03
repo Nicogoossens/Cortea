@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}}尚未列入您的兴趣",
   "atelier.track.region_locked_desc": "将{{region}}添加到您的兴趣国家,即可开始学习其礼仪。",
   "atelier.track.region_locked_cta": "管理兴趣国家",
-  "nav.tier_label": "等级"
+  "nav.tier_label": "等级",
+  "atelier.track.cooldown_title": "短暂的沉思间歇",
+  "atelier.track.cooldown_desc": "请稍作休息。下一个练习将在约{{minutes}}分钟后开放。",
+  "atelier.track.daily_limit_title": "今日的练习已完成",
+  "atelier.track.daily_limit_desc": "您今日已完成{{sessions}}/{{limit}}次练习。明日以全新视角继续。",
+  "atelier.track.session_failed": "本次练习需要再尝试一次",
+  "atelier.track.session_in_progress": "练习进行中",
+  "atelier.track.session_passed": "练习通过",
+  "atelier.track.session_passed_level_up": "已晋升至第{{level}}级",
+  "atelier.track.session_remediation_title": "复习时间",
+  "atelier.track.session_next_continue": "在同一级别继续。",
+  "atelier.track.session_next_keep_going": "继续完成此练习。",
+  "atelier.track.session_next_level_up": "您已获得下一级 — 开始新的练习。",
+  "atelier.track.session_next_remediation": "通过复习练习巩固基础。",
+  "atelier.track.start_next_session": "开始下一个练习",
+  "atelier.track.start_remediation": "开始复习"
 }

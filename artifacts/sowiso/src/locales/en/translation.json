@@ -1185,5 +1185,20 @@
   "atelier.track.region_locked_title": "{{region}} is not yet in your interests",
   "atelier.track.region_locked_desc": "Add {{region}} to your country interests to begin studying its etiquette.",
   "atelier.track.region_locked_cta": "Manage country interests",
-  "nav.tier_label": "Tier"
+  "nav.tier_label": "Tier",
+  "atelier.track.cooldown_title": "A short pause for reflection",
+  "atelier.track.cooldown_desc": "Take a breath. The next session opens in about {{minutes}} minute(s).",
+  "atelier.track.daily_limit_title": "Today's practice is complete",
+  "atelier.track.daily_limit_desc": "You've finished {{sessions}}/{{limit}} sessions today. Continue tomorrow with a fresh perspective.",
+  "atelier.track.session_failed": "This session needs another pass",
+  "atelier.track.session_in_progress": "Session in progress",
+  "atelier.track.session_passed": "Session passed",
+  "atelier.track.session_passed_level_up": "Promoted to level {{level}}",
+  "atelier.track.session_remediation_title": "Time for remediation",
+  "atelier.track.session_next_continue": "Continue at the same level.",
+  "atelier.track.session_next_keep_going": "Keep going to finish this session.",
+  "atelier.track.session_next_level_up": "You've earned the next level — start a new session.",
+  "atelier.track.session_next_remediation": "Revisit the basics with a remediation session.",
+  "atelier.track.start_next_session": "Start next session",
+  "atelier.track.start_remediation": "Start remediation"
 }

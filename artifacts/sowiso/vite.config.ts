@@ -29,6 +29,7 @@ function syncLocales(): Plugin {
   }
 
   function syncFile(file: string) {
+    if (!file.startsWith(srcDir)) return;
     const rel = path.relative(srcDir, file);
     const dest = path.join(destDir, rel);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -36,19 +37,20 @@ function syncLocales(): Plugin {
   }
 
   function removeFile(file: string) {
+    if (!file.startsWith(srcDir)) return;
     const rel = path.relative(srcDir, file);
     const dest = path.join(destDir, rel);
-    try { fs.rmSync(dest, { recursive: true }); } catch { /* already gone */ }
+    try { fs.rmSync(dest, { recursive: true, force: true }); } catch { /* already gone */ }
   }
 
   return {
     name: "sync-locales",
     buildStart() {
-      if (fs.existsSync(destDir)) fs.rmSync(destDir, { recursive: true });
+      if (fs.existsSync(destDir)) fs.rmSync(destDir, { recursive: true, force: true });
       copyDir(srcDir, destDir);
     },
     configureServer(server) {
-      if (fs.existsSync(destDir)) fs.rmSync(destDir, { recursive: true });
+      if (fs.existsSync(destDir)) fs.rmSync(destDir, { recursive: true, force: true });
       copyDir(srcDir, destDir);
       server.watcher.add(srcDir);
       server.watcher.on("change", syncFile);

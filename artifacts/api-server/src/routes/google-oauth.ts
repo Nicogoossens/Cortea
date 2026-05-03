@@ -1,13 +1,17 @@
 /**
  * Google OAuth 2.0 via OpenID Connect (PKCE)
  *
- * Required environment variables:
+ * Required environment variables (set as Replit secrets):
  *   GOOGLE_CLIENT_ID     — OAuth 2.0 Client ID from Google Cloud Console
  *   GOOGLE_CLIENT_SECRET — OAuth 2.0 Client Secret from Google Cloud Console
  *
- * Redirect URI to register in Google Cloud Console:
- *   https://sowiso-01.replit.app/api/auth/google/callback
- *   (and the Replit dev domain during development)
+ * Redirect URIs to register in Google Cloud Console (Web application type):
+ *   Production: https://sowiso-01.replit.app/api/auth/google/callback
+ *   Development: https://56840555-1cfa-43bc-a3b6-882efd178da0-00-2g9a62dbputmc-u4w0ra8p.worf.replit.dev/api/auth/google/callback
+ *
+ * Status: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured.
+ * The /api/auth/google/status endpoint returns {"configured":true}.
+ * The Google sign-in button on /signin is active (no "coming soon" badge).
  */
 import * as oidc from "openid-client";
 import { Router, type IRouter, type Request, type Response } from "express";

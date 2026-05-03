@@ -495,6 +495,103 @@ export async function sendWaitlistInvitationEmail(opts: SendWaitlistInvitationOp
   return { sent: false };
 }
 
+export interface SendFounderWelcomeOptions {
+  to: string;
+  name: string;
+  founderCode: string;
+  locale?: string;
+}
+
+/**
+ * Sent immediately after a waitlist user successfully registers an account.
+ * Reminds them their Founding 100 perk (one month of The Traveller free) is
+ * waiting and shows the personal founder code that will be auto-applied at
+ * Stripe checkout.
+ */
+export async function sendFounderWelcomeEmail(opts: SendFounderWelcomeOptions): Promise<{ sent: boolean }> {
+  const lang = (["en", "nl", "fr", "de", "es"].includes(opts.locale ?? "") ? opts.locale : "en") as "en" | "nl" | "fr" | "de" | "es";
+
+  const subjects: Record<typeof lang, string> = {
+    en: "Welcome to Cortéa — your Founding 100 perk is ready",
+    nl: "Welkom bij Cortéa — uw Founding 100 voordeel staat klaar",
+    fr: "Bienvenue chez Cortéa — votre avantage 100 fondateurs est prêt",
+    de: "Willkommen bei Cortéa — Ihr Founding 100 Vorteil ist bereit",
+    es: "Bienvenido a Cortéa — su ventaja de los 100 fundadores está lista",
+  };
+  const greeting: Record<typeof lang, string> = {
+    en: `Dear ${opts.name},`, nl: `Beste ${opts.name},`,
+    fr: `Cher ${opts.name},`, de: `Liebe(r) ${opts.name},`, es: `Estimado ${opts.name},`,
+  };
+  const body: Record<typeof lang, string> = {
+    en: "Welcome to Cortéa. As a member of the Founding 100, your reserved perk — one month of The Traveller, complimentary — is waiting for you. Use the founder code below at checkout, or simply proceed to the membership page where it will be applied automatically.",
+    nl: "Welkom bij Cortéa. Als lid van de Founding 100 staat uw voordeel klaar — één maand The Traveller cadeau. Gebruik de foundercode hieronder bij de checkout, of ga gewoon naar de lidmaatschapspagina waar deze automatisch wordt toegepast.",
+    fr: "Bienvenue chez Cortéa. En tant que membre des 100 fondateurs, votre avantage est prêt — un mois de The Traveller offert. Utilisez le code fondateur ci-dessous au paiement, ou rendez-vous simplement sur la page d'adhésion où il sera appliqué automatiquement.",
+    de: "Willkommen bei Cortéa. Als Mitglied der Founding 100 wartet Ihr Vorteil auf Sie — ein Monat The Traveller geschenkt. Verwenden Sie den Founder-Code unten beim Checkout oder besuchen Sie einfach die Mitgliedschaftsseite, wo er automatisch angewandt wird.",
+    es: "Bienvenido a Cortéa. Como miembro de los 100 fundadores, su ventaja está lista — un mes de The Traveller gratis. Use el código de fundador a continuación en el pago, o simplemente vaya a la página de membresía donde se aplicará automáticamente.",
+  };
+  const codeLabel: Record<typeof lang, string> = {
+    en: "Your founder code", nl: "Uw foundercode", fr: "Votre code fondateur",
+    de: "Ihr Founder-Code", es: "Su código de fundador",
+  };
+  const cta: Record<typeof lang, string> = {
+    en: "Claim My Free Month", nl: "Claim Mijn Gratis Maand",
+    fr: "Réclamer Mon Mois Gratuit", de: "Meinen Gratismonat Einlösen", es: "Reclamar Mi Mes Gratis",
+  };
+  const footer: Record<typeof lang, string> = {
+    en: "The art of conduct, since 2024.", nl: "De kunst van gedrag, sinds 2024.",
+    fr: "L'art de la conduite, depuis 2024.", de: "Die Kunst des Benehmens, seit 2024.",
+    es: "El arte de la conducta, desde 2024.",
+  };
+
+  const url = `${APP_URL}/membership`;
+
+  const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="UTF-8" /><title>${subjects[lang]}</title></head>
+<body style="margin:0;background:#f5f0eb;font-family:Georgia,'Times New Roman',serif;color:#2c2c2c;">
+  <div style="max-width:600px;margin:40px auto;background:#fffdf9;border:1px solid #e8e0d5;">
+    <div style="background:#1a2e1a;padding:40px 48px;text-align:center;">
+      <div style="color:#f0ebe3;font-size:28px;letter-spacing:0.2em;text-transform:uppercase;">Cortéa</div>
+      <div style="color:#8fa88f;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;margin-top:6px;font-family:'Courier New',monospace;">${footer[lang]}</div>
+    </div>
+    <div style="padding:48px;">
+      <p style="font-size:18px;color:#1a2e1a;margin-bottom:20px;font-style:italic;">${greeting[lang]}</p>
+      <p style="font-size:15px;line-height:1.8;color:#4a4a4a;">${body[lang]}</p>
+      <div style="text-align:center;margin:32px 0;">
+        <p style="font-size:11px;color:#8a8a8a;letter-spacing:0.2em;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${codeLabel[lang]}</p>
+        <div style="display:inline-block;background:#1a2e1a;color:#f0ebe3;padding:18px 36px;font-family:'Courier New',monospace;font-size:22px;letter-spacing:0.15em;">${opts.founderCode}</div>
+      </div>
+      <div style="text-align:center;margin:36px 0;">
+        <a href="${url}" style="display:inline-block;background:#1a2e1a;color:#f0ebe3;text-decoration:none;padding:14px 40px;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;font-family:'Courier New',monospace;">${cta[lang]}</a>
+      </div>
+    </div>
+    <div style="background:#f5f0eb;padding:24px 48px;text-align:center;border-top:1px solid #e8e0d5;">
+      <p style="font-size:11px;color:#9a9a9a;letter-spacing:0.15em;text-transform:uppercase;font-family:'Courier New',monospace;">Cortéa &mdash; ${footer[lang]}</p>
+    </div>
+  </div>
+</body></html>`;
+
+  const mailOptions = { from: `"${FROM_NAME}" <${FROM_ADDRESS}>`, to: opts.to, subject: subjects[lang], html };
+  const transport = createTransport();
+  if (transport) {
+    try {
+      await transport.sendMail(mailOptions);
+      logger.info({ to: opts.to }, "Founder welcome email sent");
+      return { sent: true };
+    } catch (err) {
+      logger.error({ err, to: opts.to }, "Failed to send founder welcome email");
+      throw err;
+    }
+  }
+  logger.warn({ to: opts.to, code: opts.founderCode }, "SMTP not configured — founder welcome email not delivered (logged only)");
+  console.log("\n" + "=".repeat(70));
+  console.log("  CORTÉA FOUNDER WELCOME EMAIL (SMTP not configured)");
+  console.log("=".repeat(70));
+  console.log(`  To:      ${opts.to}`);
+  console.log(`  Subject: ${subjects[lang]}`);
+  console.log(`  Code:    ${opts.founderCode}`);
+  console.log("=".repeat(70) + "\n");
+  return { sent: false };
+}
+
 export async function sendActivationEmail({
   to,
   token,

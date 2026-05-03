@@ -4,7 +4,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, ArrowRight, Crown, Globe, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { Check, ArrowRight, Crown, Globe, Sparkles, Loader2, CheckCircle2, Star } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
@@ -165,6 +165,8 @@ export default function Membership() {
   }, []);
 
   const currentTier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
+  const isFoundingMember = !!(profile as { is_founding_member?: boolean } | undefined)?.is_founding_member;
+  const founderCode = (profile as { founder_code?: string | null } | undefined)?.founder_code ?? null;
 
   const handleCheckout = async (priceId: string | null, tier: SubscriptionTier) => {
     if (!priceId) return;
@@ -291,6 +293,29 @@ export default function Membership() {
           }
         ]}
       />
+
+      {isFoundingMember && currentTier === "guest" && (
+        <div
+          className="flex items-start gap-3 px-5 py-4 bg-[#9b7c4a]/5 border border-[#9b7c4a]/30 rounded-sm"
+          role="status"
+          data-testid="founding-member-notice"
+        >
+          <Star className="h-4 w-4 text-[#9b7c4a] shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="text-sm text-foreground font-light">
+              {t(
+                "membership.founding_member_notice",
+                "Founding member — 1 month free at checkout.",
+              )}
+            </p>
+            {founderCode && (
+              <p className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                {t("membership.founding_member_code_label", "Your code")}: <span className="text-foreground">{founderCode}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {upgradeSuccess && (
         <div className="flex items-center gap-3 px-5 py-4 bg-primary/5 border border-primary/20 rounded-sm" role="status">

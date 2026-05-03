@@ -5,8 +5,29 @@ import { eq, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
-import { sendActivationEmail, sendPasswordResetEmail } from "../lib/email";
+import { sendActivationEmail, sendPasswordResetEmail, sendFounderWelcomeEmail } from "../lib/email";
 import { extractToken, setSessionCookie, clearSessionCookie } from "../lib/auth-middleware";
+import { getFounderCodeForEmail } from "./waitlist";
+
+/**
+ * Fire-and-log helper: if the newly registered/verified email matches an
+ * unredeemed Founding 100 waitlist signup, send the welcome email surfacing
+ * the personal founder code so the user knows their free month is waiting.
+ */
+async function maybeSendFounderWelcome(req: { log: { error: (o: object, m: string) => void } }, email: string, name: string | null, locale: string | null) {
+  try {
+    const code = await getFounderCodeForEmail(email);
+    if (!code) return;
+    await sendFounderWelcomeEmail({
+      to: email,
+      name: name ?? "guest",
+      founderCode: code,
+      locale: locale ?? "en",
+    });
+  } catch (err) {
+    req.log.error({ err, email }, "Failed to send founder welcome email");
+  }
+}
 
 const router = Router();
 
@@ -94,6 +115,7 @@ router.post("/auth/register", async (req, res) => {
           .where(eq(usersTable.id, existing[0].id));
 
         setSessionCookie(res, sessionToken);
+        await maybeSendFounderWelcome(req, normalizedEmail, full_name, existing[0].language_code ?? language_code);
         return res.json({
           message: "Your account has been activated.",
           user_id: existing[0].id,
@@ -129,6 +151,7 @@ router.post("/auth/register", async (req, res) => {
         .returning();
 
       setSessionCookie(res, sessionToken);
+      await maybeSendFounderWelcome(req, normalizedEmail, full_name, language_code);
       return res.status(201).json({
         message: "Your account has been established. Welcome to Cortéa.",
         user_id: newUser.id,
@@ -281,6 +304,9 @@ router.get("/auth/verify", async (req, res) => {
       .where(eq(usersTable.id, user.id));
 
     setSessionCookie(res, sessionToken);
+    if (user.email) {
+      await maybeSendFounderWelcome(req, user.email, user.full_name, user.language_code);
+    }
     return res.json({
       message: "Your address has been verified. Welcome to Cortéa.",
       user_id: user.id,

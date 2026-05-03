@@ -4,6 +4,7 @@ import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInteres
 import { eq, and, or, ne, desc, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { getFounderCodeForEmail } from "./waitlist";
 
 const router = Router();
 
@@ -47,11 +48,18 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
     }
 
     const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = user;
+
+    // Surface unredeemed Founding 100 status so the membership UI can show
+    // a "Founding member — 1 month free at checkout" notice for matched users.
+    const founderCode = await getFounderCodeForEmail(user.email);
+
     return res.json({
       ...safeUser,
       age_group: computeAgeGroup(user.birth_year, user.noble_score),
       gender: user.gender_identity ?? null,
       privacy_settings: user.privacy_settings ?? null,
+      is_founding_member: !!founderCode,
+      founder_code: founderCode,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch user profile");

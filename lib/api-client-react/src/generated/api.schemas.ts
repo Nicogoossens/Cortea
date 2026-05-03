@@ -68,6 +68,10 @@ export interface UserProfile {
    * @maxLength 100
    */
   calling_card_tagline?: string | null;
+  /** True when the user's email matches an unredeemed Founding 100 waitlist signup */
+  is_founding_member?: boolean;
+  /** The user's unredeemed Founding 100 code, if any */
+  founder_code?: string | null;
 }
 
 export type CreateProfileBodyAmbitionLevel =

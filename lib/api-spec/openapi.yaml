@@ -820,6 +820,13 @@ components:
           nullable: true
           maxLength: 100
           description: Optional personalised tagline shown on the Ambassador's Digital Calling Card
+        is_founding_member:
+          type: boolean
+          description: True when the user's email matches an unredeemed Founding 100 waitlist signup
+        founder_code:
+          type: string
+          nullable: true
+          description: The user's unredeemed Founding 100 code, if any
       required:
         - id
         - email_verified

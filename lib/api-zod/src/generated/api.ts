@@ -67,6 +67,16 @@ export const GetProfileResponse = zod.object({
     .describe(
       "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
     ),
+  is_founding_member: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the user's email matches an unredeemed Founding 100 waitlist signup",
+    ),
+  founder_code: zod
+    .string()
+    .nullish()
+    .describe("The user's unredeemed Founding 100 code, if any"),
 });
 
 /**
@@ -123,6 +133,16 @@ export const CreateProfileResponse = zod.object({
     .describe(
       "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
     ),
+  is_founding_member: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the user's email matches an unredeemed Founding 100 waitlist signup",
+    ),
+  founder_code: zod
+    .string()
+    .nullish()
+    .describe("The user's unredeemed Founding 100 code, if any"),
 });
 
 /**
@@ -189,6 +209,16 @@ export const UpdateProfileResponse = zod.object({
     .describe(
       "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
     ),
+  is_founding_member: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the user's email matches an unredeemed Founding 100 waitlist signup",
+    ),
+  founder_code: zod
+    .string()
+    .nullish()
+    .describe("The user's unredeemed Founding 100 code, if any"),
 });
 
 /**
@@ -253,6 +283,16 @@ export const PatchProfilePreferencesResponse = zod.object({
     .describe(
       "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
     ),
+  is_founding_member: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the user's email matches an unredeemed Founding 100 waitlist signup",
+    ),
+  founder_code: zod
+    .string()
+    .nullish()
+    .describe("The user's unredeemed Founding 100 code, if any"),
 });
 
 /**
@@ -311,6 +351,16 @@ export const UpdateActiveRegionResponse = zod.object({
     .describe(
       "Optional personalised tagline shown on the Ambassador's Digital Calling Card",
     ),
+  is_founding_member: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True when the user's email matches an unredeemed Founding 100 waitlist signup",
+    ),
+  founder_code: zod
+    .string()
+    .nullish()
+    .describe("The user's unredeemed Founding 100 code, if any"),
 });
 
 /**

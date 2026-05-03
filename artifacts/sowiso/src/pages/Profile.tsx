@@ -1385,6 +1385,7 @@ export default function Profile() {
         title={t("profile.interests_title")}
         icon={<Target className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.interests_subtitle")}
+        storageKey="interests"
       >
         <CardContent className="space-y-6">
 
@@ -1452,6 +1453,7 @@ export default function Profile() {
       <CollapsibleSection
         title={t("profile.culinary_interests_label")}
         icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        storageKey="culinary"
       >
         <CardContent>
           <InterestSelector
@@ -1475,6 +1477,7 @@ export default function Profile() {
         title={t("profile.spheres_title")}
         icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.spheres_subtitle")}
+        storageKey="spheres"
       >
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -1514,6 +1517,7 @@ export default function Profile() {
         title={t("profile.countries_interest_title", "Countries you're learning")}
         icon={<Globe className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.countries_interest_subtitle", "Track several cultures in parallel — each one keeps its own progress.")}
+        storageKey="countries"
       >
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -2176,24 +2180,43 @@ function InterestSelector({
  * Starts collapsed (isOpen = false) and resets to collapsed on next page load.
  */
 function CollapsibleSection({
-  title, icon, description, className, children,
+  title, icon, description, className, storageKey, children,
 }: {
   title: string;
   icon?: React.ReactNode;
   description?: string;
   className?: string;
+  storageKey?: string;
   children: React.ReactNode;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    if (!storageKey) return false;
+    try {
+      const stored = localStorage.getItem(`profile_section_${storageKey}`);
+      return stored === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  function toggle() {
+    setIsOpen((v) => {
+      const next = !v;
+      if (storageKey) {
+        try { localStorage.setItem(`profile_section_${storageKey}`, String(next)); } catch { /* noop */ }
+      }
+      return next;
+    });
+  }
   return (
     <Card className={`bg-card border-border shadow-sm ${className ?? ""}`}>
       <CardHeader
         className="pb-3 cursor-pointer select-none"
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={toggle}
         role="button"
         tabIndex={0}
         aria-expanded={isOpen}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsOpen((v) => !v); } }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
       >
         <div className="flex items-center justify-between">
           <CardTitle className="font-serif text-lg flex items-center gap-2">
@@ -2547,6 +2570,7 @@ function PasswordSection() {
       title={t("profile.password_title")}
       icon={<KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />}
       description={t("profile.password_desc")}
+      storageKey="password"
     >
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-w-sm" noValidate>

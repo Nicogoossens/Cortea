@@ -4015,6 +4015,152 @@ function IntegrationsPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Google Tag Manager */}
+      <GtmIntegrationCard />
     </div>
+  );
+}
+
+function GtmIntegrationCard() {
+  const gtmId = (import.meta.env.VITE_GTM_ID as string | undefined)?.trim();
+  const isPlaceholder = !gtmId || gtmId === "%VITE_GTM_ID%" || gtmId.toLowerCase() === "undefined";
+  const looksValid = !!gtmId && /^GTM-[A-Z0-9]+$/i.test(gtmId);
+  const status: "configured" | "invalid" | "not_configured" = isPlaceholder
+    ? "not_configured"
+    : looksValid
+      ? "configured"
+      : "invalid";
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 shrink-0" />
+          Google Tag Manager
+          <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-mono ${
+            status === "configured"
+              ? "border border-green-300 bg-green-50 text-green-700"
+              : status === "invalid"
+                ? "border border-red-300 bg-red-50 text-red-700"
+                : "border border-amber-300 bg-amber-50 text-amber-700"
+          }`}>
+            {status === "configured" ? "Geconfigureerd" : status === "invalid" ? "Ongeldig ID" : "Niet geconfigureerd"}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {status === "configured" ? (
+          <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
+            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-green-800">Tag Manager is actief</p>
+              <p className="text-xs text-green-700/80 mt-1 font-light">
+                Container ID <code className="font-mono">{gtmId}</code> is ingesteld. Pageviews worden naar GTM gestuurd.
+              </p>
+            </div>
+          </div>
+        ) : status === "invalid" ? (
+          <div className="flex items-start gap-3 p-4 border border-red-200 bg-red-50/60 rounded-sm">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-red-800">Container ID lijkt ongeldig</p>
+              <p className="text-xs text-red-700/80 mt-1 font-light">
+                Verwacht formaat <code className="font-mono">GTM-XXXXXXX</code>, gevonden <code className="font-mono">{gtmId}</code>.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-amber-800">Configuratie vereist</p>
+              <p className="text-xs text-amber-700/80 mt-1 font-light">
+                Stel <code className="font-mono">VITE_GTM_ID</code> in als Replit Secret om analytics te activeren.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+          <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
+              <span>
+                Ga naar{" "}
+                <a href="https://tagmanager.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
+                  tagmanager.google.com
+                </a>{" "}
+                en log in met je Google-account.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
+              <span>
+                Klik op <strong className="text-foreground">Account aanmaken</strong>. Vul de accountnaam in (bv. <em>SOWISO</em>) en kies een land.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
+              <div className="space-y-1 flex-1">
+                <span>Maak een container aan met:</span>
+                <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground/90 list-disc list-inside">
+                  <li>Containernaam: <code className="font-mono">sowiso-01.replit.app</code> (of je eigen domein)</li>
+                  <li>Doelplatform: <strong className="text-foreground">Web</strong></li>
+                </ul>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
+              <span>
+                Accepteer de servicevoorwaarden. Je krijgt nu een <strong className="text-foreground">Container ID</strong> te zien in het formaat <code className="font-mono">GTM-XXXXXXX</code>. Kopieer deze.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">5</span>
+              <div className="space-y-1 flex-1">
+                <span>Voeg de container ID toe als Replit Secret:</span>
+                <div className="mt-2 flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
+                  <code className="text-xs font-mono text-foreground/80 flex-1">VITE_GTM_ID</code>
+                  <span className="text-[10px] text-muted-foreground/60">= GTM-XXXXXXX</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground/70 mt-1">
+                  Open in Replit het tabblad <strong className="text-foreground">Secrets</strong> en voeg een nieuwe sleutel toe met deze naam en jouw container ID als waarde.
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">6</span>
+              <span>
+                Herstart de <code className="font-mono">web</code> workflow zodat Vite de nieuwe variabele oppikt. Controleer daarna in GTM via <strong className="text-foreground">Preview</strong> of pageviews binnenkomen.
+              </span>
+            </li>
+          </ol>
+        </div>
+
+        <div className="border-t border-border/40 pt-4">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
+            <div>
+              <span className="font-medium text-foreground/70 block mb-0.5">Snippet locatie</span>
+              <code className="font-mono text-[11px]">artifacts/sowiso/index.html</code>
+            </div>
+            <div>
+              <span className="font-medium text-foreground/70 block mb-0.5">Env variabele</span>
+              <code className="font-mono text-[11px]">VITE_GTM_ID</code>
+            </div>
+            <div>
+              <span className="font-medium text-foreground/70 block mb-0.5">Huidige waarde</span>
+              <code className="font-mono text-[11px]">{isPlaceholder ? "— niet ingesteld —" : gtmId}</code>
+            </div>
+            <div>
+              <span className="font-medium text-foreground/70 block mb-0.5">Verwacht formaat</span>
+              <code className="font-mono text-[11px]">GTM-XXXXXXX</code>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

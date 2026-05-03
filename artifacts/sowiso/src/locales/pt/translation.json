@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "Amplie o seu universo",
   "onboarding.plan_ambassador_tagline": "Aperfeiçoe a sua presença",
   "onboarding.plan_skip_title": "Decida posteriormente",
-  "onboarding.plan_skip_subtitle": "Prossiga como convidado. O senhor poderá escolher o seu caminho no seu perfil a qualquer momento."
+  "onboarding.plan_skip_subtitle": "Prossiga como convidado. O senhor poderá escolher o seu caminho no seu perfil a qualquer momento.",
+  "landing.waitlist_eyebrow": "Lançamento Restrito — Cem Fundadores",
+  "landing.waitlist_title": "Integre-se aos Cem Fundadores",
+  "landing.waitlist_cta": "Reserve sua posição"
 }

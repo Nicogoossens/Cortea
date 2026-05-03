@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "Espandete il vostro orizzonte",
   "onboarding.plan_ambassador_tagline": "Raffinate la vostra presenza",
   "onboarding.plan_skip_title": "Decidete in seguito",
-  "onboarding.plan_skip_subtitle": "Proseguite come Guest. Potrete scegliere il vostro percorso dal vostro profilo in qualsiasi momento."
+  "onboarding.plan_skip_subtitle": "Proseguite come Guest. Potrete scegliere il vostro percorso dal vostro profilo in qualsiasi momento.",
+  "landing.waitlist_eyebrow": "Lancio graduale — Cento Fondatori",
+  "landing.waitlist_title": "Aderisci ai Cento Fondatori",
+  "landing.waitlist_cta": "Prenota il vostro posto"
 }

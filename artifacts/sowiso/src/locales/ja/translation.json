@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "世界を広げる",
   "onboarding.plan_ambassador_tagline": "ご自身の存在を磨く",
   "onboarding.plan_skip_title": "後ほどご決定ください",
-  "onboarding.plan_skip_subtitle": "The Guest としてご継続いただけます。プロフィールからいつでもご自身の道程をお選びになれます。"
+  "onboarding.plan_skip_subtitle": "The Guest としてご継続いただけます。プロフィールからいつでもご自身の道程をお選びになれます。",
+  "landing.waitlist_eyebrow": "ソフトローンチ — 創業初期メンバー100名",
+  "landing.waitlist_title": "創業初期メンバー100名へのご参加",
+  "landing.waitlist_cta": "お席のご予約"
 }

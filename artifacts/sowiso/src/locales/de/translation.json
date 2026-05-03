@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "Erweitern Sie Ihren Horizont",
   "onboarding.plan_ambassador_tagline": "Verfeinern Sie Ihre Präsenz",
   "onboarding.plan_skip_title": "Entscheiden Sie später",
-  "onboarding.plan_skip_subtitle": "Fahren Sie als The Guest fort. Sie können Ihren Weg jederzeit über Ihr Profil wählen."
+  "onboarding.plan_skip_subtitle": "Fahren Sie als The Guest fort. Sie können Ihren Weg jederzeit über Ihr Profil wählen.",
+  "landing.waitlist_eyebrow": "Sanfte Markteinführung — Gründende 100",
+  "landing.waitlist_title": "Treten Sie den Gründenden 100 bei",
+  "landing.waitlist_cta": "Reservieren Sie Ihren Platz"
 }

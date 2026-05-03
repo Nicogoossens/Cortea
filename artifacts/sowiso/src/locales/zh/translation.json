@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "拓展阁下之世界",
   "onboarding.plan_ambassador_tagline": "修进阁下之风仪",
   "onboarding.plan_skip_title": "他日再决",
-  "onboarding.plan_skip_subtitle": "以The Guest身份继续。阁下得于任何时刻从个人档案中择其路而行。"
+  "onboarding.plan_skip_subtitle": "以The Guest身份继续。阁下得于任何时刻从个人档案中择其路而行。",
+  "landing.waitlist_eyebrow": "柔性上线——创始百人",
+  "landing.waitlist_title": "加入创始百人之列",
+  "landing.waitlist_cta": "预留您的席位"
 }

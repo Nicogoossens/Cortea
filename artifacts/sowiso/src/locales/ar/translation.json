@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "وسّع آفاقك",
   "onboarding.plan_ambassador_tagline": "هذّب حضورك",
   "onboarding.plan_skip_title": "قرر لاحقاً",
-  "onboarding.plan_skip_subtitle": "استمرّ كضيف. يمكنك اختيار مسارك من ملفك الشخصي في أي وقت."
+  "onboarding.plan_skip_subtitle": "استمرّ كضيف. يمكنك اختيار مسارك من ملفك الشخصي في أي وقت.",
+  "landing.waitlist_eyebrow": "الإطلاق الأولي — المائة الؤسسون",
+  "landing.waitlist_title": "انضم إلى المائة المؤسسين",
+  "landing.waitlist_cta": "احجز مقعدك"
 }

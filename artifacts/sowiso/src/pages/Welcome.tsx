@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ArrowLeft, Briefcase, Globe, Star, User, Crown, TrendingUp, Check } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, CheckCircle2, XCircle, ChevronRight, MapPin, ArrowLeft, Briefcase, Globe, Star, User, Crown, TrendingUp, Check, Sparkles } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -189,6 +189,98 @@ function RegionPicker() {
 }
 
 
+interface WaitlistStats {
+  claimed: number;
+  total: number;
+  remaining: number;
+}
+
+function WaitlistHeroBanner() {
+  const { t } = useLanguage();
+  const [stats, setStats] = useState<WaitlistStats | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/waitlist/stats`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: WaitlistStats | null) => {
+        if (!cancelled && d) setStats(d);
+      })
+      .catch(() => { /* silent */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const claimed = stats?.claimed ?? 0;
+  const total = stats?.total ?? 100;
+  const remaining = stats?.remaining ?? Math.max(0, total - claimed);
+  const percent = Math.min(100, Math.round((claimed / total) * 100));
+  const full = remaining <= 0;
+
+  return (
+    <Link href="/waitlist">
+      <div
+        data-testid="link-welcome-waitlist-cta"
+        className="group relative overflow-hidden rounded-sm border border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card hover:border-primary/50 hover:from-primary/10 transition-all duration-300 cursor-pointer animate-in fade-in duration-700"
+        style={{ animationDelay: "300ms" }}
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" aria-hidden="true" />
+        <div className="p-6 md:p-7 flex flex-col md:flex-row md:items-center gap-5">
+          <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-sm bg-primary/10 border border-primary/20">
+            <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-primary">
+              {t("landing.waitlist_eyebrow")}
+            </p>
+            <h2 className="font-serif text-xl md:text-2xl text-foreground">
+              {t("landing.waitlist_title")}
+            </h2>
+            {stats && (
+              <div className="space-y-1.5 max-w-md">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="font-mono uppercase tracking-widest text-muted-foreground">
+                    {t("waitlist.counter_label")}
+                  </span>
+                  <span
+                    className="font-serif text-foreground"
+                    data-testid="welcome-waitlist-counter"
+                  >
+                    <span className="text-primary">{claimed}</span>
+                    <span className="text-muted-foreground"> / {total}</span>
+                  </span>
+                </div>
+                <div
+                  className="h-1.5 bg-muted/40 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full bg-primary transition-all duration-500"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground font-light">
+                  {full
+                    ? t("waitlist.counter_full")
+                    : t("waitlist.counter_remaining", { count: remaining })}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0">
+            <span className="inline-flex items-center gap-2 px-5 py-3 rounded-sm bg-primary/10 border border-primary/30 text-primary text-sm font-medium tracking-wide group-hover:bg-primary/20 transition-colors">
+              {t("landing.waitlist_cta")}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function Welcome() {
   const [, navigate] = useLocation();
   const { t, locale } = useLanguage();
@@ -306,6 +398,10 @@ export default function Welcome() {
             <p className="text-xs text-muted-foreground/50 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
               {t("welcome.foundation_sentence")}
             </p>
+          </div>
+
+          <div className="w-full border-t border-border/30 pt-10">
+            <WaitlistHeroBanner />
           </div>
 
           <div className="w-full border-t border-border/30 pt-10">

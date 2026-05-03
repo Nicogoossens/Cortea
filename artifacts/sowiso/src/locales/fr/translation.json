@@ -1352,5 +1352,8 @@
   "onboarding.plan_traveller_tagline": "Élargissez votre horizon",
   "onboarding.plan_ambassador_tagline": "Affinez votre présence",
   "onboarding.plan_skip_title": "Décidez ultérieurement",
-  "onboarding.plan_skip_subtitle": "Poursuivez en tant que The Guest. Vous pourrez choisir votre voie à partir de votre profil à tout moment."
+  "onboarding.plan_skip_subtitle": "Poursuivez en tant que The Guest. Vous pourrez choisir votre voie à partir de votre profil à tout moment.",
+  "landing.waitlist_eyebrow": "Lancement en phase discrète — Les 100 Fondateurs",
+  "landing.waitlist_title": "Rejoignez les 100 Fondateurs",
+  "landing.waitlist_cta": "Réservez votre place"
 }

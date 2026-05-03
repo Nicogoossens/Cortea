@@ -9,10 +9,10 @@ import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable,
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
-import { eq, ilike, or, desc, sql, count, inArray } from "drizzle-orm";
+import { eq, ilike, or, desc, sql, count, inArray, and } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
-import { calibrateTranslationsByIds, calibrateI18nMap, type CalibrationModule } from "../lib/register-calibration";
+import { calibrateTranslationsByIds, calibrateI18nMap, upsertContentTranslationRows, type CalibrationModule } from "../lib/register-calibration";
 
 const execAsync = promisify(exec);
 const __currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -623,12 +623,12 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
                   (content.options ?? []).map(async (opt) => {
                     const out = { ...opt };
                     for (const field of ["text", "explanation", "behavior_signal"] as const) {
-                      const v = (opt as Record<string, unknown>)[field];
+                      const v = (opt as unknown as Record<string, unknown>)[field];
                       if (typeof v !== "string" || v.length === 0) continue;
                       const r = await calibrateI18nMap({ [locale]: v }, module);
                       const next = r.calibrated[locale] ?? v;
                       if (r.changed) anyChanged = true;
-                      (out as Record<string, unknown>)[field] = next;
+                      (out as unknown as Record<string, unknown>)[field] = next;
                     }
                     return out;
                   })
@@ -1419,9 +1419,9 @@ router.patch("/admin/cc-protocols/:id", requireAdmin, async (req, res) => {
     // Mirrors the cc-save save-path: re-fetch translations for the new English
     // text and run register calibration over the resulting i18n map. Both
     // steps are fire-and-forget so the response is not delayed.
-    if (body.rule_cc !== undefined) {
+    if (body.rule_cc !== undefined && updated.rule_cc) {
       const ccId = updated.id;
-      const newRuleCc = updated.rule_cc;
+      const newRuleCc: string = updated.rule_cc;
       const pillarCode = (updated as { pillar_code?: string | null }).pillar_code ?? "Z1";
       const subcat = updated.subcategory ?? "general";
       void (async () => {
@@ -1579,6 +1579,53 @@ const CalibrateRequestSchema = z.object({
   module: z.enum(["standard", "elite"]),
   dry_run: z.boolean().optional(),
   force: z.boolean().optional(),
+});
+
+// Centralized write path: upserts module-content translation rows AND
+// auto-fires register calibration on every row whose key matches a content
+// prefix. Any admin CRUD flow that needs to persist a translation row should
+// use this endpoint (or import upsertContentTranslationRows directly) instead
+// of writing to the translations table by hand, so the manual CLI worker step
+// is never required.
+
+const TranslationRowSchema = z.object({
+  language_code: z.string().min(2).max(8),
+  key: z.string().min(1).max(255),
+  value: z.string().min(1),
+  formality_register: z.string().optional(),
+  rtl_flag: z.boolean().optional(),
+  region_link: z.string().nullable().optional(),
+});
+
+const TranslationsUpsertSchema = z.object({
+  rows: z.array(TranslationRowSchema).min(1).max(200),
+  module: z.enum(["standard", "elite"]).optional(),
+  dry_run: z.boolean().optional(),
+  force: z.boolean().optional(),
+});
+
+router.post("/admin/translations/upsert", requireAdmin, async (req, res) => {
+  const parsed = TranslationsUpsertSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid upsert request.",
+      details: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const { rows, module, dry_run, force } = parsed.data;
+
+  try {
+    const result = await upsertContentTranslationRows(rows, {
+      module: module as CalibrationModule | undefined,
+      dryRun: dry_run,
+      force,
+    });
+    return res.json(result);
+  } catch (err) {
+    req.log?.error({ err }, "Translations upsert failed");
+    return res.status(500).json({ error: "Translation upsert failed." });
+  }
 });
 
 router.post("/admin/translations/calibrate", requireAdmin, async (req, res) => {

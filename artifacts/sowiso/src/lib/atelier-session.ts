@@ -18,6 +18,7 @@ export interface AtelierSession {
   lastAnsweredId?: number;
   unlocks: AtelierSessionUnlock[];
   streakMilestone?: number | null;
+  completed?: boolean;
 }
 
 export function loadSession(): AtelierSession | null {
@@ -87,4 +88,10 @@ export function advanceSession(session: AtelierSession): AtelierSession {
 
 export function isLastQuestion(session: AtelierSession): boolean {
   return session.index >= session.ids.length - 1;
+}
+
+export function markSessionCompleted(session: AtelierSession): AtelierSession {
+  const updated: AtelierSession = { ...session, completed: true };
+  saveSession(updated);
+  return updated;
 }

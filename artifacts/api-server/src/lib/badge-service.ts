@@ -181,6 +181,14 @@ async function maybeAwardCountryBadge(
 }
 
 /**
+ * Awards the universal "Session Master" badge for completing a full Atelier
+ * session. Idempotent — returns null if already held.
+ */
+export async function awardSessionMasterBadge(userId: string): Promise<AwardedBadge | null> {
+  return awardBadgeBySlug(userId, "session-master");
+}
+
+/**
  * Fetches all badges awarded to a user, ordered by most recent first.
  */
 export async function getUserBadges(userId: string): Promise<AwardedBadge[]> {

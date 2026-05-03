@@ -1,6 +1,6 @@
 import { useGetScenario, useSubmitScenarioAnswer, getGetScenarioQueryKey } from "@workspace/api-client-react";
 import { useParams, useLocation, useSearch, Link } from "wouter";
-import { loadSession, recordAnswer, advanceSession, isLastQuestion, clearSession, type AtelierSession } from "@/lib/atelier-session";
+import { loadSession, recordAnswer, advanceSession, isLastQuestion, clearSession, markSessionCompleted, type AtelierSession } from "@/lib/atelier-session";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -173,6 +173,7 @@ export default function Scenario() {
   const handleNextQuestion = () => {
     if (!session) return;
     if (isLastQuestion(session)) {
+      markSessionCompleted(session);
       setLocation("/atelier?session_summary=1");
       return;
     }

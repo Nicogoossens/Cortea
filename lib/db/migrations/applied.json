@@ -209,6 +209,19 @@
         "note": "companion_messages table created with columns id, link_id, sender_id, recipient_id, body, read_at, created_at. Indexes on recipient_id and link_id. Supports task-204 freeform notes between linked companions."
       },
       "status": "applied"
+    },
+    {
+      "id": "0018_session_master_badge",
+      "file": "lib/db/migrations/0018_session_master_badge.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT slug, badge_type, register FROM badges WHERE slug='session-master'",
+      "verificationResult": {
+        "rowCount": 1,
+        "rows": [{ "slug": "session-master", "badge_type": "session", "register": "universal" }],
+        "note": "Seeded the universal 'Session Master' badge (badge_type=session, register=universal, no region/pillar/phase). Awarded by POST /api/atelier/session/complete when a student finishes a full sequential Atelier session (task-217)."
+      },
+      "status": "applied"
     }
   ]
 }

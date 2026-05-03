@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useLocation, useSearch } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList, Users2, Play, Sparkles, Flame } from "lucide-react";
+import { Clock, TrendingUp, BookOpen, Lock, Globe, GraduationCap, LayoutList, Users2, Play, Sparkles, Flame, Award } from "lucide-react";
 import { startSession, loadSession, clearSession, type AtelierSession } from "@/lib/atelier-session";
 import { useLanguage } from "@/lib/i18n";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
@@ -57,6 +57,7 @@ export default function Atelier() {
   const search = useSearch();
   const showSummary = new URLSearchParams(search).get("session_summary") === "1";
   const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
+  const [sessionMasterAwarded, setSessionMasterAwarded] = useState<boolean>(false);
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
   // Default to the structured learning tracks — scenarios are no longer a
   // standalone end-user surface; they live behind the session flow only.
@@ -67,8 +68,33 @@ export default function Atelier() {
       setSummarySession(loadSession());
     } else {
       setSummarySession(null);
+      setSessionMasterAwarded(false);
     }
   }, [showSummary]);
+
+  useEffect(() => {
+    if (!showSummary || !summarySession) return;
+    if (!summarySession.completed) return;
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/api/atelier/session/complete`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        answered: summarySession.answered,
+        total: summarySession.ids.length,
+        correct: summarySession.correct,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        if (data && data.awarded_badge) setSessionMasterAwarded(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [showSummary, summarySession, isAuthenticated]);
   const [roleplayScenarios, setRoleplayScenarios] = useState<RoleplayScenarioSummary[]>([]);
   const [roleplayLoading, setRoleplayLoading] = useState(false);
 
@@ -366,6 +392,26 @@ export default function Atelier() {
                     <li key={u.id} className="font-serif text-foreground">{u.name}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {sessionMasterAwarded && (
+              <div className="border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-amber-500/5 rounded-sm p-4 flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-sm bg-amber-500/20 flex items-center justify-center">
+                  <Award className="w-5 h-5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-mono text-amber-700 dark:text-amber-400 mb-1">
+                    <Sparkles className="w-3 h-3" aria-hidden="true" />
+                    {t("atelier.session.summary_master_label")}
+                  </div>
+                  <div className="font-serif text-lg text-foreground">
+                    {t("atelier.session.summary_master_title")}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-0.5">
+                    {t("atelier.session.summary_master_desc")}
+                  </div>
+                </div>
               </div>
             )}
 

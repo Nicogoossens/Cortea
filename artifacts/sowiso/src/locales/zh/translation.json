@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "查看会员方案",
   "atelier.track.region_locked_title": "{{region}}尚未列入您的兴趣",
   "atelier.track.region_locked_desc": "将{{region}}添加到您的兴趣国家,即可开始学习其礼仪。",
-  "atelier.track.region_locked_cta": "管理兴趣国家"
+  "atelier.track.region_locked_cta": "管理兴趣国家",
+  "nav.tier_label": "等级"
 }

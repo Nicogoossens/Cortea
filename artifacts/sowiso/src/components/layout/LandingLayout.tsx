@@ -6,13 +6,15 @@ import { LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-locales";
 import { FlagEmoji } from "@/lib/active-region";
 import { useGetProfile } from "@workspace/api-client-react";
 
+// Optimised for the light landing-page header background — saturated text on
+// soft tinted backgrounds with a visible border.
 const TIER_BADGE_CLASSES: Record<string, string> = {
-  guest:      "bg-stone-500/15 text-stone-600 border-stone-400/30",
-  basic:      "bg-sky-500/15 text-sky-700 border-sky-400/30",
-  student:    "bg-emerald-500/15 text-emerald-700 border-emerald-400/30",
-  traveller:  "bg-indigo-500/15 text-indigo-700 border-indigo-400/30",
-  ambassador: "bg-amber-500/20 text-amber-700 border-amber-400/40",
-  elite:      "bg-violet-500/15 text-violet-700 border-violet-400/40",
+  guest:      "bg-stone-500/15 text-stone-700 border-stone-500/40",
+  basic:      "bg-sky-500/15 text-sky-800 border-sky-500/50",
+  student:    "bg-emerald-500/15 text-emerald-800 border-emerald-500/50",
+  traveller:  "bg-amber-500/20 text-amber-900 border-amber-600/60",
+  ambassador: "bg-yellow-400/30 text-yellow-900 border-yellow-600/70",
+  elite:      "bg-fuchsia-500/20 text-fuchsia-900 border-fuchsia-600/60",
 };
 
 function LandingTierBadge() {

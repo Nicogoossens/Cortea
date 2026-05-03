@@ -489,26 +489,47 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         </div>
       )}
 
-      {/* ── Register selector (Ambassador sees both) ── */}
-      {tier === "ambassador" && (
-        <div className="flex gap-2" role="tablist" aria-label="Learning track register">
-          {(["middle_class", "elite"] as Register[]).map((r) => (
+      {/* ── Register selector ──
+          Always visible so non-ambassador users (Traveller) still SEE the
+          Elite track exists; the Elite tab is locked with an upgrade CTA. */}
+      <div className="flex gap-2" role="tablist" aria-label="Learning track register">
+        {(["middle_class", "elite"] as Register[]).map((r) => {
+          const isEliteLocked = r === "elite" && tier !== "ambassador";
+          const isSelected = register === r;
+          if (isEliteLocked) {
+            return (
+              <Link
+                key={r}
+                href="/membership"
+                role="tab"
+                aria-selected={false}
+                aria-disabled={true}
+                title={t("atelier.track.tier_locked_title_ambassador")}
+                data-testid="tab-elite-locked"
+                className="px-5 py-2 text-xs font-mono uppercase tracking-widest rounded-sm border border-amber-500/40 bg-amber-500/[0.06] text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/60 transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                <Lock className="w-3 h-3" aria-hidden="true" />
+                {t("atelier.track.register_elite")}
+              </Link>
+            );
+          }
+          return (
             <button
               key={r}
               role="tab"
-              aria-selected={register === r}
+              aria-selected={isSelected}
               onClick={() => handleRegisterChange(r)}
               className={`px-5 py-2 text-xs font-mono uppercase tracking-widest rounded-sm border transition-colors ${
-                register === r
+                isSelected
                   ? "bg-primary text-primary-foreground border-primary"
                   : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
               {r === "middle_class" ? t("atelier.track.register_middle_class") : t("atelier.track.register_elite")}
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       {/* ── Auto-walk header: "Next up" + progress + reset-to-auto link ──
           When the user is on the auto-recommended path the header reflects

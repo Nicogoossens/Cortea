@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "Voir les adhésions",
   "atelier.track.region_locked_title": "{{region}} ne fait pas encore partie de vos intérêts",
   "atelier.track.region_locked_desc": "Ajoutez {{region}} à vos pays d'intérêt pour étudier son étiquette.",
-  "atelier.track.region_locked_cta": "Gérer mes pays d'intérêt"
+  "atelier.track.region_locked_cta": "Gérer mes pays d'intérêt",
+  "nav.tier_label": "Niveau"
 }

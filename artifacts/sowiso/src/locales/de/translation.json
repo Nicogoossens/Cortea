@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "Mitgliedschaften ansehen",
   "atelier.track.region_locked_title": "{{region}} gehört noch nicht zu Ihren Interessen",
   "atelier.track.region_locked_desc": "Fügen Sie {{region}} Ihren Länderinteressen hinzu, um die Etikette zu studieren.",
-  "atelier.track.region_locked_cta": "Länderinteressen verwalten"
+  "atelier.track.region_locked_cta": "Länderinteressen verwalten",
+  "nav.tier_label": "Stufe"
 }

@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "عرض العضويات",
   "atelier.track.region_locked_title": "{{region}} ليست ضمن اهتماماتك بعد",
   "atelier.track.region_locked_desc": "أضِف {{region}} إلى بلدان اهتمامك لدراسة آدابها.",
-  "atelier.track.region_locked_cta": "إدارة بلدان الاهتمام"
+  "atelier.track.region_locked_cta": "إدارة بلدان الاهتمام",
+  "nav.tier_label": "المستوى"
 }

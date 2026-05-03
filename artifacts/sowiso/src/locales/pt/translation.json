@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "Ver subscrições",
   "atelier.track.region_locked_title": "{{region}} ainda não está nos seus interesses",
   "atelier.track.region_locked_desc": "Adicione {{region}} aos seus países de interesse para estudar a etiqueta.",
-  "atelier.track.region_locked_cta": "Gerir países de interesse"
+  "atelier.track.region_locked_cta": "Gerir países de interesse",
+  "nav.tier_label": "Nível"
 }

@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "View memberships",
   "atelier.track.region_locked_title": "{{region}} is not yet in your interests",
   "atelier.track.region_locked_desc": "Add {{region}} to your country interests to begin studying its etiquette.",
-  "atelier.track.region_locked_cta": "Manage country interests"
+  "atelier.track.region_locked_cta": "Manage country interests",
+  "nav.tier_label": "Tier"
 }

@@ -1184,5 +1184,6 @@
   "atelier.track.tier_locked_cta": "Lidmaatschappen bekijken",
   "atelier.track.region_locked_title": "{{region}} staat nog niet in uw interesses",
   "atelier.track.region_locked_desc": "Voeg {{region}} toe aan uw landinteresses om de etiquette te bestuderen.",
-  "atelier.track.region_locked_cta": "Landinteresses beheren"
+  "atelier.track.region_locked_cta": "Landinteresses beheren",
+  "nav.tier_label": "Niveau"
 }

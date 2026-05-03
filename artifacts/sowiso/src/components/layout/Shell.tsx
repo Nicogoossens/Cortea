@@ -114,13 +114,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador";
   const showUpgradePill = (href: string) => href === "/membership" && !isPremium;
 
+  // Optimised for the dark sidebar/header background — bright text on
+  // semi-transparent tinted backgrounds with a clear border.
   const tierBadgeClasses: Record<string, string> = {
-    guest:      "bg-stone-500/15 text-stone-600 border-stone-400/30",
-    basic:      "bg-sky-500/15 text-sky-700 border-sky-400/30",
-    student:    "bg-emerald-500/15 text-emerald-700 border-emerald-400/30",
-    traveller:  "bg-indigo-500/15 text-indigo-700 border-indigo-400/30",
-    ambassador: "bg-amber-500/20 text-amber-700 border-amber-400/40",
-    elite:      "bg-violet-500/15 text-violet-700 border-violet-400/40",
+    guest:      "bg-stone-400/20 text-stone-200 border-stone-300/40",
+    basic:      "bg-sky-400/25 text-sky-200 border-sky-300/50",
+    student:    "bg-emerald-400/25 text-emerald-200 border-emerald-300/50",
+    traveller:  "bg-amber-500/25 text-amber-200 border-amber-300/60",
+    ambassador: "bg-yellow-300/30 text-yellow-100 border-yellow-200/70",
+    elite:      "bg-fuchsia-400/30 text-fuchsia-100 border-fuchsia-300/60",
   };
   const tierBadgeLabel = currentTier.toUpperCase();
   const tierBadgeClass = tierBadgeClasses[currentTier] ?? tierBadgeClasses.guest;

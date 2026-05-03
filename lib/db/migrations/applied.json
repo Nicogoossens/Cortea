@@ -253,6 +253,28 @@
         "note": "Seeded the universal 'Session Master' badge (badge_type=session, register=universal, no region/pillar/phase). Awarded by POST /api/atelier/session/complete when a student finishes a full sequential Atelier session (task-217)."
       },
       "status": "applied"
+    },
+    {
+      "id": "0020_onboarding_events",
+      "file": "lib/db/migrations/0020_onboarding_events.sql",
+      "appliedAt": "2026-05-03",
+      "environment": "development",
+      "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='onboarding_events' ORDER BY column_name",
+      "verificationResult": {
+        "rowCount": 8,
+        "rows": [
+          { "column_name": "action" },
+          { "column_name": "created_at" },
+          { "column_name": "event_type" },
+          { "column_name": "id" },
+          { "column_name": "objectives" },
+          { "column_name": "recommended_tier" },
+          { "column_name": "tier" },
+          { "column_name": "user_id" }
+        ],
+        "note": "onboarding_events table created (id, user_id, event_type, action, tier, recommended_tier, objectives, created_at) with indexes on event_type and created_at. Backs the admin onboarding funnel panel for plan_choice telemetry (task-241)."
+      },
+      "status": "applied"
     }
   ]
 }

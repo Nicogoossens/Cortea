@@ -527,6 +527,17 @@ CREATE TABLE "waitlist_signups" (
 	CONSTRAINT "waitlist_signups_founder_position_range" CHECK ("waitlist_signups"."founder_position" IS NULL OR ("waitlist_signups"."founder_position" >= 1 AND "waitlist_signups"."founder_position" <= 100))
 );
 --> statement-breakpoint
+CREATE TABLE "onboarding_events" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" text,
+	"event_type" text NOT NULL,
+	"action" text NOT NULL,
+	"tier" text,
+	"recommended_tier" text,
+	"objectives" jsonb,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -564,4 +575,6 @@ CREATE INDEX "referrals_referrer_idx" ON "referrals" USING btree ("referrer_user
 CREATE INDEX "referrals_status_idx" ON "referrals" USING btree ("status");--> statement-breakpoint
 CREATE UNIQUE INDEX "waitlist_signups_email_unique" ON "waitlist_signups" USING btree (lower("email"));--> statement-breakpoint
 CREATE UNIQUE INDEX "waitlist_signups_founder_code_unique" ON "waitlist_signups" USING btree ("founder_code");--> statement-breakpoint
-CREATE UNIQUE INDEX "waitlist_signups_founder_position_unique" ON "waitlist_signups" USING btree ("founder_position");
+CREATE UNIQUE INDEX "waitlist_signups_founder_position_unique" ON "waitlist_signups" USING btree ("founder_position");--> statement-breakpoint
+CREATE INDEX "onboarding_events_event_type_idx" ON "onboarding_events" USING btree ("event_type");--> statement-breakpoint
+CREATE INDEX "onboarding_events_created_at_idx" ON "onboarding_events" USING btree ("created_at");

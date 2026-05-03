@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, referralsTable } from "@workspace/db";
+import { usersTable, referralsTable, onboardingEventsTable } from "@workspace/db";
 import { eq, and, sql, desc } from "drizzle-orm";
 import {
   TIER_FEATURES,
@@ -484,6 +484,25 @@ router.post("/onboarding/plan-choice", async (req, res) => {
     console.info(
       `[onboarding.plan_choice] user=${userId} action=${safeAction} tier=${safeTier} recommended=${safeRecommended} objectives=${objectivesList}`
     );
+
+    // Persist for the admin onboarding-funnel panel. Best-effort only —
+    // telemetry must never surface as an error to the client.
+    try {
+      const objectivesPayload = Array.isArray(objectives)
+        ? objectives.filter((o): o is string => typeof o === "string")
+        : null;
+      await db.insert(onboardingEventsTable).values({
+        user_id: userId === "anon" ? null : userId,
+        event_type: "plan_choice",
+        action: safeAction,
+        tier: typeof tier === "string" ? tier : null,
+        recommended_tier: typeof recommendedTier === "string" ? recommendedTier : null,
+        objectives: objectivesPayload,
+      });
+    } catch (err) {
+      console.warn("[onboarding.plan_choice] persist failed:", err);
+    }
+
     return res.json({ ok: true });
   } catch {
     // Telemetry must never surface as an error to the client.

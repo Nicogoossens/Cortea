@@ -610,6 +610,12 @@ export async function findOpenSession(
     eq(learningTrackSessionsTable.region_code, regionCode),
     eq(learningTrackSessionsTable.phase, phase),
     isNull(learningTrackSessionsTable.completed_at),
+    // A session that was created with zero served questions is degenerate —
+    // it traps the user on the "no content" empty-state forever because the
+    // route reuses the open session and never gets a chance to re-run
+    // selectQuestions (which would now succeed thanks to the lang fallback).
+    // Treat such rows as if they did not exist so a fresh session is built.
+    sql`${learningTrackSessionsTable.total_questions} > 0`,
   ];
   if (pillar) {
     conds.push(eq(learningTrackSessionsTable.research_pillar, pillar));

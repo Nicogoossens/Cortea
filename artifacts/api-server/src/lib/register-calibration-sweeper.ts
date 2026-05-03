@@ -22,7 +22,7 @@
  */
 
 import { db, translationsTable } from "@workspace/db";
-import { and, eq, isNull, sql, or, like } from "drizzle-orm";
+import { and, asc, inArray, isNull, sql, or, like } from "drizzle-orm";
 import {
   calibrateTranslationsByIds,
   type CalibrationModule,
@@ -43,6 +43,11 @@ const CONTENT_PREFIXES = [
   "module.",
   "content.",
 ];
+
+// Mirrors SUPPORTED_BASE_CODES in register-calibration.ts. Listed here so
+// the sweeper can apply the filter at the SQL boundary, preventing
+// unsupported-locale rows from monopolising bounded batches.
+const SUPPORTED_BASE_CODES = ["nl", "fr", "en", "de", "es", "it"];
 
 const DEFAULT_BATCH = 25;
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -71,10 +76,15 @@ async function runOnce(batchSize: number): Promise<{ processed: number; errors: 
       and(
         isNull(translationsTable.calibrated_module),
         prefixOr,
+        // Restrict to supported calibration locales at the SQL boundary so
+        // unsupported-locale rows never consume batch slots and never
+        // perpetually re-select.
+        inArray(translationsTable.language_code, SUPPORTED_BASE_CODES),
         // Skip the small set of immutable keys without a JS filter call.
         sql`${translationsTable.key} NOT IN ('app.name', 'app.established', 'atelier.duration')`,
       ),
     )
+    .orderBy(asc(translationsTable.id))
     .limit(batchSize);
 
   if (candidates.length === 0) return { processed: 0, errors: 0 };

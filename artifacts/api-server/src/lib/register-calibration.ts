@@ -529,6 +529,17 @@ export interface UpsertContentTranslationsResult {
   calibrationQueued: boolean;
 }
 
+/**
+ * Derive a default calibration module from a row's formality_register so
+ * callers do not have to specify `module` explicitly to get automatic
+ * calibration. Mirrors the sweeper mapping for consistency.
+ */
+function defaultModuleFor(formalityRegister: string | null | undefined): CalibrationModule {
+  if (formalityRegister === "low") return "standard";
+  if (formalityRegister === "high") return "elite";
+  return "standard";
+}
+
 export async function upsertContentTranslationRows(
   rows: ContentTranslationInput[],
   options: { module?: CalibrationModule; dryRun?: boolean; force?: boolean } = {}
@@ -564,25 +575,41 @@ export async function upsertContentTranslationRows(
     if (inserted[0]) ids.push(inserted[0].id);
   }
 
+  // Group content rows by chosen module so each call processes a homogeneous
+  // batch. When the caller did not specify a module, derive one per row from
+  // formality_register so calibration is truly automatic on write.
+  const byModule: Record<CalibrationModule, number[]> = { standard: [], elite: [] };
+  let contentRowCount = 0;
+  rows.forEach((r, i) => {
+    const id = ids[i];
+    if (id === undefined || !isContentKey(r.key)) return;
+    contentRowCount++;
+    const moduleForRow = options.module ?? defaultModuleFor(r.formality_register);
+    byModule[moduleForRow].push(id);
+  });
+
+  if (contentRowCount > 0) {
+    for (const moduleKey of Object.keys(byModule) as CalibrationModule[]) {
+      const targetIds = byModule[moduleKey];
+      if (targetIds.length === 0) continue;
+      void calibrateTranslationsByIds(targetIds, moduleKey, {
+        dryRun: options.dryRun,
+        force: options.force,
+      }).catch(() => {
+        // Errors are surfaced through caller logging; swallow here so the
+        // background promise does not become an unhandled rejection.
+      });
+    }
+  }
+
   const contentRowIds = rows
     .map((r, i) => ({ key: r.key, id: ids[i] }))
     .filter((x) => x.id !== undefined && isContentKey(x.key))
     .map((x) => x.id);
 
-  if (contentRowIds.length > 0 && options.module) {
-    const module = options.module;
-    void calibrateTranslationsByIds(contentRowIds, module, {
-      dryRun: options.dryRun,
-      force: options.force,
-    }).catch(() => {
-      // Errors are surfaced through caller logging; swallow here so the
-      // background promise does not become an unhandled rejection.
-    });
-  }
-
   return {
     ids,
     contentRowIds,
-    calibrationQueued: contentRowIds.length > 0 && Boolean(options.module),
+    calibrationQueued: contentRowCount > 0,
   };
 }

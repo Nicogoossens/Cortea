@@ -191,6 +191,7 @@ router.get("/auth/google", async (req: Request, res: Response) => {
       code_challenge_method: "S256",
       state,
       nonce,
+      prompt: "select_account",
     });
 
     setSecureCookie(res, "g_code_verifier", codeVerifier);

@@ -33,7 +33,9 @@ interface Props {
 }
 
 
-const START_CARD_KEY = "cortea_start_card_v1";
+function startCardKey(ambition: string) {
+  return `cortea_start_card_v1_${ambition}`;
+}
 
 type Register = "middle_class" | "elite";
 
@@ -72,8 +74,12 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const hasManuallyChanged = useRef(false);
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
-    () => !localStorage.getItem(START_CARD_KEY)
+    () => !localStorage.getItem(startCardKey(ambitionLevel))
   );
+
+  useEffect(() => {
+    setShowStartCard(!localStorage.getItem(startCardKey(ambitionLevel)));
+  }, [ambitionLevel]);
 
   // ── Switchable focus list MUST come from the user's active interests,
   // never from the broad COMPASS_REGIONS catalogue. Picking an unsupported
@@ -93,7 +99,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   }, []);
 
   function dismissStartCard() {
-    localStorage.setItem(START_CARD_KEY, "1");
+    localStorage.setItem(startCardKey(ambitionLevel), "1");
     setShowStartCard(false);
   }
 

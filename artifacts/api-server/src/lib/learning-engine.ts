@@ -307,36 +307,44 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   if (result.length >= ctx.size) return result.slice(0, ctx.size);
 
   // ─── Tier 1+2: full demographic match, re-ranked ───────────────────────────
-  const baseConditions = [
+  const baseConditionsNoLang = [
     eq(learningTrackQuestionsTable.region_code, ctx.regionCode.toUpperCase()),
     eq(learningTrackQuestionsTable.register, ctx.register),
     eq(learningTrackQuestionsTable.phase, ctx.phase),
-    eq(learningTrackQuestionsTable.lang, ctx.lang),
   ];
   if (ctx.pillar) {
-    baseConditions.push(eq(learningTrackQuestionsTable.research_pillar, ctx.pillar));
+    baseConditionsNoLang.push(eq(learningTrackQuestionsTable.research_pillar, ctx.pillar));
   } else {
-    baseConditions.push(isNull(learningTrackQuestionsTable.research_pillar));
+    baseConditionsNoLang.push(isNull(learningTrackQuestionsTable.research_pillar));
   }
 
+  // Lang fallback: serve UI-language questions when present, otherwise fall
+  // back to English so regions that haven't been translated yet still surface
+  // their actual content instead of a misleading "coming soon" screen.
   async function fetchPool(level: number, demographics: string[] | null) {
-    const conds = [...baseConditions, eq(learningTrackQuestionsTable.level, level)];
+    const baseConds = [...baseConditionsNoLang, eq(learningTrackQuestionsTable.level, level)];
     if (demographics && demographics.length > 0) {
-      conds.push(inArray(learningTrackQuestionsTable.demographic, demographics));
+      baseConds.push(inArray(learningTrackQuestionsTable.demographic, demographics));
     }
     if (exclude.size > 0) {
-      conds.push(notInArray(learningTrackQuestionsTable.id, Array.from(exclude)));
+      baseConds.push(notInArray(learningTrackQuestionsTable.id, Array.from(exclude)));
     }
-    return executor.select({
+    const cols = {
       id: learningTrackQuestionsTable.id,
       question_text: learningTrackQuestionsTable.question_text,
       historical_context: learningTrackQuestionsTable.historical_context,
       options: learningTrackQuestionsTable.options,
       demographic: learningTrackQuestionsTable.demographic,
       interest_tags: learningTrackQuestionsTable.interest_tags,
-    })
+    };
+    const primary = await executor.select(cols)
       .from(learningTrackQuestionsTable)
-      .where(and(...conds))
+      .where(and(...baseConds, eq(learningTrackQuestionsTable.lang, ctx.lang)))
+      .limit(50);
+    if (primary.length > 0 || ctx.lang === "en") return primary;
+    return executor.select(cols)
+      .from(learningTrackQuestionsTable)
+      .where(and(...baseConds, eq(learningTrackQuestionsTable.lang, "en")))
       .limit(50);
   }
 

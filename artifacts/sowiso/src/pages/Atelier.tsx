@@ -58,7 +58,9 @@ export default function Atelier() {
   const showSummary = new URLSearchParams(search).get("session_summary") === "1";
   const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
-  const [view, setView] = useState<AtelierView>("scenarios");
+  // Default to the structured learning tracks — scenarios are no longer a
+  // standalone end-user surface; they live behind the session flow only.
+  const [view, setView] = useState<AtelierView>("tracks");
 
   useEffect(() => {
     if (showSummary) {
@@ -182,37 +184,24 @@ export default function Atelier() {
         </div>
       )}
 
-      {/* View toggle: Scenarios / Learning Tracks / Roleplay */}
+      {/* View toggle: Learning Tracks / Roleplay (Scenarios tab intentionally
+          removed — the scenario library is no longer a standalone end-user
+          surface; sessions are the canonical entry point). */}
       {!isVisitor && (
         <div className="flex items-center gap-1 border border-border/40 rounded-sm p-0.5 w-fit flex-wrap" role="tablist" aria-label="Atelier view">
           <button
             role="tab"
-            aria-selected={view === "scenarios"}
-            onClick={() => setView("scenarios")}
+            aria-selected={view === "tracks"}
+            onClick={() => setView("tracks")}
             className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
-              view === "scenarios"
+              view === "tracks"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <LayoutList className="w-3.5 h-3.5" aria-hidden="true" />
-            {t("atelier.tab_scenarios")}
+            <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
+            {t("atelier.tab_learning_tracks")}
           </button>
-          {hasFullAccess && (
-            <button
-              role="tab"
-              aria-selected={view === "tracks"}
-              onClick={() => setView("tracks")}
-              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] transition-colors ${
-                view === "tracks"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5" aria-hidden="true" />
-              {t("atelier.tab_learning_tracks")}
-            </button>
-          )}
           <button
             role="tab"
             aria-selected={view === "roleplay"}
@@ -227,6 +216,12 @@ export default function Atelier() {
             Rollenspel
           </button>
         </div>
+      )}
+
+      {/* Learning Tracks paywall for free users (was previously bypassed because
+          scenarios served as the free-tier surface). */}
+      {!isVisitor && !hasFullAccess && view === "tracks" && (
+        <TierGate feature="Learning Tracks" requiredTier="traveller" isAuthenticated={isAuthenticated} />
       )}
 
       {/* Learning Tracks panel */}

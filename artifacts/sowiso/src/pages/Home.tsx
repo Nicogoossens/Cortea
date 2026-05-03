@@ -4,7 +4,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Compass, Shield, ArrowRight, X, MapPin, Bell, Scan, Crown, Flame, ShirtIcon, Check } from "lucide-react";
+import { BookOpen, Compass, Shield, ArrowRight, X, MapPin, Bell, Scan, Crown, Flame, ShirtIcon, Check, Globe2 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n";
@@ -395,6 +395,33 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {isAuthenticated && (
+        <Link href="/votes">
+          <div
+            data-testid="link-home-votes-cta"
+            className="group relative overflow-hidden rounded-sm border border-primary/20 bg-card hover:border-primary/40 hover:bg-primary/[0.02] transition-all duration-300 cursor-pointer"
+          >
+            <div className="p-5 md:p-6 flex items-center gap-5">
+              <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-sm bg-primary/5 border border-primary/15">
+                <Globe2 className="h-5 w-5 text-primary/80" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-primary/60">
+                  {t("home.votes_eyebrow")}
+                </p>
+                <h2 className="font-serif text-lg md:text-xl text-foreground">
+                  {t("home.votes_title")}
+                </h2>
+                <p className="text-sm text-muted-foreground font-light leading-relaxed">
+                  {t("home.votes_description")}
+                </p>
+              </div>
+              <ArrowRight className="hidden md:block h-4 w-4 text-primary/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" aria-hidden="true" />
             </div>
           </div>
         </Link>

@@ -566,6 +566,9 @@ export const VENUES: Venue[] = [
   { id: "sg-t-3", regionCode: "SG", category: "transport", subcategory: "Privé Jacht", name: "Ocean Opulence Yachts, Marina at Keppel Bay", description: "Singapore's finest private yacht charter fleet — Sunseeker and Azimut vessels for corporate events, Batam island hops, and Indonesian archipelago cruises.", occasionTags: ["business", "social", "romantic"], tierBadge: "Superyacht Charter", etiquetteTip: "Singapore's marina culture is international and meticulous. Arrive in yacht-appropriate casual dress. Confirm your guest list and dietary requirements 48 hours before charter." },
 ];
 
+import { EXTRA_VENUES } from "./venues-extra.js";
+VENUES.push(...EXTRA_VENUES);
+
 export function getVenues(regionCode?: string, category?: VenueCategory): Venue[] {
   return VENUES.filter((v) => {
     if (regionCode && v.regionCode !== regionCode.toUpperCase()) return false;

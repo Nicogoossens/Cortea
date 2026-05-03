@@ -996,35 +996,19 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Subscription Status ── */}
-      {subscriptionStatus && subscriptionStatus.tier !== "guest" && (
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm ${
-          subscriptionStatus.paymentFailed
-            ? "border-amber-500/30 bg-amber-500/5"
-            : "border-border/40 bg-card"
-        }`}>
+      {/* ── Subscription Status ──
+          The standalone "Lidmaatschap actief" row was removed because the
+          tier badge in the user header above (TRAVELLER / AMBASSADOR / …)
+          already communicates membership status. We keep a slim row here
+          ONLY when payment has failed, since that warrants a prominent
+          banner the user must see and act on. */}
+      {subscriptionStatus && subscriptionStatus.tier !== "guest" && subscriptionStatus.paymentFailed && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm border-amber-500/30 bg-amber-500/5">
           <div className="flex items-center gap-3">
-            {subscriptionStatus.paymentFailed ? (
-              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
-            ) : (
-              <Calendar className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden="true" />
-            )}
-            <div>
-              {subscriptionStatus.paymentFailed ? (
-                <p className="text-amber-500 font-light">
-                  {t("subscription.profile_payment_failed")}
-                </p>
-              ) : subscriptionStatus.renewalDate ? (
-                <p className="text-muted-foreground font-light">
-                  {t("subscription.profile_renews")}{" "}
-                  <span className="text-foreground">
-                    {format(new Date(subscriptionStatus.renewalDate), "d LLLL yyyy", { locale: dateFnsLocale })}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-muted-foreground font-light">{t("subscription.profile_active")}</p>
-              )}
-            </div>
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+            <p className="text-amber-500 font-light">
+              {t("subscription.profile_payment_failed")}
+            </p>
           </div>
           <Link
             href="/membership"
@@ -1230,17 +1214,17 @@ export default function Profile() {
             duplicate region picker that confused users. */}
       </div>
 
-      {/* ── Course Settings (Cursinstellingen) ── */}
-      <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-lg flex items-center gap-2">
-            <Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />
-            {t("profile.course_settings_title")}
-          </CardTitle>
-          <CardDescription className="text-xs font-light text-muted-foreground/70 mt-0.5">
-            {t("profile.course_settings_desc")}
-          </CardDescription>
-        </CardHeader>
+      {/* ── Course Settings (Cursusinstellingen) ──
+          Converted from a static Card to a CollapsibleSection so it stacks
+          uniformly with Interesses, Culinaire Interesses and Sferen below.
+          Together they read as one grouped "Cursus & Voorkeuren" set of
+          accordions, while each retains its own collapsible state. */}
+      <CollapsibleSection
+        title={t("profile.course_settings_title")}
+        icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+        description={t("profile.course_settings_desc")}
+        storageKey="course_settings"
+      >
         <CardContent className="space-y-5">
 
           {/* Warning banner */}
@@ -1431,7 +1415,7 @@ export default function Profile() {
           })()}
 
         </CardContent>
-      </Card>
+      </CollapsibleSection>
 
       {/* ── Interests & Objectives ── collapsible ── */}
       <CollapsibleSection

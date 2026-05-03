@@ -88,7 +88,7 @@ interface EarnedBadge {
 export default function Home() {
   usePageTitle("Home");
   const { t, language } = useLanguage();
-  const { userId, isAuthenticated, getAuthHeaders } = useAuth();
+  const { userId, isAuthenticated, isAdmin, getAuthHeaders } = useAuth();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfile();
   const { data: nobleScore, isLoading: isScoreLoading } = useGetNobleScore();
   const { data: pillars, isLoading: isPillarsLoading } = useGetPillarProgress();
@@ -540,7 +540,7 @@ export default function Home() {
                 </div>
               )}
 
-              {isAuthenticated && (
+              {isAuthenticated && isAdmin && (
                 <Link href="/wardrobe" className="flex items-center justify-between gap-3 pt-2 border-t border-border/30 group/avatar">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0 rounded-full bg-muted/30 ring-1 ring-border/40 p-1 transition-all group-hover/avatar:ring-primary/40">

@@ -357,7 +357,12 @@ export default function Atelier() {
                     {getRegionName(activeRegion)}
                   </span>.
                 </p>
-                <Link href="/compass">
+                {/* Region changes must happen on the profile page so the
+                    user's persisted preference is updated, not the volatile
+                    session region. Linking to /compass here previously sent
+                    the user to a screen that could not actually change the
+                    active region from this empty state. */}
+                <Link href="/profile">
                   <button className="text-sm underline underline-offset-2 text-primary/70 hover:text-primary transition-colors">
                     {t("atelier.change_region")}
                   </button>

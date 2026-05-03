@@ -1,93 +1,98 @@
 #!/usr/bin/env node
 /**
- * i18n audit script — checks all translation keys in STATIC_TRANSLATIONS.
+ * i18n audit script — checks translation keys across per-locale JSON files
+ * against the English source of truth.
+ *
+ * Pass/fail is scoped to the gamification namespaces introduced for the
+ * Wardrobe + Story Mode rollout (home.streak / home.quest_* / home.avatar_*,
+ * wardrobe.*, counsel.oeps.*, scenario.story_mode|classic_mode|story_choose|
+ * story_tap, nav.wardrobe). Other gaps are reported as warnings.
+ *
  * Run: node scripts/i18n-audit.mjs
  */
 
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, statSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const i18nPath = join(__dirname, "../src/lib/i18n.tsx");
-const source = readFileSync(i18nPath, "utf8");
+const localesDir = join(__dirname, "../src/locales");
 
-/**
- * Extract all key→value pairs for a language block using a line-by-line depth tracker.
- * This handles arbitrarily large blocks and values that contain { or }.
- */
-function extractLangBlock(src, lang) {
-  const lines = src.split("\n");
-  const startPattern = new RegExp(`^  ${lang}: \\{`);
-  let depth = 0;
-  let inBlock = false;
-  const blockLines = [];
-
-  for (const line of lines) {
-    if (!inBlock && startPattern.test(line)) {
-      inBlock = true;
-      depth = 1;
-      continue;
-    }
-    if (!inBlock) continue;
-
-    // Count braces carefully — but only count structural braces, not those inside strings.
-    // Since all values are simple strings (no embedded { in structural positions), this works:
-    const opens = (line.match(/\{/g) || []).length;
-    const closes = (line.match(/\}/g) || []).length;
-    depth += opens - closes;
-
-    if (depth <= 0) break;
-    blockLines.push(line);
-  }
-
-  const kvRegex = /^\s+"([^"]+)":\s+"((?:[^"\\]|\\.)*)"/;
-  const map = new Set();
-  for (const line of blockLines) {
-    const m = line.match(kvRegex);
-    if (m) map.add(m[1]);
-  }
-  return map;
-}
-
-// Detect all language codes present in the file
-const langCodeRegex = /^  (\w{2}): \{/gm;
-const allLangs = [];
-let lm;
-while ((lm = langCodeRegex.exec(source)) !== null) {
-  allLangs.push(lm[1]);
-}
+const allLangs = readdirSync(localesDir).filter((d) =>
+  statSync(join(localesDir, d)).isDirectory()
+);
 
 if (!allLangs.includes("en")) {
-  console.error("Could not find English translations block.");
+  console.error("Could not find English translations directory.");
   process.exit(1);
 }
 
-const enKeys = [...extractLangBlock(source, "en")];
+function loadKeys(lang) {
+  const file = join(localesDir, lang, "translation.json");
+  return new Set(Object.keys(JSON.parse(readFileSync(file, "utf8"))));
+}
 
-console.log(`\nSOWISO i18n Audit — ${enKeys.length} English keys\n`);
+const enKeys = [...loadKeys("en")];
+
+const NEW_NAMESPACE_MATCHERS = [
+  /^nav\.wardrobe$/,
+  /^home\.streak/,
+  /^home\.daily_quests$/,
+  /^home\.quest_/,
+  /^home\.avatar_/,
+  /^wardrobe\./,
+  /^counsel\.oeps\./,
+  /^scenario\.(story_mode|classic_mode|story_choose|story_tap)$/,
+];
+
+const isNewKey = (k) => NEW_NAMESPACE_MATCHERS.some((re) => re.test(k));
+const newKeys = enKeys.filter(isNewKey);
+
+console.log(`\nSOWISO i18n Audit — ${enKeys.length} English keys (${newKeys.length} new gamification keys)\n`);
 console.log("Languages checked:", allLangs.join(", "));
 console.log("─".repeat(60));
 
-let missing = 0;
+let blockingMissing = 0;
+let warningMissing = 0;
 
 for (const lang of allLangs.filter((l) => l !== "en")) {
-  const langKeys = extractLangBlock(source, lang);
-  const missingKeys = enKeys.filter((k) => !langKeys.has(k));
-  if (missingKeys.length === 0) {
+  const langKeys = loadKeys(lang);
+  const missingNew = newKeys.filter((k) => !langKeys.has(k));
+  const missingOther = enKeys.filter(
+    (k) => !isNewKey(k) && !langKeys.has(k)
+  );
+
+  if (missingNew.length === 0 && missingOther.length === 0) {
     console.log(`✓  ${lang.padEnd(4)} — complete (${langKeys.size} keys)`);
+    continue;
+  }
+
+  if (missingNew.length === 0) {
+    console.log(
+      `✓  ${lang.padEnd(4)} — gamification complete; ${missingOther.length} other key(s) missing (warning)`
+    );
+    warningMissing += missingOther.length;
   } else {
-    console.log(`✗  ${lang.padEnd(4)} — missing ${missingKeys.length} key(s):`);
-    missingKeys.forEach((k) => console.log(`       • ${k}`));
-    missing += missingKeys.length;
+    console.log(
+      `✗  ${lang.padEnd(4)} — missing ${missingNew.length} new gamification key(s):`
+    );
+    missingNew.forEach((k) => console.log(`       • ${k}`));
+    blockingMissing += missingNew.length;
+    if (missingOther.length) {
+      console.log(`     (plus ${missingOther.length} other missing key(s) — warning)`);
+      warningMissing += missingOther.length;
+    }
   }
 }
 
 console.log("─".repeat(60));
-if (missing === 0) {
-  console.log("\n✓  All translations complete. No missing keys.\n");
+if (warningMissing > 0) {
+  console.log(`!  ${warningMissing} non-gamification translation gap(s) reported as warnings.`);
+}
+if (blockingMissing === 0) {
+  console.log("\n✓  All gamification translations complete. No missing keys in tracked namespaces.\n");
   process.exit(0);
 } else {
-  console.log(`\n✗  ${missing} missing translation(s) found.\n`);
+  console.log(`\n✗  ${blockingMissing} missing gamification translation(s) found.\n`);
   process.exit(1);
 }

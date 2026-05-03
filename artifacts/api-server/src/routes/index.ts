@@ -24,6 +24,7 @@ import invitationsRouter from "./invitations";
 import companionRouter from "./companion";
 import roleplayRouter from "./roleplay";
 import atelierSessionRouter from "./atelier-session";
+import translationHealthRouter from "./translation-health";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(invitationsRouter);
 router.use(companionRouter);
 router.use(roleplayRouter);
 router.use(atelierSessionRouter);
+router.use(translationHealthRouter);
 
 export default router;

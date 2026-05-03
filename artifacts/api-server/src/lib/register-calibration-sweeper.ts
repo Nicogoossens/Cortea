@@ -54,6 +54,48 @@ const DEFAULT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 let timer: NodeJS.Timeout | null = null;
 let running = false;
+let lastRunAt: number | null = null;
+let lastProcessed: number = 0;
+let lastErrors: number = 0;
+
+export interface CalibrationSweeperStatus {
+  enabled: boolean;
+  lastRunAt: number | null;
+  running: boolean;
+  pendingRows: number;
+  lastProcessed: number;
+  lastErrors: number;
+}
+
+export async function getCalibrationSweeperStatus(): Promise<CalibrationSweeperStatus> {
+  const prefixConditions = CONTENT_PREFIXES.map((p) => like(translationsTable.key, `${p}%`));
+  const prefixOr = prefixConditions.length === 1 ? prefixConditions[0] : or(...prefixConditions);
+  let pendingRows = 0;
+  try {
+    const rows = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(translationsTable)
+      .where(
+        and(
+          isNull(translationsTable.calibrated_module),
+          prefixOr,
+          inArray(translationsTable.language_code, SUPPORTED_BASE_CODES),
+          sql`${translationsTable.key} NOT IN ('app.name', 'app.established', 'atelier.duration')`,
+        ),
+      );
+    pendingRows = rows[0]?.n ?? 0;
+  } catch {
+    pendingRows = -1;
+  }
+  return {
+    enabled: timer !== null,
+    lastRunAt,
+    running,
+    pendingRows,
+    lastProcessed,
+    lastErrors,
+  };
+}
 
 function chooseModule(formalityRegister: string | null | undefined): CalibrationModule {
   if (formalityRegister === "low") return "standard";
@@ -156,6 +198,9 @@ export function startCalibrationSweeper(opts: SweeperOptions = {}): void {
     running = true;
     try {
       const { processed, errors } = await runOnce(batchSize);
+      lastProcessed = processed;
+      lastErrors = errors;
+      lastRunAt = Date.now();
       if (processed > 0 || errors > 0) {
         logger.info(
           { processed, errors, batchSize },

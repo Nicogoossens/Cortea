@@ -11,7 +11,7 @@ import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
   BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check, Plus, Pencil, X,
-  Briefcase, BarChart3, Tag,
+  Briefcase, BarChart3, Tag, Languages,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -60,7 +60,7 @@ interface ContentStatus {
 }
 
 type ActionState = "idle" | "loading" | "done" | "error";
-type AdminTab = "users" | "content" | "cc_screening" | "integrations" | "use_cases" | "attribution";
+type AdminTab = "users" | "content" | "cc_screening" | "integrations" | "use_cases" | "attribution" | "translation";
 
 interface UseCase {
   id: number;
@@ -2672,6 +2672,253 @@ function AttributionTab() {
   );
 }
 
+// ── Translation Health Tab ────────────────────────────────────────────────────
+
+interface TranslationHealth {
+  ok: boolean;
+  generated_at: string;
+  overall: {
+    healthy: boolean;
+    ui_healthy: boolean;
+    calibration_healthy: boolean;
+    scenario_healthy: boolean;
+  };
+  ui_locales: {
+    en_key_count: number;
+    total_missing: number;
+    per_locale: { locale: string; enKeys: number; localeKeys: number; missing: number; pct: number }[];
+    sweeper: { enabled: boolean; worker_running: boolean; last_run_at: number | null; last_spawn_at: number | null };
+  };
+  calibration: {
+    pending_rows: number;
+    last_processed: number;
+    last_errors: number;
+    sweeper: { enabled: boolean; running: boolean; last_run_at: number | null };
+  };
+  scenarios: {
+    pending: number;
+    sweeper: { enabled: boolean; worker_running: boolean; last_run_at: number | null; last_spawn_at: number | null; last_worker_exit_at: number | null };
+  };
+}
+
+function formatRelative(ts: number | null): string {
+  if (!ts) return "never";
+  const diff = Date.now() - ts;
+  if (diff < 0) return "just now";
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.floor(hr / 24);
+  return `${d}d ago`;
+}
+
+function HealthDot({ healthy }: { healthy: boolean }) {
+  return (
+    <span
+      className={`inline-block w-2.5 h-2.5 rounded-full ${healthy ? "bg-emerald-500" : "bg-amber-500"}`}
+      aria-hidden="true"
+    />
+  );
+}
+
+function TranslationHealthTab() {
+  const [data, setData] = useState<TranslationHealth | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchHealth = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/translation-health`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        setError(`Request failed (${res.status}).`);
+        return;
+      }
+      setData(await res.json() as TranslationHealth);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHealth();
+    const id = setInterval(fetchHealth, 30_000);
+    return () => clearInterval(id);
+  }, [fetchHealth]);
+
+  const overall = data?.overall;
+  const overallHealthy = overall?.healthy ?? false;
+
+  return (
+    <div className="space-y-6">
+      {/* Headline badge */}
+      <Card className={`border ${overallHealthy ? "border-emerald-500/40 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5"}`}>
+        <CardContent className="py-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${overallHealthy ? "bg-emerald-500/15 text-emerald-700" : "bg-amber-500/15 text-amber-700"}`}>
+              {overallHealthy ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+            </div>
+            <div>
+              <p className="text-sm font-mono uppercase tracking-widest text-muted-foreground">
+                Translation Health
+              </p>
+              <p className="text-lg font-serif text-foreground">
+                {data
+                  ? overallHealthy
+                    ? "All locales are 100% translated"
+                    : "Sweepers are catching up"
+                  : loading
+                    ? "Loading…"
+                    : "No data yet"}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-mono text-xs gap-1.5"
+            onClick={fetchHealth}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Refresh
+          </Button>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="py-4 text-sm font-mono text-destructive">{error}</CardContent>
+        </Card>
+      )}
+
+      {data && (
+        <>
+          {/* UI locales */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                  <HealthDot healthy={data.overall.ui_healthy} />
+                  UI Locales — {data.ui_locales.en_key_count} EN keys
+                </CardTitle>
+                <span className="text-xs font-mono text-muted-foreground">
+                  {data.ui_locales.total_missing === 0
+                    ? "100% covered"
+                    : `${data.ui_locales.total_missing} missing`}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {data.ui_locales.per_locale.map((l) => (
+                  <div key={l.locale} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-mono text-foreground/80 uppercase">{l.locale}</span>
+                      <span className={`font-mono ${l.missing === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                        {l.pct}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${l.missing === 0 ? "bg-emerald-500" : "bg-amber-500"}`}
+                        style={{ width: `${l.pct}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] font-mono text-muted-foreground">
+                      {l.localeKeys}/{l.enKeys}{l.missing > 0 ? ` · ${l.missing} missing` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs font-mono text-muted-foreground mt-4">
+                Sweeper: {data.ui_locales.sweeper.enabled ? "enabled" : "disabled"}
+                {data.ui_locales.sweeper.worker_running && " · worker running"}
+                {" · last check "}{formatRelative(data.ui_locales.sweeper.last_run_at)}
+                {data.ui_locales.sweeper.last_spawn_at && (
+                  <> · last worker spawn {formatRelative(data.ui_locales.sweeper.last_spawn_at)}</>
+                )}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Calibration sweeper */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                  <HealthDot healthy={data.overall.calibration_healthy} />
+                  Register Calibration (translations table)
+                </CardTitle>
+                <span className="text-xs font-mono text-muted-foreground">
+                  {data.calibration.pending_rows < 0
+                    ? "lookup error"
+                    : data.calibration.pending_rows === 0
+                      ? "all calibrated"
+                      : `${data.calibration.pending_rows} pending`}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs font-mono text-muted-foreground">
+                Sweeper: {data.calibration.sweeper.enabled ? "enabled" : "disabled"}
+                {data.calibration.sweeper.running && " · running"}
+                {" · last pass "}{formatRelative(data.calibration.sweeper.last_run_at)}
+                {" · last batch processed "}{data.calibration.last_processed}
+                {data.calibration.last_errors > 0 && ` · ${data.calibration.last_errors} errors`}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Scenario sweeper */}
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                  <HealthDot healthy={data.overall.scenario_healthy} />
+                  Scenario Translations (scenarios.content_i18n)
+                </CardTitle>
+                <span className="text-xs font-mono text-muted-foreground">
+                  {data.scenarios.pending < 0
+                    ? "lookup error"
+                    : data.scenarios.pending === 0
+                      ? "all translated"
+                      : `${data.scenarios.pending} pending`}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs font-mono text-muted-foreground">
+                Sweeper: {data.scenarios.sweeper.enabled ? "enabled" : "disabled"}
+                {data.scenarios.sweeper.worker_running && " · worker running"}
+                {" · last check "}{formatRelative(data.scenarios.sweeper.last_run_at)}
+                {data.scenarios.sweeper.last_spawn_at && (
+                  <> · last worker spawn {formatRelative(data.scenarios.sweeper.last_spawn_at)}</>
+                )}
+                {data.scenarios.sweeper.last_worker_exit_at && (
+                  <> · last worker exit {formatRelative(data.scenarios.sweeper.last_worker_exit_at)}</>
+                )}
+              </p>
+            </CardContent>
+          </Card>
+
+          <p className="text-[10px] font-mono text-muted-foreground/60 text-right">
+            Generated {new Date(data.generated_at).toLocaleString()}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main Admin page ───────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -2780,6 +3027,7 @@ export default function Admin() {
           { key: "use_cases" as const, label: "Use Cases", icon: Briefcase },
           { key: "cc_screening" as const, label: "CC Screening", icon: Cpu },
           { key: "integrations" as const, label: "Integrations", icon: KeyRound },
+          { key: "translation" as const, label: "Translation", icon: Languages },
         ]).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -2904,6 +3152,11 @@ export default function Admin() {
       {/* Attribution tab */}
       {activeTab === "attribution" && (
         <AttributionTab />
+      )}
+
+      {/* Translation health tab */}
+      {activeTab === "translation" && (
+        <TranslationHealthTab />
       )}
     </div>
   );

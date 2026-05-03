@@ -34,6 +34,40 @@ let timer: NodeJS.Timeout | null = null;
 let child: ChildProcess | null = null;
 let childStartedAt: number = 0;
 let childTimer: NodeJS.Timeout | null = null;
+let lastRunAt: number | null = null;
+let lastSpawnAt: number | null = null;
+let lastWorkerExitAt: number | null = null;
+let lastPending: number = 0;
+
+export interface ScenarioSweeperStatus {
+  enabled: boolean;
+  lastRunAt: number | null;
+  lastSpawnAt: number | null;
+  lastWorkerExitAt: number | null;
+  workerRunning: boolean;
+  pendingScenarios: number;
+}
+
+export async function getScenarioSweeperStatus(): Promise<ScenarioSweeperStatus> {
+  let pending: number;
+  try {
+    pending = await countPending();
+    lastPending = pending;
+  } catch {
+    // Sentinel value (-1) signals a probe failure so callers can avoid
+    // reporting a healthy state on an unknown/broken probe. Mirrors the
+    // approach taken by getCalibrationSweeperStatus.
+    pending = -1;
+  }
+  return {
+    enabled: timer !== null,
+    lastRunAt,
+    lastSpawnAt,
+    lastWorkerExitAt,
+    workerRunning: child !== null,
+    pendingScenarios: pending,
+  };
+}
 
 /**
  * Resolve the path to scripts/scenario-translate.mjs robustly across launch
@@ -125,6 +159,7 @@ function spawnWorker(from: number, to: number): void {
 
   proc.on("exit", (code, signal) => {
     const elapsedMs = Date.now() - childStartedAt;
+    lastWorkerExitAt = Date.now();
     logger.info(
       { code, signal, pid: proc.pid, elapsedMs },
       "Scenario translation sweeper: worker exited",
@@ -190,6 +225,8 @@ export function startScenarioTranslationSweeper(
     if (child) return;
     try {
       const pending = await countPending();
+      lastPending = pending;
+      lastRunAt = Date.now();
       if (pending === 0) return;
       const range = await findPendingRange(batchSize);
       if (!range) return;
@@ -197,6 +234,7 @@ export function startScenarioTranslationSweeper(
         { pending, batch: range },
         "Scenario translation sweeper: launching worker",
       );
+      lastSpawnAt = Date.now();
       spawnWorker(range.from, range.to);
     } catch (err) {
       logger.warn({ err }, "Scenario translation sweeper: tick failed");

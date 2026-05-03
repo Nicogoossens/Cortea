@@ -29,9 +29,41 @@ const SUPPORTED_LOCALES = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"]
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const CHILD_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
 
+interface LocaleGap {
+  locale: string;
+  missing: number;
+  total: number;
+}
+
 let timer: NodeJS.Timeout | null = null;
 let child: ChildProcess | null = null;
 let childTimer: NodeJS.Timeout | null = null;
+let lastRunAt: number | null = null;
+let lastSpawnAt: number | null = null;
+let lastEnKeyCount: number = 0;
+let lastGaps: LocaleGap[] = [];
+
+export interface UiTranslationSweeperStatus {
+  enabled: boolean;
+  lastRunAt: number | null;
+  lastSpawnAt: number | null;
+  workerRunning: boolean;
+  enKeyCount: number;
+  gaps: { locale: string; missing: number; total: number }[];
+  totalMissing: number;
+}
+
+export function getUiTranslationSweeperStatus(): UiTranslationSweeperStatus {
+  return {
+    enabled: timer !== null,
+    lastRunAt,
+    lastSpawnAt,
+    workerRunning: child !== null,
+    enKeyCount: lastEnKeyCount,
+    gaps: lastGaps,
+    totalMissing: lastGaps.reduce((a, g) => a + g.missing, 0),
+  };
+}
 
 /**
  * Walk up from this module to find the repository root that contains the
@@ -57,12 +89,6 @@ function findRepoRoot(): string | null {
     }
   }
   return null;
-}
-
-interface LocaleGap {
-  locale: string;
-  missing: number;
-  total: number;
 }
 
 function loadKeyset(file: string): Set<string> {
@@ -215,6 +241,9 @@ export function startUiTranslationSweeper(opts: UiTranslationSweeperOptions = {}
     if (child) return;
     try {
       const { gaps, enKeyCount } = detectGaps(repoRoot);
+      lastEnKeyCount = enKeyCount;
+      lastGaps = gaps;
+      lastRunAt = Date.now();
       if (gaps.length === 0) return;
       logger.info(
         {
@@ -224,6 +253,7 @@ export function startUiTranslationSweeper(opts: UiTranslationSweeperOptions = {}
         },
         "UI translation sweeper: gap detected, launching worker",
       );
+      lastSpawnAt = Date.now();
       spawnWorker(repoRoot, gaps);
     } catch (err) {
       logger.warn({ err }, "UI translation sweeper: tick failed");

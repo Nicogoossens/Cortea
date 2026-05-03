@@ -12,6 +12,7 @@ import { runCompassSeed } from "@workspace/db/seed-compass";
 import { eq, ilike, or, desc, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
+import { calibrateTranslationsByIds, type CalibrationModule } from "../lib/register-calibration";
 
 const execAsync = promisify(exec);
 const __currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -1408,6 +1409,52 @@ router.get("/admin/use-cases", requireAdmin, async (req, res) => {
   } catch (err) {
     req.log?.error({ err }, "Admin: failed to list use cases");
     return res.status(500).json({ error: "Could not retrieve use cases." });
+  }
+});
+
+// ── Register Calibration ─────────────────────────────────────────────────────
+//
+// On-demand entry point for the register-calibration worker. Accepts one or
+// more translation row IDs, evaluates each against the requested module
+// register, and (unless dry_run) writes back the rewritten value plus the
+// quality_reviewed_at / calibrated_module stamps.
+//
+// Designed to be called from any admin CRUD flow that creates or updates
+// translation rows for module-content keys (scenario.*, situation.*,
+// counsel_advice.*, etc.) so new content receives correct register treatment
+// without a manual CLI run.
+
+const CalibrateRequestSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1).max(50),
+  module: z.enum(["standard", "elite"]),
+  dry_run: z.boolean().optional(),
+  force: z.boolean().optional(),
+});
+
+router.post("/admin/translations/calibrate", requireAdmin, async (req, res) => {
+  const parsed = CalibrateRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid calibration request.",
+      details: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const { ids, module, dry_run, force } = parsed.data;
+
+  try {
+    const summary = await calibrateTranslationsByIds(ids, module as CalibrationModule, {
+      dryRun: dry_run,
+      force,
+    });
+    return res.json(summary);
+  } catch (err) {
+    req.log?.error({ err }, "Register calibration failed");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    if (message.includes("AI_INTEGRATIONS_ANTHROPIC")) {
+      return res.status(503).json({ error: "Calibration service is not configured." });
+    }
+    return res.status(500).json({ error: "Register calibration failed." });
   }
 });
 

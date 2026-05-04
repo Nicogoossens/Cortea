@@ -134,7 +134,17 @@ async function syncTable({ name, conflict_col, order_col }) {
       const params = columns.map((_, ci) => `$${start + ci + 1}`).join(", ");
       return `(${params})`;
     });
-    const flatValues = rows.flatMap((row) => columns.map((c) => row[c] ?? null));
+    // pg returns JSONB columns as JS objects; re-stringify them so the
+    // parameterized query receives a valid JSON string for those columns.
+    const flatValues = rows.flatMap((row) =>
+      columns.map((c) => {
+        const val = row[c] ?? null;
+        if (val !== null && typeof val === "object" && !Buffer.isBuffer(val) && !(val instanceof Date)) {
+          return JSON.stringify(val);
+        }
+        return val;
+      }),
+    );
 
     const sql =
       `INSERT INTO "${name}" (${colList}) VALUES ${valueClauses.join(",")} ` +

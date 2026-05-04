@@ -12,6 +12,8 @@
  *   --table <name>   Only sync this table (default: all tables)
  *   --dry-run        Show counts; do not write to prod
  *   --batch-size <n> Rows per upsert batch (default: 500)
+ *   --upsert         Overwrite existing prod rows (DO UPDATE SET).
+ *                    Default behaviour is DO NOTHING (only insert new rows).
  *
  * Requires:
  *   DATABASE_URL       — development database
@@ -34,6 +36,7 @@ const flagBool = (n) => args.includes(n);
 
 const FLAG_TABLE      = flagStr("--table");
 const FLAG_DRY        = flagBool("--dry-run");
+const FLAG_UPSERT     = flagBool("--upsert");
 const FLAG_BATCH_SIZE = flagStr("--batch-size") ? parseInt(flagStr("--batch-size"), 10) : 500;
 
 // ── Table configuration ───────────────────────────────────────────────────────
@@ -169,8 +172,9 @@ async function syncTable({ name, conflict_col, conflict_cols, conflict_constrain
       continue;
     }
 
-    // Build multi-row INSERT with DO UPDATE; use RETURNING to distinguish inserts vs updates.
-    // xmax = 0 → newly inserted row; xmax != 0 → updated (conflict resolved with DO UPDATE).
+    // Build multi-row INSERT with conditional conflict action; use RETURNING to distinguish
+    // inserts vs updates. xmax = 0 → newly inserted row; xmax != 0 → updated row (DO UPDATE).
+    // With DO NOTHING, conflicting rows are not returned so they show up as "unchanged".
     const valueClauses = rows.map((_, rowIdx) => {
       const start = rowIdx * insertCols.length;
       const params = insertCols.map((_, ci) => `$${start + ci + 1}`).join(", ");
@@ -188,9 +192,13 @@ async function syncTable({ name, conflict_col, conflict_cols, conflict_constrain
       }),
     );
 
+    const conflictAction = FLAG_UPSERT
+      ? `DO UPDATE SET ${setClause}`
+      : `DO NOTHING`;
+
     const sql =
       `INSERT INTO "${name}" (${colList}) VALUES ${valueClauses.join(",")} ` +
-      `ON CONFLICT ${conflictTarget} DO UPDATE SET ${setClause} ` +
+      `ON CONFLICT ${conflictTarget} ${conflictAction} ` +
       `RETURNING (xmax::text::bigint = 0) AS was_inserted`;
 
     const result = await prodPool.query(sql, flatValues);
@@ -226,6 +234,9 @@ async function main() {
   console.log("│         Cortéa — Dev → Prod Data Sync                       │");
   if (FLAG_DRY) {
     console.log("│                    [DRY RUN — geen wijzigingen]             │");
+  }
+  if (FLAG_UPSERT) {
+    console.log("│                    [UPSERT — bestaande rijen worden bijgewerkt] │");
   }
   console.log("└─────────────────────────────────────────────────────────────┘");
 

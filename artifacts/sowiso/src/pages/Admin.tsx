@@ -3355,6 +3355,11 @@ function sweeperLabel(sweeper: string): string {
     return `Oefenvragen ${lang}`;
   }
   if (sweeper === "scenario-translation") return "Scenario's (alle talen)";
+  if (sweeper === "compass-content-translation") return "Landenprotocollen";
+  if (sweeper.startsWith("compass-content-translation-")) {
+    const lang = sweeper.replace("compass-content-translation-", "").toUpperCase();
+    return `Landenprotocollen ${lang}`;
+  }
   if (sweeper === "compass-translation")  return "Landenprotocollen";
   if (sweeper === "counsel-seed")             return "Atelier-distillaten";
   if (sweeper === "counsel-seed-translation") return "Atelier-distillaten (Vertaling)";
@@ -3381,12 +3386,16 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
             <table className="w-full text-xs font-mono">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border/40">
-                  <th className="py-1.5 pr-3 font-normal">taak</th>
-                  <th className="py-1.5 pr-3 font-normal">gestart</th>
-                  <th className="py-1.5 pr-3 font-normal text-right">items</th>
-                  <th className="py-1.5 pr-3 font-normal text-right">kosten</th>
+                  <th className="py-1.5 pr-3 font-normal">tijdstip</th>
+                  <th className="py-1.5 pr-3 font-normal">module</th>
+                  <th className="py-1.5 pr-2 font-normal">taal</th>
+                  <th className="py-1.5 pr-2 font-normal">register</th>
+                  <th className="py-1.5 pr-2 font-normal">regio</th>
+                  <th className="py-1.5 pr-2 font-normal text-right">items</th>
+                  <th className="py-1.5 pr-2 font-normal text-right">kosten</th>
+                  <th className="py-1.5 pr-2 font-normal text-right">duur</th>
                   <th className="py-1.5 pr-3 font-normal">kwaliteit</th>
-                  <th className="py-1.5 pr-3 font-normal">status</th>
+                  <th className="py-1.5 font-normal">status</th>
                 </tr>
               </thead>
               <tbody>
@@ -3399,20 +3408,56 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
                   const scoreColor = avgScore === null ? "" :
                     avgScore >= 8.0 ? "text-emerald-700" :
                     avgScore >= 7.0 ? "text-amber-700" : "text-rose-700";
+
+                  // Extract module / taal / register / regio from sweeper + metadata
+                  const swLang = r.sweeper.startsWith("ltq-translation-")
+                    ? r.sweeper.replace("ltq-translation-", "").toUpperCase()
+                    : r.sweeper.startsWith("scenario-translation-")
+                    ? r.sweeper.replace("scenario-translation-", "").toUpperCase()
+                    : r.sweeper.startsWith("compass-content-translation-")
+                    ? r.sweeper.replace("compass-content-translation-", "").toUpperCase()
+                    : null;
+                  const moduleName = r.sweeper.startsWith("ltq-translation") ? "LTQ"
+                    : r.sweeper.startsWith("scenario-translation") ? "Scenario"
+                    : r.sweeper.startsWith("compass-content-translation") || r.sweeper.startsWith("compass-translation") ? "Compass"
+                    : r.sweeper.startsWith("counsel-seed-translation") ? "Atelier (trans.)"
+                    : r.sweeper === "counsel-seed" ? "Atelier (gen.)"
+                    : sweeperLabel(r.sweeper);
+                  const metaRegister = typeof meta.register === "string" ? meta.register
+                    : typeof meta.registers === "string" ? meta.registers : null;
+                  const metaRegion = typeof meta.region === "string" ? meta.region
+                    : typeof meta.region_code === "string" ? meta.region_code : null;
+                  const registerLabel = metaRegister === "middle_class" ? "Midden"
+                    : metaRegister === "elite" ? "Elite" : metaRegister ?? "—";
+
+                  // Duration: finished_at - started_at in minutes
+                  let duurLabel = "—";
+                  if (r.finished_at) {
+                    const ms = new Date(r.finished_at).getTime() - new Date(r.started_at).getTime();
+                    const mins = Math.round(ms / 60000);
+                    duurLabel = mins < 1 ? "<1 min" : `${mins} min`;
+                  } else if (r.status !== "failed") {
+                    duurLabel = "⏳";
+                  }
+
                   return (
                     <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
-                      <td className="py-1 pr-3 truncate max-w-[200px]">{sweeperLabel(r.sweeper)}</td>
-                      <td className="py-1 pr-3 text-muted-foreground">{formatRelative(r.started_at)}</td>
-                      <td className="py-1 pr-3 text-right tabular-nums">{r.items_processed}</td>
-                      <td className="py-1 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
+                      <td className="py-1 pr-3 text-muted-foreground whitespace-nowrap">{formatRelative(r.started_at)}</td>
+                      <td className="py-1 pr-3 font-medium">{moduleName}</td>
+                      <td className="py-1 pr-2">{swLang ?? "—"}</td>
+                      <td className="py-1 pr-2 text-muted-foreground">{registerLabel}</td>
+                      <td className="py-1 pr-2 text-muted-foreground">{metaRegion ?? "—"}</td>
+                      <td className="py-1 pr-2 text-right tabular-nums">{r.items_processed}</td>
+                      <td className="py-1 pr-2 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
+                      <td className="py-1 pr-2 text-right tabular-nums text-muted-foreground">{duurLabel}</td>
                       <td className="py-1 pr-3">
                         {avgScore !== null ? (
                           <span className={`tabular-nums ${scoreColor}`} title={pctPassed !== null ? `${Math.round(pctPassed)}% eerste poging geslaagd` : undefined}>
-                            {scoreLow && "⚠ "}{avgScore.toFixed(1)}{pctPassed !== null ? ` · ${Math.round(pctPassed)}%` : ""}
+                            {scoreLow && "⚠ "}⭐{avgScore.toFixed(1)}{pctPassed !== null ? ` · ${Math.round(pctPassed)}%` : ""}
                           </span>
                         ) : <span className="text-muted-foreground">—</span>}
                       </td>
-                      <td className="py-1 pr-3"><StatusPill status={r.status} /></td>
+                      <td className="py-1"><StatusPill status={r.status} /></td>
                     </tr>
                   );
                 })}
@@ -3515,7 +3560,7 @@ function LtqRegisterGrid({
             const enTotal = enGrid[region]?.[register] ?? 0;
             const rowData = grid[region]?.[register] ?? {};
             const rowKey = `${region}-${register}`;
-            const rowActive = activeSweepers.has(`ltq-translation-${rowKey}`) || activeSweepers.has("ltq-translation");
+            const rowActive = activeSweepers.has("ltq-translation");
             const rowBusy = rowLaunching === rowKey;
             // Count how many langs are missing for this row
             const missingLangs = TRANSLATION_LANGS.filter((lang) => {
@@ -3852,6 +3897,7 @@ function TranslationHealthTab() {
     new Date(r.started_at).getTime() >= sevenDaysAgo &&
     (r.sweeper.startsWith("ltq-translation") ||
      r.sweeper === "scenario-translation" ||
+     r.sweeper.startsWith("compass-content-translation") ||
      r.sweeper === "compass-translation" ||
      r.sweeper.startsWith("counsel-seed"))
   );
@@ -3947,7 +3993,7 @@ function TranslationHealthTab() {
             sweeper="ltq-translation"
             showRegisterBars
             costPerItem={0.006}
-            itemsPerMinute={35}
+            itemsPerMinute={20}
             onTranslateAll={launchLtqAll}
             onTranslateLang={launchLtqLang}
             launching={ltqLaunching}
@@ -3992,7 +4038,7 @@ function TranslationHealthTab() {
           langs={scen.langs as LangCoverage[]}
           sweeper="scenario-translation"
           costPerItem={0.005}
-          itemsPerMinute={40}
+          itemsPerMinute={15}
           onTranslateAll={launchScenAll}
           onTranslateLang={launchScenLang}
           launching={scenLaunching}
@@ -4009,9 +4055,9 @@ function TranslationHealthTab() {
           actionLabel="vertaalt alle landenprotocollen naar die taal (alle pijlers van alle gepubliceerde landen die nog niet vertaald zijn)."
           total={compass.total}
           langs={compass.langs as LangCoverage[]}
-          sweeper="compass-translation"
+          sweeper="compass-content-translation"
           costPerItem={0.011}
-          itemsPerMinute={30}
+          itemsPerMinute={3}
           onTranslateAll={launchCompassAll}
           onTranslateLang={launchCompassLang}
           launching={compassLaunching}
@@ -4054,10 +4100,10 @@ function TranslationHealthTab() {
       {runs.length > 0 && (
         <WorkerRunsLog runs={runs.filter((r) =>
           r.sweeper.startsWith("ltq-translation") ||
-          r.sweeper === "scenario-translation" ||
+          r.sweeper.startsWith("scenario-translation") ||
+          r.sweeper.startsWith("compass-content-translation") ||
           r.sweeper === "compass-translation" ||
-          r.sweeper === "counsel-seed" ||
-          r.sweeper === "counsel-seed-translation"
+          r.sweeper.startsWith("counsel-seed")
         )} />
       )}
 

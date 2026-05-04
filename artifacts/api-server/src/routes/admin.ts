@@ -2574,6 +2574,41 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
 
   const { lang, region, register, limit, no_quality, parallel } = parsed.data;
 
+  // Duplicate-active-run guard: check for unfinished run with matching sweeper
+  const sweeperName = lang ? `ltq-translation-${lang}` : "ltq-translation";
+  const activeRunRows = await db
+    .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
+    .from(workerRunsTable)
+    .where(sql`sweeper = ${sweeperName} AND finished_at IS NULL AND status != 'failed'`)
+    .limit(1);
+  if (activeRunRows.length > 0) {
+    return res.status(409).json({
+      ok: false,
+      error: "Een vertaalworker voor deze taal is momenteel actief. Wacht tot die klaar is.",
+      active_since: activeRunRows[0].started_at,
+    });
+  }
+
+  // Estimate remaining work (LTQ: $0.006/question, 20 questions/min)
+  const remainingRows = await db.execute(
+    lang
+      ? sql`SELECT COUNT(*) AS n FROM learning_track_questions WHERE lang = 'en'
+            AND id NOT IN (SELECT source_id FROM learning_track_questions WHERE lang = ${lang})
+            ${region ? sql`AND region_code = ${region}` : sql``}
+            ${register ? sql`AND register = ${register}` : sql``}`
+      : sql`SELECT COALESCE(SUM(missing), 0) AS n FROM (
+              SELECT l.lang, COUNT(*) AS missing
+              FROM (SELECT unnest(ARRAY['nl','fr','de','es','pt','it','ar','ja','zh']) AS lang) l
+              CROSS JOIN learning_track_questions en
+              WHERE en.lang = 'en'
+                AND NOT EXISTS (SELECT 1 FROM learning_track_questions t WHERE t.lang = l.lang AND t.source_id = en.id)
+              GROUP BY l.lang
+            ) sub`
+  );
+  const estimatedQuestions = Number((remainingRows.rows[0] as { n: string }).n ?? 0);
+  const LTQ_RATE_PER_MIN = 20;
+  const LTQ_COST_PER_ITEM = 0.006;
+
   const script = lang
     ? "scripts/translate-learning-track-questions.mjs"
     : "scripts/translate-learning-track-all-langs.mjs";
@@ -2592,15 +2627,18 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ script, lang, region, register }, "Admin: LTQ translate worker spawned");
+  req.log?.info({ script, lang, region, register, estimatedQuestions }, "Admin: LTQ translate worker spawned");
 
   return res.json({
     ok: true,
+    queued: true,
     message: lang
       ? `LTQ translation worker for [${lang.toUpperCase()}] spawned in background.`
       : `LTQ all-languages orchestrator spawned (parallel=${parallel ?? 1}).`,
     pid: child.pid,
-    args: childArgs,
+    estimated_questions: estimatedQuestions,
+    estimated_usd: Math.round(estimatedQuestions * LTQ_COST_PER_ITEM * 100) / 100,
+    estimated_minutes: estimatedQuestions > 0 ? Math.ceil(estimatedQuestions / LTQ_RATE_PER_MIN) : 0,
   });
 });
 
@@ -2701,6 +2739,32 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
   }
   const { lang, id, force } = parsed.data;
 
+  // Duplicate-active-run guard
+  const scenSweeper = lang ? `scenario-translation-${lang}` : "scenario-translation";
+  const scenActiveRows = await db
+    .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
+    .from(workerRunsTable)
+    .where(sql`sweeper = ${scenSweeper} AND finished_at IS NULL AND status != 'failed'`)
+    .limit(1);
+  if (scenActiveRows.length > 0) {
+    return res.status(409).json({
+      ok: false,
+      error: "Een scenario-vertaalworker voor deze taal is momenteel actief. Wacht tot die klaar is.",
+      active_since: scenActiveRows[0].started_at,
+    });
+  }
+
+  // Estimate remaining scenarios (Scenario: $0.005/scenario, 15 scenarios/min)
+  const scenTotalRow = await db.execute(sql`SELECT COUNT(*) AS n FROM scenarios`);
+  const scenTotal = Number((scenTotalRow.rows[0] as { n: string }).n ?? 0);
+  const scenDoneRow = lang
+    ? await db.execute(sql`SELECT COUNT(DISTINCT id) AS n FROM scenarios, LATERAL jsonb_object_keys(COALESCE(title_i18n::jsonb,'{}')) AS k WHERE k = ${lang}`)
+    : { rows: [{ n: "0" }] };
+  const scenDone = Number((scenDoneRow.rows[0] as { n: string }).n ?? 0);
+  const scenRemaining = lang ? Math.max(0, scenTotal - scenDone) : scenTotal * 9;
+  const SCEN_RATE_PER_MIN = 15;
+  const SCEN_COST_PER_ITEM = 0.005;
+
   const childArgs = ["scripts/scenario-translate.mjs"];
   if (lang)  { childArgs.push("--lang",  lang); }
   if (id)    { childArgs.push("--id",    String(id)); }
@@ -2712,14 +2776,18 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ lang, id, force }, "Admin: scenario translate worker spawned");
+  req.log?.info({ lang, id, force, scenRemaining }, "Admin: scenario translate worker spawned");
 
   return res.json({
     ok: true,
+    queued: true,
     message: lang
       ? `Scenario translation worker for [${lang.toUpperCase()}] spawned in background.`
       : "Scenario translation worker (all languages) spawned in background.",
     pid: child.pid,
+    estimated_questions: scenRemaining,
+    estimated_usd: Math.round(scenRemaining * SCEN_COST_PER_ITEM * 100) / 100,
+    estimated_minutes: scenRemaining > 0 ? Math.ceil(scenRemaining / SCEN_RATE_PER_MIN) : 0,
   });
 });
 
@@ -2750,7 +2818,7 @@ router.get("/admin/compass/translation-status", requireAdmin, async (req, res) =
     const lastRun = await db
       .select()
       .from(workerRunsTable)
-      .where(eq(workerRunsTable.sweeper, "compass-translation"))
+      .where(sql`sweeper = 'compass-content-translation' OR sweeper LIKE 'compass-content-translation-%'`)
       .orderBy(desc(workerRunsTable.started_at))
       .limit(1);
 
@@ -2783,6 +2851,32 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   }
   const { lang, region, force } = parsed.data;
 
+  // Duplicate-active-run guard (sweeper = "compass-content-translation" or per-lang variant)
+  const compassSweeper = lang ? `compass-content-translation-${lang}` : "compass-content-translation";
+  const compassActiveRows = await db
+    .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
+    .from(workerRunsTable)
+    .where(sql`sweeper = ${compassSweeper} AND finished_at IS NULL AND status != 'failed'`)
+    .limit(1);
+  if (compassActiveRows.length > 0) {
+    return res.status(409).json({
+      ok: false,
+      error: "Een compass-vertaalworker voor deze taal is momenteel actief. Wacht tot die klaar is.",
+      active_since: compassActiveRows[0].started_at,
+    });
+  }
+
+  // Estimate remaining regions (Compass: $0.011/region, 3 regions/min)
+  const compassTotalRow = await db.execute(sql`SELECT COUNT(*) AS n FROM compass_regions WHERE is_published = true`);
+  const compassTotal = Number((compassTotalRow.rows[0] as { n: string }).n ?? 0);
+  const compassDoneRow = lang
+    ? await db.execute(sql`SELECT COUNT(DISTINCT region_code) AS n FROM compass_regions, LATERAL jsonb_object_keys(COALESCE(content,'{}')) AS k WHERE k = ${lang} AND is_published = true`)
+    : { rows: [{ n: "0" }] };
+  const compassDone = Number((compassDoneRow.rows[0] as { n: string }).n ?? 0);
+  const compassRemaining = lang ? Math.max(0, compassTotal - compassDone) : compassTotal * 9;
+  const COMPASS_RATE_PER_MIN = 3;
+  const COMPASS_COST_PER_ITEM = 0.011;
+
   const childArgs = ["scripts/translate-compass-content.mjs"];
   if (lang)   { childArgs.push("--lang",   lang); }
   if (region) { childArgs.push("--region", region); }
@@ -2794,14 +2888,18 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ lang, region, force }, "Admin: compass translate worker spawned");
+  req.log?.info({ lang, region, force, compassRemaining }, "Admin: compass translate worker spawned");
 
   return res.json({
     ok: true,
+    queued: true,
     message: lang
       ? `Compass translation worker for [${lang.toUpperCase()}] spawned in background.`
       : "Compass translation worker (all languages) spawned in background.",
     pid: child.pid,
+    estimated_questions: compassRemaining,
+    estimated_usd: Math.round(compassRemaining * COMPASS_COST_PER_ITEM * 100) / 100,
+    estimated_minutes: compassRemaining > 0 ? Math.ceil(compassRemaining / COMPASS_RATE_PER_MIN) : 0,
   });
 });
 

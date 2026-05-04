@@ -124,6 +124,7 @@
   "counsel.session_override_reset": "プロフィール地域にリセット",
   "counsel.session_override_hint": "この地域はこのご相談にのみ適用されます — お客様のプロフィール地域は変更されません。",
   "counsel.picker.search_placeholder": "地域を検索",
+  "counsel.picker.clear_search": "検索をクリア",
   "counsel.picker.soon": "準備中",
   "counsel.picker.continent.europe": "ヨーロッパ",
   "counsel.picker.continent.americas": "南北アメリカ",

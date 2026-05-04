@@ -145,6 +145,7 @@
   "counsel.session_override_reset": "Terug naar profielregio",
   "counsel.session_override_hint": "Deze regio geldt alleen voor dit consult — uw profielregio blijft ongewijzigd.",
   "counsel.picker.search_placeholder": "Zoek regio's",
+  "counsel.picker.clear_search": "Zoekopdracht wissen",
   "counsel.picker.soon": "Binnenkort",
   "counsel.picker.continent.europe": "Europa",
   "counsel.picker.continent.americas": "Amerika",

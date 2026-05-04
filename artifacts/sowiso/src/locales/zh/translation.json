@@ -127,6 +127,7 @@
   "counsel.session_override_reset": "重置为档案地区",
   "counsel.session_override_hint": "此地区仅适用于本次咨询——您的档案地区保持不变。",
   "counsel.picker.search_placeholder": "搜索地区",
+  "counsel.picker.clear_search": "清除搜索",
   "counsel.picker.soon": "即将开放",
   "counsel.picker.continent.europe": "欧洲",
   "counsel.picker.continent.americas": "美洲",

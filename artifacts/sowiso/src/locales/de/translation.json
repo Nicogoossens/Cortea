@@ -135,6 +135,7 @@
   "counsel.change_region": "ändern",
   "counsel.region_hint": "Ändern über den Regionsauswähler oben rechts",
   "counsel.picker.search_placeholder": "Regionen suchen",
+  "counsel.picker.clear_search": "Suche löschen",
   "counsel.picker.soon": "Bald",
   "counsel.picker.continent.europe": "Europa",
   "counsel.picker.continent.americas": "Amerika",

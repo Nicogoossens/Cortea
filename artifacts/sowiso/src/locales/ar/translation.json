@@ -142,6 +142,7 @@
   "counsel.session_override_reset": "إعادة تعيين إلى منطقة الملف الشخصي",
   "counsel.session_override_hint": "هذه المنطقة تنطبق على هذه الاستشارة فقط — منطقة ملفك الشخصي لم تتغير.",
   "counsel.picker.search_placeholder": "البحث عن منطقة",
+  "counsel.picker.clear_search": "مسح البحث",
   "counsel.picker.soon": "قريباً",
   "counsel.picker.continent.europe": "أوروبا",
   "counsel.picker.continent.americas": "الأمريكتان",

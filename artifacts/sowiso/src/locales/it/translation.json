@@ -133,6 +133,7 @@
   "counsel.session_override_reset": "Ripristina regione del profilo",
   "counsel.session_override_hint": "Questa regione si applica solo a questa consulenza — la regione del profilo rimane invariata.",
   "counsel.picker.search_placeholder": "Cerca regione",
+  "counsel.picker.clear_search": "Cancella ricerca",
   "counsel.picker.soon": "Presto",
   "counsel.picker.continent.europe": "Europa",
   "counsel.picker.continent.americas": "Americhe",

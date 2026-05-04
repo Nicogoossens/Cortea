@@ -63,7 +63,7 @@ const args = process.argv.slice(2);
 const flagStr  = (n) => { const i = args.indexOf(n); return i !== -1 && args[i+1] ? args[i+1] : null; };
 const flagBool = (n) => args.includes(n);
 
-const FLAG_LANG       = flagStr("--lang");
+const FLAG_LANG       = flagStr("--lang") ?? "nl"; // default nl for backward compat
 const FLAG_REGION     = flagStr("--region");
 const FLAG_REGISTER   = flagStr("--register");
 const FLAG_LIMIT      = flagStr("--limit") ? parseInt(flagStr("--limit"), 10) : null;
@@ -72,9 +72,10 @@ const FLAG_NO_QUALITY = flagBool("--no-quality");
 
 const SUPPORTED_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 
-if (!FLAG_LANG || !SUPPORTED_LANGS.includes(FLAG_LANG)) {
+if (!SUPPORTED_LANGS.includes(FLAG_LANG)) {
   console.error(
-    `Error: --lang <code> is required.\nSupported: ${SUPPORTED_LANGS.join(", ")}\n\n` +
+    `Error: unsupported --lang code "${FLAG_LANG}".\n` +
+    `Supported: ${SUPPORTED_LANGS.join(", ")}\n\n` +
     `  node scripts/translate-learning-track-questions.mjs --lang fr\n`
   );
   process.exit(1);
@@ -415,6 +416,8 @@ async function main() {
 
   let translated = 0, skipped = 0, failed = 0, rewrites = 0, stop = false;
   let scoreSum = 0, scoreCount = 0;
+  // Per-register quality tracking (populated even when FLAG_REGISTER is null)
+  const perRegisterQuality = {};
 
   for (const slot of slotsRes.rows) {
     if (stop) break;
@@ -456,21 +459,32 @@ async function main() {
       let qualScore  = null;
 
       if (!FLAG_NO_QUALITY && !FLAG_DRY) {
+        let evalOk = true;
         try {
           const ev = await evaluateQuality(result.question_text, lang, slot.register);
           qualScore = ev.score;
           scoreSum += qualScore; scoreCount++;
+          // Accumulate per-register stats
+          if (!perRegisterQuality[slot.register]) {
+            perRegisterQuality[slot.register] = { scoreSum: 0, scoreCount: 0, rewrites: 0 };
+          }
+          perRegisterQuality[slot.register].scoreCount++;
+          perRegisterQuality[slot.register].scoreSum += qualScore;
           if (qualScore < 8) {
             finalQText = ev.rewritten;
             rewrites++;
+            perRegisterQuality[slot.register].rewrites++;
             process.stdout.write(`[⚠${qualScore}→rewrite] `);
           } else {
             process.stdout.write(`[✓${qualScore}] `);
           }
         } catch (err) {
-          process.stderr.write(`eval err: ${err.message}\n`);
-          scoreSum += 10; scoreCount++;
+          // Quality evaluation failed — do not insert unverified translation.
+          process.stdout.write(`[eval-err: ${err.message.substring(0, 60)}]\n`);
+          failed++;
+          evalOk = false;
         }
+        if (!evalOk) continue;
       }
 
       if (FLAG_DRY) {
@@ -526,6 +540,15 @@ async function main() {
       quality_checked: !FLAG_NO_QUALITY,
       dryRun: FLAG_DRY,
       limit: FLAG_LIMIT,
+      // Per-register breakdown (populated when both registers are processed together)
+      per_register_quality: Object.fromEntries(
+        Object.entries(perRegisterQuality).map(([reg, s]) => [reg, {
+          avg_score: s.scoreCount > 0 ? Math.round((s.scoreSum / s.scoreCount) * 10) / 10 : null,
+          pct_passed_first_try: s.scoreCount > 0 ? Math.round(((s.scoreCount - s.rewrites) / s.scoreCount) * 100) : null,
+          pct_rewritten: s.scoreCount > 0 ? Math.round((s.rewrites / s.scoreCount) * 100) : null,
+          scored: s.scoreCount,
+        }])
+      ),
     },
   });
   await closeWorkerCostPool();

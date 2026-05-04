@@ -2,8 +2,10 @@
 /**
  * SOWISO LTQ All-Languages Orchestrator
  *
- * Spawns translate-learning-track-questions.mjs for each of the 8 target
+ * Spawns translate-learning-track-questions.mjs for each of the 9 target
  * languages (nl fr de es pt it ar ja zh), optionally in parallel groups.
+ * The per-lang worker is idempotent — if nl is already fully translated it
+ * completes immediately, making it safe to include in every admin-triggered run.
  *
  * Usage:
  *   node scripts/translate-learning-track-all-langs.mjs [options]

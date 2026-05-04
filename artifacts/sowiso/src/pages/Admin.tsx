@@ -2967,10 +2967,15 @@ const TRANS_LABELS: Record<TransLang, string> = {
   it: "IT", ar: "AR", ja: "JA", zh: "ZH",
 };
 
-interface LangCoverage { lang: TransLang; count: number; pct: number; last_run?: unknown }
+interface RegCoverage { count: number; pct: number }
+interface LangCoverage {
+  lang: TransLang; count: number; pct: number; last_run?: unknown;
+  by_register?: Record<string, RegCoverage>;
+}
 
 interface LtqStatus {
   ok: boolean; en_total: number;
+  en_by_register?: Record<string, number>;
   langs: LangCoverage[];
 }
 interface ScenarioStatus {
@@ -3033,26 +3038,29 @@ function StatusPill({ status }: { status: string }) {
 // ── Coverage panel for one content type ──────────────────────────────────────
 interface CoverageCardProps {
   title: string;
+  description: string;
   total: number;
   langs: LangCoverage[];
   sweeper: string;
+  showRegisterBars?: boolean;
   onTranslateAll: () => Promise<void>;
   onTranslateLang: (lang: TransLang) => Promise<void>;
   launching: string | null;
   lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
 }
-function CoverageCard({ title, total, langs, onTranslateAll, onTranslateLang, launching, lastRun }: CoverageCardProps) {
+function CoverageCard({ title, description, total, langs, showRegisterBars, onTranslateAll, onTranslateLang, launching, lastRun }: CoverageCardProps) {
   const allDone = langs.every((l) => l.pct >= 100);
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80">{title}</CardTitle>
-            <p className="text-xs font-mono text-muted-foreground mt-0.5">
-              EN source: {total.toLocaleString()}
+          <div className="space-y-0.5">
+            <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
+            <p className="text-xs text-muted-foreground leading-snug">{description}</p>
+            <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">
+              Bron: {total.toLocaleString()} EN-rijen
               {lastRun && (
-                <> · last run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /> · {lastRun.items_processed} items · ${lastRun.estimated_usd.toFixed(3)}</>
+                <> · laatste run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /> · {lastRun.items_processed} items · ${lastRun.estimated_usd.toFixed(3)}</>
               )}
             </p>
           </div>
@@ -3064,32 +3072,64 @@ function CoverageCard({ title, total, langs, onTranslateAll, onTranslateLang, la
             onClick={onTranslateAll}
           >
             {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Translate all langs
+            Alle talen vertalen
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-4 gap-y-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-4 gap-y-4">
           {langs.map((l) => (
-            <div key={l.lang} className="space-y-1">
+            <div key={l.lang} className="space-y-1.5">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-mono font-medium text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
                 <button
                   className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
                   disabled={launching !== null}
                   onClick={() => onTranslateLang(l.lang)}
-                  title={`Translate ${l.lang.toUpperCase()} now`}
+                  title={`${l.lang.toUpperCase()} nu vertalen`}
                 >
                   {launching === l.lang ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
                 </button>
               </div>
               <CovBar pct={l.pct} count={l.count} />
+              {showRegisterBars && l.by_register && (
+                <div className="space-y-1 pt-0.5">
+                  {(["middle_class", "elite"] as const).map((reg) => {
+                    const rv = l.by_register![reg] ?? { count: 0, pct: 0 };
+                    return (
+                      <div key={reg} className="space-y-0.5">
+                        <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wide">
+                          {reg === "middle_class" ? "Middenklasse" : "Elite"}
+                        </p>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${reg === "middle_class" ? "bg-blue-400" : "bg-purple-400"}`}
+                            style={{ width: `${Math.min(100, rv.pct)}%` }}
+                          />
+                        </div>
+                        <p className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{rv.count.toLocaleString()} · {rv.pct}%</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+// ── Human-readable sweeper display names ──────────────────────────────────────
+function sweeperLabel(sweeper: string): string {
+  if (sweeper.startsWith("ltq-translation-")) {
+    const lang = sweeper.replace("ltq-translation-", "").toUpperCase();
+    return `Oefenvragen ${lang}`;
+  }
+  if (sweeper === "scenario-translation") return "Scenario's (alle talen)";
+  if (sweeper === "compass-translation")  return "Landenprotocollen";
+  return sweeper;
 }
 
 // ── Worker Runs Log ───────────────────────────────────────────────────────────
@@ -3101,7 +3141,7 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
       <CardHeader className="pb-2 cursor-pointer" onClick={() => setOpen((o) => !o)}>
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-            <Clock className="w-4 h-4" /> Worker Run History ({runs.length})
+            <Clock className="w-4 h-4" /> Recente vertaalruns ({runs.length})
           </CardTitle>
           <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
         </div>
@@ -3112,19 +3152,17 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
             <table className="w-full text-xs font-mono">
               <thead>
                 <tr className="text-left text-muted-foreground border-b border-border/40">
-                  <th className="py-1.5 pr-3 font-normal">sweeper</th>
-                  <th className="py-1.5 pr-3 font-normal">lang</th>
-                  <th className="py-1.5 pr-3 font-normal">started</th>
+                  <th className="py-1.5 pr-3 font-normal">taak</th>
+                  <th className="py-1.5 pr-3 font-normal">gestart</th>
                   <th className="py-1.5 pr-3 font-normal text-right">items</th>
-                  <th className="py-1.5 pr-3 font-normal text-right">usd</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">kosten</th>
                   <th className="py-1.5 pr-3 font-normal">status</th>
                 </tr>
               </thead>
               <tbody>
                 {runs.map((r) => (
                   <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
-                    <td className="py-1 pr-3 truncate max-w-[140px]">{r.sweeper}</td>
-                    <td className="py-1 pr-3 uppercase">{(r.metadata?.lang as string) ?? "—"}</td>
+                    <td className="py-1 pr-3 truncate max-w-[200px]">{sweeperLabel(r.sweeper)}</td>
                     <td className="py-1 pr-3 text-muted-foreground">{formatRelative(r.started_at)}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">{r.items_processed}</td>
                     <td className="py-1 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
@@ -3294,9 +3332,9 @@ function TranslationHealthTab() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-serif text-foreground">Translation Control Panel</h2>
-          <p className="text-xs font-mono text-muted-foreground mt-0.5">
-            LTQ · Scenarios · Compass — 9 target languages · register-aware · inline quality evaluation
+          <h2 className="text-xl font-serif text-foreground">Vertalingen</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Beheer de AI-vertalingen van oefenvragen, etiquettescenario's en landenprotocollen naar 9 talen.
           </p>
         </div>
         <Button
@@ -3315,7 +3353,7 @@ function TranslationHealthTab() {
       {(ltq || scen || compass) && (
         <div className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono border ${allGreen ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700" : "border-amber-500/40 bg-amber-500/5 text-amber-700"}`}>
           {allGreen ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-          {allGreen ? "All content types are fully translated across all 9 languages." : "Some languages still need translation — use the buttons below to launch workers."}
+          {allGreen ? "Alle inhoud is volledig vertaald in alle 9 talen." : "Sommige talen zijn nog niet vertaald — gebruik de knoppen hieronder om een vertaalrun te starten."}
         </div>
       )}
 
@@ -3328,10 +3366,12 @@ function TranslationHealthTab() {
       {/* LTQ */}
       {ltq && (
         <CoverageCard
-          title={`Learning Track Questions · ${ltq.en_total.toLocaleString()} EN`}
+          title="Oefenvragen"
+          description={`${ltq.en_total.toLocaleString()} Engelstalige DB-rijen vertaald naar 9 talen. Middenklasse en elite worden apart verwerkt — zie de sub-balkjes per taal.`}
           total={ltq.en_total}
           langs={ltq.langs as LangCoverage[]}
           sweeper="ltq-translation"
+          showRegisterBars
           onTranslateAll={launchLtqAll}
           onTranslateLang={launchLtqLang}
           launching={ltqLaunching}
@@ -3341,7 +3381,8 @@ function TranslationHealthTab() {
       {/* Scenarios */}
       {scen && (
         <CoverageCard
-          title={`Scenarios · ${scen.total} EN`}
+          title="Etiquettescenario's"
+          description="Realistische sociale situaties (titel + situatiebeschrijving) per taal vertaald vanuit het Engels. Zichtbaar voor gebruikers in de leermodule."
           total={scen.total}
           langs={scen.langs as LangCoverage[]}
           sweeper="scenario-translation"
@@ -3355,7 +3396,8 @@ function TranslationHealthTab() {
       {/* Compass */}
       {compass && (
         <CoverageCard
-          title={`Compass Regions · ${compass.total} regions`}
+          title="Landenprotocollen"
+          description="De 5 etiquette-pijlers per land (compass_regions.locale_data), vertaald voor alle 206 gepubliceerde landen. Zichtbaar op de Cultural Compass-pagina's."
           total={compass.total}
           langs={compass.langs as LangCoverage[]}
           sweeper="compass-translation"
@@ -3775,12 +3817,12 @@ export default function Admin() {
           { key: "users" as const, label: "Users", icon: Users },
           { key: "attribution" as const, label: "Attribution", icon: BarChart3 },
           { key: "onboarding" as const, label: "Onboarding", icon: TrendingUp },
-          { key: "content" as const, label: "Content", icon: Database },
+          { key: "content" as const, label: "Inhoud", icon: Database },
           { key: "use_cases" as const, label: "Use Cases", icon: Briefcase },
           { key: "cc_screening" as const, label: "CC Screening", icon: Cpu },
           { key: "integrations" as const, label: "Integrations", icon: KeyRound },
-          { key: "translation" as const, label: "Translation", icon: Languages },
-          { key: "counsel_seeds" as const, label: "Counsel Seeds", icon: Database },
+          { key: "translation" as const, label: "Vertalingen", icon: Languages },
+          { key: "counsel_seeds" as const, label: "Atelier-distillaten", icon: Database },
           { key: "votes" as const, label: "Country Votes", icon: Vote },
         ]).map(({ key, label, icon: Icon }) => (
           <button

@@ -2382,16 +2382,27 @@ router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
 const SUPPORTED_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
 type SupportedLang = typeof SUPPORTED_LANGS[number];
 
-/** GET /admin/ltq/translation-status — per-lang coverage of learning_track_questions */
+/** GET /admin/ltq/translation-status — per-lang + per-register coverage of learning_track_questions */
 router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
   try {
-    // Total EN questions by region+register
+    // Total EN questions overall + per register
     const enRow = await db.execute(
       sql`SELECT COUNT(*) AS total FROM learning_track_questions WHERE lang = 'en'`
     );
     const enTotal = Number((enRow.rows[0] as { total: string }).total);
 
-    // Per-lang counts
+    const enByRegisterRows = await db.execute(
+      sql`SELECT register, COUNT(*) AS total
+          FROM learning_track_questions
+          WHERE lang = 'en'
+          GROUP BY register`
+    );
+    const enByRegister: Record<string, number> = {};
+    for (const r of enByRegisterRows.rows as { register: string; total: string }[]) {
+      enByRegister[r.register] = Number(r.total);
+    }
+
+    // Per-lang overall counts
     const perLangRows = await db.execute(
       sql`SELECT lang, COUNT(*) AS cnt
           FROM learning_track_questions
@@ -2399,11 +2410,30 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
           GROUP BY lang
           ORDER BY lang`
     );
-
     const perLang: Record<string, { count: number; pct: number }> = {};
     for (const row of perLangRows.rows as { lang: string; cnt: string }[]) {
       const n = Number(row.cnt);
       perLang[row.lang] = { count: n, pct: enTotal > 0 ? Math.round((n / enTotal) * 100) : 0 };
+    }
+
+    // Per-lang per-register counts
+    const perLangRegRows = await db.execute(
+      sql`SELECT lang, register, COUNT(*) AS cnt
+          FROM learning_track_questions
+          WHERE lang != 'en'
+          GROUP BY lang, register
+          ORDER BY lang, register`
+    );
+    type RegMap = Record<string, { count: number; pct: number }>;
+    const perLangReg: Record<string, RegMap> = {};
+    for (const row of perLangRegRows.rows as { lang: string; register: string; cnt: string }[]) {
+      if (!perLangReg[row.lang]) perLangReg[row.lang] = {};
+      const n = Number(row.cnt);
+      const enReg = enByRegister[row.register] ?? 0;
+      perLangReg[row.lang][row.register] = {
+        count: n,
+        pct: enReg > 0 ? Math.round((n / enReg) * 100) : 0,
+      };
     }
 
     // Last run per ltq-translation-* sweeper
@@ -2414,7 +2444,6 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
           WHERE sweeper LIKE 'ltq-translation-%'
           ORDER BY sweeper, started_at DESC`
     );
-
     const lastRunByLang: Record<string, unknown> = {};
     for (const r of lastRuns.rows as { sweeper: string; [k: string]: unknown }[]) {
       const lang = r.sweeper.replace("ltq-translation-", "");
@@ -2424,9 +2453,11 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
     return res.json({
       ok: true,
       en_total: enTotal,
+      en_by_register: enByRegister,
       langs: SUPPORTED_LANGS.map((lang) => ({
         lang,
         ...(perLang[lang] ?? { count: 0, pct: 0 }),
+        by_register: perLangReg[lang] ?? {},
         last_run: lastRunByLang[lang] ?? null,
       })),
     });

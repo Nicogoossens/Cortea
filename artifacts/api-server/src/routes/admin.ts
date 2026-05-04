@@ -2423,13 +2423,25 @@ router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
       ? Math.min(limitParam, 100) : 50;
     const sweeperFilter = typeof req.query.sweeper === "string" && req.query.sweeper.length > 0
       ? req.query.sweeper : null;
+    // ?active=1 — return only currently-running rows (finished_at IS NULL), no row limit.
+    // Used by the frontend to build activeSweepers independently of the history limit.
+    const activeOnly = req.query.active === "1";
 
-    const rows = await db
+    const whereClause = activeOnly
+      ? sweeperFilter
+        ? sql`sweeper LIKE ${sweeperFilter + "%"} AND finished_at IS NULL AND status = 'running'`
+        : sql`finished_at IS NULL AND status = 'running'`
+      : sweeperFilter
+        ? sql`sweeper LIKE ${sweeperFilter + "%"}`
+        : undefined;
+
+    const query = db
       .select()
       .from(workerRunsTable)
-      .where(sweeperFilter ? sql`sweeper LIKE ${sweeperFilter + "%"}` : undefined)
-      .orderBy(desc(workerRunsTable.started_at))
-      .limit(limit);
+      .where(whereClause)
+      .orderBy(desc(workerRunsTable.started_at));
+
+    const rows = activeOnly ? await query : await query.limit(limit);
     return res.json({ ok: true, runs: rows });
   } catch (err) {
     req.log?.error({ err }, "Admin: worker-runs fetch failed");
@@ -2687,6 +2699,8 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
               FROM (SELECT unnest(ARRAY['nl','fr','de','es','pt','it','ar','ja','zh']) AS lang) l
               CROSS JOIN learning_track_questions en
               WHERE en.lang = 'en'
+                ${region_code ? sql`AND en.region_code = ${region_code}` : sql``}
+                ${register   ? sql`AND en.register = ${register}`       : sql``}
                 AND NOT EXISTS (SELECT 1 FROM learning_track_questions t WHERE t.lang = l.lang AND t.source_id = en.id)
               GROUP BY l.lang
             ) sub`

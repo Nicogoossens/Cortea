@@ -3649,6 +3649,7 @@ function TranslationHealthTab() {
   const [counselSeeds, setCounselSeeds] = useState<CounselSeedCoverageStatus | null>(null);
   const [counselSeedTrans, setCounselSeedTrans] = useState<CounselSeedTransStatus | null>(null);
   const [runs, setRuns]           = useState<WorkerRun[]>([]);
+  const [activeRuns, setActiveRuns] = useState<WorkerRun[]>([]);
   const [loading, setLoading]     = useState(false);
   const [err, setErr]             = useState<string | null>(null);
 
@@ -3670,13 +3671,14 @@ function TranslationHealthTab() {
     setLoading(true);
     setErr(null);
     try {
-      const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes, weekCostRes] = await Promise.all([
+      const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes, activeRunsRes, weekCostRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/ltq/translation-status`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/scenarios/translation-status`,        { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/worker-runs?limit=50`,                { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/worker-runs?active=1`,                { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/translation/week-cost`,               { credentials: "include" }),
       ]);
       if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
@@ -3685,6 +3687,7 @@ function TranslationHealthTab() {
       if (seedsRes.ok)       setCounselSeeds(await seedsRes.json() as CounselSeedCoverageStatus);
       if (seedsTransRes.ok)  setCounselSeedTrans(await seedsTransRes.json() as CounselSeedTransStatus);
       if (runsRes.ok)        setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
+      if (activeRunsRes.ok)  setActiveRuns(((await activeRunsRes.json()) as { runs: WorkerRun[] }).runs);
       if (weekCostRes.ok)    setWeekCostUsd(((await weekCostRes.json()) as { week_usd: number }).week_usd);
     } catch (e) {
       setErr(String(e));
@@ -3871,12 +3874,10 @@ function TranslationHealthTab() {
     finally { setSeedsLaunching(null); }
   };
 
-  // ── Active-worker detection — derive from DB-backed runs (finished_at === null) ──────
-  // This is the source-of-truth for button disabled state; it persists across 30s auto-refreshes
-  // until the worker actually finishes, unlike local `launching` state which resets after POST.
-  const activeSweepers = new Set(
-    runs.filter((r) => r.finished_at === null && r.status !== "failed").map((r) => r.sweeper)
-  );
+  // ── Active-worker detection — dedicated ?active=1 fetch (no row-count limit) ──────────
+  // Uses a separate API call that returns ONLY running rows (finished_at IS NULL, status='running')
+  // so it cannot miss workers that have been pushed past the history limit=50 window.
+  const activeSweepers = new Set(activeRuns.map((r) => r.sweeper));
 
   // allGreen = every module + lang at 100% (completion truth, not color threshold)
   const allGreen = ltq && scen && compass

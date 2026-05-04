@@ -139,7 +139,7 @@ async function syncTable({ name, conflict_col, order_col }) {
     const sql =
       `INSERT INTO "${name}" (${colList}) VALUES ${valueClauses.join(",")} ` +
       `ON CONFLICT ("${conflict_col}") DO UPDATE SET ${setClause} ` +
-      `RETURNING (xmax::bigint = 0) AS was_inserted`;
+      `RETURNING (xmax::text::bigint = 0) AS was_inserted`;
 
     const result = await prodPool.query(sql, flatValues);
     for (const row of result.rows) {

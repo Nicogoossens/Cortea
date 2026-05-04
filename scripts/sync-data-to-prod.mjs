@@ -37,11 +37,19 @@ const FLAG_DRY        = flagBool("--dry-run");
 const FLAG_BATCH_SIZE = flagStr("--batch-size") ? parseInt(flagStr("--batch-size"), 10) : 500;
 
 // ── Table configuration ───────────────────────────────────────────────────────
-// conflict_col: the unique/primary key column to upsert on.
-// order_col:    stable column to ORDER BY for deterministic batch pagination.
+// conflict_col:        single unique column → ON CONFLICT ("col")
+// conflict_constraint: named constraint   → ON CONFLICT ON CONSTRAINT "name"
+// no_update_cols:      columns to skip in the SET clause (e.g. primary key when
+//                      using a compound unique constraint as the conflict target)
+// order_col:           stable column to ORDER BY for deterministic batch pagination.
 const ALL_TABLES = [
   { name: "compass_regions",          conflict_col: "region_code",   order_col: "region_code" },
-  { name: "culture_protocols",        conflict_col: "id",            order_col: "id" },
+  {
+    name: "culture_protocols",
+    conflict_constraint: "culture_protocols_region_pillar_rule_key",
+    no_update_cols: ["id"],   // never overwrite the PK of an existing prod row
+    order_col: "id",
+  },
   { name: "scenarios",                conflict_col: "id",            order_col: "id" },
   { name: "badges",                   conflict_col: "slug",          order_col: "slug" },
   { name: "counsel_region_seeds",     conflict_col: "id",            order_col: "id" },
@@ -87,7 +95,7 @@ async function count(pool, table) {
   return Number(rows[0]?.n ?? 0);
 }
 
-async function syncTable({ name, conflict_col, order_col }) {
+async function syncTable({ name, conflict_col, conflict_constraint, no_update_cols, order_col }) {
   console.log(`\n  ── ${name} ${"─".repeat(Math.max(0, 50 - name.length))}`);
 
   const devCount = await count(devPool, name);
@@ -99,13 +107,22 @@ async function syncTable({ name, conflict_col, order_col }) {
 
   // Fetch column list from dev
   const columns = await getColumns(devPool, name);
-  if (!columns.includes(conflict_col)) {
+  if (conflict_col && !columns.includes(conflict_col)) {
     console.error(`     Error: conflict column "${conflict_col}" not found in ${name}.`);
     return { table: name, inserted: 0, updated: 0, skipped: 0 };
   }
 
-  // Non-conflict columns for the DO UPDATE SET clause
-  const updateCols = columns.filter((c) => c !== conflict_col);
+  // Build the ON CONFLICT target clause
+  const conflictTarget = conflict_constraint
+    ? `ON CONSTRAINT "${conflict_constraint}"`
+    : `("${conflict_col}")`;
+
+  // Columns to skip in the SET clause: the single conflict col (if any) + explicit no_update_cols
+  const skipSet = new Set([
+    ...(conflict_col ? [conflict_col] : []),
+    ...(no_update_cols ?? []),
+  ]);
+  const updateCols = columns.filter((c) => !skipSet.has(c));
 
   const colList   = columns.map((c) => `"${c}"`).join(", ");
   const setClause = updateCols.map((c) => `"${c}" = EXCLUDED."${c}"`).join(", ");
@@ -148,7 +165,7 @@ async function syncTable({ name, conflict_col, order_col }) {
 
     const sql =
       `INSERT INTO "${name}" (${colList}) VALUES ${valueClauses.join(",")} ` +
-      `ON CONFLICT ("${conflict_col}") DO UPDATE SET ${setClause} ` +
+      `ON CONFLICT ${conflictTarget} DO UPDATE SET ${setClause} ` +
       `RETURNING (xmax::text::bigint = 0) AS was_inserted`;
 
     const result = await prodPool.query(sql, flatValues);

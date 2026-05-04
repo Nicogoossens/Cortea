@@ -65,8 +65,15 @@ const ALL_TABLES = [
     no_update_cols: ["id"],
     order_col: "id",
   },
-  // LTQ last — largest table, depends on nothing
-  { name: "learning_track_questions", conflict_col: "question_hash", order_col: "id" },
+  // LTQ last — largest table, depends on nothing.
+  // question_hash is GENERATED ALWAYS (computed by DB); exclude from INSERT
+  // but keep as the conflict target so duplicates are correctly detected.
+  {
+    name: "learning_track_questions",
+    conflict_col: "question_hash",
+    no_insert_cols: ["question_hash"],
+    order_col: "id",
+  },
 ];
 
 // ── Guards ────────────────────────────────────────────────────────────────────

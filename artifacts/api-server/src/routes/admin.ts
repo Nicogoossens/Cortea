@@ -2528,7 +2528,7 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
     const perLangRows = await db.execute(
       sql`SELECT lang, COUNT(DISTINCT id) AS cnt
           FROM scenarios,
-               LATERAL jsonb_object_keys(COALESCE(title_i18n, '{}')) AS lang
+               LATERAL jsonb_object_keys(COALESCE(title_i18n::jsonb, '{}')) AS lang
           GROUP BY lang
           ORDER BY lang`
     );
@@ -2598,18 +2598,19 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
 
 // ── Compass Translation Status / Trigger ──────────────────────────────────────
 
-/** GET /admin/compass/translation-status — per-lang coverage of compass_regions.locale_data */
+/** GET /admin/compass/translation-status — per-lang coverage of compass_regions.content */
 router.get("/admin/compass/translation-status", requireAdmin, async (req, res) => {
   try {
     const totalRow = await db.execute(
-      sql`SELECT COUNT(*) AS total FROM compass_regions`
+      sql`SELECT COUNT(*) AS total FROM compass_regions WHERE is_published = true`
     );
     const total = Number((totalRow.rows[0] as { total: string }).total);
 
     const perLangRows = await db.execute(
       sql`SELECT lang, COUNT(DISTINCT region_code) AS cnt
           FROM compass_regions,
-               LATERAL jsonb_object_keys(COALESCE(locale_data, '{}')) AS lang
+               LATERAL jsonb_object_keys(COALESCE(content, '{}')) AS lang
+          WHERE is_published = true
           GROUP BY lang
           ORDER BY lang`
     );

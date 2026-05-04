@@ -3035,32 +3035,65 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
+// ── Cost / time helpers ───────────────────────────────────────────────────────
+function fmtUsd(n: number) { return n < 0.01 ? "<$0.01" : `~$${n.toFixed(2)}`; }
+function fmtMin(min: number) {
+  if (min < 1) return "<1 min";
+  if (min < 60) return `~${Math.ceil(min)} min`;
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  return m > 0 ? `~${h}u ${m}m` : `~${h}u`;
+}
+
 // ── Coverage panel for one content type ──────────────────────────────────────
 interface CoverageCardProps {
   title: string;
   description: string;
+  actionLabel: string;
   total: number;
   langs: LangCoverage[];
   sweeper: string;
   showRegisterBars?: boolean;
+  costPerItem: number;
+  itemsPerMinute: number;
   onTranslateAll: () => Promise<void>;
   onTranslateLang: (lang: TransLang) => Promise<void>;
   launching: string | null;
   lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
 }
-function CoverageCard({ title, description, total, langs, showRegisterBars, onTranslateAll, onTranslateLang, launching, lastRun }: CoverageCardProps) {
+function CoverageCard({
+  title, description, actionLabel, total, langs, showRegisterBars,
+  costPerItem, itemsPerMinute,
+  onTranslateAll, onTranslateLang, launching, lastRun,
+}: CoverageCardProps) {
   const allDone = langs.every((l) => l.pct >= 100);
+  const totalRemaining = langs.reduce((s, l) => s + Math.max(0, total - l.count), 0);
+  const totalEstCost = totalRemaining * costPerItem;
+  const totalEstMin  = totalRemaining / itemsPerMinute;
+
   return (
     <Card className="bg-card border-border">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="space-y-0.5">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="space-y-1 flex-1 min-w-0">
             <CardTitle className="text-sm font-semibold text-foreground">{title}</CardTitle>
             <p className="text-xs text-muted-foreground leading-snug">{description}</p>
-            <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">
+
+            {/* wat doet de vertaalknop */}
+            <div className="flex items-start gap-1.5 mt-1.5 px-2 py-1.5 rounded bg-muted/50 border border-border/40">
+              <Play className="w-3 h-3 mt-0.5 shrink-0 text-primary/60" />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                <span className="font-medium text-foreground/80">De ▶-knop per taal</span> {actionLabel}
+              </p>
+            </div>
+
+            {/* bron + kosten totaal */}
+            <p className="text-[11px] font-mono text-muted-foreground/70 pt-0.5">
               Bron: {total.toLocaleString()} EN-rijen
+              {!allDone && totalRemaining > 0 && (
+                <> · nog {totalRemaining.toLocaleString()} te vertalen · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
+              )}
               {lastRun && (
-                <> · laatste run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /> · {lastRun.items_processed} items · ${lastRun.estimated_usd.toFixed(3)}</>
+                <> · laatste run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /></>
               )}
             </p>
           </div>
@@ -3070,51 +3103,66 @@ function CoverageCard({ title, description, total, langs, showRegisterBars, onTr
             className="font-mono text-xs gap-1.5 shrink-0"
             disabled={launching !== null}
             onClick={onTranslateAll}
+            title={`Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
           >
             {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
             Alle talen vertalen
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-4 gap-y-4">
-          {langs.map((l) => (
-            <div key={l.lang} className="space-y-1.5">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
-                <button
-                  className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
-                  disabled={launching !== null}
-                  onClick={() => onTranslateLang(l.lang)}
-                  title={`${l.lang.toUpperCase()} nu vertalen`}
-                >
-                  {launching === l.lang ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
-                </button>
-              </div>
-              <CovBar pct={l.pct} count={l.count} />
-              {showRegisterBars && l.by_register && (
-                <div className="space-y-1 pt-0.5">
-                  {(["middle_class", "elite"] as const).map((reg) => {
-                    const rv = l.by_register![reg] ?? { count: 0, pct: 0 };
-                    return (
-                      <div key={reg} className="space-y-0.5">
-                        <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wide">
-                          {reg === "middle_class" ? "Middenklasse" : "Elite"}
-                        </p>
-                        <div className="h-1 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-500 ${reg === "middle_class" ? "bg-blue-400" : "bg-purple-400"}`}
-                            style={{ width: `${Math.min(100, rv.pct)}%` }}
-                          />
-                        </div>
-                        <p className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{rv.count.toLocaleString()} · {rv.pct}%</p>
-                      </div>
-                    );
-                  })}
+          {langs.map((l) => {
+            const remaining = Math.max(0, total - l.count);
+            const estCost   = remaining * costPerItem;
+            const estMin    = remaining / itemsPerMinute;
+            const tooltip   = remaining > 0
+              ? `Start DB-vertaling voor ${l.lang.toUpperCase()}: ${remaining.toLocaleString()} rijen nog te vertalen. Geschat: ${fmtUsd(estCost)} · ${fmtMin(estMin)}.`
+              : `${l.lang.toUpperCase()} is volledig vertaald.`;
+            return (
+              <div key={l.lang} className="space-y-1.5">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                  <button
+                    className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
+                    disabled={launching !== null || remaining === 0}
+                    onClick={() => onTranslateLang(l.lang)}
+                    title={tooltip}
+                  >
+                    {launching === l.lang ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
+                  </button>
                 </div>
-              )}
-            </div>
-          ))}
+                <CovBar pct={l.pct} count={l.count} />
+                {remaining > 0 && (
+                  <p className="text-[9px] font-mono text-muted-foreground/50 tabular-nums leading-tight">
+                    {remaining.toLocaleString()} rijen · {fmtUsd(estCost)}
+                    <br />{fmtMin(estMin)}
+                  </p>
+                )}
+                {showRegisterBars && l.by_register && (
+                  <div className="space-y-1 pt-0.5">
+                    {(["middle_class", "elite"] as const).map((reg) => {
+                      const rv = l.by_register![reg] ?? { count: 0, pct: 0 };
+                      return (
+                        <div key={reg} className="space-y-0.5">
+                          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wide">
+                            {reg === "middle_class" ? "Middenklasse" : "Elite"}
+                          </p>
+                          <div className="h-1 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 ${reg === "middle_class" ? "bg-blue-400" : "bg-purple-400"}`}
+                              style={{ width: `${Math.min(100, rv.pct)}%` }}
+                            />
+                          </div>
+                          <p className="text-[9px] font-mono text-muted-foreground/60 tabular-nums">{rv.count.toLocaleString()} · {rv.pct}%</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
@@ -3366,12 +3414,15 @@ function TranslationHealthTab() {
       {/* LTQ */}
       {ltq && (
         <CoverageCard
-          title="Oefenvragen"
-          description={`${ltq.en_total.toLocaleString()} Engelstalige DB-rijen vertaald naar 9 talen. Middenklasse en elite worden apart verwerkt — zie de sub-balkjes per taal.`}
+          title="Oefenvragen (DB-vertaling)"
+          description="De Engelstalige oefenvragen in de database worden door AI vertaald naar de gekozen taal. Middenklasse- en elite-vragen zitten als aparte rijen in de DB en worden beide in één run vertaald. Dit is géén Atelier-omschrijving — die pipeline zit in de Atelier-distillaten tab."
+          actionLabel="start de DB-vertaling voor die taal: alle onvertaalde Engelstalige oefenvragen (middenklasse + elite) worden naar die taal vertaald. De kwaliteit wordt automatisch gecheckt en bij een score onder 8/10 herschreven."
           total={ltq.en_total}
           langs={ltq.langs as LangCoverage[]}
           sweeper="ltq-translation"
           showRegisterBars
+          costPerItem={0.006}
+          itemsPerMinute={35}
           onTranslateAll={launchLtqAll}
           onTranslateLang={launchLtqLang}
           launching={ltqLaunching}
@@ -3381,11 +3432,14 @@ function TranslationHealthTab() {
       {/* Scenarios */}
       {scen && (
         <CoverageCard
-          title="Etiquettescenario's"
-          description="Realistische sociale situaties (titel + situatiebeschrijving) per taal vertaald vanuit het Engels. Zichtbaar voor gebruikers in de leermodule."
+          title="Etiquettescenario's (DB-vertaling)"
+          description="De Engelstalige etiquette-situaties (titel + situatiebeschrijving) worden door AI naar de gekozen taal vertaald. Zichtbaar voor gebruikers in de leermodule."
+          actionLabel="vertaalt alle onvertaalde Engelstalige scenario's (titel + situatiebeschrijving) naar die taal."
           total={scen.total}
           langs={scen.langs as LangCoverage[]}
           sweeper="scenario-translation"
+          costPerItem={0.005}
+          itemsPerMinute={40}
           onTranslateAll={launchScenAll}
           onTranslateLang={launchScenLang}
           launching={scenLaunching}
@@ -3396,11 +3450,14 @@ function TranslationHealthTab() {
       {/* Compass */}
       {compass && (
         <CoverageCard
-          title="Landenprotocollen"
-          description="De 5 etiquette-pijlers per land (compass_regions.locale_data), vertaald voor alle 206 gepubliceerde landen. Zichtbaar op de Cultural Compass-pagina's."
+          title="Landenprotocollen (DB-vertaling)"
+          description="De 5 etiquette-pijlers per land (compass_regions.locale_data) worden naar de gekozen taal vertaald. Zichtbaar op de Cultural Compass-pagina's voor alle 206 gepubliceerde landen."
+          actionLabel="vertaalt alle landenprotocollen naar die taal (alle pijlers van alle gepubliceerde landen die nog niet vertaald zijn)."
           total={compass.total}
           langs={compass.langs as LangCoverage[]}
           sweeper="compass-translation"
+          costPerItem={0.011}
+          itemsPerMinute={30}
           onTranslateAll={launchCompassAll}
           onTranslateLang={launchCompassLang}
           launching={compassLaunching}

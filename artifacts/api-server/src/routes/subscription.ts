@@ -223,6 +223,52 @@ router.post("/subscription/portal", requireAuthUser, async (req, res) => {
 });
 
 /**
+ * POST /subscription/start-trial — activates a 60-day free trial directly in the DB
+ * without going through Stripe. Used during the Founding 100 onboarding period when
+ * Stripe is not yet configured, or as a fallback when checkout fails.
+ *
+ * Only eligible when:
+ *  - user has never had a paid subscription (subscription_tier === "guest")
+ *  - user is not already in a trial
+ *  - requested tier is in TRIAL_ELIGIBLE_TIERS
+ */
+router.post("/subscription/start-trial", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const rawTier = (req.body as { tier?: string }).tier ?? "traveller";
+    const tier = TRIAL_ELIGIBLE_TIERS.includes(rawTier as SubscriptionTier)
+      ? (rawTier as SubscriptionTier)
+      : "traveller";
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    if (user.subscription_status === "trialing" || user.subscription_status === "active") {
+      return res.status(409).json({ error: "An active subscription or trial already exists." });
+    }
+
+    const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+
+    await db
+      .update(usersTable)
+      .set({
+        subscription_tier: tier,
+        subscription_status: "trialing",
+        trial_ends_at: trialEndsAt,
+      })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ ok: true, tier, trialEndsAt: trialEndsAt.toISOString(), trialDays: TRIAL_DAYS });
+  } catch (err) {
+    console.error("start-trial error:", err);
+    return res.status(500).json({ error: "Unable to activate trial at this time." });
+  }
+});
+
+/**
  * POST /subscription/cancel — one-click cancellation from the dashboard.
  *
  * If the user is in their trial → cancel immediately, no charge.

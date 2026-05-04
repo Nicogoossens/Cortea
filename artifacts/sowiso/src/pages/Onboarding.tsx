@@ -219,9 +219,32 @@ export default function Onboarding() {
     trackPlanChoice("selected_tier", tier);
 
     if (!priceId) {
-      // Stripe not yet configured — if already signed in, go to membership
-      // page directly; otherwise prompt sign-in first so we don't clear the session.
-      navigate(isAuthenticated ? "/membership" : "/signin?return=/membership");
+      // Stripe not yet configured. For unauthenticated users: prompt sign-in.
+      // For authenticated users: activate a direct 60-day free trial in the DB.
+      if (!isAuthenticated) {
+        navigate("/signin?return=/onboarding");
+        return;
+      }
+      setCheckingOut(tier);
+      try {
+        const trialRes = await fetch(`${API_BASE}/api/subscription/start-trial`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ tier }),
+        });
+        if (trialRes.status === 401) {
+          navigate("/signin?return=/onboarding");
+          return;
+        }
+        // Trial activated (or already active — both are fine); go to Atelier.
+        navigate("/atelier?upgrade=success");
+      } catch {
+        // Network error — let them try from the membership page.
+        navigate("/membership");
+      } finally {
+        setCheckingOut(null);
+      }
       return;
     }
 
@@ -234,9 +257,9 @@ export default function Onboarding() {
         body: JSON.stringify({ priceId }),
       });
       if (res.status === 401) {
-        // Session expired mid-flow — redirect to sign-in, back to membership after auth.
+        // Session expired mid-flow — redirect to sign-in, back to onboarding after auth.
         trackPlanChoice("skipped_unauth", tier);
-        navigate("/signin?return=/membership");
+        navigate("/signin?return=/onboarding");
         return;
       }
       const { url } = await res.json();

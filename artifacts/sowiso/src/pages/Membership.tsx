@@ -169,12 +169,37 @@ export default function Membership() {
   const founderCode = (profile as { founder_code?: string | null } | undefined)?.founder_code ?? null;
 
   const handleCheckout = async (priceId: string | null, tier: SubscriptionTier) => {
-    if (!priceId) return;
     if (tier === currentTier) return;
+    if (!priceId) {
+      // Stripe not configured — activate a direct 60-day free trial in the DB.
+      setCheckingOut(tier);
+      try {
+        const res = await fetch(`${API_BASE}/api/subscription/start-trial`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ tier }),
+        });
+        if (res.ok) {
+          setUpgradeSuccess(true);
+          // Refresh subscription status to reflect new tier
+          fetch(`${API_BASE}/api/subscription/status`, { headers: getAuthHeaders() })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => setStatus(d))
+            .catch(() => {});
+        }
+      } catch {
+        /* ignore */
+      } finally {
+        setCheckingOut(null);
+      }
+      return;
+    }
     setCheckingOut(tier);
     try {
       const res = await fetch(`${API_BASE}/api/subscription/checkout`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ priceId }),
       });
@@ -550,7 +575,7 @@ export default function Membership() {
                           borderColor: isConcierge ? "#6b4a9b" : isAmbassador ? "#9b7c4a" : undefined,
                         }}
                         onClick={() => handleCheckout(priceId, tier)}
-                        disabled={!!checkingOut || !priceId}
+                        disabled={!!checkingOut || isConcierge}
                         aria-label={`Select ${tier} membership`}
                       >
                         {checkingOut === tier ? (

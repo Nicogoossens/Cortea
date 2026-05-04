@@ -50,7 +50,12 @@ const ALL_TABLES = [
     no_update_cols: ["id"],   // never overwrite the PK of an existing prod row
     order_col: "id",
   },
-  { name: "scenarios",                conflict_col: "id",            order_col: "id" },
+  {
+    name: "scenarios",
+    conflict_constraint: "scenarios_region_pillar_title_key",
+    no_update_cols: ["id"],
+    order_col: "id",
+  },
   { name: "badges",                   conflict_col: "slug",          order_col: "slug" },
   { name: "counsel_region_seeds",     conflict_col: "id",            order_col: "id" },
   { name: "translations",             conflict_col: "id",            order_col: "id" },

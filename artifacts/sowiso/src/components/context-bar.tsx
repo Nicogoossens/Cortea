@@ -1,14 +1,15 @@
-import { Check, Globe, MapPin, ChevronDown, Eye } from "lucide-react";
+import { Eye, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { useLocale, type SupportedLocale } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { useAccessibility, type FontSize } from "@/lib/accessibility";
+import { Link } from "wouter";
 
 function PillTrigger({
   icon,
@@ -52,15 +53,14 @@ function Item({
       }`}
     >
       {children}
-      {selected && <Check className="w-3 h-3 ml-auto flex-shrink-0" aria-hidden="true" />}
     </DropdownMenuPrimitive.Item>
   );
 }
 
 
 export function ContextBar() {
-  const { locale, setLocale, t } = useLocale();
-  const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
+  const { locale, t } = useLocale();
+  const { activeRegion, getRegionName } = useActiveRegion();
   const { highContrast, setHighContrast, fontSize, setFontSize } = useAccessibility();
 
   const currentLocale = LOCALE_GROUPS.flatMap((g) => g.locales).find((l) => l.locale === locale);
@@ -77,110 +77,24 @@ export function ContextBar() {
       role="toolbar"
       aria-label={t("accessibility.title")}
     >
-      {/* Active context label — always visible */}
-      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 pointer-events-none select-none min-w-0">
+      {/* Active context — links to profile so user can change lang/region there */}
+      <Link
+        href="/profile"
+        className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 hover:text-foreground transition-colors min-w-0 group"
+        aria-label="Open profile settings"
+      >
         <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" className="flex-shrink-0" />
-        <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block">
+        <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block group-hover:text-foreground transition-colors">
           {currentLocale?.languageLabel ?? "English"}
         </span>
         <span className="text-muted-foreground/40 hidden sm:inline">·</span>
         <FlagEmoji code={activeRegion} size="sm" className="flex-shrink-0 hidden sm:inline-block" />
-        <span className="font-medium text-foreground/70 truncate hidden sm:block">
+        <span className="font-medium text-foreground/70 truncate hidden sm:block group-hover:text-foreground transition-colors">
           {getRegionName(activeRegion)}
         </span>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-1">
-
-      {/* Language picker */}
-      <DropdownMenu>
-        <PillTrigger
-          icon={<Globe className="w-3 h-3" aria-hidden="true" />}
-          ariaLabel={t("locale.choose_region")}
-        >
-          <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
-          <span className="hidden sm:inline">{currentLocale?.languageLabel ?? "English"}</span>
-        </PillTrigger>
-
-        <DropdownMenuContent
-          align="end"
-          sideOffset={6}
-          className="z-50 min-w-[220px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
-          aria-label={t("locale.choose_region")}
-        >
-          <div className="px-3 py-2 border-b border-border/30 sticky top-0 bg-background z-10">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
-              {t("locale.choose_region")}
-            </span>
-          </div>
-
-          <div className="py-1">
-            {LOCALE_GROUPS.map((group) => {
-              const representative = group.locales[0];
-              const isSelected = group.locales.some((l) => l.locale === locale);
-              return (
-                <Item
-                  key={group.groupLabel}
-                  selected={isSelected}
-                  onClick={() => setLocale(representative.locale as SupportedLocale)}
-                >
-                  <FlagEmoji code={representative.flag} size="sm" />
-                  <span className="flex-1">{group.groupLabel}</span>
-                </Item>
-              );
-            })}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <div className="w-px h-4 bg-border/60 mx-1" aria-hidden="true" />
-
-      {/* Region picker */}
-      <DropdownMenu>
-        <PillTrigger
-          icon={<MapPin className="w-3 h-3" aria-hidden="true" />}
-          ariaLabel={t("region.choose")}
-        >
-          <FlagEmoji code={activeRegion} size="sm" />
-          <span className="hidden sm:inline">{getRegionName(activeRegion)}</span>
-        </PillTrigger>
-
-        <DropdownMenuContent
-          align="end"
-          sideOffset={6}
-          className="z-50 min-w-[220px] max-h-[320px] overflow-y-auto bg-background border border-border rounded-sm shadow-lg p-0"
-          aria-label={t("region.choose")}
-        >
-          <div className="px-3 py-2 border-b border-border/30 sticky top-0 bg-background z-10">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
-              {t("region.choose")}
-            </span>
-          </div>
-
-          <div className="py-1">
-            {COMPASS_REGIONS.map((region) => {
-              const fullContent = isRegionActive(region.code);
-              return (
-                <Item
-                  key={region.code}
-                  selected={region.code === activeRegion}
-                  onClick={() => setActiveRegion(region.code as RegionCode)}
-                >
-                  <FlagEmoji code={region.flag} size="sm" />
-                  <span className="flex-1">{getRegionName(region.code)}</span>
-                  {!fullContent && (
-                    <span className="text-[9px] font-mono uppercase tracking-widest border border-current/20 rounded-[2px] px-1 py-0.5 leading-none shrink-0 opacity-50">
-                      {t("region.in_preparation")}
-                    </span>
-                  )}
-                </Item>
-              );
-            })}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <div className="w-px h-4 bg-border/60 mx-1" aria-hidden="true" />
 
       {/* Accessibility picker */}
       <DropdownMenu>

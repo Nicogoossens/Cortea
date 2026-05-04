@@ -1,108 +1,108 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
-import { useLocale, type SupportedLocale } from "@/lib/i18n";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { useLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
-import { ChevronDown } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+type DialogTarget = "language" | "region" | null;
 
 export function ActiveContextChips() {
-  const { locale, setLocale, t } = useLocale();
+  const { locale, t } = useLocale();
   const { activeRegion, getRegionName } = useActiveRegion();
-  const langLabel = t("context.active_language");
-  const regionLabel = t("context.active_region");
+  const { isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
 
-  const [showLangPicker, setShowLangPicker] = useState(false);
-
-  const langChipRef = useRef<HTMLButtonElement>(null);
+  const [dialogTarget, setDialogTarget] = useState<DialogTarget>(null);
 
   const allLocales = LOCALE_GROUPS.flatMap((g) => g.locales);
   const currentLocale = allLocales.find((l) => l.locale === locale);
   const languageLabel = currentLocale?.languageLabel ?? "English";
 
-  useEffect(() => {
-    if (!showLangPicker) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setShowLangPicker(false);
-        langChipRef.current?.focus();
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [showLangPicker]);
+  const langLabel = t("context.active_language");
+  const regionLabel = t("context.active_region");
 
   const chipBase =
-    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono transition-colors";
+    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-mono transition-colors cursor-pointer";
   const chipIdle =
-    "border-border/60 bg-muted/30 text-foreground/70 hover:border-primary/40 hover:bg-primary/5 hover:text-foreground cursor-pointer";
-  const chipOpen = "border-primary/50 bg-primary/10 text-primary cursor-pointer";
+    "border-border/60 bg-muted/30 text-foreground/70 hover:border-primary/40 hover:bg-primary/5 hover:text-foreground";
+
+  function handleConfirm() {
+    if (dialogTarget === "language") {
+      navigate("/profile?focus=language");
+    } else if (dialogTarget === "region") {
+      navigate("/profile?focus=region");
+    }
+    setDialogTarget(null);
+  }
+
+  const dialogTitle =
+    dialogTarget === "language"
+      ? "Change your language preference"
+      : "Change your learning region";
+
+  const dialogDescription =
+    dialogTarget === "language"
+      ? "To change your language, we'll take you to your profile settings where you can update your preference. Your choice is saved automatically."
+      : "To change your learning region, we'll take you to your profile settings where you can update it. Your choice is saved automatically.";
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2" aria-label="Active session context">
-        <button
-          ref={langChipRef}
-          type="button"
-          onClick={() => setShowLangPicker((v) => !v)}
-          className={`${chipBase} ${showLangPicker ? chipOpen : chipIdle}`}
-          aria-label={`${langLabel}: ${languageLabel}. Click to change.`}
-          aria-expanded={showLangPicker}
-          aria-haspopup="listbox"
-        >
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{langLabel}:</span>
-          <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
-          <span>{languageLabel}</span>
-          <ChevronDown
-            className={`w-3 h-3 opacity-50 transition-transform duration-150 ${showLangPicker ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
-        </button>
+    <>
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2" aria-label="Active session context">
+          {/* Language chip — opens confirmation before redirecting to profile */}
+          <button
+            type="button"
+            onClick={() => isAuthenticated ? setDialogTarget("language") : navigate("/profile?focus=language")}
+            className={`${chipBase} ${chipIdle}`}
+            aria-label={`${langLabel}: ${languageLabel}. Click to change.`}
+          >
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{langLabel}:</span>
+            <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" />
+            <span>{languageLabel}</span>
+          </button>
 
-        {/* The region chip is intentionally a read-only link to the profile.
-            Inline switching from non-profile pages was causing accidental
-            region changes (and downstream content pollution) when users only
-            wanted to glance at their active region. The profile page is the
-            single canonical place to change it. */}
-        <Link
-          href="/profile?focus=region"
-          className={`${chipBase} ${chipIdle}`}
-          aria-label={`${regionLabel}: ${getRegionName(activeRegion)}. Open profile to change.`}
-        >
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{regionLabel}:</span>
-          <FlagEmoji code={activeRegion} size="sm" />
-          <span>{getRegionName(activeRegion)}</span>
-        </Link>
+          {/* Region chip — opens confirmation before redirecting to profile */}
+          <button
+            type="button"
+            onClick={() => isAuthenticated ? setDialogTarget("region") : navigate("/profile?focus=region")}
+            className={`${chipBase} ${chipIdle}`}
+            aria-label={`${regionLabel}: ${getRegionName(activeRegion)}. Click to change.`}
+          >
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">{regionLabel}:</span>
+            <FlagEmoji code={activeRegion} size="sm" />
+            <span>{getRegionName(activeRegion)}</span>
+          </button>
+        </div>
       </div>
 
-      {showLangPicker && (
-        <div
-          role="listbox"
-          aria-label="Choose language"
-          className="flex flex-wrap gap-1.5 animate-in fade-in duration-150 pt-1"
-        >
-          {allLocales.map((l) => {
-            const isSelected = l.locale === locale;
-            return (
-              <button
-                key={l.locale}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => { setLocale(l.locale as SupportedLocale); setShowLangPicker(false); langChipRef.current?.focus(); }}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
-                }`}
-              >
-                <FlagEmoji code={l.flag} size="sm" />
-                {l.languageLabel}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-    </div>
+      {/* Confirmation dialog */}
+      <AlertDialog open={dialogTarget !== null} onOpenChange={(open) => { if (!open) setDialogTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialogTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDialogTarget(null)}>
+              Stay here
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              Go to profile settings
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

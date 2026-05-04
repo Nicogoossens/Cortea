@@ -55,7 +55,7 @@ export async function sendTrialEndReminder(input: TrialReminderInput): Promise<v
   const html = `<!DOCTYPE html><html><body style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; color: #2a2a2a;">
     <h1 style="font-size: 22px; font-weight: 400;">A gentle reminder</h1>
     <p>${greeting}</p>
-    <p>Your complimentary 14-day trial of <strong>${input.tierDisplayName}</strong> concludes on
+    <p>Your complimentary 60-day trial of <strong>${input.tierDisplayName}</strong> concludes on
     <strong>${input.endsAt.toUTCString().replace(" GMT", "")}</strong>.
     Should you wish to continue, no action is required &mdash; the agreed amount will be charged to the card on file.</p>
     <p>Should you prefer to part ways, you may cancel in a single click from your account:</p>

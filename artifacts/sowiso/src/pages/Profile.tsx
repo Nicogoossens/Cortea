@@ -458,6 +458,22 @@ export default function Profile() {
   // what to change. The flag auto-clears after the highlight animation so
   // a refresh does not keep flashing.
   const [focusRegion, setFocusRegion] = useState(false);
+  const [focusLanguage, setFocusLanguage] = useState(false);
+
+  // focus=language: scroll to and briefly highlight the language selector
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") !== "language") return;
+    setFocusLanguage(true);
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById("focus-language-anchor");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
+    const clearTimer = window.setTimeout(() => setFocusLanguage(false), 4000);
+    return () => { window.clearTimeout(timer); window.clearTimeout(clearTimer); };
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -1292,7 +1308,10 @@ export default function Profile() {
                 card so users see it alongside their other personal data.
                 Selecting an option PATCHes the user profile and immediately
                 switches the UI locale. */}
-            <div className="pt-3 border-t border-border/50 space-y-2">
+            <div
+              id="focus-language-anchor"
+              className={`pt-3 border-t border-border/50 space-y-2 scroll-mt-32 rounded-sm transition-all ${focusLanguage ? "ring-2 ring-primary/60 ring-offset-4 ring-offset-card animate-pulse" : ""}`}
+            >
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="profile-language-select"
@@ -1302,6 +1321,11 @@ export default function Profile() {
                 </label>
                 <SaveIndicator state={langSave} t={t} />
               </div>
+              {focusLanguage && (
+                <p className="text-xs font-light text-primary/80 italic">
+                  Change your preferred language below. Your selection is saved automatically.
+                </p>
+              )}
               <select
                 id="profile-language-select"
                 aria-label={t("profile.lang_label")}
@@ -1433,7 +1457,7 @@ export default function Profile() {
               </button>
               {courseRegionDropdownOpen && (
                 <div role="listbox" className="absolute z-50 top-full left-0 right-0 mt-1 rounded-sm border border-border bg-background shadow-md overflow-y-auto max-h-56">
-                  {COMPASS_REGIONS.map((region) => {
+                  {COMPASS_REGIONS.filter((r) => isRegionActive(r.code)).map((region) => {
                     const isSelected = region.code === activeRegion;
                     return (
                       <button
@@ -1452,6 +1476,11 @@ export default function Profile() {
                       </button>
                     );
                   })}
+                  <div className="px-3 py-2 border-t border-border/30">
+                    <span className="text-[10px] font-mono text-muted-foreground/50 uppercase tracking-wider">
+                      More regions coming soon
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

@@ -475,18 +475,26 @@ export default function Counsel() {
         <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
           {COMPASS_REGIONS.map((region) => {
             const isRegionSelected = region.code === effectiveRegion;
+            const available = isRegionActive(region.code);
             return (
               <button
                 key={region.code}
-                onClick={() => { setSessionRegion(region.code); setShowContextRegionPicker(false); }}
+                onClick={() => { if (available) { setSessionRegion(region.code); setShowContextRegionPicker(false); } }}
+                disabled={!available}
+                title={available ? getRegionName(region.code) : `${getRegionName(region.code)} — coming soon`}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                  isRegionSelected
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
+                  !available
+                    ? "border-border/20 text-muted-foreground/30 cursor-not-allowed line-through decoration-muted-foreground/20"
+                    : isRegionSelected
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
                 }`}
               >
                 <FlagEmoji code={region.flag} size="sm" />
                 {getRegionName(region.code)}
+                {!available && (
+                  <span className="ml-1 text-[8px] font-mono uppercase tracking-wider opacity-50">soon</span>
+                )}
               </button>
             );
           })}

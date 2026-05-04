@@ -177,7 +177,7 @@ router.post("/subscription/checkout", requireAuthUser, async (req, res) => {
       // For trial subscriptions we still require a card up-front so the
       // first charge after day 14 succeeds without a re-confirmation step.
       payment_method_collection: "always",
-      success_url: `${baseUrl}/?upgrade=success`,
+      success_url: `${baseUrl}/atelier?upgrade=success`,
       cancel_url: `${baseUrl}/membership`,
       metadata: { userId, founderCode: founderCode ?? "" },
       subscription_data: {

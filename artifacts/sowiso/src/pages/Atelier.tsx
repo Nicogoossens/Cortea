@@ -63,6 +63,8 @@ export default function Atelier() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const showSummary = new URLSearchParams(search).get("session_summary") === "1";
+  const showUpgradeBanner = new URLSearchParams(search).get("upgrade") === "success";
+  const [upgradeBannerVisible, setUpgradeBannerVisible] = useState(showUpgradeBanner);
   const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
   const [sessionMasterAwarded, setSessionMasterAwarded] = useState<boolean>(false);
   const [selectedPillar, setSelectedPillar] = useState<number>(0);
@@ -78,6 +80,15 @@ export default function Atelier() {
       setSessionMasterAwarded(false);
     }
   }, [showSummary]);
+
+  // Remove ?upgrade=success from the URL after the banner is shown
+  // so a hard-refresh doesn't repeat it.
+  useEffect(() => {
+    if (!showUpgradeBanner) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("upgrade");
+    window.history.replaceState({}, "", url.toString());
+  }, [showUpgradeBanner]);
 
   useEffect(() => {
     if (!showSummary || !summarySession) return;
@@ -199,6 +210,27 @@ export default function Atelier() {
 
       {/* Active context chips */}
       <ActiveContextChips />
+
+      {/* Upgrade success banner — shown once after checkout redirect */}
+      {upgradeBannerVisible && (
+        <div className="flex items-start justify-between gap-3 px-5 py-4 rounded-sm border border-primary/30 bg-primary/5 text-sm animate-in fade-in duration-300">
+          <div className="flex items-start gap-3">
+            <Award className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/70" aria-hidden="true" />
+            <div className="space-y-0.5">
+              <p className="font-medium text-foreground/90">Your membership is now active — welcome to The Atelier.</p>
+              <p className="text-muted-foreground/70 font-light text-xs">All practice sessions and learning tracks are now available to you. Begin whenever you are ready.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUpgradeBannerVisible(false)}
+            aria-label="Dismiss"
+            className="text-muted-foreground/50 hover:text-foreground transition-colors mt-0.5 flex-shrink-0"
+          >
+            <span aria-hidden="true" className="text-lg leading-none">×</span>
+          </button>
+        </div>
+      )}
 
       {/* Fallback banner — shown when region has no own scenarios yet */}
       {isUsingFallback && (

@@ -2698,7 +2698,6 @@ const COUNSEL_DOMAINS = [
   "gastronomy", "business", "eloquence",
   "formal_events", "dress_code", "cultural_knowledge",
 ] as const;
-type CounselDomain = typeof COUNSEL_DOMAINS[number];
 
 const COUNSEL_SEED_TOTAL = 206;
 

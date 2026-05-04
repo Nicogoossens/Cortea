@@ -3322,6 +3322,7 @@ function sweeperLabel(sweeper: string): string {
   }
   if (sweeper === "scenario-translation") return "Scenario's (alle talen)";
   if (sweeper === "compass-translation")  return "Landenprotocollen";
+  if (sweeper === "counsel-seed")         return "Atelier-distillaten";
   return sweeper;
 }
 

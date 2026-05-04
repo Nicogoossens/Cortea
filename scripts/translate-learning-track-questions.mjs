@@ -3,16 +3,30 @@
  * SOWISO Learning-Track Question Translator — Multi-lang, Register-aware
  *
  * Translates every English (lang='en') row in learning_track_questions to a
- * target language with:
- *   1. Register-correct system prompts (middle_class ≠ elite per language)
- *   2. Inline quality evaluation (score 1–10 per question_text)
- *   3. Automatic rewrite when score < 8 — before DB insert
+ * target language via a strict 3-step inline pipeline:
+ *
+ *   Step 1 — TRANSLATE  : callAnthropic(TRANSLATION_PROMPTS[lang][register], …)
+ *   Step 2 — EVALUATE   : evaluateQuality() → score 1–10 against register standard
+ *   Step 3 — REWRITE    : if score < 8 → use rewritten version, never sub-threshold text
  *
  * Only quality-guaranteed translations are inserted. Never a sub-threshold
- * translation in the database.
+ * translation reaches the database.
+ *
+ * Prompt coverage: 9 target languages × 2 registers = 18 register-specific prompts
+ *   Languages : nl, fr, de, es, pt, it, ar, ja, zh
+ *   Registers : middle_class (warm, direct, accessible) | elite (formal, refined)
+ *
+ * Quality prompts: same 9 × 2 matrix (QUALITY_PROMPTS object mirrors TRANSLATION_PROMPTS)
+ *
+ * worker_runs metadata written per run:
+ *   { lang, register, avg_score, pct_passed_first_try, pct_rewritten,
+ *     skipped, failed, rewritten, quality_checked, dryRun, limit }
  *
  * Idempotent: per (region, register, pillar, phase, level, demographic) slot,
  * skips if target-lang count >= en count.
+ *
+ * Called by: scripts/translate-learning-track-all-langs.mjs (orchestrator)
+ * Auto-triggered by: POST /admin/content/import { type: "learning_tracks" }
  *
  * Usage:
  *   node scripts/translate-learning-track-questions.mjs --lang fr [options]

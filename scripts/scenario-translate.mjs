@@ -1,10 +1,28 @@
 #!/usr/bin/env node
 /**
- * SOWISO Scenario Translation Worker
+ * SOWISO Scenario Translation Worker — Register-aware, Quality-gated
  *
  * Translates scenario titles and content (situation, question, option text +
- * explanation) into target languages using Claude, then stores the results in
+ * explanation) into 9 target languages using Claude, then stores the results in
  * the title_i18n (jsonb) and content_i18n (jsonb) columns of the scenarios table.
+ *
+ * Register selection (Task #263):
+ *   Each scenario has a social_class column (middle_class | elite | universal).
+ *   getScenarioPrompt(lang, social_class) selects the register-correct system prompt:
+ *     middle_class → warm, direct, accessible register prompt per lang
+ *     elite / universal → formal, refined register prompt per lang
+ *
+ * Prompt coverage: 9 langs × 2 registers = 18 prompts (SYSTEM_PROMPTS_BY_REGISTER)
+ *   Languages: nl, fr, de, es, pt, it, ar, ja, zh
+ *
+ * Inline quality evaluation on situation field (key user-facing copy):
+ *   Calls evaluateQuality() after each translation.
+ *   score < 8 → finalSituation = rewritten version before DB write.
+ *   QUALITY_PROMPTS: same 9 × 2 matrix.
+ *
+ * worker_runs metadata: { quality_rewrites, avg_quality_score, targetLangs, … }
+ *
+ * Auto-triggered by POST /admin/content/import { type: "scenarios" } via admin.ts.
  *
  * Usage:
  *   node scripts/scenario-translate.mjs [flags]
@@ -13,6 +31,8 @@
  *   --lang <code>   Base language code to translate into (nl, fr, de, es, pt, it, ar, ja, zh).
  *                   Omit to translate into ALL supported languages.
  *   --id <n>        Translate only the scenario with this ID.
+ *   --from <n>      Translate scenarios with id >= n (used by admin auto-trigger).
+ *   --to <n>        Translate scenarios with id <= n (used by admin auto-trigger).
  *   --dry-run       Print planned translations; do not write to database.
  *   --verbose       Show full translated content, not just titles.
  *   --force         Re-translate scenarios that already have a translation for

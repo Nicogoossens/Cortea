@@ -18,8 +18,9 @@
  *   track.*, question.*, hint.*, lesson.*, exercise.*, module.*, content.*
  * UI labels (counsel.*, nav.*, home.*, etc.) are never touched.
  *
- * LOCALES — only the 9 supported calibration locales are processed:
- *   nl, nl-BE, fr, fr-BE, en, en-GB, de, es, it.
+ * LOCALES — 10 base codes are supported (Task #263 added pt, ar, ja, zh):
+ *   nl, nl-BE, fr, fr-BE, en, en-GB, de, es, it, pt, ar, ja, zh.
+ * Both PROMPTS_STANDARD and PROMPTS_ELITE contain entries for all 10 codes.
  * Rows with other language codes are skipped with a warning unless
  * --locale explicitly names that code (user takes responsibility).
  *

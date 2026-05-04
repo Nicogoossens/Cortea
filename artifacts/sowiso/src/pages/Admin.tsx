@@ -3661,6 +3661,7 @@ function TranslationHealthTab() {
   const [seedsLaunching, setSeedsLaunching]         = useState<string | null>(null);
   const [seedTransLaunching, setSeedTransLaunching] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [workerTarget, setWorkerTarget] = useState<"dev" | "prod">("dev");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -3703,6 +3704,8 @@ function TranslationHealthTab() {
   }, [fetchAll]);
 
   // LTQ launchers
+  const targetParam = workerTarget === "prod" ? { target: "prod" as const } : {};
+
   const launchLtqAll = async () => {
     setLtqLaunching("all");
     try {
@@ -3710,7 +3713,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ parallel: 2 }),
+        body: JSON.stringify({ parallel: 2, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? "LTQ orchestrator launched.");
@@ -3724,7 +3727,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang }),
+        body: JSON.stringify({ lang, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? `LTQ [${lang}] launched.`);
@@ -3742,7 +3745,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region_code: region, register }),
+        body: JSON.stringify({ region_code: region, register, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? `LTQ ${key} (alle ontbrekende talen) gestart.`);
@@ -3760,7 +3763,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang, region_code: region, register }),
+        body: JSON.stringify({ lang, region_code: region, register, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? `LTQ ${lang.toUpperCase()} / ${region} ${register} gestart.`);
@@ -3776,7 +3779,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? "Scenario worker launched.");
@@ -3790,7 +3793,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang }),
+        body: JSON.stringify({ lang, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? `Scenario [${lang}] launched.`);
@@ -3806,7 +3809,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? "Compass worker launched.");
@@ -3820,7 +3823,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang }),
+        body: JSON.stringify({ lang, ...targetParam }),
       });
       const d = await res.json();
       showToast(d.message ?? `Compass [${lang}] launched.`);
@@ -3936,6 +3939,18 @@ function TranslationHealthTab() {
                 </span>
               </>
             )}
+          </div>
+          {/* Omgeving selector — controls which DB workers write to */}
+          <div className="flex items-center gap-1.5 text-[10px] font-mono border border-border/60 rounded-sm px-2 py-1.5 bg-muted/20">
+            <span className="text-foreground/60 uppercase tracking-wide">Omgeving</span>
+            <select
+              value={workerTarget}
+              onChange={(e) => setWorkerTarget(e.target.value as "dev" | "prod")}
+              className={`bg-transparent border-none outline-none font-mono text-[10px] cursor-pointer ${workerTarget === "prod" ? "text-rose-600 font-semibold" : "text-foreground"}`}
+            >
+              <option value="dev">dev</option>
+              <option value="prod">prod</option>
+            </select>
           </div>
           <Button
             size="sm"

@@ -52,6 +52,59 @@ The Cortéa application is structured as a pnpm workspace monorepo.
 - **Accessibility**: Includes an accessibility panel with high-contrast and text-size controls.
 - **Narrative Modes**: Scenario.tsx features Classic/Story Mode toggle.
 
+## Dev → Productie Workflow
+
+### Eenmalige initiële sync (dev → prod)
+
+1. **Stel `PROD_DATABASE_URL` in als secret** (Replit Settings → Secrets).
+   Kopieer de connection string vanuit je Replit deployment database-instellingen.
+
+2. **Controleer de sync-status** (toont row-counts per tabel):
+   ```bash
+   node scripts/check-sync-status.mjs
+   ```
+
+3. **Droog-run** om te zien wat er gesynchroniseerd zou worden:
+   ```bash
+   node scripts/sync-data-to-prod.mjs --dry-run
+   ```
+
+4. **Voer de sync uit** (upsert van dev → prod, idempotent):
+   ```bash
+   node scripts/sync-data-to-prod.mjs
+   ```
+   Of voor één specifieke tabel:
+   ```bash
+   node scripts/sync-data-to-prod.mjs --table learning_track_questions
+   ```
+
+### Toekomstige vertaalruns direct naar prod
+
+Alle worker-scripts ondersteunen nu `--target prod`:
+
+- `node scripts/translate-learning-track-questions.mjs --lang nl --target prod`
+- `node scripts/translate-compass-content.mjs --lang fr --target prod`
+- `node scripts/scenario-translate.mjs --lang de --target prod`
+- `node scripts/generate-learning-track-questions.mjs --region AE --target prod`
+
+In de Admin-UI (Vertalingen-tab) selecteer "prod" in de **Omgeving**-dropdown
+vóór je een worker start. Kies altijd terug "dev" na afloop.
+
+### Tabellen die NIET gesynchroniseerd worden
+- `users` — productiegebruikers mogen nooit overschreven worden.
+- `worker_runs` — run-history blijft altijd in dev.
+
+### Conflict-kolommen per tabel
+| Tabel | Conflict-kolom |
+|---|---|
+| `learning_track_questions` | `question_hash` |
+| `culture_protocols` | `id` |
+| `translations` | `id` |
+| `compass_regions` | `region_code` |
+| `scenarios` | `id` |
+| `badges` | `slug` |
+| `counsel_region_seeds` | `id` |
+
 ## External Dependencies
 
 - **Database**: PostgreSQL

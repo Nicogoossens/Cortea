@@ -50,6 +50,7 @@ import {
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
+import { getDbUrl } from "./lib/db-target.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require   = createRequire(import.meta.url);
@@ -70,6 +71,7 @@ const FLAG_REGISTER   = flagStr("--register");
 const FLAG_LIMIT      = flagStr("--limit") ? parseInt(flagStr("--limit"), 10) : null;
 const FLAG_DRY        = flagBool("--dry-run");
 const FLAG_NO_QUALITY = flagBool("--no-quality");
+const FLAG_TARGET     = flagStr("--target") ?? "dev";
 
 const SUPPORTED_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 
@@ -87,7 +89,7 @@ const SWEEPER_NAME = `ltq-translation-${FLAG_LANG}`;
 let totalInputTokens  = 0;
 let totalOutputTokens = 0;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: getDbUrl(FLAG_TARGET) });
 
 // ── JSON safety footer ────────────────────────────────────────────────────────
 const JSON_RULES = `

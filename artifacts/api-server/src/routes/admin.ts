@@ -2651,6 +2651,7 @@ const LtqTranslateSchema = z.object({
   limit: z.number().int().positive().optional(),
   no_quality: z.boolean().optional(),
   parallel: z.number().int().min(1).max(4).optional(),
+  target: z.enum(["dev", "prod"]).optional(),
 });
 
 /** POST /admin/ltq/translate — spawn LTQ translation worker in background */
@@ -2660,7 +2661,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
   }
 
-  const { lang, region_code, register, limit, no_quality, parallel } = parsed.data;
+  const { lang, region_code, register, limit, no_quality, parallel, target } = parsed.data;
 
   // Duplicate-active-run guard.
   // - Per-lang launch (lang provided): block if that specific lang's worker is active.
@@ -2720,6 +2721,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
   if (limit)       { childArgs.push("--limit",    String(limit)); }
   if (no_quality)  { childArgs.push("--no-quality"); }
   if (!lang && parallel) { childArgs.push("--parallel", String(parallel)); }
+  if (target === "prod")  { childArgs.push("--target", "prod"); }
 
   const child = spawn("node", childArgs, {
     cwd: WORKSPACE_ROOT,
@@ -2727,7 +2729,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ script, lang, region_code, register, estimatedQuestions }, "Admin: LTQ translate worker spawned");
+  req.log?.info({ script, lang, region_code, register, estimatedQuestions, target }, "Admin: LTQ translate worker spawned");
 
   return res.json({
     ok: true,
@@ -2831,6 +2833,7 @@ const ScenarioTranslateSchema = z.object({
   lang: z.enum(SUPPORTED_LANGS).optional(),
   id: z.number().int().positive().optional(),
   force: z.boolean().optional(),
+  target: z.enum(["dev", "prod"]).optional(),
 });
 
 /** POST /admin/scenarios/translate — spawn scenario translate worker */
@@ -2839,7 +2842,7 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
   }
-  const { lang, id, force } = parsed.data;
+  const { lang, id, force, target } = parsed.data;
 
   // Duplicate-active-run guard — scenario always writes sweeper = "scenario-translation"
   const scenActiveRows = await db
@@ -2867,9 +2870,10 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
   const SCEN_COST_PER_ITEM = 0.005;
 
   const childArgs = ["scripts/scenario-translate.mjs"];
-  if (lang)  { childArgs.push("--lang",  lang); }
-  if (id)    { childArgs.push("--id",    String(id)); }
-  if (force) { childArgs.push("--force"); }
+  if (lang)              { childArgs.push("--lang",   lang); }
+  if (id)                { childArgs.push("--id",     String(id)); }
+  if (force)             { childArgs.push("--force"); }
+  if (target === "prod") { childArgs.push("--target", "prod"); }
 
   const child = spawn("node", childArgs, {
     cwd: WORKSPACE_ROOT,
@@ -2877,7 +2881,7 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ lang, id, force, scenRemaining }, "Admin: scenario translate worker spawned");
+  req.log?.info({ lang, id, force, scenRemaining, target }, "Admin: scenario translate worker spawned");
 
   return res.json({
     ok: true,
@@ -2942,6 +2946,7 @@ const CompassTranslateSchema = z.object({
   lang: z.enum(SUPPORTED_LANGS).optional(),
   region: z.string().optional(),
   force: z.boolean().optional(),
+  target: z.enum(["dev", "prod"]).optional(),
 });
 
 /** POST /admin/compass/translate — spawn compass translate worker */
@@ -2950,7 +2955,7 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
   }
-  const { lang, region, force } = parsed.data;
+  const { lang, region, force, target } = parsed.data;
 
   // Duplicate-active-run guard — compass always writes sweeper = "compass-content-translation"
   const compassActiveRows = await db
@@ -2978,9 +2983,10 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   const COMPASS_COST_PER_ITEM = 0.011;
 
   const childArgs = ["scripts/translate-compass-content.mjs"];
-  if (lang)   { childArgs.push("--lang",   lang); }
-  if (region) { childArgs.push("--region", region); }
-  if (force)  { childArgs.push("--force"); }
+  if (lang)              { childArgs.push("--lang",   lang); }
+  if (region)            { childArgs.push("--region", region); }
+  if (force)             { childArgs.push("--force"); }
+  if (target === "prod") { childArgs.push("--target", "prod"); }
 
   const child = spawn("node", childArgs, {
     cwd: WORKSPACE_ROOT,
@@ -2988,7 +2994,7 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ lang, region, force, compassRemaining }, "Admin: compass translate worker spawned");
+  req.log?.info({ lang, region, force, compassRemaining, target }, "Admin: compass translate worker spawned");
 
   return res.json({
     ok: true,

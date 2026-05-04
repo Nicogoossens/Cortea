@@ -29,6 +29,7 @@ import {
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
+import { getDbUrl } from "./lib/db-target.mjs";
 
 const SWEEPER_NAME = "compass-content-translation";
 const MODEL = "claude-haiku-4-5";
@@ -51,6 +52,7 @@ const FLAG_DRY_RUN    = args.includes("--dry-run");
 const FLAG_FORCE      = args.includes("--force");
 const FLAG_VERBOSE    = args.includes("--verbose");
 const FLAG_BATCH_SIZE = args.includes("--batch-size") ? parseInt(args[args.indexOf("--batch-size") + 1], 10) : 20;
+const FLAG_TARGET     = args.includes("--target")     ? args[args.indexOf("--target") + 1]                   : "dev";
 
 // ── Supported target languages ─────────────────────────────────────────────────
 const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
@@ -115,7 +117,7 @@ Each language value must contain all 8 fields: core_value, biggest_taboo, dining
 }
 
 // ── DB pool ───────────────────────────────────────────────────────────────────
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: getDbUrl(FLAG_TARGET) });
 
 // ── Anthropic fetch (exponential backoff for rate limits) ──────────────────────
 async function callAnthropic(systemPrompt, userPrompt, retries = 6) {

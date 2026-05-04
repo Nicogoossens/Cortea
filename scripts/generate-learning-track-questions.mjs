@@ -38,6 +38,7 @@ import {
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
+import { getDbUrl } from "./lib/db-target.mjs";
 
 const SWEEPER_NAME = "ltq-generation";
 const MODEL = "claude-haiku-4-5";
@@ -63,6 +64,7 @@ const FLAG_MAX      = flag("--max-per-slot") ? parseInt(flag("--max-per-slot"), 
 const FLAG_BATCH    = flag("--batch-size") ? parseInt(flag("--batch-size"), 10) : 10;
 const FLAG_LANG     = flag("--lang") ?? "en";
 const FLAG_DRY_RUN  = args.includes("--dry-run");
+const FLAG_TARGET   = flag("--target") ?? "dev";
 
 if (!FLAG_REGION) {
   console.error("Error: --region is required (e.g. --region AE)");
@@ -72,7 +74,7 @@ if (!FLAG_REGION) {
 let totalInputTokens = 0;
 let totalOutputTokens = 0;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: getDbUrl(FLAG_TARGET) });
 
 // ── Anthropic ──────────────────────────────────────────────────────────────────
 async function callAnthropic(systemPrompt, userPrompt) {

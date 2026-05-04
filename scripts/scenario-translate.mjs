@@ -49,6 +49,7 @@ import {
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
+import { getDbUrl } from "./lib/db-target.mjs";
 
 const SWEEPER_NAME = "scenario-translation";
 const MODEL = "claude-haiku-4-5";
@@ -74,6 +75,7 @@ const FLAG_TO       = args.includes("--to")      ? parseInt(args[args.indexOf("-
 const FLAG_DRY_RUN  = args.includes("--dry-run");
 const FLAG_VERBOSE  = args.includes("--verbose");
 const FLAG_FORCE    = args.includes("--force");
+const FLAG_TARGET   = args.includes("--target") ? args[args.indexOf("--target") + 1] : "dev";
 
 // ── Supported target languages ─────────────────────────────────────────────────
 const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
@@ -255,7 +257,7 @@ Output JSON schema (return ONLY this, no other text):
 }`;
 
 // ── DB pool ───────────────────────────────────────────────────────────────────
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: getDbUrl(FLAG_TARGET) });
 
 // ── Anthropic fetch ───────────────────────────────────────────────────────────
 async function callAnthropic(systemPrompt, userPrompt) {

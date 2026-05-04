@@ -59,7 +59,14 @@ for (const lang of LANG_SEQUENCE) {
   run("translate-culture-protocols.mjs", ["--lang", lang, "--batch-size", BATCH_SIZE]);
 }
 
-// ── Phase 3: Ensure scenario zh translations are complete (--force to catch
+// ── Phase 3: Compass overview content (core_value, biggest_taboo, etc.) ───────
+// Translates compass_regions.content from en-GB into all 9 languages.
+// Only untranslated regions are processed; already-translated ones are skipped.
+for (const lang of LANG_SEQUENCE) {
+  run("translate-compass-content.mjs", ["--lang", lang, "--batch-size", "200"]);
+}
+
+// ── Phase 4: Ensure scenario zh translations are complete (--force to catch
 //    rows where content_i18n has the key but title_i18n does not, or vice versa)
 run("scenario-translate.mjs", ["--lang", "zh", "--force"]);
 

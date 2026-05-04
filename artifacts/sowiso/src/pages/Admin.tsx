@@ -3119,6 +3119,7 @@ interface CoverageCardProps {
   itemsPerMinute: number;
   onTranslateAll: () => Promise<void>;
   onTranslateLang: (lang: TransLang) => Promise<void>;
+  onForceTranslateLang?: (lang: TransLang) => Promise<void>;
   launching: string | null;
   lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
   hideAllButton?: boolean;
@@ -3127,7 +3128,7 @@ interface CoverageCardProps {
 function CoverageCard({
   title, description, actionLabel, total, langs, sweeper, showRegisterBars,
   costPerItem, itemsPerMinute,
-  onTranslateAll, onTranslateLang, launching, lastRun, hideAllButton,
+  onTranslateAll, onTranslateLang, onForceTranslateLang, launching, lastRun, hideAllButton,
   activeSweepers,
 }: CoverageCardProps) {
   // Derive active state from DB-sourced worker_runs (finished_at === null)
@@ -3207,14 +3208,30 @@ function CoverageCard({
                     <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
                     {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} previous={l.previous_quality_metrics} />}
                   </div>
-                  <button
-                    className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors shrink-0"
-                    disabled={launching !== null || isLangActive(l.lang) || remaining === 0}
-                    onClick={() => onTranslateLang(l.lang)}
-                    title={isLangActive(l.lang) ? `Een vertaalworker voor ${l.lang.toUpperCase()} is actief — wacht tot die klaar is.` : tooltip}
-                  >
-                    {(launching === l.lang || isLangActive(l.lang)) ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
+                      disabled={launching !== null || isLangActive(l.lang) || remaining === 0}
+                      onClick={() => onTranslateLang(l.lang)}
+                      title={isLangActive(l.lang) ? `Een vertaalworker voor ${l.lang.toUpperCase()} is actief — wacht tot die klaar is.` : tooltip}
+                    >
+                      {(launching === l.lang || isLangActive(l.lang)) ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
+                    </button>
+                    {onForceTranslateLang && (
+                      <button
+                        className="text-[9px] font-mono text-orange-500/70 hover:text-orange-500 disabled:opacity-40 transition-colors leading-none flex items-center gap-0.5"
+                        disabled={launching !== null || isLangActive(l.lang)}
+                        onClick={() => onForceTranslateLang(l.lang)}
+                        title={`Hertalen (overschrijf bestaande) — start de vertaalworker voor ${l.lang.toUpperCase()} met --force; reeds vertaalde seeds worden opnieuw vertaald.`}
+                        aria-label={`Hertalen (overschrijf bestaande) voor ${l.lang.toUpperCase()}`}
+                      >
+                        {launching === `force-${l.lang}`
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <><span>↺</span><span className="hidden sm:inline">Hertalen</span></>
+                        }
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <CovBar pct={l.pct} count={l.count} />
                 {remaining > 0 && (
@@ -3861,6 +3878,22 @@ function TranslationHealthTab() {
     finally { setSeedTransLaunching(null); }
   };
 
+  // Force re-translate: sends force=true so already-translated seeds are also re-processed
+  const launchSeedTransLangForce = async (lang: TransLang) => {
+    setSeedTransLaunching(`force-${lang}`);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang, force: true }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `Hertaalworker (--force) voor Atelier-distillaten [${lang.toUpperCase()}] gestart.`);
+    } catch { showToast(`Kon hertaalworker (--force) voor [${lang.toUpperCase()}] niet starten.`); }
+    finally { setSeedTransLaunching(null); }
+  };
+
   // Counsel seed launchers
   const launchSeedsAll = async () => {
     setSeedsLaunching("all");
@@ -4101,6 +4134,7 @@ function TranslationHealthTab() {
           itemsPerMinute={15}
           onTranslateAll={async () => {}}
           onTranslateLang={launchSeedTransLang}
+          onForceTranslateLang={launchSeedTransLangForce}
           launching={seedTransLaunching}
           lastRun={counselSeedTrans.last_run ?? null}
           hideAllButton

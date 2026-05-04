@@ -2968,9 +2968,11 @@ const TRANS_LABELS: Record<TransLang, string> = {
 };
 
 interface RegCoverage { count: number; pct: number }
+interface QualityMetrics { avg_score: number; pct_passed: number | null; pct_rewritten: number | null }
 interface LangCoverage {
   lang: TransLang; count: number; pct: number; last_run?: unknown;
   by_register?: Record<string, RegCoverage>;
+  quality_metrics?: QualityMetrics | null;
 }
 
 interface LtqStatus {
@@ -3018,6 +3020,29 @@ function CovBar({ pct, count }: { pct: number; count: number }) {
       </div>
       <p className="text-[10px] font-mono text-muted-foreground tabular-nums">{count.toLocaleString()} · {pct}%</p>
     </div>
+  );
+}
+
+function QualityBadge({ metrics }: { metrics: QualityMetrics }) {
+  const score = metrics.avg_score;
+  const colorClass =
+    score >= 8.5 ? "bg-emerald-500/15 text-emerald-700 border-emerald-300/40" :
+    score >= 7.0 ? "bg-amber-500/15 text-amber-700 border-amber-300/40" :
+                   "bg-rose-500/15 text-rose-700 border-rose-300/40";
+  const passed = metrics.pct_passed != null ? `${Math.round(metrics.pct_passed)}% direct geslaagd` : null;
+  const rewritten = metrics.pct_rewritten != null ? `${Math.round(metrics.pct_rewritten)}% herschreven` : null;
+  const tooltip = [
+    `avg ${score.toFixed(1)}/10`,
+    passed,
+    rewritten,
+  ].filter(Boolean).join(" · ");
+  return (
+    <span
+      title={tooltip}
+      className={`inline-flex items-center px-1 py-0.5 rounded border text-[10px] font-mono tabular-nums cursor-default ${colorClass}`}
+    >
+      {score.toFixed(1)}
+    </span>
   );
 }
 
@@ -3122,9 +3147,12 @@ function CoverageCard({
             return (
               <div key={l.lang} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                    {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} />}
+                  </div>
                   <button
-                    className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
+                    className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors shrink-0"
                     disabled={launching !== null || remaining === 0}
                     onClick={() => onTranslateLang(l.lang)}
                     title={tooltip}

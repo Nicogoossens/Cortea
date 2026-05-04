@@ -2444,8 +2444,9 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
           WHERE sweeper LIKE 'ltq-translation-%'
           ORDER BY sweeper, started_at DESC`
     );
-    const lastRunByLang: Record<string, unknown> = {};
-    for (const r of lastRuns.rows as { sweeper: string; [k: string]: unknown }[]) {
+    type LastRunRow = { sweeper: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
+    const lastRunByLang: Record<string, LastRunRow> = {};
+    for (const r of lastRuns.rows as LastRunRow[]) {
       const lang = r.sweeper.replace("ltq-translation-", "");
       lastRunByLang[lang] = r;
     }
@@ -2454,12 +2455,25 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       ok: true,
       en_total: enTotal,
       en_by_register: enByRegister,
-      langs: SUPPORTED_LANGS.map((lang) => ({
-        lang,
-        ...(perLang[lang] ?? { count: 0, pct: 0 }),
-        by_register: perLangReg[lang] ?? {},
-        last_run: lastRunByLang[lang] ?? null,
-      })),
+      langs: SUPPORTED_LANGS.map((lang) => {
+        const run = lastRunByLang[lang];
+        const meta = run?.metadata ?? {};
+        const quality_metrics =
+          typeof meta.avg_score === "number"
+            ? {
+                avg_score: meta.avg_score,
+                pct_passed: typeof meta.pct_passed === "number" ? meta.pct_passed : null,
+                pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+              }
+            : null;
+        return {
+          lang,
+          ...(perLang[lang] ?? { count: 0, pct: 0 }),
+          by_register: perLangReg[lang] ?? {},
+          last_run: run ?? null,
+          quality_metrics,
+        };
+      }),
     });
   } catch (err) {
     req.log?.error({ err }, "Admin: ltq/translation-status failed");

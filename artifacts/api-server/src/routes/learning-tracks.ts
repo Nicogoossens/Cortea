@@ -226,6 +226,9 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           // Defensive content-lang check (mirrors findOpenSession guard).
           let contentOk = true;
           if (Array.isArray(reuse.served_question_ids) && (reuse.served_question_ids as string[]).length > 0) {
+            // Same narrowed check as findOpenSession: stale only when questions
+            // are in a language that is neither the requested lang nor English
+            // (English is the legitimate fallback when localized content is absent).
             const mismatchResult = await tx.execute<{ mismatch: number }>(sql`
               SELECT COUNT(*)::int AS mismatch
               FROM jsonb_array_elements_text(
@@ -233,6 +236,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
               ) AS qid
               JOIN learning_track_questions ltq ON ltq.id::text = qid
               WHERE ltq.lang != ${lang}
+                AND ltq.lang != 'en'
               LIMIT 1
             `);
             const mismatch = (mismatchResult[0] as { mismatch: number } | undefined)?.mismatch ?? 0;

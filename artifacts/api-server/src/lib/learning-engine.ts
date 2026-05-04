@@ -651,6 +651,9 @@ export async function findOpenSession(
   // lang guard was in place, or via a fallback that stored mismatched content).
   // Discard it so a fresh session is built with the correct language content.
   if (Array.isArray(row.served_question_ids) && (row.served_question_ids as string[]).length > 0) {
+    // A session is stale only when questions are in a language that is NEITHER
+    // the requested lang NOR English. English questions in a non-English session
+    // are intentional fallback (no localized content yet) and must be kept.
     const result = await db.execute<{ mismatch: number }>(sql`
       SELECT COUNT(*)::int AS mismatch
       FROM jsonb_array_elements_text(
@@ -658,6 +661,7 @@ export async function findOpenSession(
       ) AS qid
       JOIN learning_track_questions ltq ON ltq.id::text = qid
       WHERE ltq.lang != ${lang}
+        AND ltq.lang != 'en'
       LIMIT 1
     `);
     const mismatch = (result[0] as { mismatch: number } | undefined)?.mismatch ?? 0;

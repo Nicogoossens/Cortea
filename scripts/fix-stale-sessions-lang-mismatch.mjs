@@ -32,6 +32,10 @@ const client = new Client({ connectionString: process.env.DATABASE_URL });
 await client.connect();
 
 try {
+  // Only close sessions whose questions are in a language that is NEITHER
+  // the session's requested lang NOR English.  English questions in a
+  // non-English session represent intentional content fallback (no localized
+  // questions available yet) and must NOT be touched.
   const result = await client.query(`
     UPDATE learning_track_sessions
     SET    completed_at = NOW()
@@ -41,6 +45,7 @@ try {
              FROM   jsonb_array_elements_text(served_question_ids) AS qid
              JOIN   learning_track_questions ltq ON ltq.id::text = qid
              WHERE  ltq.lang != learning_track_sessions.lang
+               AND  ltq.lang != 'en'
              LIMIT  1
            )
     RETURNING id, region_code, lang, started_at

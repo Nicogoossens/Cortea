@@ -264,6 +264,9 @@ function parseProtocols(raw) {
   });
 }
 
+// ── Required i18n language keys ───────────────────────────────────────────────
+const REQUIRED_I18N_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
+
 // ── Insert protocols ───────────────────────────────────────────────────────────
 async function insertProtocols(regionCode, protocols) {
   let inserted = 0;
@@ -271,6 +274,13 @@ async function insertProtocols(regionCode, protocols) {
     const i18n = (p.i18n && typeof p.i18n === "object") ? p.i18n : {};
     // Also store rule_cc itself in the i18n map under 'en' for consistency
     if (!i18n.en) i18n.en = p.rule_cc;
+
+    // Warn if any required i18n keys are missing — generated rows will be
+    // backfilled by Phase 2b translation pass in run-all-culture-translations.mjs
+    const missingLangs = REQUIRED_I18N_LANGS.filter((l) => !i18n[l] || !i18n[l].trim());
+    if (missingLangs.length > 0) {
+      console.warn(`  [i18n warn] ${regionCode} protocol pillar=${p.pillar}: missing langs [${missingLangs.join(",")}] — will be backfilled`);
+    }
 
     const { rows } = await pool.query(
       `INSERT INTO culture_protocols

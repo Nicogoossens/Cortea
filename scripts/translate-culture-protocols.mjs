@@ -5,6 +5,10 @@
  * Translates culture_protocols.rule_cc (or rule_description as fallback)
  * into target languages and stores the results in rule_cc_i18n (jsonb).
  *
+ * One Claude Haiku call per protocol row returns ALL missing languages in a
+ * single JSON response, then persists using a safe COALESCE merge so
+ * concurrent updates are never lost.
+ *
  * Usage:
  *   node scripts/translate-culture-protocols.mjs [flags]
  *
@@ -55,65 +59,43 @@ const FLAG_BATCH_SIZE = args.includes("--batch-size") ? parseInt(args[args.index
 const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 const TARGET_LANGS = FLAG_LANG ? [FLAG_LANG] : ALL_LANGS;
 
-// ── System prompts per language ────────────────────────────────────────────────
-const JSON_SAFETY_NOTE = `
+// ── System prompt (multi-language combined call) ───────────────────────────────
+const SYSTEM_PROMPT = `You are a professional translator for Cortéa, a Belgian elite etiquette academy.
+You translate English cultural etiquette rules into multiple formal European and world languages simultaneously.
+
+Translation style per language:
+- nl: Formal Dutch (u/uw, Latin vocabulary, no anglicisms)
+- fr: Formal French (vous/votre, Académie française standard, no anglicisms)
+- de: Formal German High German (Sie/Ihnen, Duden standard, no anglicisms)
+- es: Formal Castilian Spanish (usted, subjunctive, Real Academia Española)
+- pt: Formal European Portuguese (o senhor/a senhora, classical vocabulary, no Brazilian neologisms)
+- it: Formal literary Italian (Lei/Suo, subjunctive, no anglicisms)
+- ar: Modern Standard Arabic (formal register, official pronouns, no colloquialisms)
+- ja: Formal Japanese (keigo — polite/honorific/humble forms as appropriate)
+- zh: Formal Simplified Chinese Mandarin (您/您的 honorifics, literary register, no colloquialisms)
+
 CRITICAL JSON RULES:
 - Return ONLY the raw JSON object — no markdown fences, no preamble, no trailing text.
 - All string values must be valid JSON strings: escape every internal double-quote as \\".
-- Use single quotes (') for apostrophes/contractions; never typographic or curly quotes.`;
+- Use single quotes (') for apostrophes/contractions; never typographic or curly quotes.
+- Do not use Chinese 「」 brackets inside JSON strings.`;
 
-const SYSTEM_PROMPTS = {
-  nl: `U bent professioneel vertaler voor Cortéa, een Belgische elite-etiquetteacademie.
-Vertaal Engelse etiquetteregels naar formeel, waardig Nederlands (u/uw, Latijns vocabulaire, geen anglicismen).
-${JSON_SAFETY_NOTE}`,
-
-  fr: `Vous êtes traducteur professionnel pour Cortéa, académie belge d'étiquette de prestige.
-Traduisez des règles d'étiquette anglaises en français formel et élégant (vous/votre, Académie française, sans anglicismes).
-${JSON_SAFETY_NOTE}`,
-
-  de: `Sie sind professioneller Übersetzer für Cortéa, eine belgische Eliteakademie für Etikette.
-Übersetzen Sie englische Etikette-Regeln ins formelle Hochdeutsch (Sie/Ihnen, Duden-Standard, ohne Anglizismen).
-${JSON_SAFETY_NOTE}`,
-
-  es: `Usted es traductor profesional para Cortéa, academia belga de etiqueta de élite.
-Traduzca reglas de etiqueta del inglés al español formal castellano (usted, subjuntivo, Real Academia Española).
-${JSON_SAFETY_NOTE}`,
-
-  pt: `É tradutor profissional da Cortéa, academia belga de etiqueta de prestígio.
-Traduza regras de etiqueta do inglês para português europeu formal (o senhor/a senhora, vocabulário clássico, sem neologismos brasileiros).
-${JSON_SAFETY_NOTE}`,
-
-  it: `Lei è traduttore professionale per Cortéa, accademia belga di etichetta d'élite.
-Traduca regole di galateo dall'inglese all'italiano formale letterario (Lei/Suo, congiuntivo, senza anglicismi).
-${JSON_SAFETY_NOTE}`,
-
-  ar: `أنتَ مترجم محترف لـ Cortéa، أكاديمية الآداب البلجيكية الراقية.
-ترجم قواعد الآداب من الإنجليزية إلى العربية الفصحى المعاصرة (أسلوب رسمي راقٍ، الضمائر الرسمية، بعيداً عن العامية).
-${JSON_SAFETY_NOTE}`,
-
-  ja: `あなたはCortéa（ベルギーの名門エチケットアカデミー）専任のプロの翻訳者です。
-英語のエチケット規則を格調高い正式な日本語に翻訳してください（丁寧語・尊敬語・謙譲語を適切に使用）。
-${JSON_SAFETY_NOTE}`,
-
-  zh: `您是Cortéa比利时精英礼仪学院的专业翻译。
-请将英语礼仪规则翻译成正式、典雅的现代汉语（普通话，简体字，书面正式语体，使用您/您的等敬语，措辞庄重，避免口语化表达）。
-引用词语或专有名词时，请使用「」书名号，切勿在JSON字符串内部使用双引号（"）以免破坏JSON格式。
-${JSON_SAFETY_NOTE}`,
-};
-
-// ── User prompt ────────────────────────────────────────────────────────────────
-function buildUserPrompt(lang, row) {
+// ── User prompt: one combined call for all missing languages ───────────────────
+function buildUserPrompt(row, langsNeeded) {
   const source = row.rule_cc || row.rule_description;
-  return `Translate this cultural etiquette rule into ${lang.toUpperCase()}.
+  const langList = langsNeeded.map((l) => `"${l}": "<${l} translation>"`).join(",\n  ");
+  return `Translate this cultural etiquette rule into ALL of the following languages: ${langsNeeded.join(", ")}.
 
 Source (English):
-${JSON.stringify({ rule_type: row.rule_type, rule_text: source }, null, 2)}
+rule_type: ${JSON.stringify(row.rule_type ?? "")}
+rule_text: ${JSON.stringify(source)}
 
-Return ONLY this JSON shape:
+Return ONLY this JSON object with one key per requested language:
 {
-  "rule_type": "<translated rule_type>",
-  "rule_text": "<translated rule_text>"
-}`;
+  ${langList}
+}
+
+Each value must be the translated rule_text only (not rule_type). Keep translations concise and faithful to the Cortéa formal register.`;
 }
 
 // ── DB pool ───────────────────────────────────────────────────────────────────
@@ -138,7 +120,7 @@ async function callAnthropic(systemPrompt, userPrompt, retries = 6) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1024,
+        max_tokens: 2048,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
@@ -169,25 +151,26 @@ async function callAnthropic(systemPrompt, userPrompt, retries = 6) {
   throw new Error("callAnthropic: exhausted retries");
 }
 
-// ── Parse translation response ────────────────────────────────────────────────
-function parseTranslation(raw) {
+// ── Parse multi-language translation response ──────────────────────────────────
+function parseTranslations(raw, langsNeeded) {
   let text = raw;
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (jsonMatch) text = jsonMatch[0];
   else text = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
 
-  // Replace typographic/curly quotes with straight single quotes so jsonrepair
-  // can handle unescaped inner double-quotes produced by the model (e.g. Chinese "…")
   text = text.replace(/[\u201C\u201D]/g, "'");
 
   try { text = jsonrepair(text); } catch { /* ignore */ }
   try {
     const parsed = JSON.parse(text);
-    if (typeof parsed.rule_text !== "string") return null;
-    return {
-      rule_type: typeof parsed.rule_type === "string" ? parsed.rule_type : null,
-      rule_text: parsed.rule_text,
-    };
+    const result = {};
+    for (const lang of langsNeeded) {
+      if (typeof parsed[lang] === "string" && parsed[lang].trim()) {
+        result[lang] = parsed[lang];
+      }
+    }
+    if (Object.keys(result).length === 0) return null;
+    return result;
   } catch (e) {
     process.stderr.write(`JSON parse error: ${e.message}\nText (first 800): ${text.substring(0, 800)}\n`);
     return null;
@@ -273,73 +256,74 @@ async function main() {
   for (const row of rows) {
     const currentI18n = (row.rule_cc_i18n ?? {});
 
-    for (const lang of TARGET_LANGS) {
-      if (!FLAG_FORCE && currentI18n[lang]) {
-        if (FLAG_VERBOSE) {
-          console.log(`  [SKIP] Protocol ${row.id} (${row.region_code}) lang=${lang} — already translated`);
-        }
-        skipped++;
-        continue;
-      }
+    // Determine which languages are actually needed for this row
+    const langsNeeded = TARGET_LANGS.filter((lang) => {
+      if (FLAG_FORCE) return true;
+      return !currentI18n[lang];
+    });
 
-      const systemPrompt = SYSTEM_PROMPTS[lang];
-      if (!systemPrompt) {
-        console.warn(`  [WARN] No system prompt for lang=${lang} — skipping`);
-        skipped++;
-        continue;
-      }
-
-      const sourceText = row.rule_cc || row.rule_description;
-      if (!sourceText) {
-        if (FLAG_VERBOSE) console.log(`  [SKIP] Protocol ${row.id} — no source text`);
-        skipped++;
-        continue;
-      }
-
-      process.stdout.write(
-        `  [${row.region_code}] #${row.id} (${(row.rule_type ?? "").substring(0, 38)}) → ${lang} … `
-      );
-
-      let raw;
-      try {
-        raw = await callAnthropic(systemPrompt, buildUserPrompt(lang, row));
-      } catch (err) {
-        console.log(`API ERROR — ${err.message}`);
-        failed++;
-        continue;
-      }
-
-      const result = parseTranslation(raw);
-      if (!result) {
-        console.log("PARSE FAIL — skipping");
-        if (FLAG_VERBOSE) console.log("Raw:", raw.substring(0, 500));
-        failed++;
-        continue;
-      }
-
-      console.log(`OK`);
+    if (langsNeeded.length === 0) {
       if (FLAG_VERBOSE) {
-        console.log(`    → ${result.rule_text.substring(0, 120)}`);
+        console.log(`  [SKIP] Protocol ${row.id} (${row.region_code}) — all target languages already present`);
       }
-
-      // Merge new translation into the existing i18n map
-      currentI18n[lang] = result.rule_text;
-
-      if (!FLAG_DRY_RUN) {
-        const updateClient = await pool.connect();
-        try {
-          await updateClient.query(
-            `UPDATE culture_protocols SET rule_cc_i18n = $1::jsonb WHERE id = $2`,
-            [JSON.stringify(currentI18n), row.id]
-          );
-        } finally {
-          updateClient.release();
-        }
-      }
-
-      translated++;
-      await new Promise((r) => setTimeout(r, 200));
+      skipped++;
+      continue;
     }
+
+    const sourceText = row.rule_cc || row.rule_description;
+    if (!sourceText) {
+      if (FLAG_VERBOSE) console.log(`  [SKIP] Protocol ${row.id} — no source text`);
+      skipped++;
+      continue;
+    }
+
+    process.stdout.write(
+      `  [${row.region_code}] #${row.id} (${(row.rule_type ?? "").substring(0, 38)}) → [${langsNeeded.join(",")}] … `
+    );
+
+    let raw;
+    try {
+      raw = await callAnthropic(SYSTEM_PROMPT, buildUserPrompt(row, langsNeeded));
+    } catch (err) {
+      console.log(`API ERROR — ${err.message}`);
+      failed++;
+      continue;
+    }
+
+    const translations = parseTranslations(raw, langsNeeded);
+    if (!translations) {
+      console.log("PARSE FAIL — skipping");
+      if (FLAG_VERBOSE) console.log("Raw:", raw.substring(0, 500));
+      failed++;
+      continue;
+    }
+
+    const gotLangs = Object.keys(translations);
+    console.log(`OK (${gotLangs.join(",")})`);
+    if (FLAG_VERBOSE) {
+      for (const [lang, text] of Object.entries(translations)) {
+        console.log(`    ${lang}: ${text.substring(0, 100)}`);
+      }
+    }
+
+    if (!FLAG_DRY_RUN) {
+      const updateClient = await pool.connect();
+      try {
+        // Safe merge: COALESCE ensures we start from existing i18n even if NULL,
+        // then || merges the new translations without overwriting other keys.
+        await updateClient.query(
+          `UPDATE culture_protocols
+           SET rule_cc_i18n = COALESCE(rule_cc_i18n, '{}'::jsonb) || $1::jsonb
+           WHERE id = $2`,
+          [JSON.stringify(translations), row.id]
+        );
+      } finally {
+        updateClient.release();
+      }
+    }
+
+    translated++;
+    await new Promise((r) => setTimeout(r, 200));
   }
 
   console.log("\n" + "─".repeat(60));
@@ -364,7 +348,6 @@ async function main() {
   });
   await closeWorkerCostPool();
   await pool.end();
-
 }
 
 main().catch((err) => {

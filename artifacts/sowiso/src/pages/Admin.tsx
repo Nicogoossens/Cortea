@@ -2990,6 +2990,14 @@ interface CompassStatus {
   langs: LangCoverage[];
   last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number };
 }
+interface CounselDomainCoverage {
+  domain: string; active: number; draft: number; missing: number; pct: number;
+}
+interface CounselSeedCoverageStatus {
+  ok: boolean; total_regions: number;
+  domains: CounselDomainCoverage[];
+  last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
+}
 interface WorkerRun {
   id: number; sweeper: string; started_at: string; finished_at: string | null;
   items_processed: number; estimated_usd: number; status: string;
@@ -3197,6 +3205,115 @@ function CoverageCard({
   );
 }
 
+// ── Atelier-distillaten domain coverage card ──────────────────────────────────
+
+const COUNSEL_DOMAIN_LABELS: Record<string, string> = {
+  gastronomy:          "Gastronomie",
+  business:            "Zakelijk",
+  eloquence:           "Welsprekendheid",
+  formal_events:       "Formele gelegenheden",
+  dress_code:          "Kledingcode",
+  cultural_knowledge:  "Culturele kennis",
+};
+
+const SEED_COST_PER_REGION = 0.008;
+const SEED_REGIONS_PER_MIN = 8;
+
+interface DomainCoverageCardProps {
+  data: CounselSeedCoverageStatus;
+  launching: string | null;
+  onGenerateAll: () => Promise<void>;
+  onGenerateDomain: (domain: string) => Promise<void>;
+}
+
+function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }: DomainCoverageCardProps) {
+  const totalMissing    = data.domains.reduce((s, d) => s + d.missing, 0);
+  const totalEstCost    = totalMissing * SEED_COST_PER_REGION;
+  const totalEstMin     = totalMissing / SEED_REGIONS_PER_MIN;
+  const allActive       = data.domains.every((d) => d.missing === 0 && d.draft === 0 && d.active === data.total_regions);
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="space-y-1 flex-1 min-w-0">
+            <CardTitle className="text-sm font-semibold text-foreground">Atelier-distillaten (Regio-dekking)</CardTitle>
+            <p className="text-xs text-muted-foreground leading-snug">
+              Per regio × domein kennisdistillaat dat de Counsel-AI voedt. Actieve seeds worden automatisch als context meegestuurd bij elke Counsel-sessie. Bron: {data.total_regions} gepubliceerde landen × 6 domeinen = {(data.total_regions * 6).toLocaleString()} mogelijke seeds.
+            </p>
+
+            <div className="flex items-start gap-1.5 mt-1.5 px-2 py-1.5 rounded bg-muted/50 border border-border/40">
+              <Play className="w-3 h-3 mt-0.5 shrink-0 text-primary/60" />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                <span className="font-medium text-foreground/80">De ▶-knop per domein</span> start de counsel-seed-worker voor alle ontbrekende regio's in dat domein. De worker distilleert de Engelstalige oefenvragen voor die regio naar een gestructureerd kennisoverzicht. Nieuwe seeds verschijnen in 'draft' — promoveer ze via de Atelier-distillaten tab.
+              </p>
+            </div>
+
+            <p className="text-[11px] font-mono text-muted-foreground/70 pt-0.5">
+              {totalMissing > 0
+                ? <>nog {totalMissing.toLocaleString()} regio×domein te genereren · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
+                : <>Alle domeinen volledig gedistilleerd</>
+              }
+              {data.last_run && (
+                <> · laatste run {formatRelative(data.last_run.started_at)} · <StatusPill status={data.last_run.status} /></>
+              )}
+            </p>
+          </div>
+
+          <Button
+            size="sm"
+            variant={allActive ? "outline" : "default"}
+            className="font-mono text-xs gap-1.5 shrink-0"
+            disabled={launching !== null || totalMissing === 0}
+            onClick={onGenerateAll}
+            title={`Start batch-worker voor alle domeinen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
+          >
+            {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+            Alle domeinen aanvullen
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="space-y-3">
+          {data.domains.map((d) => {
+            const estCost = d.missing * SEED_COST_PER_REGION;
+            const estMin  = d.missing / SEED_REGIONS_PER_MIN;
+            const color   = d.pct >= 100 ? "bg-emerald-500" : d.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+            const isDone  = d.missing === 0;
+            return (
+              <div key={d.domain} className="flex items-center gap-3">
+                <div className="w-32 shrink-0">
+                  <span className="text-xs font-mono text-foreground/80">{COUNSEL_DOMAIN_LABELS[d.domain] ?? d.domain}</span>
+                </div>
+                <div className="flex-1 space-y-0.5 min-w-0">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${Math.min(100, d.pct)}%` }} />
+                  </div>
+                  <p className="text-[10px] font-mono text-muted-foreground tabular-nums">
+                    {d.active} actief · {d.draft} draft · {d.missing} ontbreekt
+                    {d.missing > 0 && <> · {fmtUsd(estCost)} · {fmtMin(estMin)}</>}
+                  </p>
+                </div>
+                <div className="w-8 shrink-0 text-right">
+                  <button
+                    className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
+                    disabled={launching !== null || isDone}
+                    onClick={() => onGenerateDomain(d.domain)}
+                    title={isDone ? `${COUNSEL_DOMAIN_LABELS[d.domain]} is volledig.` : `Genereer seeds voor alle ontbrekende regio's in ${COUNSEL_DOMAIN_LABELS[d.domain]}. ${d.missing} regio's · ${fmtUsd(estCost)} · ${fmtMin(estMin)}.`}
+                  >
+                    {launching === d.domain ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Human-readable sweeper display names ──────────────────────────────────────
 function sweeperLabel(sweeper: string): string {
   if (sweeper.startsWith("ltq-translation-")) {
@@ -3256,16 +3373,18 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
 
 // ── Main Translation Control Panel component ──────────────────────────────────
 function TranslationHealthTab() {
-  const [ltq, setLtq]       = useState<LtqStatus | null>(null);
-  const [scen, setScen]     = useState<ScenarioStatus | null>(null);
-  const [compass, setCompass] = useState<CompassStatus | null>(null);
-  const [runs, setRuns]     = useState<WorkerRun[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr]       = useState<string | null>(null);
+  const [ltq, setLtq]             = useState<LtqStatus | null>(null);
+  const [scen, setScen]           = useState<ScenarioStatus | null>(null);
+  const [compass, setCompass]     = useState<CompassStatus | null>(null);
+  const [counselSeeds, setCounselSeeds] = useState<CounselSeedCoverageStatus | null>(null);
+  const [runs, setRuns]           = useState<WorkerRun[]>([]);
+  const [loading, setLoading]     = useState(false);
+  const [err, setErr]             = useState<string | null>(null);
 
-  const [ltqLaunching, setLtqLaunching]       = useState<string | null>(null);
-  const [scenLaunching, setScenLaunching]     = useState<string | null>(null);
+  const [ltqLaunching, setLtqLaunching]         = useState<string | null>(null);
+  const [scenLaunching, setScenLaunching]       = useState<string | null>(null);
   const [compassLaunching, setCompassLaunching] = useState<string | null>(null);
+  const [seedsLaunching, setSeedsLaunching]     = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -3277,15 +3396,17 @@ function TranslationHealthTab() {
     setLoading(true);
     setErr(null);
     try {
-      const [ltqRes, scenRes, compassRes, runsRes] = await Promise.all([
+      const [ltqRes, scenRes, compassRes, seedsRes, runsRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/ltq/translation-status`,      { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/scenarios/translation-status`, { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/compass/translation-status`,   { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,       { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/worker-runs`,                  { credentials: "include" }),
       ]);
       if (ltqRes.ok)     setLtq(await ltqRes.json() as LtqStatus);
       if (scenRes.ok)    setScen(await scenRes.json() as ScenarioStatus);
       if (compassRes.ok) setCompass(await compassRes.json() as CompassStatus);
+      if (seedsRes.ok)   setCounselSeeds(await seedsRes.json() as CounselSeedCoverageStatus);
       if (runsRes.ok)    setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
     } catch (e) {
       setErr(String(e));
@@ -3388,6 +3509,36 @@ function TranslationHealthTab() {
       showToast(d.message ?? `Compass [${lang}] launched.`);
     } catch { showToast(`Failed to launch compass [${lang}].`); }
     finally { setCompassLaunching(null); }
+  };
+
+  // Counsel seed launchers
+  const launchSeedsAll = async () => {
+    setSeedsLaunching("all");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const d = await res.json();
+      showToast(d.message ?? "Counsel seed batch worker gestart.");
+    } catch { showToast("Kon counsel seed worker niet starten."); }
+    finally { setSeedsLaunching(null); }
+  };
+  const launchSeedsDomain = async (domain: string) => {
+    setSeedsLaunching(domain);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `Counsel seed worker voor [${domain}] gestart.`);
+    } catch { showToast(`Kon counsel seed worker voor [${domain}] niet starten.`); }
+    finally { setSeedsLaunching(null); }
   };
 
   const allGreen = ltq && scen && compass
@@ -3493,12 +3644,23 @@ function TranslationHealthTab() {
         />
       )}
 
+      {/* Atelier-distillaten */}
+      {counselSeeds && (
+        <DomainCoverageCard
+          data={counselSeeds}
+          launching={seedsLaunching}
+          onGenerateAll={launchSeedsAll}
+          onGenerateDomain={launchSeedsDomain}
+        />
+      )}
+
       {/* Worker run log */}
       {runs.length > 0 && (
         <WorkerRunsLog runs={runs.filter((r) =>
           r.sweeper.startsWith("ltq-translation") ||
           r.sweeper === "scenario-translation" ||
-          r.sweeper === "compass-translation"
+          r.sweeper === "compass-translation" ||
+          r.sweeper === "counsel-seed"
         )} />
       )}
 

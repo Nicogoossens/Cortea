@@ -2692,4 +2692,93 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   });
 });
 
+// ── Counsel Seeds Coverage / Generate ─────────────────────────────────────────
+
+const COUNSEL_DOMAINS = [
+  "gastronomy", "business", "eloquence",
+  "formal_events", "dress_code", "cultural_knowledge",
+] as const;
+type CounselDomain = typeof COUNSEL_DOMAINS[number];
+
+const COUNSEL_SEED_TOTAL = 206;
+
+/** GET /admin/counsel-seeds/coverage — per-domain coverage of counsel_region_seeds */
+router.get("/admin/counsel-seeds/coverage", requireAdmin, async (req, res) => {
+  try {
+    const perDomainRows = await db.execute(
+      sql`SELECT domain,
+               COUNT(*) FILTER (WHERE status = 'active')              AS active,
+               COUNT(*) FILTER (WHERE status IN ('draft','reviewed'))  AS draft
+          FROM counsel_region_seeds
+          GROUP BY domain`
+    );
+
+    const perDomain: Record<string, { active: number; draft: number }> = {};
+    for (const r of perDomainRows.rows as { domain: string; active: string; draft: string }[]) {
+      perDomain[r.domain] = { active: Number(r.active), draft: Number(r.draft) };
+    }
+
+    const lastRun = await db
+      .select()
+      .from(workerRunsTable)
+      .where(eq(workerRunsTable.sweeper, "counsel-seed"))
+      .orderBy(desc(workerRunsTable.started_at))
+      .limit(1);
+
+    return res.json({
+      ok: true,
+      total_regions: COUNSEL_SEED_TOTAL,
+      domains: COUNSEL_DOMAINS.map((d) => {
+        const counts = perDomain[d] ?? { active: 0, draft: 0 };
+        const covered = counts.active + counts.draft;
+        return {
+          domain: d,
+          active: counts.active,
+          draft: counts.draft,
+          missing: Math.max(0, COUNSEL_SEED_TOTAL - covered),
+          pct: Math.round((counts.active / COUNSEL_SEED_TOTAL) * 100),
+        };
+      }),
+      last_run: lastRun[0] ?? null,
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: counsel-seeds/coverage failed");
+    return res.status(500).json({ error: "Failed to compute counsel seeds coverage." });
+  }
+});
+
+const CounselSeedGenerateSchema = z.object({
+  domain: z.enum(COUNSEL_DOMAINS).optional(),
+  force: z.boolean().optional(),
+});
+
+/** POST /admin/counsel-seeds/generate — spawn counsel seed batch worker */
+router.post("/admin/counsel-seeds/generate", requireAdmin, async (req, res) => {
+  const parsed = CounselSeedGenerateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
+  }
+  const { domain, force } = parsed.data;
+
+  const childArgs = ["scripts/counsel-seed-batch.mjs"];
+  if (domain) { childArgs.push("--domain", domain); }
+  if (force)  { childArgs.push("--force"); }
+
+  const child = spawn("node", childArgs, {
+    cwd: WORKSPACE_ROOT,
+    env: { ...process.env },
+    stdio: "ignore",
+  });
+
+  req.log?.info({ domain, force }, "Admin: counsel seed batch worker spawned");
+
+  return res.json({
+    ok: true,
+    message: domain
+      ? `Counsel seed batch worker voor domein [${domain}] gestart.`
+      : "Counsel seed batch worker (alle domeinen) gestart.",
+    pid: child.pid,
+  });
+});
+
 export default router;

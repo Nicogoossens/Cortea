@@ -643,7 +643,28 @@ export async function findOpenSession(
     .where(and(...conds))
     .orderBy(desc(learningTrackSessionsTable.started_at))
     .limit(1);
-  return row ?? null;
+
+  if (!row) return null;
+
+  // Defensive content-lang check: if any served question's actual lang differs
+  // from the session's requested lang the session is stale (created before the
+  // lang guard was in place, or via a fallback that stored mismatched content).
+  // Discard it so a fresh session is built with the correct language content.
+  if (Array.isArray(row.served_question_ids) && (row.served_question_ids as string[]).length > 0) {
+    const result = await db.execute<{ mismatch: number }>(sql`
+      SELECT COUNT(*)::int AS mismatch
+      FROM jsonb_array_elements_text(
+        (SELECT served_question_ids FROM learning_track_sessions WHERE id = ${row.id})
+      ) AS qid
+      JOIN learning_track_questions ltq ON ltq.id::text = qid
+      WHERE ltq.lang != ${lang}
+      LIMIT 1
+    `);
+    const mismatch = (result[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
+    if (mismatch > 0) return null;
+  }
+
+  return row;
 }
 
 /**

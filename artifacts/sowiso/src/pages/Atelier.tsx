@@ -290,7 +290,7 @@ export default function Atelier() {
             }`}
           >
             <Users2 className="w-3.5 h-3.5" aria-hidden="true" />
-            Rollenspel
+            {t("atelier.tab_roleplay")}
           </button>
         </div>
       )}
@@ -319,10 +319,9 @@ export default function Atelier() {
           <div className="flex items-start gap-3 px-5 py-4 rounded-sm border border-border/40 bg-muted/20 text-sm">
             <Users2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/60" aria-hidden="true" />
             <div className="space-y-1">
-              <p className="font-medium text-foreground">Professioneel Rollenspel</p>
+              <p className="font-medium text-foreground">{t("atelier.roleplay.title")}</p>
               <p className="text-foreground/70 leading-relaxed">
-                Elk scenario kent twee afzonderlijke rollen. Doorloop uw eigen rol onafhankelijk en laat achteraf een reflectie achter voor uw companion.
-                Beide partijen kunnen elkaars voortgang inzien via het{" "}
+                {t("atelier.roleplay.description")}{" "}
                 <Link href="/companion" className="text-primary underline underline-offset-2">Companion Dashboard</Link>.
               </p>
             </div>
@@ -335,8 +334,8 @@ export default function Atelier() {
           ) : roleplayScenarios.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-sm bg-muted/10 space-y-3">
               <Users2 className="w-12 h-12 mx-auto opacity-20" aria-hidden="true" />
-              <p className="font-serif text-xl">No roleplay scenarios yet</p>
-              <p className="text-sm max-w-sm mx-auto">Roleplay scenarios will appear here as they are added.</p>
+              <p className="font-serif text-xl">{t("atelier.roleplay.empty_title")}</p>
+              <p className="text-sm max-w-sm mx-auto">{t("atelier.roleplay.empty_body")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -363,7 +362,7 @@ export default function Atelier() {
                       </div>
                       <div className="flex items-center gap-1 text-primary">
                         <Users2 className="w-3.5 h-3.5" aria-hidden="true" />
-                        <span className="font-serif italic text-xs">2 rollen</span>
+                        <span className="font-serif italic text-xs">{t("atelier.roleplay.roles")}</span>
                       </div>
                     </CardFooter>
                   </Card>

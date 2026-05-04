@@ -755,6 +755,7 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
     const errors: string[] = [];
 
     const newScenarioIds: number[] = [];
+    let ltqTranslationQueued = false;
 
     if (type === "scenarios") {
       for (let i = 0; i < items.length; i++) {
@@ -939,6 +940,20 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
           .returning({ id: learningTrackQuestionsTable.id });
         inserted += rows.length;
       }
+
+      // Spawn translation orchestrator for all 9 target languages when new EN
+      // questions were inserted. Runs in background — response returns immediately.
+      // translate-learning-track-questions.mjs (called by the orchestrator) is
+      // idempotent: it skips slots where target-lang count >= en count.
+      if (inserted > 0) {
+        spawn(
+          "node",
+          ["scripts/translate-learning-track-all-langs.mjs", "--parallel", "2"],
+          { cwd: WORKSPACE_ROOT, env: { ...process.env }, stdio: "ignore" },
+        );
+        ltqTranslationQueued = true;
+        req.log?.info({ inserted }, "Admin: LTQ all-languages translation worker spawned");
+      }
     }
 
     return res.json({
@@ -950,6 +965,10 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
         translation_queued: true,
         translation_scenario_ids: newScenarioIds,
         translation_note: "Translations into 9 languages are being generated in the background. This may take a few minutes.",
+      }),
+      ...(ltqTranslationQueued && {
+        translation_queued: true,
+        translation_note: "LTQ translations into 9 languages are being generated in the background (2 parallel workers). This may take several minutes.",
       }),
     });
   } catch (err) {

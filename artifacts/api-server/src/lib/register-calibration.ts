@@ -52,7 +52,8 @@ export function isContentKey(key: string): boolean {
 }
 
 // ── Supported calibration locales ─────────────────────────────────────────────
-const SUPPORTED_BASE_CODES = new Set(["nl", "fr", "en", "de", "es", "it"]);
+// Prompts exist for all 10 base codes (incl. pt, ar, ja, zh added in task #263).
+const SUPPORTED_BASE_CODES = new Set(["nl", "fr", "en", "de", "es", "it", "pt", "ar", "ja", "zh"]);
 
 export function isSupportedLocale(languageCode: string): boolean {
   return SUPPORTED_BASE_CODES.has(languageCode);

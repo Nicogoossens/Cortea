@@ -239,7 +239,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
                 AND ltq.lang != 'en'
               LIMIT 1
             `);
-            const mismatch = (mismatchResult[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
+            const mismatch = (mismatchResult.rows[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
             if (mismatch > 0) contentOk = false;
           }
           if (contentOk) return reuse;

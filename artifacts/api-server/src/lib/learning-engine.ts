@@ -664,7 +664,7 @@ export async function findOpenSession(
         AND ltq.lang != 'en'
       LIMIT 1
     `);
-    const mismatch = (result[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
+    const mismatch = (result.rows[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
     if (mismatch > 0) return null;
   }
 

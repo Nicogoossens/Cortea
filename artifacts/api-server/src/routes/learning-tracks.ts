@@ -167,7 +167,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
 
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.
-    let session = await findOpenSession(userId, register, regionCode, pillar, phase);
+    let session = await findOpenSession(userId, register, regionCode, pillar, phase, lang);
 
     // ── Race-safe session creation ─────────────────────────────────────────
     // We wrap the entire (lock → re-check open → check limits → INSERT)
@@ -308,6 +308,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           repeat_question_ids: [],
           total_questions: questions.length,
           remediates_session_id: isRemediation && failed ? failed.id : null,
+          lang,
         }).returning();
 
         // Consume the parent failure so it is not picked up again on the
@@ -508,7 +509,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
           eq(learningTrackSessionsTable.id, session_id),
           eq(learningTrackSessionsTable.user_id, userId),
         )).limit(1))[0] ?? null
-      : await findOpenSession(userId, register, question.region_code, pillar, phase);
+      : await findOpenSession(userId, register, question.region_code, pillar, phase, question.lang ?? "en");
 
     if (!session) {
       return res.status(400).json({

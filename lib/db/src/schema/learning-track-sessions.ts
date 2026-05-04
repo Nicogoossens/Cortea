@@ -38,6 +38,7 @@ export const learningTrackSessionsTable = pgTable(
     // not picked up again) and link the child via `remediates_session_id`.
     remediated_at:        timestamp("remediated_at"),
     remediates_session_id: integer("remediates_session_id"),
+    lang:                 text("lang").notNull().default("en"),
   },
   (table) => [
     index("lts_user_register_started_idx").on(table.user_id, table.register, table.started_at),

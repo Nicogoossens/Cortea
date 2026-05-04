@@ -614,6 +614,7 @@ export async function findOpenSession(
   regionCode: string,
   pillar: string | null,
   phase: number,
+  lang = "en",
 ) {
   const conds = [
     eq(learningTrackSessionsTable.user_id, userId),
@@ -627,6 +628,10 @@ export async function findOpenSession(
     // selectQuestions (which would now succeed thanks to the lang fallback).
     // Treat such rows as if they did not exist so a fresh session is built.
     sql`${learningTrackSessionsTable.total_questions} > 0`,
+    // Only reuse sessions that were created in the same UI language so that
+    // switching from e.g. English to Dutch doesn't serve an English-question
+    // session when Dutch rows exist.
+    eq(learningTrackSessionsTable.lang, lang),
   ];
   if (pillar) {
     conds.push(eq(learningTrackSessionsTable.research_pillar, pillar));

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck, BookOpen, Info, AlertTriangle, LifeBuoy } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
+import { useActiveRegion, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
 import {
   useGetProfile,
   useGetCultureProtocols,
@@ -22,6 +22,7 @@ import { SITUATIONS } from "@/lib/situations";
 import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, getSituationChipsForRegion } from "@/lib/counsel";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { hasFullAccess as tierHasFullAccess, hasBasicAccess as tierHasBasicAccess, isCounselDomainAccessible } from "@/lib/tier-access";
+import { CounselRegionPicker } from "@/components/CounselRegionPicker";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
@@ -78,6 +79,24 @@ export default function Counsel() {
 
   const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(null);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+
+  // Data-driven region availability — fetched once on mount.
+  // Fallback to ACTIVE_REGIONS so the picker works even if the API is slow.
+  const [availableRegionCodes, setAvailableRegionCodes] = useState<Set<string>>(
+    () => new Set(["GB", "AU", "CN", "US", "JP", "DE", "IT", "FR", "BE", "CH",
+                   "BR", "ES", "SG", "IN", "MX", "AE", "CO", "NL", "CA", "PT", "ZA"])
+  );
+  useEffect(() => {
+    fetch(`${API_BASE}/api/regions/available`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { codes?: string[] } | null) => {
+        if (data?.codes && data.codes.length > 0) {
+          setAvailableRegionCodes(new Set(data.codes));
+        }
+      })
+      .catch(() => undefined);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const effectiveRegion: RegionCode = sessionRegion ?? activeRegion;
   const isOverriding = sessionRegion !== null;
@@ -472,41 +491,15 @@ export default function Counsel() {
 
       {/* ── Context strip region picker ── */}
       {showContextRegionPicker && (
-        <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
-          {COMPASS_REGIONS.map((region) => {
-            const isRegionSelected = region.code === effectiveRegion;
-            const available = isRegionActive(region.code);
-            return (
-              <button
-                key={region.code}
-                onClick={() => { if (available) { setSessionRegion(region.code); setShowContextRegionPicker(false); } }}
-                disabled={!available}
-                title={available ? getRegionName(region.code) : `${getRegionName(region.code)} — coming soon`}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                  !available
-                    ? "border-border/20 text-muted-foreground/30 cursor-not-allowed line-through decoration-muted-foreground/20"
-                    : isRegionSelected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
-                }`}
-              >
-                <FlagEmoji code={region.flag} size="sm" />
-                {getRegionName(region.code)}
-                {!available && (
-                  <span className="ml-1 text-[8px] font-mono uppercase tracking-wider opacity-50">soon</span>
-                )}
-              </button>
-            );
-          })}
-          {sessionRegion && (
-            <button
-              onClick={() => { setSessionRegion(null); setShowContextRegionPicker(false); }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-xs border border-primary/30 text-primary hover:bg-primary/10 transition-all"
-            >
-              <X className="w-3 h-3" aria-hidden="true" />
-              {t("counsel.session_override_reset")}
-            </button>
-          )}
+        <div className="px-1 animate-in fade-in duration-150">
+          <CounselRegionPicker
+            effectiveRegion={effectiveRegion}
+            availableCodes={availableRegionCodes}
+            sessionRegion={sessionRegion}
+            getRegionName={getRegionName}
+            onSelect={(code) => { setSessionRegion(code); setShowContextRegionPicker(false); }}
+            onReset={() => { setSessionRegion(null); setShowContextRegionPicker(false); }}
+          />
         </div>
       )}
 
@@ -823,24 +816,15 @@ export default function Counsel() {
               </div>
 
               {showRegionPicker && (
-                <div className="flex flex-wrap gap-1.5 px-1 animate-in fade-in duration-150">
-                  {COMPASS_REGIONS.map((region) => {
-                    const isRegionSelected = region.code === effectiveRegion;
-                    return (
-                      <button
-                        key={region.code}
-                        onClick={() => { setSessionRegion(region.code); setShowRegionPicker(false); }}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs border transition-all ${
-                          isRegionSelected
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30"
-                        }`}
-                      >
-                        <FlagEmoji code={region.flag} size="sm" />
-                        {getRegionName(region.code)}
-                      </button>
-                    );
-                  })}
+                <div className="px-1 animate-in fade-in duration-150">
+                  <CounselRegionPicker
+                    effectiveRegion={effectiveRegion}
+                    availableCodes={availableRegionCodes}
+                    sessionRegion={sessionRegion}
+                    getRegionName={getRegionName}
+                    onSelect={(code) => { setSessionRegion(code); setShowRegionPicker(false); }}
+                    onReset={() => { setSessionRegion(null); setShowRegionPicker(false); }}
+                  />
                 </div>
               )}
 

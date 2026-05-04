@@ -32,6 +32,7 @@ import waitlistRouter from "./waitlist";
 import systemConfigRouter from "./system-config";
 import debugRouter from "./debug";
 import compassBadgeRouter from "./compass-badge";
+import regionsRouter from "./regions";
 
 const router: IRouter = Router();
 
@@ -68,5 +69,6 @@ router.use(waitlistRouter);
 router.use(systemConfigRouter);
 router.use(debugRouter);
 router.use(compassBadgeRouter);
+router.use(regionsRouter);
 
 export default router;

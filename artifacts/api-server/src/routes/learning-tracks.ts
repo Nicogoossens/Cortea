@@ -203,12 +203,18 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         await tx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey1}::int, ${lockKey2}::int)`);
 
         // 1) Re-check open session inside the lock.
+        //    Apply the same guards as findOpenSession: matching lang, non-zero
+        //    question count, and a content-lang mismatch check so that stale
+        //    sessions (questions in a different language than requested) are
+        //    never reused even when two concurrent requests race here.
         const [reuse] = await tx.select().from(learningTrackSessionsTable)
           .where(and(
             eq(learningTrackSessionsTable.user_id, userId),
             eq(learningTrackSessionsTable.register, register),
             eq(learningTrackSessionsTable.region_code, regionCode),
             eq(learningTrackSessionsTable.phase, phase),
+            eq(learningTrackSessionsTable.lang, lang),
+            sql`${learningTrackSessionsTable.total_questions} > 0`,
             pillar
               ? eq(learningTrackSessionsTable.research_pillar, pillar)
               : sql`${learningTrackSessionsTable.research_pillar} IS NULL`,
@@ -216,7 +222,25 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           ))
           .orderBy(desc(learningTrackSessionsTable.id))
           .limit(1);
-        if (reuse) return reuse;
+        if (reuse) {
+          // Defensive content-lang check (mirrors findOpenSession guard).
+          let contentOk = true;
+          if (Array.isArray(reuse.served_question_ids) && (reuse.served_question_ids as string[]).length > 0) {
+            const mismatchResult = await tx.execute<{ mismatch: number }>(sql`
+              SELECT COUNT(*)::int AS mismatch
+              FROM jsonb_array_elements_text(
+                (SELECT served_question_ids FROM learning_track_sessions WHERE id = ${reuse.id})
+              ) AS qid
+              JOIN learning_track_questions ltq ON ltq.id::text = qid
+              WHERE ltq.lang != ${lang}
+              LIMIT 1
+            `);
+            const mismatch = (mismatchResult[0] as { mismatch: number } | undefined)?.mismatch ?? 0;
+            if (mismatch > 0) contentOk = false;
+          }
+          if (contentOk) return reuse;
+          // Fall through: create a fresh session with the correct language.
+        }
 
         // 2) Check rate limits inside the lock so two concurrent requests
         //    cannot both pass the 4-of-the-day check.

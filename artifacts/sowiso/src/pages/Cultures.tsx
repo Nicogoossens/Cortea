@@ -91,7 +91,7 @@ function ConversionCard({ regionName }: { regionName: string }) {
       <h2 id="cultures-cta-heading" className="font-serif text-2xl md:text-3xl text-foreground mb-3">
         {t(headlineKey, {
           country: regionName,
-          defaultValue: `Get the full {{country}} guide + 50+ other countries — 14 days free`,
+          defaultValue: `Get the full {{country}} guide + 50+ other countries — 2 months free`,
         })}
       </h2>
       <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-6 max-w-2xl">
@@ -103,7 +103,7 @@ function ConversionCard({ regionName }: { regionName: string }) {
       <div className="flex flex-wrap items-center gap-4">
         <Link href={CTA_HREF}>
           <span className="inline-flex items-center gap-2 px-6 py-3 rounded-sm bg-primary text-primary-foreground text-sm font-medium tracking-wide hover:bg-primary/90 transition-colors cursor-pointer">
-            {t(buttonKey, CTA_MODE === "trial" ? "Start 14-day free trial" : "Join the waitlist")}
+            {t(buttonKey, CTA_MODE === "trial" ? "Start 2-month free trial" : "Join the waitlist")}
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </span>
         </Link>

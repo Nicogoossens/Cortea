@@ -134,7 +134,7 @@ function formatPrice(amount: number | null, currency: string): string {
 export default function Onboarding() {
   usePageTitle("Welcome");
   const { t } = useLanguage();
-  const { getAuthHeaders } = useAuth();
+  const { getAuthHeaders, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
 
   const [step, setStep] = useState<Step>(1);
@@ -219,9 +219,9 @@ export default function Onboarding() {
     trackPlanChoice("selected_tier", tier);
 
     if (!priceId) {
-      // Stripe not yet configured — send to signin so they can register/login
-      // and will be shown membership options once authenticated.
-      navigate("/signin?return=/membership");
+      // Stripe not yet configured — if already signed in, go to membership
+      // page directly; otherwise prompt sign-in first so we don't clear the session.
+      navigate(isAuthenticated ? "/membership" : "/signin?return=/membership");
       return;
     }
 
@@ -234,7 +234,7 @@ export default function Onboarding() {
         body: JSON.stringify({ priceId }),
       });
       if (res.status === 401) {
-        // Not signed in — redirect to sign-in, then back to membership after auth.
+        // Session expired mid-flow — redirect to sign-in, back to membership after auth.
         trackPlanChoice("skipped_unauth", tier);
         navigate("/signin?return=/membership");
         return;
@@ -554,7 +554,7 @@ export default function Onboarding() {
                 {t("onboarding.step5_title", "Choose your path")}
               </h1>
               <p className="text-muted-foreground font-light leading-relaxed">
-                {t("onboarding.step5_subtitle", "Begin with a 14-day free trial. Cancel any time before then and you'll never be charged.")}
+                {t("onboarding.step5_subtitle", "Begin with a 2-month free trial. Cancel any time before then and you'll never be charged.")}
               </p>
             </div>
 
@@ -565,7 +565,7 @@ export default function Onboarding() {
                 const plan = plans.find((p) => p.tier === tier);
                 const amount = plan?.monthlyAmount ?? null;
                 const currency = plan?.currency ?? "eur";
-                const trialDays = plan?.trialDays ?? 60;
+                const trialDays = plan?.trialDays || 60;
                 const isRecommended = tier === recommended;
                 const isLoading = checkingOut === tier;
 

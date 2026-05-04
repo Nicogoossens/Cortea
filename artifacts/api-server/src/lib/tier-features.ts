@@ -90,10 +90,10 @@ export const TIER_FEATURES: Record<SubscriptionTier, TierFeatures> = {
 
 /**
  * Tiers that auto-grant a 60-day (2-month) free trial when checked-out for the first time.
- * Excludes Student (entry-level) and Concierge (white-glove premium anchor).
+ * Excludes Concierge (white-glove premium anchor) only.
  * Extended from 14 days to 60 days for the Founding 100 onboarding period.
  */
-export const TRIAL_ELIGIBLE_TIERS: SubscriptionTier[] = ["traveller", "ambassador"];
+export const TRIAL_ELIGIBLE_TIERS: SubscriptionTier[] = ["student", "traveller", "ambassador"];
 export const TRIAL_DAYS = 60;
 
 /**

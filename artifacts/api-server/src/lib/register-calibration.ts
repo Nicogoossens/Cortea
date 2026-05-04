@@ -109,6 +109,27 @@ Frases: cortas y claras. Tono: amable, alentador, como un buen compañero.`,
 Usa 'tu' o 'Lei' a seconda del contesto; nessuna rigidità formale.
 Vocabolario: quotidiano, concreto, senza latinismi o frasi elitarie.
 Frasi: brevi e chiare. Tono: amichevole, incoraggiante, come un buon collega.`,
+
+  // ── Portuguese (European) ────────────────────────────────────────────────
+  "pt": `Reescreve os textos em português europeu corrente, caloroso e direto — o registo da classe média.
+Usa 'você' ou 'tu' conforme o contexto; sem rigidez formal.
+Vocabulário: quotidiano, concreto, sem latinismos nem frases elitistas.
+Frases: curtas e claras. Tom: amigável, encorajador, como um bom colega de trabalho.`,
+
+  // ── Arabic ───────────────────────────────────────────────────────────────
+  "ar": `أعِد كتابة النصوص بالعربية الفصحى المعاصرة الواضحة والدافئة والمباشرة — مستوى الطبقة المتوسطة.
+استخدم الضمائر المناسبة بشكل طبيعي. المفردات: يومية وملموسة وبعيدة عن التقعير والتصنع.
+الجمل: قصيرة وواضحة. النبرة: ودية ومشجعة، كما يتحدث زميل جيد.`,
+
+  // ── Japanese ─────────────────────────────────────────────────────────────
+  "ja": `丁寧語（です・ます体）を使い、温かく親しみやすい日本語に書き直してください — 中間層のレジスター。
+自然な敬語を使用し、過度な形式張りは避ける。語彙：日常的で具体的、やさしい和語と漢語を均衡よく。
+文章：短く明瞭に。トーン：親切で励まし型、良い同僚と話すような雰囲気で。`,
+
+  // ── Chinese (Simplified) ─────────────────────────────────────────────────
+  "zh": `请将文字改写为清晰、亲切、直接的现代汉语（普通话，简体字）— 中间阶层的文体。
+自然使用"你"或礼貌的"您"，视语境而定。词汇：日常、具体，不使用文言词语或精英腔调。
+句子：简短清晰。语气：友好、鼓励，像与好同事交谈一样。`,
 };
 
 const PROMPTS_ELITE: Record<string, string> = {
@@ -156,6 +177,30 @@ Sin coloquialismos latinoamericanos, sin anglicismos. Tono: Corte Real española
 Sempre 'Lei'/'Suo'/'Sua'. Congiuntivo usato correttamente e liberamente.
 Vocabolario latinista e toscano letterario. Nessun anglicismo, nessuna abbreviazione.
 Tono: Leopardi e Manzoni — periodico, elegante, toscano.`,
+
+  // ── Portuguese (European) ────────────────────────────────────────────────
+  "pt": `Reescreve os textos em português europeu formal, refinado e elitista (pt-PT, norma culta da Academia).
+Sempre 'o senhor'/'a senhora' ou 'vossa excelência'. Vocabulário de prestígio ('solicitar', 'adquirir', 'residir').
+Infinitivo pessoal e conjuntivo amplamente utilizados. Sem anglicismos, sem coloquialismos.
+Tom: correspondência da aristocracia portuguesa — preciso, elegante, digno.`,
+
+  // ── Arabic ───────────────────────────────────────────────────────────────
+  "ar": `أعِد كتابة النصوص بالعربية الفصحى الرفيعة والرسمية — مستوى النخبة والحضارة.
+استخدم الضمائر الرسمية الرفيعة دائماً. المفردات: كلاسيكية من التراث الفصيح ('يتفضل'، 'يُتاح'، 'يُعنى').
+الصياغة: مقتبسة من أساليب الكتابة الديوانية والأدبية الرفيعة. لا عامية، لا تعبيرات مستعارة.
+النبرة: مراسلات الأكاديميات والبلاط الملكي العربي — رصينة، موقَّرة، أنيقة.`,
+
+  // ── Japanese ─────────────────────────────────────────────────────────────
+  "ja": `最上級の敬語（尊敬語・謙譲語・丁寧語を適切に使い分け）を駆使した格調高い日本語に書き直してください — 上流階級のレジスター。
+常に最上位の敬称を用い、語彙は漢語を主体に品格ある表現を選ぶ。カタカナ語は最小限。
+文体：宮廷文学・公文書の格調。略語・俗語・口語は一切不使用。
+トーン：皇室の書簡のような品格 — 精密で格調高く、威厳あるもの。`,
+
+  // ── Chinese (Simplified) ─────────────────────────────────────────────────
+  "zh": `请将文字改写为正式、典雅、精炼的现代书面汉语（普通话，简体字）— 精英阶层的文体。
+始终使用"您/您的"等尊称。词汇：典雅庄重，多用四字格和书面语（"惠顾"、"敬请"、"莅临"等）。
+文体：类似外交文书或高端商务函件的格调。不用口语化表达，不用英语借词。
+语气：典雅、庄重，如贵族书信 — 精准、高贵、克制。`,
 };
 
 const MODULE_PROMPTS: Record<CalibrationModule, Record<string, string>> = {

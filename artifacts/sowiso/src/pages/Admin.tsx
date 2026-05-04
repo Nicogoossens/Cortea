@@ -12,6 +12,7 @@ import {
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
   BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check, Plus, Pencil, X,
   Briefcase, BarChart3, Tag, Languages, Vote, Mail, ArrowRight, TrendingUp,
+  Clock, Play,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -2956,249 +2957,431 @@ function AttributionTab() {
   );
 }
 
-// ── Translation Health Tab ────────────────────────────────────────────────────
+// ── Translation Control Panel ─────────────────────────────────────────────────
 
-interface TranslationHealth {
-  ok: boolean;
-  generated_at: string;
-  overall: {
-    healthy: boolean;
-    ui_healthy: boolean;
-    calibration_healthy: boolean;
-    scenario_healthy: boolean;
-  };
-  ui_locales: {
-    en_key_count: number;
-    total_missing: number;
-    per_locale: { locale: string; enKeys: number; localeKeys: number; missing: number; pct: number }[];
-    sweeper: { enabled: boolean; worker_running: boolean; last_run_at: number | null; last_spawn_at: number | null };
-  };
-  calibration: {
-    pending_rows: number;
-    last_processed: number;
-    last_errors: number;
-    sweeper: { enabled: boolean; running: boolean; last_run_at: number | null };
-  };
-  scenarios: {
-    pending: number;
-    sweeper: { enabled: boolean; worker_running: boolean; last_run_at: number | null; last_spawn_at: number | null; last_worker_exit_at: number | null };
-  };
+const TRANSLATION_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
+type TransLang = typeof TRANSLATION_LANGS[number];
+
+const TRANS_LABELS: Record<TransLang, string> = {
+  nl: "NL", fr: "FR", de: "DE", es: "ES", pt: "PT",
+  it: "IT", ar: "AR", ja: "JA", zh: "ZH",
+};
+
+interface LangCoverage { lang: TransLang; count: number; pct: number; last_run?: unknown }
+
+interface LtqStatus {
+  ok: boolean; en_total: number;
+  langs: LangCoverage[];
+}
+interface ScenarioStatus {
+  ok: boolean; total: number;
+  langs: LangCoverage[];
+  last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number };
+}
+interface CompassStatus {
+  ok: boolean; total: number;
+  langs: LangCoverage[];
+  last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number };
+}
+interface WorkerRun {
+  id: number; sweeper: string; started_at: string; finished_at: string | null;
+  items_processed: number; estimated_usd: number; status: string;
+  metadata: Record<string, unknown> | null;
 }
 
-function formatRelative(ts: number | null): string {
+function formatRelative(ts: string | number | null | undefined): string {
   if (!ts) return "never";
-  const diff = Date.now() - ts;
+  const d = typeof ts === "number" ? ts : Date.parse(ts);
+  if (isNaN(d)) return "—";
+  const diff = Date.now() - d;
   if (diff < 0) return "just now";
   const sec = Math.floor(diff / 1000);
   if (sec < 60) return `${sec}s ago`;
   const min = Math.floor(sec / 60);
   if (min < 60) return `${min}m ago`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const d = Math.floor(hr / 24);
-  return `${d}d ago`;
+  if (hr < 24) return `${hr}h ${Math.floor(min % 60)}m ago`;
+  return `${Math.floor(hr / 24)}d ago`;
 }
 
-function HealthDot({ healthy }: { healthy: boolean }) {
+function CovBar({ pct, count }: { pct: number; count: number }) {
+  const color = pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
   return (
-    <span
-      className={`inline-block w-2.5 h-2.5 rounded-full ${healthy ? "bg-emerald-500" : "bg-amber-500"}`}
-      aria-hidden="true"
-    />
+    <div className="space-y-0.5">
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${Math.min(100, pct)}%` }} />
+      </div>
+      <p className="text-[10px] font-mono text-muted-foreground tabular-nums">{count.toLocaleString()} · {pct}%</p>
+    </div>
   );
 }
 
-function TranslationHealthTab() {
-  const [data, setData] = useState<TranslationHealth | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    ok: "bg-emerald-500/15 text-emerald-700",
+    partial: "bg-amber-500/15 text-amber-700",
+    budget_capped: "bg-blue-500/15 text-blue-700",
+    failed: "bg-rose-500/15 text-rose-700",
+  };
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase ${map[status] ?? "bg-muted text-muted-foreground"}`}>
+      {status}
+    </span>
+  );
+}
 
-  const fetchHealth = useCallback(async () => {
+// ── Coverage panel for one content type ──────────────────────────────────────
+interface CoverageCardProps {
+  title: string;
+  total: number;
+  langs: LangCoverage[];
+  sweeper: string;
+  onTranslateAll: () => Promise<void>;
+  onTranslateLang: (lang: TransLang) => Promise<void>;
+  launching: string | null;
+  lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
+}
+function CoverageCard({ title, total, langs, onTranslateAll, onTranslateLang, launching, lastRun }: CoverageCardProps) {
+  const allDone = langs.every((l) => l.pct >= 100);
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80">{title}</CardTitle>
+            <p className="text-xs font-mono text-muted-foreground mt-0.5">
+              EN source: {total.toLocaleString()}
+              {lastRun && (
+                <> · last run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /> · {lastRun.items_processed} items · ${lastRun.estimated_usd.toFixed(3)}</>
+              )}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant={allDone ? "outline" : "default"}
+            className="font-mono text-xs gap-1.5 shrink-0"
+            disabled={launching !== null}
+            onClick={onTranslateAll}
+          >
+            {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+            Translate all langs
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-x-4 gap-y-3">
+          {langs.map((l) => (
+            <div key={l.lang} className="space-y-1">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-mono font-medium text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                <button
+                  className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
+                  disabled={launching !== null}
+                  onClick={() => onTranslateLang(l.lang)}
+                  title={`Translate ${l.lang.toUpperCase()} now`}
+                >
+                  {launching === l.lang ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
+                </button>
+              </div>
+              <CovBar pct={l.pct} count={l.count} />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Worker Runs Log ───────────────────────────────────────────────────────────
+function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
+  const [open, setOpen] = useState(false);
+  if (runs.length === 0) return null;
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setOpen((o) => !o)}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+            <Clock className="w-4 h-4" /> Worker Run History ({runs.length})
+          </CardTitle>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </CardHeader>
+      {open && (
+        <CardContent className="pt-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs font-mono">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border/40">
+                  <th className="py-1.5 pr-3 font-normal">sweeper</th>
+                  <th className="py-1.5 pr-3 font-normal">lang</th>
+                  <th className="py-1.5 pr-3 font-normal">started</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">items</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">usd</th>
+                  <th className="py-1.5 pr-3 font-normal">status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((r) => (
+                  <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
+                    <td className="py-1 pr-3 truncate max-w-[140px]">{r.sweeper}</td>
+                    <td className="py-1 pr-3 uppercase">{(r.metadata?.lang as string) ?? "—"}</td>
+                    <td className="py-1 pr-3 text-muted-foreground">{formatRelative(r.started_at)}</td>
+                    <td className="py-1 pr-3 text-right tabular-nums">{r.items_processed}</td>
+                    <td className="py-1 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
+                    <td className="py-1 pr-3"><StatusPill status={r.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+// ── Main Translation Control Panel component ──────────────────────────────────
+function TranslationHealthTab() {
+  const [ltq, setLtq]       = useState<LtqStatus | null>(null);
+  const [scen, setScen]     = useState<ScenarioStatus | null>(null);
+  const [compass, setCompass] = useState<CompassStatus | null>(null);
+  const [runs, setRuns]     = useState<WorkerRun[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr]       = useState<string | null>(null);
+
+  const [ltqLaunching, setLtqLaunching]       = useState<string | null>(null);
+  const [scenLaunching, setScenLaunching]     = useState<string | null>(null);
+  const [compassLaunching, setCompassLaunching] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const fetchAll = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setErr(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/translation-health`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        setError(`Request failed (${res.status}).`);
-        return;
-      }
-      setData(await res.json() as TranslationHealth);
-    } catch (err) {
-      setError(String(err));
+      const [ltqRes, scenRes, compassRes, runsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/ltq/translation-status`,      { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/scenarios/translation-status`, { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/compass/translation-status`,   { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/worker-runs`,                  { credentials: "include" }),
+      ]);
+      if (ltqRes.ok)     setLtq(await ltqRes.json() as LtqStatus);
+      if (scenRes.ok)    setScen(await scenRes.json() as ScenarioStatus);
+      if (compassRes.ok) setCompass(await compassRes.json() as CompassStatus);
+      if (runsRes.ok)    setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
+    } catch (e) {
+      setErr(String(e));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchHealth();
-    const id = setInterval(fetchHealth, 30_000);
+    fetchAll();
+    const id = setInterval(fetchAll, 30_000);
     return () => clearInterval(id);
-  }, [fetchHealth]);
+  }, [fetchAll]);
 
-  const overall = data?.overall;
-  const overallHealthy = overall?.healthy ?? false;
+  // LTQ launchers
+  const launchLtqAll = async () => {
+    setLtqLaunching("all");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parallel: 2 }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? "LTQ orchestrator launched.");
+    } catch { showToast("Failed to launch LTQ orchestrator."); }
+    finally { setLtqLaunching(null); }
+  };
+  const launchLtqLang = async (lang: TransLang) => {
+    setLtqLaunching(lang);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `LTQ [${lang}] launched.`);
+    } catch { showToast(`Failed to launch LTQ [${lang}].`); }
+    finally { setLtqLaunching(null); }
+  };
+
+  // Scenario launchers
+  const launchScenAll = async () => {
+    setScenLaunching("all");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/scenarios/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const d = await res.json();
+      showToast(d.message ?? "Scenario worker launched.");
+    } catch { showToast("Failed to launch scenario worker."); }
+    finally { setScenLaunching(null); }
+  };
+  const launchScenLang = async (lang: TransLang) => {
+    setScenLaunching(lang);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/scenarios/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `Scenario [${lang}] launched.`);
+    } catch { showToast(`Failed to launch scenario [${lang}].`); }
+    finally { setScenLaunching(null); }
+  };
+
+  // Compass launchers
+  const launchCompassAll = async () => {
+    setCompassLaunching("all");
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/compass/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const d = await res.json();
+      showToast(d.message ?? "Compass worker launched.");
+    } catch { showToast("Failed to launch compass worker."); }
+    finally { setCompassLaunching(null); }
+  };
+  const launchCompassLang = async (lang: TransLang) => {
+    setCompassLaunching(lang);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/compass/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `Compass [${lang}] launched.`);
+    } catch { showToast(`Failed to launch compass [${lang}].`); }
+    finally { setCompassLaunching(null); }
+  };
+
+  const allGreen = ltq && scen && compass
+    && ltq.langs.every((l) => l.pct >= 100)
+    && scen.langs.every((l) => l.pct >= 100)
+    && compass.langs.every((l) => l.pct >= 100);
 
   return (
     <div className="space-y-6">
-      {/* Headline badge */}
-      <Card className={`border ${overallHealthy ? "border-emerald-500/40 bg-emerald-500/5" : "border-amber-500/40 bg-amber-500/5"}`}>
-        <CardContent className="py-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${overallHealthy ? "bg-emerald-500/15 text-emerald-700" : "bg-amber-500/15 text-amber-700"}`}>
-              {overallHealthy ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
-            </div>
-            <div>
-              <p className="text-sm font-mono uppercase tracking-widest text-muted-foreground">
-                Translation Health
-              </p>
-              <p className="text-lg font-serif text-foreground">
-                {data
-                  ? overallHealthy
-                    ? "All locales are 100% translated"
-                    : "Sweepers are catching up"
-                  : loading
-                    ? "Loading…"
-                    : "No data yet"}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="font-mono text-xs gap-1.5"
-            onClick={fetchHealth}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Refresh
-          </Button>
-        </CardContent>
-      </Card>
 
-      {error && (
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background text-xs font-mono px-4 py-2.5 rounded-sm shadow-lg animate-in slide-in-from-bottom-2 duration-200">
+          {toast}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-xl font-serif text-foreground">Translation Control Panel</h2>
+          <p className="text-xs font-mono text-muted-foreground mt-0.5">
+            LTQ · Scenarios · Compass — 9 target languages · register-aware · inline quality evaluation
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="font-mono text-xs gap-1.5"
+          onClick={fetchAll}
+          disabled={loading}
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Refresh
+        </Button>
+      </div>
+
+      {/* Overall health pill */}
+      {(ltq || scen || compass) && (
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono border ${allGreen ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700" : "border-amber-500/40 bg-amber-500/5 text-amber-700"}`}>
+          {allGreen ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+          {allGreen ? "All content types are fully translated across all 9 languages." : "Some languages still need translation — use the buttons below to launch workers."}
+        </div>
+      )}
+
+      {err && (
         <Card className="border-destructive/40 bg-destructive/5">
-          <CardContent className="py-4 text-sm font-mono text-destructive">{error}</CardContent>
+          <CardContent className="py-3 text-xs font-mono text-destructive">{err}</CardContent>
         </Card>
       )}
 
-      {data && (
-        <>
-          {/* UI locales */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                  <HealthDot healthy={data.overall.ui_healthy} />
-                  UI Locales — {data.ui_locales.en_key_count} EN keys
-                </CardTitle>
-                <span className="text-xs font-mono text-muted-foreground">
-                  {data.ui_locales.total_missing === 0
-                    ? "100% covered"
-                    : `${data.ui_locales.total_missing} missing`}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {data.ui_locales.per_locale.map((l) => (
-                  <div key={l.locale} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-mono text-foreground/80 uppercase">{l.locale}</span>
-                      <span className={`font-mono ${l.missing === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                        {l.pct}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${l.missing === 0 ? "bg-emerald-500" : "bg-amber-500"}`}
-                        style={{ width: `${l.pct}%` }}
-                      />
-                    </div>
-                    <p className="text-[10px] font-mono text-muted-foreground">
-                      {l.localeKeys}/{l.enKeys}{l.missing > 0 ? ` · ${l.missing} missing` : ""}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs font-mono text-muted-foreground mt-4">
-                Sweeper: {data.ui_locales.sweeper.enabled ? "enabled" : "disabled"}
-                {data.ui_locales.sweeper.worker_running && " · worker running"}
-                {" · last check "}{formatRelative(data.ui_locales.sweeper.last_run_at)}
-                {data.ui_locales.sweeper.last_spawn_at && (
-                  <> · last worker spawn {formatRelative(data.ui_locales.sweeper.last_spawn_at)}</>
-                )}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Calibration sweeper */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                  <HealthDot healthy={data.overall.calibration_healthy} />
-                  Register Calibration (translations table)
-                </CardTitle>
-                <span className="text-xs font-mono text-muted-foreground">
-                  {data.calibration.pending_rows < 0
-                    ? "lookup error"
-                    : data.calibration.pending_rows === 0
-                      ? "all calibrated"
-                      : `${data.calibration.pending_rows} pending`}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs font-mono text-muted-foreground">
-                Sweeper: {data.calibration.sweeper.enabled ? "enabled" : "disabled"}
-                {data.calibration.sweeper.running && " · running"}
-                {" · last pass "}{formatRelative(data.calibration.sweeper.last_run_at)}
-                {" · last batch processed "}{data.calibration.last_processed}
-                {data.calibration.last_errors > 0 && ` · ${data.calibration.last_errors} errors`}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Scenario sweeper */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                  <HealthDot healthy={data.overall.scenario_healthy} />
-                  Scenario Translations (scenarios.content_i18n)
-                </CardTitle>
-                <span className="text-xs font-mono text-muted-foreground">
-                  {data.scenarios.pending < 0
-                    ? "lookup error"
-                    : data.scenarios.pending === 0
-                      ? "all translated"
-                      : `${data.scenarios.pending} pending`}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs font-mono text-muted-foreground">
-                Sweeper: {data.scenarios.sweeper.enabled ? "enabled" : "disabled"}
-                {data.scenarios.sweeper.worker_running && " · worker running"}
-                {" · last check "}{formatRelative(data.scenarios.sweeper.last_run_at)}
-                {data.scenarios.sweeper.last_spawn_at && (
-                  <> · last worker spawn {formatRelative(data.scenarios.sweeper.last_spawn_at)}</>
-                )}
-                {data.scenarios.sweeper.last_worker_exit_at && (
-                  <> · last worker exit {formatRelative(data.scenarios.sweeper.last_worker_exit_at)}</>
-                )}
-              </p>
-            </CardContent>
-          </Card>
-
-          <p className="text-[10px] font-mono text-muted-foreground/60 text-right">
-            Generated {new Date(data.generated_at).toLocaleString()}
-          </p>
-        </>
+      {/* LTQ */}
+      {ltq && (
+        <CoverageCard
+          title={`Learning Track Questions · ${ltq.en_total.toLocaleString()} EN`}
+          total={ltq.en_total}
+          langs={ltq.langs as LangCoverage[]}
+          sweeper="ltq-translation"
+          onTranslateAll={launchLtqAll}
+          onTranslateLang={launchLtqLang}
+          launching={ltqLaunching}
+        />
       )}
+
+      {/* Scenarios */}
+      {scen && (
+        <CoverageCard
+          title={`Scenarios · ${scen.total} EN`}
+          total={scen.total}
+          langs={scen.langs as LangCoverage[]}
+          sweeper="scenario-translation"
+          onTranslateAll={launchScenAll}
+          onTranslateLang={launchScenLang}
+          launching={scenLaunching}
+          lastRun={scen.last_run ?? null}
+        />
+      )}
+
+      {/* Compass */}
+      {compass && (
+        <CoverageCard
+          title={`Compass Regions · ${compass.total} regions`}
+          total={compass.total}
+          langs={compass.langs as LangCoverage[]}
+          sweeper="compass-translation"
+          onTranslateAll={launchCompassAll}
+          onTranslateLang={launchCompassLang}
+          launching={compassLaunching}
+          lastRun={compass.last_run ?? null}
+        />
+      )}
+
+      {/* Worker run log */}
+      {runs.length > 0 && (
+        <WorkerRunsLog runs={runs.filter((r) =>
+          r.sweeper.startsWith("ltq-translation") ||
+          r.sweeper === "scenario-translation" ||
+          r.sweeper === "compass-translation"
+        )} />
+      )}
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 text-[10px] font-mono text-muted-foreground">
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" />100%</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block" />≥50%</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" />&lt;50%</span>
+        <span className="ml-auto">Auto-refresh every 30s</span>
+      </div>
     </div>
   );
 }

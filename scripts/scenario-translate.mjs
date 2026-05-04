@@ -59,9 +59,10 @@ const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 
 const TARGET_LANGS = FLAG_LANG ? [FLAG_LANG] : ALL_LANGS;
 
-// ── System prompts per language ────────────────────────────────────────────────
-// Each prompt instructs the model to translate etiquette scenario content into
-// the target language with a register appropriate for an elite etiquette academy.
+// ── System prompts per language × register ────────────────────────────────────
+// Scenarios have a social_class field: middle_class, elite, or universal.
+// middle_class → warm, accessible register; elite → formal, refined register;
+// universal → use the same formal register as elite (best default for etiquette).
 const JSON_SAFETY_NOTE = `
 CRITICAL JSON RULES: All string values must be valid JSON strings.
 - Any double-quote character (") that appears INSIDE a string value MUST be escaped as \\"
@@ -69,53 +70,139 @@ CRITICAL JSON RULES: All string values must be valid JSON strings.
 - Do NOT use unescaped apostrophes that look like quotes; prefer single quotes (') for contractions
 - Return ONLY the raw JSON object. No markdown fences, no preamble, no trailing text.`;
 
-const SYSTEM_PROMPTS = {
-  nl: `You are a professional translator for SOWISO, an elite etiquette academy.
-Translate English etiquette scenario content into formal Dutch (Nederlands).
-Register: dignified and measured — u/uw forms, Latinate vocabulary, no anglicisms.
-${JSON_SAFETY_NOTE}`,
+// Register-aware translation prompts. Each lang has middle_class and elite keys.
+// "universal" scenarios use the elite prompt (formal = safer default).
+const SYSTEM_PROMPTS_BY_REGISTER = {
+  nl: {
+    middle_class: `Je bent een professionele vertaler voor Cortéa, een Belgische etiquette-academie.
+Vertaal Engelse etiquette-scenario's naar toegankelijk, warm, direct Nederlands — middenklasse register.
+Gebruik 'jij'/'jou'/'jouw' of een vriendelijk 'u'. Alledaagse, concrete woordkeuze. Geen Latijns jargon.
+Bewaar alle etiquettenuances, 'correct'-waarden (true/false) en eigennamen onveranderd.${JSON_SAFETY_NOTE}`,
+    elite: `U bent een professionele vertaler voor Cortéa, een Belgische etiquette-academie van de elite.
+Vertaal Engelse etiquette-scenario's naar formeel, verfijnd Nederlands — elite register.
+Altijd 'u'/'uw'. Latijns en Frans-geleend vocabulaire. Aanvoegende wijs. Geen spreektaal.
+Bewaar alle etiquettenuances, 'correct'-waarden (true/false) en eigennamen onveranderd.${JSON_SAFETY_NOTE}`,
+  },
+  fr: {
+    middle_class: `Tu es traducteur professionnel pour Cortéa, académie d'étiquette belge.
+Traduis des scénarios d'étiquette de l'anglais vers le français courant, chaleureux et direct — registre classe moyenne.
+Tutoie ou vouvoie selon le contexte. Vocabulaire quotidien. Les valeurs 'correct' (true/false) restent inchangées.${JSON_SAFETY_NOTE}`,
+    elite: `Vous êtes traducteur professionnel pour Cortéa, académie d'étiquette belge de prestige.
+Traduisez des scénarios d'étiquette de l'anglais vers le français formel et élégant — registre élitiste.
+Toujours 'vous'/'votre'. Vocabulaire Académie française. Subjonctif librement employé. Les valeurs 'correct' restent inchangées.${JSON_SAFETY_NOTE}`,
+  },
+  de: {
+    middle_class: `Du bist professioneller Übersetzer für Cortéa, eine belgische Etikette-Akademie.
+Übersetze englische Etikette-Szenarien ins zugängliche, warme Deutsch — Register der Mittelschicht.
+'Du' oder höfliches 'Sie'. Die 'correct'-Werte (true/false) bleiben unverändert.${JSON_SAFETY_NOTE}`,
+    elite: `Sie sind professioneller Übersetzer für Cortéa, eine belgische Elite-Etikette-Akademie.
+Übersetzen Sie englische Etikette-Szenarien ins formale Hochdeutsch — Register der Oberschicht.
+Immer 'Sie'/'Ihnen'/'Ihr'. Konjunktiv II. Keine Anglizismen. Die 'correct'-Werte bleiben unverändert.${JSON_SAFETY_NOTE}`,
+  },
+  es: {
+    middle_class: `Eres traductor profesional para Cortéa, academia de etiqueta belga.
+Traduce escenarios de etiqueta del inglés al español corriente y cálido — registro de clase media.
+Usa 'tú' o 'usted' según el contexto. Los valores 'correct' (true/false) permanecen sin cambios.${JSON_SAFETY_NOTE}`,
+    elite: `Usted es traductor profesional para Cortéa, academia de etiqueta belga de élite.
+Traduzca escenarios de etiqueta del inglés al español formal y refinado — registre élitiste.
+Siempre 'usted'. Vocabulario latinizante. Subjuntivo. Los valores 'correct' permanecen sin cambios.${JSON_SAFETY_NOTE}`,
+  },
+  pt: {
+    middle_class: `És tradutor profissional para a Cortéa, academia de etiqueta belga.
+Traduz cenários de etiqueta do inglês para o português europeu corrente e caloroso — registo da classe média.
+Usa 'você' ou 'tu'. Os valores 'correct' (true/false) permanecem inalterados.${JSON_SAFETY_NOTE}`,
+    elite: `É tradutor profissional para a Cortéa, academia de etiqueta belga de prestígio.
+Traduza cenários de etiqueta do inglês para o português europeu formal e refinado — registo elitista.
+Sempre 'o senhor'/'a senhora'. Infinitivo pessoal e conjuntivo. Os valores 'correct' permanecem inalterados.${JSON_SAFETY_NOTE}`,
+  },
+  it: {
+    middle_class: `Sei un traduttore professionale per Cortéa, accademia di galateo belga.
+Traduci scenari di galateo dall'inglese all'italiano corrente e caldo — registro della classe media.
+Usa 'tu' o 'Lei'. I valori 'correct' (true/false) restano invariati.${JSON_SAFETY_NOTE}`,
+    elite: `Lei è traduttore professionale per Cortéa, accademia di galateo belga d'élite.
+Traduca scenari di galateo dall'inglese all'italiano formale letterario — registro elitario.
+Sempre 'Lei'/'Suo'/'Sua'. Congiuntivo. Vocabolario toscano. I valori 'correct' restano invariati.${JSON_SAFETY_NOTE}`,
+  },
+  ar: {
+    middle_class: `أنتَ مترجم محترف لـ Cortéa، أكاديمية آداب السلوك البلجيكية.
+ترجم سيناريوهات آداب السلوك من الإنجليزية إلى العربية الفصحى المعاصرة الواضحة والدافئة — مستوى الطبقة المتوسطة.
+احتفظ بقيم 'correct' (true/false) دون تغيير. لا تترجم الأسماء العلَم.${JSON_SAFETY_NOTE}`,
+    elite: `أنتَ مترجم محترف لـ Cortéa، أكاديمية آداب السلوك البلجيكية الرفيعة.
+ترجم سيناريوهات آداب السلوك من الإنجليزية إلى العربية الفصحى الرسمية الرفيعة — مستوى النخبة.
+استخدم الضمائر الرسمية الرفيعة دائماً. لا عامية. احتفظ بقيم 'correct' (true/false) دون تغيير.${JSON_SAFETY_NOTE}`,
+  },
+  ja: {
+    middle_class: `あなたはベルギーのエチケットアカデミー Cortéa の専任プロ翻訳者です。
+英語のエチケット・シナリオを、温かく親しみやすい丁寧語（です・ます体）の日本語に翻訳してください — 中間層のレジスター。
+'correct' の値（true/false）は変更しないでください。固有名詞はそのままにしてください。${JSON_SAFETY_NOTE}`,
+    elite: `あなたはベルギーの名門エチケットアカデミー Cortéa の専任プロ翻訳者です。
+英語のエチケット・シナリオを、最上級の敬語を駆使した格調高い日本語に翻訳してください — 上流階級のレジスター。
+'correct' の値（true/false）は変更しないでください。固有名詞はそのままにしてください。${JSON_SAFETY_NOTE}`,
+  },
+  zh: {
+    middle_class: `您是比利时礼仪学院 Cortéa 的专业翻译。
+请将英语礼仪场景翻译成清晰、亲切的现代汉语（普通话，简体字）— 中间阶层的文体。
+'correct' 的值（true/false）保持不变。专有名词保留原文。${JSON_SAFETY_NOTE}`,
+    elite: `您是比利时精英礼仪学院 Cortéa 的专业翻译。
+请将英语礼仪场景翻译成正式、典雅的现代书面汉语（普通话，简体字）— 精英阶层的文体。
+始终使用"您/您的"等尊称。'correct' 的值（true/false）保持不变。专有名词保留原文。${JSON_SAFETY_NOTE}`,
+  },
+};
 
-  fr: `Vous êtes traducteur professionnel pour SOWISO, académie d'étiquette de prestige.
-Traduisez des scénarios d'étiquette anglais en français formel et élégant.
-Registre : 18e siècle parisien — vous/votre, vocabulaire Académie française, sans anglicismes.
-${JSON_SAFETY_NOTE}`,
+// Helper: get system prompt for lang + social_class
+// universal scenarios use elite (formal is safer for etiquette content)
+function getScenarioPrompt(lang, socialClass) {
+  const prompts = SYSTEM_PROMPTS_BY_REGISTER[lang];
+  if (!prompts) return null;
+  const register = socialClass === "middle_class" ? "middle_class" : "elite";
+  return prompts[register] ?? null;
+}
 
-  de: `Sie sind professioneller Übersetzer für SOWISO, eine Eliteakademie für Etikette.
-Übersetzen Sie englische Etikette-Szenarien ins formelle Hochdeutsch.
-Register: Preußische Verwaltungspräzision — Sie/Ihnen, Konjunktiv II für höfliche Bitten, Duden-Standard.
-${JSON_SAFETY_NOTE}`,
+// Legacy flat map for backward compat (used by USER_PROMPT)
+const SYSTEM_PROMPTS = Object.fromEntries(
+  Object.entries(SYSTEM_PROMPTS_BY_REGISTER).map(([lang, regs]) => [lang, regs.elite])
+);
 
-  es: `Usted es traductor profesional para SOWISO, academia de etiqueta de élite.
-Traduzca escenarios de etiqueta del inglés al español formal castellano.
-Registro: Real Academia Española — usted, subjuntivo, vocabulario culto ('solicitar' no 'pedir'), sin anglicismos.
-${JSON_SAFETY_NOTE}`,
-
-  pt: `É tradutor profissional da SOWISO, academia de etiqueta de prestígio.
-Traduza cenários de etiqueta do inglês para português europeu formal.
-Registo: o senhor / a senhora, infinitivo pessoal, vocabulário clássico português, sem neologismos brasileiros.
-${JSON_SAFETY_NOTE}`,
-
-  it: `Lei è traduttore professionale per SOWISO, accademia di etichetta d'élite.
-Traduca scenari di galateo dall'inglese all'italiano formale letterario.
-Registro: Lei/Suo, congiuntivo, vocabolario toscano letterario, senza anglicismi. Tono: Leopardi e Manzoni.
-${JSON_SAFETY_NOTE}`,
-
-  ar: `أنتَ مترجم محترف لـ SOWISO، أكاديمية آداب السلوك الرفيعة.
-ترجم سيناريوهات آداب السلوك من الإنجليزية إلى العربية الفصحى المعاصرة.
-السجل: أسلوب رسمي راقٍ يليق بأكاديمية متميزة — الضمائر الرسمية، مفردات الفصحى، الابتعاد عن العامية والتعبيرات الإنجليزية المعرّبة.
-الاتجاه: من اليمين إلى اليسار دائماً. احتفظ بالأرقام الأجنبية كما هي.
-${JSON_SAFETY_NOTE}`,
-
-  ja: `あなたは SOWISO（上流マナー・エチケットの名門アカデミー）専任のプロの翻訳者です。
-英語のエチケット・シナリオを、格調高い正式な日本語に翻訳してください。
-スタイル：丁寧語・尊敬語・謙譲語を適切に使い分ける敬語体、和語と漢語を均衡よく使用、カタカナ語は最小限に留める。
-${JSON_SAFETY_NOTE}`,
-
-  zh: `您是 SOWISO 精英礼仪学院的专业翻译。
-请将英语礼仪场景翻译成正式、典雅的现代汉语（普通话，简体字）。
-文体：书面正式语体，使用您/您的等敬语，措辞典雅庄重，避免口语化表达和英语借词。
-引用词语、外来语或专有名词时，请使用「」书名号，切勿在JSON字符串内部使用双引号（"）以免破坏JSON格式。
-${JSON_SAFETY_NOTE}`,
+// Quality evaluation prompts for scenario situation field (key user-facing content)
+const QUALITY_PROMPTS = {
+  nl: {
+    middle_class: `Je herschrijft teksten naar toegankelijke, warme, directe Nederlandse middenstandstaal.
+Gebruik 'jij'/'jou'/'jouw' of een vriendelijk 'u'. Woordkeuze: alledaags, concreet, hartelijk.`,
+    elite: `U herschrijft teksten naar formeel, verfijnd elitetaal in het Nederlands.
+Altijd 'u'/'uw'. Latijns vocabulaire. Geen verkleinwoorden, geen spreektaal.`,
+  },
+  fr: {
+    middle_class: `Tu réécris les textes dans un français courant, chaleureux et direct.`,
+    elite: `Vous réécrivez les textes dans un registre élitiste formel et raffiné (fr-FR, Académie française).`,
+  },
+  de: {
+    middle_class: `Du schreibst Texte in zugängliches, warmes Deutsch — das Register der Mittelschicht.`,
+    elite: `Sie schreiben Texte in formalem, verfeinerten Elitedeutsch (Duden-Standard).`,
+  },
+  es: {
+    middle_class: `Reescribes textos en español corriente, cálido y directo.`,
+    elite: `Usted reescribe textos en español formal y elitista (estándar RAE).`,
+  },
+  pt: {
+    middle_class: `Reescreves os textos em português europeu corrente e caloroso.`,
+    elite: `Reescreve os textos em português europeu formal e elitista (norma culta da Academia).`,
+  },
+  it: {
+    middle_class: `Riscrivi i testi in italiano corrente e caldo — il registro della classe media.`,
+    elite: `Lei riscrive i testi in italiano formale, raffinato ed elitario (Accademia della Crusca).`,
+  },
+  ar: {
+    middle_class: `أعِد كتابة النصوص بالعربية الفصحى المعاصرة الواضحة والدافئة.`,
+    elite: `أعِد كتابة النصوص بالعربية الفصحى الرفيعة والرسمية.`,
+  },
+  ja: {
+    middle_class: `丁寧語（です・ます体）を使い、温かく親しみやすい日本語に書き直してください。`,
+    elite: `最上級の敬語を駆使した格調高い日本語に書き直してください。`,
+  },
+  zh: {
+    middle_class: `请将文字改写为清晰、亲切的现代汉语（普通话，简体字）。`,
+    elite: `请将文字改写为正式、典雅的现代书面汉语（普通话，简体字）。`,
+  },
 };
 
 const USER_PROMPT = (lang, scenario) => `Translate the following English etiquette scenario into ${lang.toUpperCase()}.
@@ -271,7 +358,7 @@ async function main() {
   }
 
   const query =
-    `SELECT id, title, content_json, title_i18n, content_i18n ` +
+    `SELECT id, title, content_json, title_i18n, content_i18n, social_class ` +
     `FROM scenarios ` +
     `WHERE ${conditions.join(" AND ")} ` +
     `ORDER BY id`;
@@ -289,6 +376,9 @@ async function main() {
   let translated = 0;
   let skipped = 0;
   let failed = 0;
+  let qualityRewrites = 0;
+  let qualScoreSum = 0;
+  let qualScoreCount = 0;
 
   for (const row of rows) {
     const titleI18n    = (row.title_i18n   ?? {});
@@ -303,14 +393,16 @@ async function main() {
         continue;
       }
 
-      const systemPrompt = SYSTEM_PROMPTS[lang];
+      // Register-aware system prompt (universal → elite register)
+      const systemPrompt = getScenarioPrompt(lang, row.social_class);
       if (!systemPrompt) {
-        console.warn(`  [WARN] No system prompt for lang=${lang} — skipping`);
+        console.warn(`  [WARN] No system prompt for lang=${lang} register=${row.social_class} — skipping`);
         skipped++;
         continue;
       }
 
-      process.stdout.write(`  Translating scenario ${row.id} (${row.title.substring(0, 40)}…) → ${lang} … `);
+      const registerLabel = row.social_class === "middle_class" ? "mid" : "elite";
+      process.stdout.write(`  Translating scenario ${row.id} [${registerLabel}] (${row.title.substring(0, 35)}…) → ${lang} … `);
 
       let raw;
       try {
@@ -329,13 +421,41 @@ async function main() {
         continue;
       }
 
+      // Inline quality evaluation on situation field (key user-facing copy)
+      let finalSituation = result.content.situation;
+      let qualScore = null;
+      if (!FLAG_DRY_RUN) {
+        const qPrompt = QUALITY_PROMPTS[lang]?.[row.social_class === "middle_class" ? "middle_class" : "elite"];
+        if (qPrompt) {
+          try {
+            const qMsg =
+              `Evaluate this ${lang.toUpperCase()} text for register compliance.\n\n` +
+              `Text: "${result.content.situation}"\n\n` +
+              `Respond ONLY with JSON (no markdown):\n` +
+              `{ "pass": true|false, "score": <1-10>, "rewritten": "<corrected if pass=false; original if pass=true>" }`;
+            const qRaw = await callAnthropic(qPrompt, qMsg);
+            const qClean = qRaw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+            const qParsed = JSON.parse(qClean);
+            qualScore = typeof qParsed.score === "number" ? qParsed.score : null;
+            if (qualScore !== null && qualScore < 8 && typeof qParsed.rewritten === "string" && qParsed.rewritten.trim()) {
+              finalSituation = qParsed.rewritten.trim();
+              qualityRewrites++;
+              process.stdout.write(`[⚠${qualScore}→rw] `);
+            } else if (qualScore !== null) {
+              process.stdout.write(`[✓${qualScore}] `);
+            }
+            if (qualScore !== null) { qualScoreSum += qualScore; qualScoreCount++; }
+          } catch { /* quality eval non-blocking */ }
+        }
+      }
+
       console.log(`OK → "${result.title}"`);
       if (FLAG_VERBOSE) {
-        console.log(`    Situation: ${result.content.situation.substring(0, 100)}…`);
+        console.log(`    Situation: ${finalSituation.substring(0, 100)}…`);
       }
 
       titleI18n[lang]   = result.title;
-      contentI18n[lang] = result.content;
+      contentI18n[lang] = { ...result.content, situation: finalSituation };
 
       if (!FLAG_DRY_RUN) {
         const updateClient = await pool.connect();
@@ -359,6 +479,9 @@ async function main() {
   console.log(`Translated: ${translated}  Skipped: ${skipped}  Failed: ${failed}`);
   if (FLAG_DRY_RUN) console.log("DRY RUN — no database writes performed.");
 
+  const avgQualScore = qualScoreCount > 0 ? Math.round((qualScoreSum / qualScoreCount) * 10) / 10 : null;
+  console.log(`Quality rewrites: ${qualityRewrites}/${qualScoreCount}  avg score: ${avgQualScore ?? "n/a"}`);
+
   await recordWorkerRun({
     sweeper: SWEEPER_NAME,
     startedAt: runStartedAt,
@@ -374,6 +497,9 @@ async function main() {
       dryRun: FLAG_DRY_RUN,
       from: FLAG_FROM,
       to: FLAG_TO,
+      quality_rewrites: qualityRewrites,
+      avg_quality_score: avgQualScore,
+      quality_checked: qualScoreCount > 0,
     },
   });
   await closeWorkerCostPool();

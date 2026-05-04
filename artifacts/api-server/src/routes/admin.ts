@@ -5,7 +5,7 @@ import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, useCasesTable, onboardingEventsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
+import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, useCasesTable, onboardingEventsTable, workerRunsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
 import { runCompassSeed } from "@workspace/db/seed-compass";
@@ -2358,6 +2358,292 @@ router.get("/admin/onboarding-funnel", requireAdmin, async (req, res) => {
     req.log?.error({ err }, "Admin: failed to compute onboarding funnel");
     return res.status(500).json({ error: "A difficulty arose computing the onboarding funnel." });
   }
+});
+
+// ── Translation Control Panel: Worker Runs ─────────────────────────────────────
+
+/** GET /admin/worker-runs — recent worker run history (last 60 rows) */
+router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(workerRunsTable)
+      .orderBy(desc(workerRunsTable.started_at))
+      .limit(60);
+    return res.json({ ok: true, runs: rows });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: worker-runs fetch failed");
+    return res.status(500).json({ error: "Failed to fetch worker runs." });
+  }
+});
+
+// ── LTQ Translation Status / Trigger ──────────────────────────────────────────
+
+const SUPPORTED_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
+type SupportedLang = typeof SUPPORTED_LANGS[number];
+
+/** GET /admin/ltq/translation-status — per-lang coverage of learning_track_questions */
+router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
+  try {
+    // Total EN questions by region+register
+    const enRow = await db.execute(
+      sql`SELECT COUNT(*) AS total FROM learning_track_questions WHERE lang = 'en'`
+    );
+    const enTotal = Number((enRow.rows[0] as { total: string }).total);
+
+    // Per-lang counts
+    const perLangRows = await db.execute(
+      sql`SELECT lang, COUNT(*) AS cnt
+          FROM learning_track_questions
+          WHERE lang != 'en'
+          GROUP BY lang
+          ORDER BY lang`
+    );
+
+    const perLang: Record<string, { count: number; pct: number }> = {};
+    for (const row of perLangRows.rows as { lang: string; cnt: string }[]) {
+      const n = Number(row.cnt);
+      perLang[row.lang] = { count: n, pct: enTotal > 0 ? Math.round((n / enTotal) * 100) : 0 };
+    }
+
+    // Last run per ltq-translation-* sweeper
+    const lastRuns = await db.execute(
+      sql`SELECT DISTINCT ON (sweeper) sweeper, started_at, finished_at, items_processed,
+             estimated_usd, status, metadata
+          FROM worker_runs
+          WHERE sweeper LIKE 'ltq-translation-%'
+          ORDER BY sweeper, started_at DESC`
+    );
+
+    const lastRunByLang: Record<string, unknown> = {};
+    for (const r of lastRuns.rows as { sweeper: string; [k: string]: unknown }[]) {
+      const lang = r.sweeper.replace("ltq-translation-", "");
+      lastRunByLang[lang] = r;
+    }
+
+    return res.json({
+      ok: true,
+      en_total: enTotal,
+      langs: SUPPORTED_LANGS.map((lang) => ({
+        lang,
+        ...(perLang[lang] ?? { count: 0, pct: 0 }),
+        last_run: lastRunByLang[lang] ?? null,
+      })),
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: ltq/translation-status failed");
+    return res.status(500).json({ error: "Failed to compute LTQ translation status." });
+  }
+});
+
+const LtqTranslateSchema = z.object({
+  lang: z.enum(SUPPORTED_LANGS).optional(),
+  region: z.enum(["AE", "BE"]).optional(),
+  register: z.enum(["middle_class", "elite"]).optional(),
+  limit: z.number().int().positive().optional(),
+  no_quality: z.boolean().optional(),
+  parallel: z.number().int().min(1).max(4).optional(),
+});
+
+/** POST /admin/ltq/translate — spawn LTQ translation worker in background */
+router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
+  const parsed = LtqTranslateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
+  }
+
+  const { lang, region, register, limit, no_quality, parallel } = parsed.data;
+
+  const script = lang
+    ? "scripts/translate-learning-track-questions.mjs"
+    : "scripts/translate-learning-track-all-langs.mjs";
+
+  const childArgs: string[] = [script];
+  if (lang)      { childArgs.push("--lang",     lang); }
+  if (region)    { childArgs.push("--region",   region); }
+  if (register)  { childArgs.push("--register", register); }
+  if (limit)     { childArgs.push("--limit",    String(limit)); }
+  if (no_quality){ childArgs.push("--no-quality"); }
+  if (!lang && parallel) { childArgs.push("--parallel", String(parallel)); }
+
+  const child = spawn("node", childArgs, {
+    cwd: WORKSPACE_ROOT,
+    env: { ...process.env },
+    stdio: "ignore",
+  });
+
+  req.log?.info({ script, lang, region, register }, "Admin: LTQ translate worker spawned");
+
+  return res.json({
+    ok: true,
+    message: lang
+      ? `LTQ translation worker for [${lang.toUpperCase()}] spawned in background.`
+      : `LTQ all-languages orchestrator spawned (parallel=${parallel ?? 1}).`,
+    pid: child.pid,
+    args: childArgs,
+  });
+});
+
+// ── Scenario Translation Status / Trigger ─────────────────────────────────────
+
+/** GET /admin/scenarios/translation-status — per-lang coverage of scenario i18n */
+router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res) => {
+  try {
+    const totalRow = await db.execute(
+      sql`SELECT COUNT(*) AS total FROM scenarios`
+    );
+    const total = Number((totalRow.rows[0] as { total: string }).total);
+
+    const perLangRows = await db.execute(
+      sql`SELECT lang, COUNT(DISTINCT id) AS cnt
+          FROM scenarios,
+               LATERAL jsonb_object_keys(COALESCE(title_i18n, '{}')) AS lang
+          GROUP BY lang
+          ORDER BY lang`
+    );
+
+    const perLang: Record<string, number> = {};
+    for (const r of perLangRows.rows as { lang: string; cnt: string }[]) {
+      perLang[r.lang] = Number(r.cnt);
+    }
+
+    const lastRun = await db
+      .select()
+      .from(workerRunsTable)
+      .where(eq(workerRunsTable.sweeper, "scenario-translation"))
+      .orderBy(desc(workerRunsTable.started_at))
+      .limit(1);
+
+    return res.json({
+      ok: true,
+      total,
+      langs: SUPPORTED_LANGS.map((lang) => {
+        const n = perLang[lang] ?? 0;
+        return { lang, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+      }),
+      last_run: lastRun[0] ?? null,
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: scenarios/translation-status failed");
+    return res.status(500).json({ error: "Failed to compute scenario translation status." });
+  }
+});
+
+const ScenarioTranslateSchema = z.object({
+  lang: z.enum(SUPPORTED_LANGS).optional(),
+  id: z.number().int().positive().optional(),
+  force: z.boolean().optional(),
+});
+
+/** POST /admin/scenarios/translate — spawn scenario translate worker */
+router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
+  const parsed = ScenarioTranslateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
+  }
+  const { lang, id, force } = parsed.data;
+
+  const childArgs = ["scripts/scenario-translate.mjs"];
+  if (lang)  { childArgs.push("--lang",  lang); }
+  if (id)    { childArgs.push("--id",    String(id)); }
+  if (force) { childArgs.push("--force"); }
+
+  const child = spawn("node", childArgs, {
+    cwd: WORKSPACE_ROOT,
+    env: { ...process.env },
+    stdio: "ignore",
+  });
+
+  req.log?.info({ lang, id, force }, "Admin: scenario translate worker spawned");
+
+  return res.json({
+    ok: true,
+    message: lang
+      ? `Scenario translation worker for [${lang.toUpperCase()}] spawned in background.`
+      : "Scenario translation worker (all languages) spawned in background.",
+    pid: child.pid,
+  });
+});
+
+// ── Compass Translation Status / Trigger ──────────────────────────────────────
+
+/** GET /admin/compass/translation-status — per-lang coverage of compass_regions.locale_data */
+router.get("/admin/compass/translation-status", requireAdmin, async (req, res) => {
+  try {
+    const totalRow = await db.execute(
+      sql`SELECT COUNT(*) AS total FROM compass_regions`
+    );
+    const total = Number((totalRow.rows[0] as { total: string }).total);
+
+    const perLangRows = await db.execute(
+      sql`SELECT lang, COUNT(DISTINCT region_code) AS cnt
+          FROM compass_regions,
+               LATERAL jsonb_object_keys(COALESCE(locale_data, '{}')) AS lang
+          GROUP BY lang
+          ORDER BY lang`
+    );
+
+    const perLang: Record<string, number> = {};
+    for (const r of perLangRows.rows as { lang: string; cnt: string }[]) {
+      perLang[r.lang] = Number(r.cnt);
+    }
+
+    const lastRun = await db
+      .select()
+      .from(workerRunsTable)
+      .where(eq(workerRunsTable.sweeper, "compass-translation"))
+      .orderBy(desc(workerRunsTable.started_at))
+      .limit(1);
+
+    return res.json({
+      ok: true,
+      total,
+      langs: SUPPORTED_LANGS.map((lang) => {
+        const n = perLang[lang] ?? 0;
+        return { lang, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+      }),
+      last_run: lastRun[0] ?? null,
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: compass/translation-status failed");
+    return res.status(500).json({ error: "Failed to compute compass translation status." });
+  }
+});
+
+const CompassTranslateSchema = z.object({
+  lang: z.enum(SUPPORTED_LANGS).optional(),
+  region: z.string().optional(),
+  force: z.boolean().optional(),
+});
+
+/** POST /admin/compass/translate — spawn compass translate worker */
+router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
+  const parsed = CompassTranslateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
+  }
+  const { lang, region, force } = parsed.data;
+
+  const childArgs = ["scripts/compass-translate.mjs"];
+  if (lang)   { childArgs.push("--lang",   lang); }
+  if (region) { childArgs.push("--region", region); }
+  if (force)  { childArgs.push("--force"); }
+
+  const child = spawn("node", childArgs, {
+    cwd: WORKSPACE_ROOT,
+    env: { ...process.env },
+    stdio: "ignore",
+  });
+
+  req.log?.info({ lang, region, force }, "Admin: compass translate worker spawned");
+
+  return res.json({
+    ok: true,
+    message: lang
+      ? `Compass translation worker for [${lang.toUpperCase()}] spawned in background.`
+      : "Compass translation worker (all languages) spawned in background.",
+    pid: child.pid,
+  });
 });
 
 export default router;

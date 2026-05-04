@@ -2385,14 +2385,21 @@ router.get("/admin/onboarding-funnel", requireAdmin, async (req, res) => {
 
 // ── Translation Control Panel: Worker Runs ─────────────────────────────────────
 
-/** GET /admin/worker-runs — recent worker run history (last 60 rows) */
+/** GET /admin/worker-runs — recent worker run history.
+ *  ?limit=N  max rows to return (default 50, max 100)
+ *  ?sweeper=X  filter to a specific sweeper name prefix (optional)
+ */
 router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
   try {
+    const limitParam = Number(req.query.limit ?? 50);
+    const limit = Number.isFinite(limitParam) && limitParam > 0
+      ? Math.min(limitParam, 100) : 50;
+
     const rows = await db
       .select()
       .from(workerRunsTable)
       .orderBy(desc(workerRunsTable.started_at))
-      .limit(60);
+      .limit(limit);
     return res.json({ ok: true, runs: rows });
   } catch (err) {
     req.log?.error({ err }, "Admin: worker-runs fetch failed");
@@ -2405,7 +2412,10 @@ router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
 const SUPPORTED_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
 type SupportedLang = typeof SUPPORTED_LANGS[number];
 
-/** GET /admin/ltq/translation-status — per-lang + per-register coverage of learning_track_questions */
+/** GET /admin/ltq/translation-status — per-lang + per-register coverage of learning_track_questions.
+ *  Also returns region_register_grid: { region: { register: { lang: { count, pct } } } }
+ *  so the frontend can render the full BE-middenklasse / BE-elite / AE-middenklasse / AE-elite × 9-lang grid.
+ */
 router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
   try {
     // Total EN questions overall + per register
@@ -2425,6 +2435,20 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       enByRegister[r.register] = Number(r.total);
     }
 
+    // EN counts per region + register (for the grid row headers)
+    const enByRegionRegisterRows = await db.execute(
+      sql`SELECT region_code, register, COUNT(*) AS total
+          FROM learning_track_questions
+          WHERE lang = 'en'
+          GROUP BY region_code, register`
+    );
+    // enByRegionRegister["BE"]["middle_class"] = 500
+    const enByRegionRegister: Record<string, Record<string, number>> = {};
+    for (const r of enByRegionRegisterRows.rows as { region_code: string; register: string; total: string }[]) {
+      if (!enByRegionRegister[r.region_code]) enByRegionRegister[r.region_code] = {};
+      enByRegionRegister[r.region_code][r.register] = Number(r.total);
+    }
+
     // Per-lang overall counts
     const perLangRows = await db.execute(
       sql`SELECT lang, COUNT(*) AS cnt
@@ -2439,7 +2463,7 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       perLang[row.lang] = { count: n, pct: enTotal > 0 ? Math.round((n / enTotal) * 100) : 0 };
     }
 
-    // Per-lang per-register counts
+    // Per-lang per-register counts (for per-lang register sub-bars)
     const perLangRegRows = await db.execute(
       sql`SELECT lang, register, COUNT(*) AS cnt
           FROM learning_track_questions
@@ -2456,6 +2480,26 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       perLangReg[row.lang][row.register] = {
         count: n,
         pct: enReg > 0 ? Math.round((n / enReg) * 100) : 0,
+      };
+    }
+
+    // Per-lang + per-region + per-register counts (for the region×register grid)
+    const gridRows = await db.execute(
+      sql`SELECT lang, region_code, register, COUNT(*) AS cnt
+          FROM learning_track_questions
+          WHERE lang != 'en'
+          GROUP BY lang, region_code, register`
+    );
+    // grid["BE"]["middle_class"]["nl"] = { count: 400, pct: 80 }
+    const grid: Record<string, Record<string, Record<string, { count: number; pct: number }>>> = {};
+    for (const row of gridRows.rows as { lang: string; region_code: string; register: string; cnt: string }[]) {
+      if (!grid[row.region_code]) grid[row.region_code] = {};
+      if (!grid[row.region_code][row.register]) grid[row.region_code][row.register] = {};
+      const n = Number(row.cnt);
+      const enBase = enByRegionRegister[row.region_code]?.[row.register] ?? 0;
+      grid[row.region_code][row.register][row.lang] = {
+        count: n,
+        pct: enBase > 0 ? Math.round((n / enBase) * 100) : 0,
       };
     }
 
@@ -2478,15 +2522,20 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       ok: true,
       en_total: enTotal,
       en_by_register: enByRegister,
+      en_by_region_register: enByRegionRegister,
+      region_register_grid: grid,
       langs: SUPPORTED_LANGS.map((lang) => {
         const run = lastRunByLang[lang];
-        const meta = run?.metadata ?? {};
+        const meta = (run?.metadata ?? {}) as Record<string, unknown>;
         const quality_metrics =
           typeof meta.avg_score === "number"
             ? {
                 avg_score: meta.avg_score,
-                pct_passed: typeof meta.pct_passed === "number" ? meta.pct_passed : null,
+                pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
                 pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+                per_register: typeof meta.per_register_quality === "object" && meta.per_register_quality !== null
+                  ? meta.per_register_quality as Record<string, unknown>
+                  : null,
               }
             : null;
         return {
@@ -2554,7 +2603,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
 
 // ── Scenario Translation Status / Trigger ─────────────────────────────────────
 
-/** GET /admin/scenarios/translation-status — per-lang coverage of scenario i18n */
+/** GET /admin/scenarios/translation-status — per-lang coverage of scenario i18n + quality metrics */
 router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res) => {
   try {
     const totalRow = await db.execute(
@@ -2575,21 +2624,40 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
       perLang[r.lang] = Number(r.cnt);
     }
 
-    const lastRun = await db
+    // Last run + quality metrics from metadata
+    const lastRunRows = await db
       .select()
       .from(workerRunsTable)
       .where(eq(workerRunsTable.sweeper, "scenario-translation"))
       .orderBy(desc(workerRunsTable.started_at))
       .limit(1);
+    const lastRun = lastRunRows[0] ?? null;
+    const runMeta = (lastRun?.metadata ?? {}) as Record<string, unknown>;
+
+    // scenario-translate.mjs writes avg_quality_score + quality_rewrites to metadata
+    const globalQuality = typeof runMeta.avg_quality_score === "number"
+      ? {
+          avg_score: runMeta.avg_quality_score,
+          pct_passed: typeof runMeta.pct_passed_first_try === "number" ? runMeta.pct_passed_first_try : null,
+          pct_rewritten: typeof runMeta.quality_rewrites === "number" && typeof runMeta.targetLangs === "object"
+            ? null // per-lang breakdown not available from scenario runs
+            : null,
+        }
+      : null;
 
     return res.json({
       ok: true,
       total,
       langs: SUPPORTED_LANGS.map((lang) => {
         const n = perLang[lang] ?? 0;
-        return { lang, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+        return {
+          lang,
+          count: n,
+          pct: total > 0 ? Math.round((n / total) * 100) : 0,
+          quality_metrics: globalQuality,
+        };
       }),
-      last_run: lastRun[0] ?? null,
+      last_run: lastRun,
     });
   } catch (err) {
     req.log?.error({ err }, "Admin: scenarios/translation-status failed");

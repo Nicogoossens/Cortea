@@ -12,7 +12,7 @@ import {
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
   BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check, Plus, Pencil, X,
   Briefcase, BarChart3, Tag, Languages, Vote, Mail, ArrowRight, TrendingUp,
-  Clock, Play,
+  Clock, Play, Grid2x2,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -2975,9 +2975,12 @@ interface LangCoverage {
   quality_metrics?: QualityMetrics | null;
 }
 
+interface LtqGridCell { count: number; pct: number }
 interface LtqStatus {
   ok: boolean; en_total: number;
   en_by_register?: Record<string, number>;
+  en_by_region_register?: Record<string, Record<string, number>>;
+  region_register_grid?: Record<string, Record<string, Record<string, LtqGridCell>>>;
   langs: LangCoverage[];
 }
 interface ScenarioStatus {
@@ -3038,8 +3041,9 @@ function CovBar({ pct, count }: { pct: number; count: number }) {
 
 function QualityBadge({ metrics }: { metrics: QualityMetrics }) {
   const score = metrics.avg_score;
+  // Thresholds: ≥8.0 green, 7.0–7.9 orange, <7.0 red (per task spec)
   const colorClass =
-    score >= 8.5 ? "bg-emerald-500/15 text-emerald-700 border-emerald-300/40" :
+    score >= 8.0 ? "bg-emerald-500/15 text-emerald-700 border-emerald-300/40" :
     score >= 7.0 ? "bg-amber-500/15 text-amber-700 border-amber-300/40" :
                    "bg-rose-500/15 text-rose-700 border-rose-300/40";
   const passed = metrics.pct_passed != null ? `${Math.round(metrics.pct_passed)}% direct geslaagd` : null;
@@ -3359,25 +3363,142 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
                   <th className="py-1.5 pr-3 font-normal">gestart</th>
                   <th className="py-1.5 pr-3 font-normal text-right">items</th>
                   <th className="py-1.5 pr-3 font-normal text-right">kosten</th>
+                  <th className="py-1.5 pr-3 font-normal">kwaliteit</th>
                   <th className="py-1.5 pr-3 font-normal">status</th>
                 </tr>
               </thead>
               <tbody>
-                {runs.map((r) => (
-                  <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
-                    <td className="py-1 pr-3 truncate max-w-[200px]">{sweeperLabel(r.sweeper)}</td>
-                    <td className="py-1 pr-3 text-muted-foreground">{formatRelative(r.started_at)}</td>
-                    <td className="py-1 pr-3 text-right tabular-nums">{r.items_processed}</td>
-                    <td className="py-1 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
-                    <td className="py-1 pr-3"><StatusPill status={r.status} /></td>
-                  </tr>
-                ))}
+                {runs.map((r) => {
+                  const meta = (r.metadata ?? {}) as Record<string, unknown>;
+                  const avgScore = typeof meta.avg_score === "number" ? meta.avg_score
+                    : typeof meta.avg_quality_score === "number" ? meta.avg_quality_score : null;
+                  const pctPassed = typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null;
+                  const scoreLow = avgScore !== null && avgScore < 7.5;
+                  const scoreColor = avgScore === null ? "" :
+                    avgScore >= 8.0 ? "text-emerald-700" :
+                    avgScore >= 7.0 ? "text-amber-700" : "text-rose-700";
+                  return (
+                    <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
+                      <td className="py-1 pr-3 truncate max-w-[200px]">{sweeperLabel(r.sweeper)}</td>
+                      <td className="py-1 pr-3 text-muted-foreground">{formatRelative(r.started_at)}</td>
+                      <td className="py-1 pr-3 text-right tabular-nums">{r.items_processed}</td>
+                      <td className="py-1 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
+                      <td className="py-1 pr-3">
+                        {avgScore !== null ? (
+                          <span className={`tabular-nums ${scoreColor}`} title={pctPassed !== null ? `${Math.round(pctPassed)}% eerste poging geslaagd` : undefined}>
+                            {scoreLow && "⚠ "}{avgScore.toFixed(1)}{pctPassed !== null ? ` · ${Math.round(pctPassed)}%` : ""}
+                          </span>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="py-1 pr-3"><StatusPill status={r.status} /></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </CardContent>
       )}
     </Card>
+  );
+}
+
+// ── LTQ Region × Register grid ────────────────────────────────────────────────
+// Rows = BE-middenklasse / BE-elite / AE-middenklasse / AE-elite
+// Columns = 9 target languages
+// Each cell shows: mini progress bar + count/total + pct (+ quality when available)
+
+const LTQ_GRID_ROWS = [
+  { region: "BE", register: "middle_class", label: "BE Middenklasse" },
+  { region: "BE", register: "elite",        label: "BE Elite" },
+  { region: "AE", register: "middle_class", label: "AE Middenklasse" },
+  { region: "AE", register: "elite",        label: "AE Elite" },
+] as const;
+
+function LtqRegisterGrid({
+  ltq,
+  onTranslateLang,
+  launching,
+}: {
+  ltq: LtqStatus;
+  onTranslateLang: (lang: TransLang) => Promise<void>;
+  launching: string | null;
+}) {
+  const grid = ltq.region_register_grid ?? {};
+  const enGrid = ltq.en_by_region_register ?? {};
+  const qualByLang = Object.fromEntries(
+    (ltq.langs ?? []).map((l) => [l.lang, l.quality_metrics])
+  );
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs font-mono border-separate border-spacing-0">
+        <thead>
+          <tr>
+            <th className="py-1.5 pr-4 text-left font-normal text-muted-foreground text-[10px] uppercase tracking-wide w-32">Register</th>
+            {TRANSLATION_LANGS.map((lang) => (
+              <th key={lang} className="py-1.5 px-2 font-normal text-center">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[10px] font-semibold text-foreground/70">{lang.toUpperCase()}</span>
+                  <button
+                    className="text-[9px] text-primary/60 hover:text-primary disabled:opacity-30 transition-colors"
+                    disabled={launching !== null}
+                    onClick={() => onTranslateLang(lang)}
+                    title={`Start LTQ-vertaling voor ${lang.toUpperCase()} (alle regio's, alle registers)`}
+                  >
+                    {launching === lang ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "▶"}
+                  </button>
+                </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {LTQ_GRID_ROWS.map(({ region, register, label }) => {
+            const enTotal = enGrid[region]?.[register] ?? 0;
+            const rowData = grid[region]?.[register] ?? {};
+            return (
+              <tr key={`${region}-${register}`} className="border-t border-border/20">
+                <td className="py-2 pr-4 text-foreground/80 font-medium text-[10px] leading-tight">
+                  {label}
+                  {enTotal > 0 && <span className="block text-muted-foreground/60 font-normal">{enTotal.toLocaleString()} EN</span>}
+                </td>
+                {TRANSLATION_LANGS.map((lang) => {
+                  const cell = rowData[lang] ?? { count: 0, pct: 0 };
+                  const isRed = enTotal > 0 && cell.pct === 0;
+                  const isOrange = cell.pct > 0 && cell.pct < 85;
+                  const cellBg = isRed ? "bg-rose-500/5" : "";
+                  const barColor = cell.pct >= 85 ? "bg-emerald-500" : cell.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+                  const qualMetrics = qualByLang[lang];
+                  return (
+                    <td key={lang} className={`py-2 px-1.5 text-center align-top ${cellBg}`}>
+                      <div className="flex flex-col items-center gap-0.5 min-w-[40px]">
+                        <div className="h-1 w-10 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${barColor} transition-all duration-500`}
+                            style={{ width: `${Math.min(100, cell.pct)}%` }} />
+                        </div>
+                        <span className={`tabular-nums text-[9px] ${isRed ? "text-rose-600 font-medium" : isOrange ? "text-amber-700" : "text-muted-foreground"}`}>
+                          {cell.count}/{enTotal > 0 ? enTotal : "?"}
+                        </span>
+                        <span className="tabular-nums text-[9px] text-muted-foreground/60">{cell.pct}%</span>
+                        {qualMetrics && (
+                          <span
+                            className={`text-[8px] tabular-nums leading-none ${qualMetrics.avg_score >= 8.0 ? "text-emerald-700" : qualMetrics.avg_score >= 7.0 ? "text-amber-700" : "text-rose-700"}`}
+                            title={`Gem. kwaliteitsscore: ${qualMetrics.avg_score.toFixed(1)}/10`}
+                          >
+                            ⭐{qualMetrics.avg_score.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -3414,7 +3535,7 @@ function TranslationHealthTab() {
         fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/worker-runs`,                         { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/worker-runs?limit=100`,               { credentials: "include" }),
       ]);
       if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
       if (scenRes.ok)        setScen(await scenRes.json() as ScenarioStatus);
@@ -3576,6 +3697,23 @@ function TranslationHealthTab() {
     && scen.langs.every((l) => l.pct >= 100)
     && compass.langs.every((l) => l.pct >= 100);
 
+  // ── Weekly cost computation (from worker_runs in last 7 days) ─────────────
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weekRuns = runs.filter((r) =>
+    new Date(r.started_at).getTime() >= sevenDaysAgo &&
+    (r.sweeper.startsWith("ltq-translation") ||
+     r.sweeper === "scenario-translation" ||
+     r.sweeper === "compass-translation" ||
+     r.sweeper.startsWith("counsel-seed"))
+  );
+  const weekCost = weekRuns.reduce((s, r) => s + (r.estimated_usd ?? 0), 0);
+
+  // ── Backlog cost estimate (remaining × rate per item) ─────────────────────
+  const ltqBacklog   = ltq    ? Math.max(0, ltq.en_total   - Math.min(...ltq.langs.map((l) => l.count)))   : 0;
+  const scenBacklog  = scen   ? Math.max(0, scen.total      - Math.min(...scen.langs.map((l) => l.count)))  : 0;
+  const compassBacklog = compass ? Math.max(0, compass.total - Math.min(...compass.langs.map((l) => l.count))) : 0;
+  const backlogCost  = ltqBacklog * 0.006 + scenBacklog * 0.005 + compassBacklog * 0.011;
+
   return (
     <div className="space-y-6">
 
@@ -3586,7 +3724,7 @@ function TranslationHealthTab() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header + cost summary */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-xl font-serif text-foreground">Vertalingen</h2>
@@ -3594,16 +3732,37 @@ function TranslationHealthTab() {
             Beheer de AI-vertalingen van oefenvragen, etiquettescenario's en landenprotocollen naar 9 talen.
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="font-mono text-xs gap-1.5"
-          onClick={fetchAll}
-          disabled={loading}
-        >
-          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Cost summary badges */}
+          {runs.length > 0 && (
+            <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground border border-border/60 rounded-sm px-2.5 py-1.5 bg-muted/20">
+              <span className="text-foreground/60 uppercase tracking-wide">AI-kosten</span>
+              <span className="text-foreground font-medium">
+                ${weekCost.toFixed(2)}
+                <span className="text-muted-foreground font-normal"> / 7 dagen</span>
+              </span>
+              {backlogCost > 0.01 && (
+                <>
+                  <span className="text-border">·</span>
+                  <span className="text-amber-700">
+                    ~${backlogCost.toFixed(2)}
+                    <span className="text-muted-foreground font-normal"> achterstand</span>
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="font-mono text-xs gap-1.5"
+            onClick={fetchAll}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Overall health pill */}
@@ -3622,20 +3781,43 @@ function TranslationHealthTab() {
 
       {/* LTQ */}
       {ltq && (
-        <CoverageCard
-          title="Oefenvragen (DB-vertaling)"
-          description="De Engelstalige oefenvragen in de database worden door AI vertaald naar de gekozen taal. Middenklasse- en elite-vragen zitten als aparte rijen in de DB en worden beide in één run vertaald. Dit is géén Atelier-omschrijving — die pipeline zit in de Atelier-distillaten tab."
-          actionLabel="start de DB-vertaling voor die taal: alle onvertaalde Engelstalige oefenvragen (middenklasse + elite) worden naar die taal vertaald. De kwaliteit wordt automatisch gecheckt en bij een score onder 8/10 herschreven."
-          total={ltq.en_total}
-          langs={ltq.langs as LangCoverage[]}
-          sweeper="ltq-translation"
-          showRegisterBars
-          costPerItem={0.006}
-          itemsPerMinute={35}
-          onTranslateAll={launchLtqAll}
-          onTranslateLang={launchLtqLang}
-          launching={ltqLaunching}
-        />
+        <>
+          <CoverageCard
+            title="Oefenvragen (DB-vertaling)"
+            description="De Engelstalige oefenvragen in de database worden door AI vertaald naar de gekozen taal. Middenklasse- en elite-vragen zitten als aparte rijen in de DB en worden beide in één run vertaald. Dit is géén Atelier-omschrijving — die pipeline zit in de Atelier-distillaten tab."
+            actionLabel="start de DB-vertaling voor die taal: alle onvertaalde Engelstalige oefenvragen (middenklasse + elite) worden naar die taal vertaald. De kwaliteit wordt automatisch gecheckt en bij een score onder 8/10 herschreven."
+            total={ltq.en_total}
+            langs={ltq.langs as LangCoverage[]}
+            sweeper="ltq-translation"
+            showRegisterBars
+            costPerItem={0.006}
+            itemsPerMinute={35}
+            onTranslateAll={launchLtqAll}
+            onTranslateLang={launchLtqLang}
+            launching={ltqLaunching}
+          />
+          {/* Region × Register grid — only shown when grid data is available */}
+          {ltq.region_register_grid && Object.keys(ltq.region_register_grid).length > 0 && (
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                  <Grid2x2 className="w-4 h-4" /> Regio × Register dekking
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Vertaaldekking per regio-register combinatie. Klik ▶ per taal om een run te starten.
+                  Kwaliteitsscore (⭐) toont het gemiddelde van de laatste run per taal.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <LtqRegisterGrid
+                  ltq={ltq}
+                  onTranslateLang={launchLtqLang}
+                  launching={ltqLaunching}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Scenarios */}

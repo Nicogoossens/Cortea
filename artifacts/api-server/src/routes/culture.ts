@@ -5,6 +5,7 @@ import { eq, and, or, isNull, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, resolveUserTier, getResolvedUserId } from "../lib/auth-middleware";
 import { TIER_FEATURES, type SubscriptionTier, hasFeatureAccess, canAccessRegion } from "../lib/tier-features";
+import { getLocalizedRegionName } from "../lib/region-names";
 
 const router = Router();
 
@@ -428,7 +429,7 @@ router.get("/culture/compass", async (req, res) => {
       return {
         region_code: row.region_code,
         flag_emoji: row.flag_emoji,
-        region_name: localeContent.region_name ?? row.region_code,
+        region_name: getLocalizedRegionName(row.region_code, locale, (localeContent.region_name as string | undefined) ?? row.region_code),
         core_value: localeContent.core_value ?? "",
         biggest_taboo: localeContent.biggest_taboo ?? "",
         has_content,
@@ -507,7 +508,7 @@ router.get("/culture/compass/:regionCode", requireAuthUser, async (req, res) => 
     return res.json({
       region_code: row.region_code,
       flag_emoji: row.flag_emoji,
-      region_name: localeContent.region_name ?? row.region_code,
+      region_name: getLocalizedRegionName(row.region_code, locale, (localeContent.region_name as string | undefined) ?? row.region_code),
       core_value: localeContent.core_value ?? "",
       biggest_taboo: localeContent.biggest_taboo ?? "",
       dining_etiquette: localeContent.dining_etiquette ?? "",

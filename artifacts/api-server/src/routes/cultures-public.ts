@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { compassRegionsTable, type CompassLocaleContent } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { getLocalizedRegionName } from "../lib/region-names";
 
 const router = Router();
 
@@ -131,7 +132,7 @@ function buildSummary(
   return {
     slug: slugify(englishName),
     region_code: row.region_code,
-    region_name: localeContent.region_name ?? englishName,
+    region_name: getLocalizedRegionName(row.region_code, locale, localeContent.region_name ?? englishName),
     flag_emoji: row.flag_emoji,
     core_value: localeContent.core_value ?? "",
     biggest_taboo: localeContent.biggest_taboo ?? "",

@@ -549,6 +549,8 @@ async function main() {
     metadata: {
       lang,
       region: FLAG_REGION ?? null,
+      // register is null when both registers were processed in a single run (FLAG_REGISTER omitted).
+      // Downstream consumers: use per_register_quality for register-split metrics in that case.
       register: FLAG_REGISTER ?? null,
       skipped, failed,
       rewritten: rewrites,

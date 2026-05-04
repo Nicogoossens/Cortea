@@ -441,9 +441,11 @@ async function main() {
         continue;
       }
 
-      // Inline quality evaluation on situation field (key user-facing copy).
-      // Fail closed: if evaluator response is malformed, skip storing this lang's
-      // translation rather than insert unverified copy.
+      // Inline quality evaluation on the `situation` field (primary user-facing copy).
+      // Coverage: situation only. title/question/options are structurally validated by
+      // parseTranslation() but not register-quality scored in the current pipeline version.
+      // Fail closed: if evaluator response is malformed or score<8 with empty rewrite,
+      // skip storing this lang's translation rather than insert unverified copy.
       let finalSituation = result.content.situation;
       let qualScore = null;
       let qualEvalFailed = false;

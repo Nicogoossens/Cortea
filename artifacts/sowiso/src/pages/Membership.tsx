@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useGetProfile } from "@workspace/api-client-react";
+import { useGetProfile, getGetProfileQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,7 @@ export default function Membership() {
   const { t, locale } = useLanguage();
   const { getAuthHeaders } = useAuth();
   const { data: profile, isLoading: profileLoading } = useGetProfile();
+  const queryClient = useQueryClient();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [billing, setBilling] = useState<BillingInterval>("monthly");
@@ -182,8 +184,11 @@ export default function Membership() {
         });
         if (res.ok) {
           setUpgradeSuccess(true);
-          // Refresh subscription status to reflect new tier
-          fetch(`${API_BASE}/api/subscription/status`, { headers: getAuthHeaders() })
+          // Invalidate the React Query profile cache so the tier badge updates
+          // immediately without a full page reload.
+          void queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+          // Also refresh the local subscription status card.
+          fetch(`${API_BASE}/api/subscription/status`, { credentials: "include", headers: getAuthHeaders() })
             .then((r) => (r.ok ? r.json() : null))
             .then((d) => setStatus(d))
             .catch(() => {});

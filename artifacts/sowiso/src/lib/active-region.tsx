@@ -269,6 +269,7 @@ const LANGUAGE_DEFAULTS: Record<SupportedLanguage, RegionCode> = {
   it: "IT",
   ar: "AE",
   ja: "JP",
+  zh: "CN",
 };
 
 function resolveActiveRegion(language: SupportedLanguage): RegionCode {

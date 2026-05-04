@@ -1313,10 +1313,7 @@
   "membership.cancel_cta": "Lidmaatschap annuleren",
   "membership.cancel_confirm": "Bent u zeker dat u uw lidmaatschap wenst te annuleren?",
   "membership.cancel_done_trial": "Uw proefperiode is beëindigd; geen bedrag zal in rekening worden gebracht. Een bevestiging is verzonden.",
-  "membership.cancel_done_period": "Uw lidmaatschap zal eindigen bij de sluiting van de huidige periode. Een bevestiging is verzonden."
-,
-  "cultures.index.empty": "Landengidsen komen binnenkort."
-,
+  "membership.cancel_done_period": "Uw lidmaatschap zal eindigen bij de sluiting van de huidige periode. Een bevestiging is verzonden.",
   "landing.waitlist_eyebrow": "Soft launch — Founding 100",
   "landing.waitlist_title": "Word een van de Founding 100",
   "landing.waitlist_cta": "Reserveer uw plek",
@@ -1369,5 +1366,24 @@
   "admin.waitlist_invite": "Verstuur uitnodiging",
   "admin.waitlist_invited": "Uitgenodigd",
   "admin.waitlist_filter_all": "Alle segmenten",
-  "admin.waitlist_empty": "Nog geen aanmeldingen."
+  "admin.waitlist_empty": "Nog geen aanmeldingen.",
+  "votes.page_title": "Stem op nieuwe landen",
+  "votes.locked_title": "Stem op nieuwe landen",
+  "votes.locked_desc": "Alleen geregistreerde gebruikers kunnen stemmen op de landen die we als volgende toevoegen.",
+  "votes.sign_in": "Aanmelden",
+  "votes.register": "Registreren",
+  "votes.subtitle": "Help bepalen welke landen we als volgende uitwerken. U hebt {{count}} stemmen per maand.",
+  "votes.period_label": "Stemperiode",
+  "votes.used": "{{used}} / {{max}} stemmen gebruikt",
+  "votes.remaining": "({{count}} resterend)",
+  "votes.reset_note": "Stemmen worden elke kalendermaand gereset. U kunt uw keuze altijd aanpassen.",
+  "votes.your_choices": "Uw keuzes deze maand",
+  "votes.remove": "Verwijder",
+  "votes.countries_title": "Nog toe te voegen landen",
+  "votes.countries_desc": "Klik op een land om uw stem uit te brengen. Landen die al beschikbaar zijn in het Kompas staan niet in deze lijst.",
+  "votes.search_placeholder": "Zoek een land…",
+  "votes.no_results": "Geen landen gevonden.",
+  "votes.error_load": "Kon de lijst niet laden. Probeer het opnieuw.",
+  "votes.error_cast": "Kon uw stem niet opslaan.",
+  "votes.error_remove": "Kon stem niet verwijderen."
 }

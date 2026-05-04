@@ -137,7 +137,16 @@ export default function Onboarding() {
   const { getAuthHeaders, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
 
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(() => {
+    // Restore the step the user was on before being redirected to sign-in.
+    const saved = sessionStorage.getItem("onboarding_resume_step");
+    if (saved) {
+      sessionStorage.removeItem("onboarding_resume_step");
+      const n = parseInt(saved, 10);
+      if (n >= 1 && n <= 5) return n as Step;
+    }
+    return 1;
+  });
   const [country, setCountry] = useState("");
   const [objectives, setObjectives] = useState<string[]>([]);
   const [sports, setSports] = useState<string[]>([]);
@@ -222,6 +231,8 @@ export default function Onboarding() {
       // Stripe not yet configured. For unauthenticated users: prompt sign-in.
       // For authenticated users: activate a direct 60-day free trial in the DB.
       if (!isAuthenticated) {
+        // Preserve the plan-selection step so the user lands back here after sign-in.
+        sessionStorage.setItem("onboarding_resume_step", "5");
         navigate("/signin?return=/onboarding");
         return;
       }
@@ -234,11 +245,14 @@ export default function Onboarding() {
           body: JSON.stringify({ tier }),
         });
         if (trialRes.status === 401) {
+          sessionStorage.setItem("onboarding_resume_step", "5");
           navigate("/signin?return=/onboarding");
           return;
         }
-        // Trial activated (or already active — both are fine); go to Atelier.
-        navigate("/atelier?upgrade=success");
+        // Trial activated (or already active — both are fine).
+        // Use a full page reload so React Query profile cache is cleared and
+        // the Atelier page shows the updated subscription tier immediately.
+        window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/atelier?upgrade=success`;
       } catch {
         // Network error — let them try from the membership page.
         navigate("/membership");

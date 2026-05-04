@@ -3506,26 +3506,9 @@ function LtqRegisterGrid({
 }) {
   const grid = ltq.region_register_grid ?? {};
   const enGrid = ltq.en_by_region_register ?? {};
-
-  // Build per-lang, per-register quality lookup:
-  // qualByLang[lang](register) = avg_score from per_register data or overall fallback
-  const qualByLang = Object.fromEntries(
-    (ltq.langs ?? []).map((l) => {
-      const perReg = l.quality_metrics?.per_register;
-      const overall = l.quality_metrics?.avg_score ?? null;
-      const getScore = (reg: string): number | null => {
-        if (perReg && typeof perReg === "object") {
-          const entry = (perReg as Record<string, unknown>)[reg];
-          if (entry && typeof entry === "object") {
-            const s = (entry as Record<string, unknown>).avg_score;
-            if (typeof s === "number") return s;
-          }
-        }
-        return overall;
-      };
-      return [l.lang, getScore];
-    })
-  ) as Record<string, (reg: string) => number | null>;
+  // grid_quality[region][register][lang] = { avg_score, pct_passed, pct_rewritten } | null
+  const gridQuality = (ltq as Record<string, unknown>).grid_quality as
+    Record<string, Record<string, Record<string, { avg_score: number; pct_passed: number | null } | null>>> | undefined;
 
   const anyBusy = launching !== null || rowLaunching !== null || cellLaunching !== null;
 
@@ -3563,7 +3546,8 @@ function LtqRegisterGrid({
             const enTotal = enGrid[region]?.[register] ?? 0;
             const rowData = grid[region]?.[register] ?? {};
             const rowKey = `${region}-${register}`;
-            const rowActive = activeSweepers.has("ltq-translation");
+            // rowActive = any ltq-translation-* worker is currently running (not just orchestrator)
+            const rowActive = [...activeSweepers].some((s) => s.startsWith("ltq-translation"));
             const rowBusy = rowLaunching === rowKey;
             // Count how many langs are missing for this row
             const missingLangs = TRANSLATION_LANGS.filter((lang) => {
@@ -3602,7 +3586,9 @@ function LtqRegisterGrid({
                   const isOrange = cell.pct > 0 && cell.pct < 85;
                   const cellBg = isRed ? "bg-rose-500/5" : "";
                   const barColor = cell.pct >= 85 ? "bg-emerald-500" : cell.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
-                  const qualScore = qualByLang[lang]?.(register) ?? null;
+                  // Use per-(region, register, lang) quality from grid_quality; fall back to lang-level
+                  const cellQual = gridQuality?.[region]?.[register]?.[lang] ?? null;
+                  const qualScore = cellQual?.avg_score ?? null;
                   const qualColor = qualScore === null ? "" :
                     qualScore >= 8.0 ? "text-emerald-700" :
                     qualScore >= 7.0 ? "text-amber-700" : "text-rose-700";
@@ -3753,7 +3739,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region, register }),
+        body: JSON.stringify({ region_code: region, register }),
       });
       const d = await res.json();
       showToast(d.message ?? `LTQ ${key} (alle ontbrekende talen) gestart.`);
@@ -3771,7 +3757,7 @@ function TranslationHealthTab() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang, region, register }),
+        body: JSON.stringify({ lang, region_code: region, register }),
       });
       const d = await res.json();
       showToast(d.message ?? `LTQ ${lang.toUpperCase()} / ${region} ${register} gestart.`);

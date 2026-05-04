@@ -2533,19 +2533,70 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       };
     }
 
-    // Last run per ltq-translation-* sweeper
-    const lastRuns = await db.execute(
-      sql`SELECT DISTINCT ON (sweeper) sweeper, started_at, finished_at, items_processed,
-             estimated_usd, status, metadata
+    // Last run per ltq-translation-* sweeper — fetch the 200 most recent runs for quality aggregation.
+    // Each run carries metadata.region, metadata.register (may be null = all) and metadata.avg_score.
+    // We build two maps:
+    //   lastRunByLang[lang]                               — most recent run per lang (overall)
+    //   gridQuality[region][register][lang]               — most specific quality per cell
+    const qualRuns = await db.execute(
+      sql`SELECT sweeper, metadata, started_at
           FROM worker_runs
           WHERE sweeper LIKE 'ltq-translation-%'
-          ORDER BY sweeper, started_at DESC`
+            AND finished_at IS NOT NULL
+          ORDER BY started_at DESC
+          LIMIT 200`
     );
-    type LastRunRow = { sweeper: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
-    const lastRunByLang: Record<string, LastRunRow> = {};
-    for (const r of lastRuns.rows as LastRunRow[]) {
+    type QualRunRow = { sweeper: string; started_at: string; metadata?: Record<string, unknown> | null };
+    type QualCell = { avg_score: number; pct_passed: number | null; pct_rewritten: number | null };
+
+    const lastRunByLang: Record<string, QualRunRow> = {};
+    // gridQuality[region|"__all__"][register|"__all__"][lang] = best (most-specific) quality
+    const rawQual: Record<string, Record<string, Record<string, QualCell>>> = {};
+
+    for (const r of qualRuns.rows as QualRunRow[]) {
       const lang = r.sweeper.replace("ltq-translation-", "");
-      lastRunByLang[lang] = r;
+      if (!lastRunByLang[lang]) lastRunByLang[lang] = r;
+
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const avgScore = typeof meta.avg_score === "number" ? meta.avg_score : null;
+      if (avgScore === null) continue;
+
+      const runRegion   = typeof meta.region   === "string" ? meta.region   : "__all__";
+      const runRegister = typeof meta.register === "string" ? meta.register : "__all__";
+
+      if (!rawQual[runRegion]) rawQual[runRegion] = {};
+      if (!rawQual[runRegion][runRegister]) rawQual[runRegion][runRegister] = {};
+      // Only keep the most recent run per (region, register, lang) — already ordered by DESC
+      if (!rawQual[runRegion][runRegister][lang]) {
+        rawQual[runRegion][runRegister][lang] = {
+          avg_score: avgScore,
+          pct_passed:   typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
+          pct_rewritten: typeof meta.pct_rewritten       === "number" ? meta.pct_rewritten         : null,
+        };
+      }
+    }
+
+    // Resolve quality for a specific (region, register, lang) with specificity priority:
+    // exact match > (region, __all__) > (__all__, register) > (__all__, __all__)
+    const resolveQual = (region: string, register: string, lang: string): QualCell | null =>
+      rawQual[region]?.[register]?.[lang]
+      ?? rawQual[region]?.["__all__"]?.[lang]
+      ?? rawQual["__all__"]?.[register]?.[lang]
+      ?? rawQual["__all__"]?.["__all__"]?.[lang]
+      ?? null;
+
+    // Build grid_quality[region][register][lang] = QualCell | null
+    const REGIONS   = ["BE", "AE"] as const;
+    const REGISTERS = ["middle_class", "elite"] as const;
+    const gridQuality: Record<string, Record<string, Record<string, QualCell | null>>> = {};
+    for (const rgn of REGIONS) {
+      gridQuality[rgn] = {};
+      for (const reg of REGISTERS) {
+        gridQuality[rgn][reg] = {};
+        for (const lang of SUPPORTED_LANGS) {
+          gridQuality[rgn][reg][lang] = resolveQual(rgn, reg, lang);
+        }
+      }
     }
 
     return res.json({
@@ -2554,6 +2605,7 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       en_by_register: enByRegister,
       en_by_region_register: enByRegionRegister,
       region_register_grid: grid,
+      grid_quality: gridQuality,
       langs: SUPPORTED_LANGS.map((lang) => {
         const run = lastRunByLang[lang];
         const meta = (run?.metadata ?? {}) as Record<string, unknown>;
@@ -2563,9 +2615,6 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
                 avg_score: meta.avg_score,
                 pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
                 pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
-                per_register: typeof meta.per_register_quality === "object" && meta.per_register_quality !== null
-                  ? meta.per_register_quality as Record<string, unknown>
-                  : null,
               }
             : null;
         return {
@@ -2585,7 +2634,7 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
 
 const LtqTranslateSchema = z.object({
   lang: z.enum(SUPPORTED_LANGS).optional(),
-  region: z.enum(["AE", "BE"]).optional(),
+  region_code: z.enum(["AE", "BE"]).optional(),
   register: z.enum(["middle_class", "elite"]).optional(),
   limit: z.number().int().positive().optional(),
   no_quality: z.boolean().optional(),
@@ -2599,19 +2648,29 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
   }
 
-  const { lang, region, register, limit, no_quality, parallel } = parsed.data;
+  const { lang, region_code, register, limit, no_quality, parallel } = parsed.data;
 
-  // Duplicate-active-run guard: check for unfinished run with matching sweeper
-  const sweeperName = lang ? `ltq-translation-${lang}` : "ltq-translation";
-  const activeRunRows = await db
-    .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
-    .from(workerRunsTable)
-    .where(sql`sweeper = ${sweeperName} AND finished_at IS NULL AND status != 'failed'`)
-    .limit(1);
+  // Duplicate-active-run guard.
+  // - Per-lang launch (lang provided): block if that specific lang's worker is active.
+  // - All-langs launch (lang omitted): block if ANY ltq-translation* worker is active
+  //   to prevent double-spawning while per-lang workers are still running.
+  const activeRunRows = lang
+    ? await db
+        .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
+        .from(workerRunsTable)
+        .where(sql`sweeper = ${"ltq-translation-" + lang} AND finished_at IS NULL AND status != 'failed'`)
+        .limit(1)
+    : await db
+        .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
+        .from(workerRunsTable)
+        .where(sql`sweeper LIKE 'ltq-translation%' AND finished_at IS NULL AND status != 'failed'`)
+        .limit(1);
   if (activeRunRows.length > 0) {
     return res.status(409).json({
       ok: false,
-      error: "Een vertaalworker voor deze taal is momenteel actief. Wacht tot die klaar is.",
+      error: lang
+        ? `Een vertaalworker voor [${lang.toUpperCase()}] is momenteel actief. Wacht tot die klaar is.`
+        : "Er zijn actieve LTQ-vertaalworkers. Wacht tot alle klaar zijn.",
       active_since: activeRunRows[0].started_at,
     });
   }
@@ -2621,7 +2680,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     lang
       ? sql`SELECT COUNT(*) AS n FROM learning_track_questions WHERE lang = 'en'
             AND id NOT IN (SELECT source_id FROM learning_track_questions WHERE lang = ${lang})
-            ${region ? sql`AND region_code = ${region}` : sql``}
+            ${region_code ? sql`AND region_code = ${region_code}` : sql``}
             ${register ? sql`AND register = ${register}` : sql``}`
       : sql`SELECT COALESCE(SUM(missing), 0) AS n FROM (
               SELECT l.lang, COUNT(*) AS missing
@@ -2641,11 +2700,11 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     : "scripts/translate-learning-track-all-langs.mjs";
 
   const childArgs: string[] = [script];
-  if (lang)      { childArgs.push("--lang",     lang); }
-  if (region)    { childArgs.push("--region",   region); }
-  if (register)  { childArgs.push("--register", register); }
-  if (limit)     { childArgs.push("--limit",    String(limit)); }
-  if (no_quality){ childArgs.push("--no-quality"); }
+  if (lang)        { childArgs.push("--lang",     lang); }
+  if (region_code) { childArgs.push("--region",   region_code); }
+  if (register)    { childArgs.push("--register", register); }
+  if (limit)       { childArgs.push("--limit",    String(limit)); }
+  if (no_quality)  { childArgs.push("--no-quality"); }
   if (!lang && parallel) { childArgs.push("--parallel", String(parallel)); }
 
   const child = spawn("node", childArgs, {
@@ -2654,7 +2713,7 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     stdio: "ignore",
   });
 
-  req.log?.info({ script, lang, region, register, estimatedQuestions }, "Admin: LTQ translate worker spawned");
+  req.log?.info({ script, lang, region_code, register, estimatedQuestions }, "Admin: LTQ translate worker spawned");
 
   return res.json({
     ok: true,
@@ -2692,26 +2751,28 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
       perLang[r.lang] = Number(r.cnt);
     }
 
-    // Last run per lang — sweeper pattern: "scenario-translation-{lang}" or "scenario-translation" (orchestrator).
-    // We query DISTINCT ON sweeper to get the most recent run for each, then build a per-lang quality map.
-    // If a per-lang sweeper run exists, it takes priority; otherwise we fall back to the global orchestrator run.
+    // Last run per lang — scenario worker always writes sweeper = "scenario-translation" (no suffix).
+    // Per-lang quality is stored in metadata.lang. We group by metadata.lang to get per-lang quality.
+    type ScenRunRow = { sweeper: string; started_at: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
     const allRunRows = await db.execute(
-      sql`SELECT DISTINCT ON (sweeper) sweeper, started_at, finished_at, items_processed,
-             estimated_usd, status, metadata
+      sql`SELECT sweeper, started_at, finished_at, items_processed, estimated_usd, status, metadata
           FROM worker_runs
           WHERE sweeper = 'scenario-translation'
              OR sweeper LIKE 'scenario-translation-%'
-          ORDER BY sweeper, started_at DESC`
+          ORDER BY started_at DESC
+          LIMIT 100`
     );
-    type ScenRunRow = { sweeper: string; started_at: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
     const runByLang: Record<string, ScenRunRow> = {};
     let orchestratorRun: ScenRunRow | null = null;
     for (const r of allRunRows.rows as ScenRunRow[]) {
-      if (r.sweeper === "scenario-translation") {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const metaLang = typeof meta.lang === "string" ? meta.lang : null;
+      if (metaLang) {
+        // Per-lang run (identified by metadata.lang): keep most recent per lang
+        if (!runByLang[metaLang]) runByLang[metaLang] = r;
+      } else if (!orchestratorRun) {
+        // Multi-lang run or orchestrator: keep most recent
         orchestratorRun = r;
-      } else {
-        const lang = r.sweeper.replace("scenario-translation-", "");
-        runByLang[lang] = r;
       }
     }
     const lastRun = orchestratorRun ?? (Object.values(runByLang)[0] ?? null);

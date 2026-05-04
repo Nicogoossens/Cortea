@@ -2394,10 +2394,13 @@ router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
     const limitParam = Number(req.query.limit ?? 50);
     const limit = Number.isFinite(limitParam) && limitParam > 0
       ? Math.min(limitParam, 100) : 50;
+    const sweeperFilter = typeof req.query.sweeper === "string" && req.query.sweeper.length > 0
+      ? req.query.sweeper : null;
 
     const rows = await db
       .select()
       .from(workerRunsTable)
+      .where(sweeperFilter ? sql`sweeper LIKE ${sweeperFilter + "%"}` : undefined)
       .orderBy(desc(workerRunsTable.started_at))
       .limit(limit);
     return res.json({ ok: true, runs: rows });
@@ -2624,37 +2627,56 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
       perLang[r.lang] = Number(r.cnt);
     }
 
-    // Last run + quality metrics from metadata
-    const lastRunRows = await db
-      .select()
-      .from(workerRunsTable)
-      .where(eq(workerRunsTable.sweeper, "scenario-translation"))
-      .orderBy(desc(workerRunsTable.started_at))
-      .limit(1);
-    const lastRun = lastRunRows[0] ?? null;
-    const runMeta = (lastRun?.metadata ?? {}) as Record<string, unknown>;
+    // Last run per lang — sweeper pattern: "scenario-translation-{lang}" or "scenario-translation" (orchestrator).
+    // We query DISTINCT ON sweeper to get the most recent run for each, then build a per-lang quality map.
+    // If a per-lang sweeper run exists, it takes priority; otherwise we fall back to the global orchestrator run.
+    const allRunRows = await db.execute(
+      sql`SELECT DISTINCT ON (sweeper) sweeper, started_at, finished_at, items_processed,
+             estimated_usd, status, metadata
+          FROM worker_runs
+          WHERE sweeper = 'scenario-translation'
+             OR sweeper LIKE 'scenario-translation-%'
+          ORDER BY sweeper, started_at DESC`
+    );
+    type ScenRunRow = { sweeper: string; started_at: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
+    const runByLang: Record<string, ScenRunRow> = {};
+    let orchestratorRun: ScenRunRow | null = null;
+    for (const r of allRunRows.rows as ScenRunRow[]) {
+      if (r.sweeper === "scenario-translation") {
+        orchestratorRun = r;
+      } else {
+        const lang = r.sweeper.replace("scenario-translation-", "");
+        runByLang[lang] = r;
+      }
+    }
+    const lastRun = orchestratorRun ?? (Object.values(runByLang)[0] ?? null);
 
-    // scenario-translate.mjs writes avg_quality_score + quality_rewrites to metadata
-    const globalQuality = typeof runMeta.avg_quality_score === "number"
-      ? {
-          avg_score: runMeta.avg_quality_score,
-          pct_passed: typeof runMeta.pct_passed_first_try === "number" ? runMeta.pct_passed_first_try : null,
-          pct_rewritten: typeof runMeta.quality_rewrites === "number" && typeof runMeta.targetLangs === "object"
-            ? null // per-lang breakdown not available from scenario runs
-            : null,
-        }
-      : null;
+    const extractQuality = (row: ScenRunRow | null) => {
+      const meta = (row?.metadata ?? {}) as Record<string, unknown>;
+      const score = typeof meta.avg_quality_score === "number" ? meta.avg_quality_score
+        : typeof meta.avg_score === "number" ? meta.avg_score : null;
+      if (score === null) return null;
+      return {
+        avg_score: score,
+        pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
+        pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+      };
+    };
+    const globalQuality = extractQuality(orchestratorRun);
 
     return res.json({
       ok: true,
       total,
       langs: SUPPORTED_LANGS.map((lang) => {
         const n = perLang[lang] ?? 0;
+        const langRun = runByLang[lang] ?? null;
+        const quality_metrics = langRun ? extractQuality(langRun) : globalQuality;
         return {
           lang,
           count: n,
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
-          quality_metrics: globalQuality,
+          quality_metrics,
+          last_run: langRun ?? orchestratorRun ?? null,
         };
       }),
       last_run: lastRun,

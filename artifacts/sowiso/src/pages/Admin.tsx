@@ -3126,7 +3126,9 @@ function CoverageCard({
       ? activeSweepers.has(`${sweeper}-${lang}`) || activeSweepers.has(sweeper)
       : false;
 
-  const allDone = langs.every((l) => l.pct >= 85);
+  // allDone = every lang is 100% translated (used for button variant + copy)
+  // 85/50 thresholds are for color bars only — not completion semantics
+  const allDone = langs.every((l) => l.pct >= 100);
   const totalRemaining = langs.reduce((s, l) => s + Math.max(0, total - l.count), 0);
   const totalEstCost = totalRemaining * costPerItem;
   const totalEstMin  = totalRemaining / itemsPerMinute;
@@ -3438,20 +3440,27 @@ const LTQ_GRID_ROWS = [
 function LtqRegisterGrid({
   ltq,
   onTranslateLang,
+  onTranslateRow,
+  onTranslateCell,
   launching,
+  rowLaunching,
+  cellLaunching,
   activeSweepers,
 }: {
   ltq: LtqStatus;
   onTranslateLang: (lang: TransLang) => Promise<void>;
+  onTranslateRow: (region: string, register: string) => Promise<void>;
+  onTranslateCell: (lang: TransLang, region: string, register: string) => Promise<void>;
   launching: string | null;
+  rowLaunching: string | null;
+  cellLaunching: string | null;
   activeSweepers: Set<string>;
 }) {
   const grid = ltq.region_register_grid ?? {};
   const enGrid = ltq.en_by_region_register ?? {};
 
   // Build per-lang, per-register quality lookup:
-  // qualByLang[lang][register] = avg_score from metadata.per_register_quality
-  // Falls back to overall avg_score when per_register is unavailable.
+  // qualByLang[lang](register) = avg_score from per_register data or overall fallback
   const qualByLang = Object.fromEntries(
     (ltq.langs ?? []).map((l) => {
       const perReg = l.quality_metrics?.per_register;
@@ -3470,25 +3479,28 @@ function LtqRegisterGrid({
     })
   ) as Record<string, (reg: string) => number | null>;
 
+  const anyBusy = launching !== null || rowLaunching !== null || cellLaunching !== null;
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs font-mono border-separate border-spacing-0">
         <thead>
           <tr>
-            <th className="py-1.5 pr-4 text-left font-normal text-muted-foreground text-[10px] uppercase tracking-wide w-32">Register</th>
+            {/* Row header column — includes a blank for the "Alle talen" sub-header */}
+            <th className="py-1.5 pr-3 text-left font-normal text-muted-foreground text-[10px] uppercase tracking-wide w-40">Register</th>
             {TRANSLATION_LANGS.map((lang) => {
               const isActive = activeSweepers.has(`ltq-translation-${lang}`) || activeSweepers.has("ltq-translation");
               return (
-                <th key={lang} className="py-1.5 px-2 font-normal text-center">
+                <th key={lang} className="py-1.5 px-1 font-normal text-center">
                   <div className="flex flex-col items-center gap-0.5">
                     <span className="text-[10px] font-semibold text-foreground/70">{lang.toUpperCase()}</span>
                     <button
                       className="text-[9px] text-primary/60 hover:text-primary disabled:opacity-30 transition-colors"
-                      disabled={launching !== null || isActive}
+                      disabled={anyBusy || isActive}
                       onClick={() => onTranslateLang(lang)}
                       title={isActive
                         ? `LTQ-worker voor ${lang.toUpperCase()} is actief`
-                        : `Start LTQ-vertaling voor ${lang.toUpperCase()} (alle regio's, alle registers)`}
+                        : `Start LTQ-vertaling voor ${lang.toUpperCase()} (alle regio's + registers)`}
                     >
                       {(launching === lang || isActive) ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "▶"}
                     </button>
@@ -3502,11 +3514,39 @@ function LtqRegisterGrid({
           {LTQ_GRID_ROWS.map(({ region, register, label }) => {
             const enTotal = enGrid[region]?.[register] ?? 0;
             const rowData = grid[region]?.[register] ?? {};
+            const rowKey = `${region}-${register}`;
+            const rowActive = activeSweepers.has(`ltq-translation-${rowKey}`) || activeSweepers.has("ltq-translation");
+            const rowBusy = rowLaunching === rowKey;
+            // Count how many langs are missing for this row
+            const missingLangs = TRANSLATION_LANGS.filter((lang) => {
+              const cell = rowData[lang] ?? { count: 0, pct: 0 };
+              return cell.pct < 100;
+            });
             return (
-              <tr key={`${region}-${register}`} className="border-t border-border/20">
-                <td className="py-2 pr-4 text-foreground/80 font-medium text-[10px] leading-tight">
-                  {label}
-                  {enTotal > 0 && <span className="block text-muted-foreground/60 font-normal">{enTotal.toLocaleString()} EN</span>}
+              <tr key={rowKey} className="border-t border-border/20">
+                <td className="py-2 pr-3 align-top">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-foreground/80 leading-tight">{label}</span>
+                    {enTotal > 0 && (
+                      <span className="text-[9px] font-mono text-muted-foreground/60">{enTotal.toLocaleString()} EN</span>
+                    )}
+                    {/* Row-level "alle ontbrekende talen" button */}
+                    {missingLangs.length > 0 && enTotal > 0 && (
+                      <button
+                        className="flex items-center gap-0.5 text-[9px] font-mono text-primary/60 hover:text-primary disabled:opacity-30 transition-colors mt-0.5"
+                        disabled={anyBusy || rowActive}
+                        onClick={() => onTranslateRow(region, register)}
+                        title={rowActive
+                          ? `Worker voor ${label} is actief`
+                          : `Alle ${missingLangs.length} ontbrekende talen vertalen voor ${label}`}
+                      >
+                        {(rowBusy || rowActive)
+                          ? <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                          : <Play className="w-2.5 h-2.5" />}
+                        <span>Alle talen ({missingLangs.length})</span>
+                      </button>
+                    )}
+                  </div>
                 </td>
                 {TRANSLATION_LANGS.map((lang) => {
                   const cell = rowData[lang] ?? { count: 0, pct: 0 };
@@ -3514,15 +3554,18 @@ function LtqRegisterGrid({
                   const isOrange = cell.pct > 0 && cell.pct < 85;
                   const cellBg = isRed ? "bg-rose-500/5" : "";
                   const barColor = cell.pct >= 85 ? "bg-emerald-500" : cell.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
-                  // Per-register quality score for this cell (falls back to overall)
                   const qualScore = qualByLang[lang]?.(register) ?? null;
                   const qualColor = qualScore === null ? "" :
                     qualScore >= 8.0 ? "text-emerald-700" :
                     qualScore >= 7.0 ? "text-amber-700" : "text-rose-700";
+                  const cellKey = `${rowKey}-${lang}`;
+                  const cellActive = activeSweepers.has(`ltq-translation-${lang}`) || rowActive;
+                  const cellBusy = cellLaunching === cellKey;
+                  const remaining = enTotal > 0 ? Math.max(0, enTotal - cell.count) : 0;
                   return (
-                    <td key={lang} className={`py-2 px-1.5 text-center align-top ${cellBg}`}>
-                      <div className="flex flex-col items-center gap-0.5 min-w-[40px]">
-                        <div className="h-1 w-10 bg-muted rounded-full overflow-hidden">
+                    <td key={lang} className={`py-2 px-1 text-center align-top ${cellBg}`}>
+                      <div className="flex flex-col items-center gap-0.5 min-w-[38px]">
+                        <div className="h-1 w-9 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${barColor} transition-all duration-500`}
                             style={{ width: `${Math.min(100, cell.pct)}%` }} />
                         </div>
@@ -3533,10 +3576,23 @@ function LtqRegisterGrid({
                         {qualScore !== null && (
                           <span
                             className={`text-[8px] tabular-nums leading-none ${qualColor}`}
-                            title={`Kwaliteitsscore (${register === "middle_class" ? "middenklasse" : "elite"}): ${qualScore.toFixed(1)}/10`}
+                            title={`Kwaliteitsscore (${register === "middle_class" ? "middenklasse" : "elite"} / ${lang.toUpperCase()}): ${qualScore.toFixed(1)}/10`}
                           >
                             ⭐{qualScore.toFixed(1)}
                           </span>
+                        )}
+                        {/* Per-cell translate button — only shown when there's work to do */}
+                        {remaining > 0 && (
+                          <button
+                            className="text-[8px] text-primary/50 hover:text-primary disabled:opacity-25 transition-colors mt-0.5"
+                            disabled={anyBusy || cellActive}
+                            onClick={() => onTranslateCell(lang, region, register)}
+                            title={cellActive
+                              ? `Worker voor ${lang.toUpperCase()} / ${label} is actief`
+                              : `${remaining.toLocaleString()} rijen vertalen (${lang.toUpperCase()} / ${label})`}
+                          >
+                            {(cellBusy || cellActive) ? <Loader2 className="w-2 h-2 animate-spin inline" /> : "▶"}
+                          </button>
                         )}
                       </div>
                     </td>
@@ -3633,6 +3689,42 @@ function TranslationHealthTab() {
       showToast(d.message ?? `LTQ [${lang}] launched.`);
     } catch { showToast(`Failed to launch LTQ [${lang}].`); }
     finally { setLtqLaunching(null); }
+  };
+
+  // Row-level launcher: all missing languages for one region × register row
+  const [ltqRowLaunching, setLtqRowLaunching] = useState<string | null>(null);
+  const launchLtqRow = async (region: string, register: string) => {
+    const key = `${region}-${register}`;
+    setLtqRowLaunching(key);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ region, register }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `LTQ ${key} (alle ontbrekende talen) gestart.`);
+    } catch { showToast(`Kon LTQ ${key} niet starten.`); }
+    finally { setLtqRowLaunching(null); }
+  };
+
+  // Cell-level launcher: specific lang × region × register
+  const [ltqCellLaunching, setLtqCellLaunching] = useState<string | null>(null);
+  const launchLtqCell = async (lang: TransLang, region: string, register: string) => {
+    const key = `${region}-${register}-${lang}`;
+    setLtqCellLaunching(key);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang, region, register }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `LTQ ${lang.toUpperCase()} / ${region} ${register} gestart.`);
+    } catch { showToast(`Kon LTQ ${lang}/${region}/${register} niet starten.`); }
+    finally { setLtqCellLaunching(null); }
   };
 
   // Scenario launchers
@@ -3748,10 +3840,11 @@ function TranslationHealthTab() {
     runs.filter((r) => r.finished_at === null && r.status !== "failed").map((r) => r.sweeper)
   );
 
+  // allGreen = every module + lang at 100% (completion truth, not color threshold)
   const allGreen = ltq && scen && compass
-    && ltq.langs.every((l) => l.pct >= 85)
-    && scen.langs.every((l) => l.pct >= 85)
-    && compass.langs.every((l) => l.pct >= 85);
+    && ltq.langs.every((l) => l.pct >= 100)
+    && scen.langs.every((l) => l.pct >= 100)
+    && compass.langs.every((l) => l.pct >= 100);
 
   // ── Weekly cost computation (from worker_runs in last 7 days) ─────────────
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -3876,7 +3969,11 @@ function TranslationHealthTab() {
                 <LtqRegisterGrid
                   ltq={ltq}
                   onTranslateLang={launchLtqLang}
+                  onTranslateRow={launchLtqRow}
+                  onTranslateCell={launchLtqCell}
                   launching={ltqLaunching}
+                  rowLaunching={ltqRowLaunching}
+                  cellLaunching={ltqCellLaunching}
                   activeSweepers={activeSweepers}
                 />
               </CardContent>

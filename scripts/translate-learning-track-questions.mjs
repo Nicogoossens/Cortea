@@ -347,8 +347,12 @@ function parseTranslation(raw, row) {
 // ── Inline quality evaluation ─────────────────────────────────────────────────
 // Evaluates question_text for register compliance. Returns { score, rewritten }.
 // score < 8 → use rewritten version (still within the same pipeline run).
+//
+// THROWS on any failure (API error OR malformed/unparseable evaluator response).
+// Callers must catch and treat the item as failed — never insert on unknown quality.
 async function evaluateQuality(questionText, lang, register) {
   const qualityPrompt = QUALITY_PROMPTS[lang]?.[register];
+  // No prompt for this lang/register combination: skip quality check (not an error).
   if (!qualityPrompt) return { score: 10, rewritten: questionText };
 
   const registerLabel = register === "elite" ? "elite register" : "middle-class register";
@@ -362,13 +366,16 @@ async function evaluateQuality(questionText, lang, register) {
 
   const raw = await callAnthropic(qualityPrompt, userMsg, 512);
   const clean = raw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
+  let p;
   try {
-    const p = JSON.parse(clean);
-    if (typeof p.score === "number" && typeof p.rewritten === "string") {
-      return { score: p.score, rewritten: p.rewritten || questionText };
-    }
-  } catch { /* fall through */ }
-  return { score: 10, rewritten: questionText };
+    p = JSON.parse(clean);
+  } catch (e) {
+    throw new Error(`quality-eval: JSON parse failed — ${e.message}. Raw (first 200): ${clean.substring(0, 200)}`);
+  }
+  if (typeof p.score !== "number" || typeof p.rewritten !== "string") {
+    throw new Error(`quality-eval: unexpected response shape — score=${p.score} rewritten=${typeof p.rewritten}`);
+  }
+  return { score: p.score, rewritten: p.rewritten || questionText };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────

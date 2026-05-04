@@ -441,11 +441,15 @@ async function main() {
         continue;
       }
 
-      // Inline quality evaluation on situation field (key user-facing copy)
+      // Inline quality evaluation on situation field (key user-facing copy).
+      // Fail closed: if evaluator response is malformed, skip storing this lang's
+      // translation rather than insert unverified copy.
       let finalSituation = result.content.situation;
       let qualScore = null;
+      let qualEvalFailed = false;
       if (!FLAG_DRY_RUN) {
-        const qPrompt = QUALITY_PROMPTS[lang]?.[row.social_class === "middle_class" ? "middle_class" : "elite"];
+        const register = row.social_class === "middle_class" ? "middle_class" : "elite";
+        const qPrompt = QUALITY_PROMPTS[lang]?.[register];
         if (qPrompt) {
           try {
             const qMsg =
@@ -455,19 +459,34 @@ async function main() {
               `{ "pass": true|false, "score": <1-10>, "rewritten": "<corrected if pass=false; original if pass=true>" }`;
             const qRaw = await callAnthropic(qPrompt, qMsg);
             const qClean = qRaw.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
-            const qParsed = JSON.parse(qClean);
-            qualScore = typeof qParsed.score === "number" ? qParsed.score : null;
-            if (qualScore !== null && qualScore < 8 && typeof qParsed.rewritten === "string" && qParsed.rewritten.trim()) {
+            let qParsed;
+            try {
+              qParsed = JSON.parse(qClean);
+            } catch (parseErr) {
+              throw new Error(`quality-eval JSON parse failed: ${parseErr.message}`);
+            }
+            if (typeof qParsed.score !== "number" || typeof qParsed.rewritten !== "string") {
+              throw new Error(`quality-eval unexpected shape: score=${qParsed.score} rewritten=${typeof qParsed.rewritten}`);
+            }
+            qualScore = qParsed.score;
+            if (qualScore < 8 && qParsed.rewritten.trim()) {
               finalSituation = qParsed.rewritten.trim();
               qualityRewrites++;
               process.stdout.write(`[⚠${qualScore}→rw] `);
-            } else if (qualScore !== null) {
+            } else {
               process.stdout.write(`[✓${qualScore}] `);
             }
-            if (qualScore !== null) { qualScoreSum += qualScore; qualScoreCount++; }
-          } catch { /* quality eval non-blocking */ }
+            qualScoreSum += qualScore; qualScoreCount++;
+          } catch (evalErr) {
+            // Quality eval failed (API error or malformed response) — skip this lang's
+            // translation to avoid storing unverified copy.
+            console.log(`[qual-fail: ${evalErr.message.substring(0, 80)}] — skipping`);
+            failed++;
+            qualEvalFailed = true;
+          }
         }
       }
+      if (qualEvalFailed) continue;
 
       console.log(`OK → "${result.title}"`);
       if (FLAG_VERBOSE) {

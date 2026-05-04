@@ -219,9 +219,9 @@ export default function Onboarding() {
     trackPlanChoice("selected_tier", tier);
 
     if (!priceId) {
-      // Stripe not yet configured — fall back to the membership page so the
-      // user can still see what's on offer instead of getting stuck.
-      navigate("/membership");
+      // Stripe not yet configured — send to signin so they can register/login
+      // and will be shown membership options once authenticated.
+      navigate("/signin?return=/membership");
       return;
     }
 
@@ -234,15 +234,16 @@ export default function Onboarding() {
         body: JSON.stringify({ priceId }),
       });
       if (res.status === 401) {
-        // Not signed in — send them to membership (which will route through auth).
+        // Not signed in — redirect to sign-in, then back to membership after auth.
         trackPlanChoice("skipped_unauth", tier);
-        navigate("/membership");
+        navigate("/signin?return=/membership");
         return;
       }
       const { url } = await res.json();
       if (url) {
         window.location.href = url;
       } else {
+        // Checkout URL missing — go to membership page to retry.
         navigate("/membership");
       }
     } catch {
@@ -564,7 +565,7 @@ export default function Onboarding() {
                 const plan = plans.find((p) => p.tier === tier);
                 const amount = plan?.monthlyAmount ?? null;
                 const currency = plan?.currency ?? "eur";
-                const trialDays = plan?.trialDays ?? 14;
+                const trialDays = plan?.trialDays ?? 60;
                 const isRecommended = tier === recommended;
                 const isLoading = checkingOut === tier;
 

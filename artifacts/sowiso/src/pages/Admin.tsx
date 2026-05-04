@@ -2968,7 +2968,12 @@ const TRANS_LABELS: Record<TransLang, string> = {
 };
 
 interface RegCoverage { count: number; pct: number }
-interface QualityMetrics { avg_score: number; pct_passed: number | null; pct_rewritten: number | null }
+interface QualityMetrics {
+  avg_score: number;
+  pct_passed: number | null;
+  pct_rewritten: number | null;
+  per_register?: Record<string, { avg_score?: number; pct_passed?: number } | unknown> | null;
+}
 interface LangCoverage {
   lang: TransLang; count: number; pct: number; last_run?: unknown;
   by_register?: Record<string, RegCoverage>;
@@ -3028,7 +3033,8 @@ function formatRelative(ts: string | number | null | undefined): string {
 }
 
 function CovBar({ pct, count }: { pct: number; count: number }) {
-  const color = pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+  // Thresholds: ≥85% green, 50–84% amber, <50% red
+  const color = pct >= 85 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
   return (
     <div className="space-y-0.5">
       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -3102,13 +3108,25 @@ interface CoverageCardProps {
   launching: string | null;
   lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
   hideAllButton?: boolean;
+  activeSweepers?: Set<string>;
 }
 function CoverageCard({
-  title, description, actionLabel, total, langs, showRegisterBars,
+  title, description, actionLabel, total, langs, sweeper, showRegisterBars,
   costPerItem, itemsPerMinute,
   onTranslateAll, onTranslateLang, launching, lastRun, hideAllButton,
+  activeSweepers,
 }: CoverageCardProps) {
-  const allDone = langs.every((l) => l.pct >= 100);
+  // Derive active state from DB-sourced worker_runs (finished_at === null)
+  // sweeper = "ltq-translation" → checks "ltq-translation" (orchestrator) or "ltq-translation-nl" etc.
+  const isModuleActive = activeSweepers
+    ? [...activeSweepers].some((s) => s === sweeper || s.startsWith(`${sweeper}-`))
+    : false;
+  const isLangActive = (lang: string) =>
+    activeSweepers
+      ? activeSweepers.has(`${sweeper}-${lang}`) || activeSweepers.has(sweeper)
+      : false;
+
+  const allDone = langs.every((l) => l.pct >= 85);
   const totalRemaining = langs.reduce((s, l) => s + Math.max(0, total - l.count), 0);
   const totalEstCost = totalRemaining * costPerItem;
   const totalEstMin  = totalRemaining / itemsPerMinute;
@@ -3145,11 +3163,13 @@ function CoverageCard({
               size="sm"
               variant={allDone ? "outline" : "default"}
               className="font-mono text-xs gap-1.5 shrink-0"
-              disabled={launching !== null}
+              disabled={launching !== null || isModuleActive}
               onClick={onTranslateAll}
-              title={`Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
+              title={isModuleActive
+                ? "Een vertaalworker is momenteel actief voor deze module — wacht tot die klaar is."
+                : `Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
             >
-              {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              {(launching === "all" || isModuleActive) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
               Alle talen vertalen
             </Button>
           )}
@@ -3173,11 +3193,11 @@ function CoverageCard({
                   </div>
                   <button
                     className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors shrink-0"
-                    disabled={launching !== null || remaining === 0}
+                    disabled={launching !== null || isLangActive(l.lang) || remaining === 0}
                     onClick={() => onTranslateLang(l.lang)}
-                    title={tooltip}
+                    title={isLangActive(l.lang) ? `Een vertaalworker voor ${l.lang.toUpperCase()} is actief — wacht tot die klaar is.` : tooltip}
                   >
-                    {launching === l.lang ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
+                    {(launching === l.lang || isLangActive(l.lang)) ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
                   </button>
                 </div>
                 <CovBar pct={l.pct} count={l.count} />
@@ -3419,16 +3439,36 @@ function LtqRegisterGrid({
   ltq,
   onTranslateLang,
   launching,
+  activeSweepers,
 }: {
   ltq: LtqStatus;
   onTranslateLang: (lang: TransLang) => Promise<void>;
   launching: string | null;
+  activeSweepers: Set<string>;
 }) {
   const grid = ltq.region_register_grid ?? {};
   const enGrid = ltq.en_by_region_register ?? {};
+
+  // Build per-lang, per-register quality lookup:
+  // qualByLang[lang][register] = avg_score from metadata.per_register_quality
+  // Falls back to overall avg_score when per_register is unavailable.
   const qualByLang = Object.fromEntries(
-    (ltq.langs ?? []).map((l) => [l.lang, l.quality_metrics])
-  );
+    (ltq.langs ?? []).map((l) => {
+      const perReg = l.quality_metrics?.per_register;
+      const overall = l.quality_metrics?.avg_score ?? null;
+      const getScore = (reg: string): number | null => {
+        if (perReg && typeof perReg === "object") {
+          const entry = (perReg as Record<string, unknown>)[reg];
+          if (entry && typeof entry === "object") {
+            const s = (entry as Record<string, unknown>).avg_score;
+            if (typeof s === "number") return s;
+          }
+        }
+        return overall;
+      };
+      return [l.lang, getScore];
+    })
+  ) as Record<string, (reg: string) => number | null>;
 
   return (
     <div className="overflow-x-auto">
@@ -3436,21 +3476,26 @@ function LtqRegisterGrid({
         <thead>
           <tr>
             <th className="py-1.5 pr-4 text-left font-normal text-muted-foreground text-[10px] uppercase tracking-wide w-32">Register</th>
-            {TRANSLATION_LANGS.map((lang) => (
-              <th key={lang} className="py-1.5 px-2 font-normal text-center">
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-[10px] font-semibold text-foreground/70">{lang.toUpperCase()}</span>
-                  <button
-                    className="text-[9px] text-primary/60 hover:text-primary disabled:opacity-30 transition-colors"
-                    disabled={launching !== null}
-                    onClick={() => onTranslateLang(lang)}
-                    title={`Start LTQ-vertaling voor ${lang.toUpperCase()} (alle regio's, alle registers)`}
-                  >
-                    {launching === lang ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "▶"}
-                  </button>
-                </div>
-              </th>
-            ))}
+            {TRANSLATION_LANGS.map((lang) => {
+              const isActive = activeSweepers.has(`ltq-translation-${lang}`) || activeSweepers.has("ltq-translation");
+              return (
+                <th key={lang} className="py-1.5 px-2 font-normal text-center">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[10px] font-semibold text-foreground/70">{lang.toUpperCase()}</span>
+                    <button
+                      className="text-[9px] text-primary/60 hover:text-primary disabled:opacity-30 transition-colors"
+                      disabled={launching !== null || isActive}
+                      onClick={() => onTranslateLang(lang)}
+                      title={isActive
+                        ? `LTQ-worker voor ${lang.toUpperCase()} is actief`
+                        : `Start LTQ-vertaling voor ${lang.toUpperCase()} (alle regio's, alle registers)`}
+                    >
+                      {(launching === lang || isActive) ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "▶"}
+                    </button>
+                  </div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -3469,7 +3514,11 @@ function LtqRegisterGrid({
                   const isOrange = cell.pct > 0 && cell.pct < 85;
                   const cellBg = isRed ? "bg-rose-500/5" : "";
                   const barColor = cell.pct >= 85 ? "bg-emerald-500" : cell.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
-                  const qualMetrics = qualByLang[lang];
+                  // Per-register quality score for this cell (falls back to overall)
+                  const qualScore = qualByLang[lang]?.(register) ?? null;
+                  const qualColor = qualScore === null ? "" :
+                    qualScore >= 8.0 ? "text-emerald-700" :
+                    qualScore >= 7.0 ? "text-amber-700" : "text-rose-700";
                   return (
                     <td key={lang} className={`py-2 px-1.5 text-center align-top ${cellBg}`}>
                       <div className="flex flex-col items-center gap-0.5 min-w-[40px]">
@@ -3481,12 +3530,12 @@ function LtqRegisterGrid({
                           {cell.count}/{enTotal > 0 ? enTotal : "?"}
                         </span>
                         <span className="tabular-nums text-[9px] text-muted-foreground/60">{cell.pct}%</span>
-                        {qualMetrics && (
+                        {qualScore !== null && (
                           <span
-                            className={`text-[8px] tabular-nums leading-none ${qualMetrics.avg_score >= 8.0 ? "text-emerald-700" : qualMetrics.avg_score >= 7.0 ? "text-amber-700" : "text-rose-700"}`}
-                            title={`Gem. kwaliteitsscore: ${qualMetrics.avg_score.toFixed(1)}/10`}
+                            className={`text-[8px] tabular-nums leading-none ${qualColor}`}
+                            title={`Kwaliteitsscore (${register === "middle_class" ? "middenklasse" : "elite"}): ${qualScore.toFixed(1)}/10`}
                           >
-                            ⭐{qualMetrics.avg_score.toFixed(1)}
+                            ⭐{qualScore.toFixed(1)}
                           </span>
                         )}
                       </div>
@@ -3535,7 +3584,7 @@ function TranslationHealthTab() {
         fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/worker-runs?limit=100`,               { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/worker-runs?limit=50`,                { credentials: "include" }),
       ]);
       if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
       if (scenRes.ok)        setScen(await scenRes.json() as ScenarioStatus);
@@ -3692,10 +3741,17 @@ function TranslationHealthTab() {
     finally { setSeedsLaunching(null); }
   };
 
+  // ── Active-worker detection — derive from DB-backed runs (finished_at === null) ──────
+  // This is the source-of-truth for button disabled state; it persists across 30s auto-refreshes
+  // until the worker actually finishes, unlike local `launching` state which resets after POST.
+  const activeSweepers = new Set(
+    runs.filter((r) => r.finished_at === null && r.status !== "failed").map((r) => r.sweeper)
+  );
+
   const allGreen = ltq && scen && compass
-    && ltq.langs.every((l) => l.pct >= 100)
-    && scen.langs.every((l) => l.pct >= 100)
-    && compass.langs.every((l) => l.pct >= 100);
+    && ltq.langs.every((l) => l.pct >= 85)
+    && scen.langs.every((l) => l.pct >= 85)
+    && compass.langs.every((l) => l.pct >= 85);
 
   // ── Weekly cost computation (from worker_runs in last 7 days) ─────────────
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -3708,11 +3764,18 @@ function TranslationHealthTab() {
   );
   const weekCost = weekRuns.reduce((s, r) => s + (r.estimated_usd ?? 0), 0);
 
-  // ── Backlog cost estimate (remaining × rate per item) ─────────────────────
-  const ltqBacklog   = ltq    ? Math.max(0, ltq.en_total   - Math.min(...ltq.langs.map((l) => l.count)))   : 0;
-  const scenBacklog  = scen   ? Math.max(0, scen.total      - Math.min(...scen.langs.map((l) => l.count)))  : 0;
-  const compassBacklog = compass ? Math.max(0, compass.total - Math.min(...compass.langs.map((l) => l.count))) : 0;
-  const backlogCost  = ltqBacklog * 0.006 + scenBacklog * 0.005 + compassBacklog * 0.011;
+  // ── Backlog cost estimate — sum remaining work across ALL 9 target langs per module ──
+  // Each language that isn't fully translated contributes its remaining items × rate.
+  const ltqBacklog = ltq
+    ? ltq.langs.reduce((s, l) => s + Math.max(0, ltq.en_total - l.count), 0)
+    : 0;
+  const scenBacklog = scen
+    ? scen.langs.reduce((s, l) => s + Math.max(0, scen.total - l.count), 0)
+    : 0;
+  const compassBacklog = compass
+    ? compass.langs.reduce((s, l) => s + Math.max(0, compass.total - l.count), 0)
+    : 0;
+  const backlogCost = ltqBacklog * 0.006 + scenBacklog * 0.005 + compassBacklog * 0.011;
 
   return (
     <div className="space-y-6">
@@ -3795,6 +3858,7 @@ function TranslationHealthTab() {
             onTranslateAll={launchLtqAll}
             onTranslateLang={launchLtqLang}
             launching={ltqLaunching}
+            activeSweepers={activeSweepers}
           />
           {/* Region × Register grid — only shown when grid data is available */}
           {ltq.region_register_grid && Object.keys(ltq.region_register_grid).length > 0 && (
@@ -3805,7 +3869,7 @@ function TranslationHealthTab() {
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Vertaaldekking per regio-register combinatie. Klik ▶ per taal om een run te starten.
-                  Kwaliteitsscore (⭐) toont het gemiddelde van de laatste run per taal.
+                  Kwaliteitsscore (⭐) toont het gemiddelde van de laatste run per register per taal.
                 </p>
               </CardHeader>
               <CardContent>
@@ -3813,6 +3877,7 @@ function TranslationHealthTab() {
                   ltq={ltq}
                   onTranslateLang={launchLtqLang}
                   launching={ltqLaunching}
+                  activeSweepers={activeSweepers}
                 />
               </CardContent>
             </Card>
@@ -3835,6 +3900,7 @@ function TranslationHealthTab() {
           onTranslateLang={launchScenLang}
           launching={scenLaunching}
           lastRun={scen.last_run ?? null}
+          activeSweepers={activeSweepers}
         />
       )}
 
@@ -3853,6 +3919,7 @@ function TranslationHealthTab() {
           onTranslateLang={launchCompassLang}
           launching={compassLaunching}
           lastRun={compass.last_run ?? null}
+          activeSweepers={activeSweepers}
         />
       )}
 
@@ -3882,6 +3949,7 @@ function TranslationHealthTab() {
           launching={seedTransLaunching}
           lastRun={counselSeedTrans.last_run ?? null}
           hideAllButton
+          activeSweepers={activeSweepers}
         />
       )}
 
@@ -3898,8 +3966,8 @@ function TranslationHealthTab() {
 
       {/* Legend */}
       <div className="flex items-center gap-4 text-[10px] font-mono text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" />100%</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block" />≥50%</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" />≥85%</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500 inline-block" />50–84%</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" />&lt;50%</span>
         <span className="ml-auto">Auto-refresh every 30s</span>
       </div>

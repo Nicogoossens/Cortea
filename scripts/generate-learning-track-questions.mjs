@@ -37,6 +37,7 @@ import {
   checkDailyBudget,
   recordWorkerRun,
   closeWorkerCostPool,
+  initWorkerCostPool,
 } from "./lib/worker-cost.mjs";
 import { getDbUrl } from "./lib/db-target.mjs";
 
@@ -65,6 +66,9 @@ const FLAG_BATCH    = flag("--batch-size") ? parseInt(flag("--batch-size"), 10) 
 const FLAG_LANG     = flag("--lang") ?? "en";
 const FLAG_DRY_RUN  = args.includes("--dry-run");
 const FLAG_TARGET   = flag("--target") ?? "dev";
+
+// Direct worker_runs writes to the same DB as content writes (dev or prod).
+initWorkerCostPool(getDbUrl(FLAG_TARGET));
 
 if (!FLAG_REGION) {
   console.error("Error: --region is required (e.g. --region AE)");

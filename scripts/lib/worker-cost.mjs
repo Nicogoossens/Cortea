@@ -40,12 +40,30 @@ export function extractUsage(data) {
 }
 
 let sharedPool = null;
+let _poolUrl = null;
+
+/**
+ * Override the DB URL used for worker_runs writes.
+ * Worker scripts call this once at startup with getDbUrl(FLAG_TARGET) so that
+ * run logging follows the same environment as content writes (dev or prod).
+ * Must be called before the first startWorkerRun / recordWorkerRun / checkDailyBudget.
+ */
+export function initWorkerCostPool(url) {
+  if (sharedPool) {
+    // Close the old pool so getPool() re-creates with the new URL.
+    sharedPool.end().catch(() => {});
+    sharedPool = null;
+  }
+  _poolUrl = url;
+}
+
 function getPool() {
   if (!sharedPool) {
-    if (!process.env.DATABASE_URL) {
+    const url = _poolUrl ?? process.env.DATABASE_URL;
+    if (!url) {
       throw new Error("worker-cost: DATABASE_URL not set");
     }
-    sharedPool = new Pool({ connectionString: process.env.DATABASE_URL });
+    sharedPool = new Pool({ connectionString: url });
   }
   return sharedPool;
 }

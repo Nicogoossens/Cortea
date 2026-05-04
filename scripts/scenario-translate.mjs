@@ -48,6 +48,7 @@ import {
   startWorkerRun,
   recordWorkerRun,
   closeWorkerCostPool,
+  initWorkerCostPool,
 } from "./lib/worker-cost.mjs";
 import { getDbUrl } from "./lib/db-target.mjs";
 
@@ -76,6 +77,9 @@ const FLAG_DRY_RUN  = args.includes("--dry-run");
 const FLAG_VERBOSE  = args.includes("--verbose");
 const FLAG_FORCE    = args.includes("--force");
 const FLAG_TARGET   = args.includes("--target") ? args[args.indexOf("--target") + 1] : "dev";
+
+// Direct worker_runs writes to the same DB as content writes (dev or prod).
+initWorkerCostPool(getDbUrl(FLAG_TARGET));
 
 // ── Supported target languages ─────────────────────────────────────────────────
 const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];

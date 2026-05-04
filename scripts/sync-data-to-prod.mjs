@@ -88,28 +88,31 @@ async function count(pool, table) {
 }
 
 async function syncTable({ name, conflict_col, order_col }) {
-  console.log(`\n  ── ${name} ─────────────────────────────────────────────`);
+  console.log(`\n  ── ${name} ${"─".repeat(Math.max(0, 50 - name.length))}`);
 
   const devCount = await count(devPool, name);
   console.log(`     Dev rows  : ${fmt(devCount)}`);
   if (devCount === 0) {
     console.log("     Skipping  : no rows in dev.");
-    return { table: name, inserted: 0, skipped: devCount };
+    return { table: name, inserted: 0, updated: 0, skipped: 0 };
   }
 
   // Fetch column list from dev
   const columns = await getColumns(devPool, name);
   if (!columns.includes(conflict_col)) {
     console.error(`     Error: conflict column "${conflict_col}" not found in ${name}.`);
-    return { table: name, inserted: 0, skipped: devCount };
+    return { table: name, inserted: 0, updated: 0, skipped: 0 };
   }
 
-  // Build the upsert template (ON CONFLICT DO NOTHING — safe for initial sync)
-  const colList   = columns.map((c) => `"${c}"`).join(", ");
-  const placeholders = (offset) => columns.map((_, i) => `$${offset + i + 1}`).join(", ");
+  // Non-conflict columns for the DO UPDATE SET clause
+  const updateCols = columns.filter((c) => c !== conflict_col);
 
-  let offset  = 0;
-  let total   = 0;
+  const colList   = columns.map((c) => `"${c}"`).join(", ");
+  const setClause = updateCols.map((c) => `"${c}" = EXCLUDED."${c}"`).join(", ");
+
+  let offset   = 0;
+  let inserted = 0;
+  let updated  = 0;
 
   while (offset < devCount) {
     const { rows } = await devPool.query(
@@ -119,34 +122,50 @@ async function syncTable({ name, conflict_col, order_col }) {
     if (rows.length === 0) break;
 
     if (FLAG_DRY) {
-      total   += rows.length;
-      offset  += rows.length;
+      inserted += rows.length; // treat all as would-be inserts in dry-run
+      offset   += rows.length;
       continue;
     }
 
-    // Build a multi-row INSERT for this batch
-    const valueClauses = rows.map((_, rowIdx) => `(${placeholders(rowIdx * columns.length)})`);
-    const flatValues   = rows.flatMap((row) => columns.map((c) => row[c] ?? null));
+    // Build multi-row INSERT with DO UPDATE; use RETURNING to distinguish inserts vs updates.
+    // xmax = 0 → newly inserted row; xmax != 0 → updated (conflict resolved with DO UPDATE).
+    const valueClauses = rows.map((_, rowIdx) => {
+      const start = rowIdx * columns.length;
+      const params = columns.map((_, ci) => `$${start + ci + 1}`).join(", ");
+      return `(${params})`;
+    });
+    const flatValues = rows.flatMap((row) => columns.map((c) => row[c] ?? null));
 
     const sql =
       `INSERT INTO "${name}" (${colList}) VALUES ${valueClauses.join(",")} ` +
-      `ON CONFLICT ("${conflict_col}") DO NOTHING`;
+      `ON CONFLICT ("${conflict_col}") DO UPDATE SET ${setClause} ` +
+      `RETURNING (xmax::bigint = 0) AS was_inserted`;
 
     const result = await prodPool.query(sql, flatValues);
-    total  += result.rowCount ?? 0;
-    offset += rows.length;
+    for (const row of result.rows) {
+      if (row.was_inserted) inserted++;
+      else updated++;
+    }
 
-    process.stdout.write(`\r     Upserted  : ${fmt(total)} / ${fmt(devCount)}`);
+    offset += rows.length;
+    const processed = offset < devCount ? offset : devCount;
+    process.stdout.write(
+      `\r     Progress  : ${fmt(processed)} / ${fmt(devCount)} (${fmt(inserted)} new, ${fmt(updated)} updated)`,
+    );
   }
 
   if (!FLAG_DRY) {
     process.stdout.write("\n");
-    console.log(`     Done      : ${fmt(total)} rows upserted (${fmt(devCount - total)} skipped / already in prod).`);
+    const skipped = devCount - inserted - updated;
+    console.log(
+      `     Done      : ${fmt(inserted)} inserted, ${fmt(updated)} updated` +
+      (skipped > 0 ? `, ${fmt(skipped)} unchanged` : "") + ".",
+    );
   } else {
-    console.log(`     Dry-run   : would upsert ${fmt(devCount)} rows.`);
+    console.log(`     Dry-run   : would process ${fmt(devCount)} rows.`);
   }
 
-  return { table: name, inserted: total, total: devCount };
+  return { table: name, inserted, updated, skipped: devCount - inserted - updated };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -177,13 +196,21 @@ async function main() {
 
   const elapsed = ((Date.now() - startedAt) / 1000).toFixed(1);
   const totalInserted = results.reduce((s, r) => s + (r.inserted ?? 0), 0);
+  const totalUpdated  = results.reduce((s, r) => s + (r.updated  ?? 0), 0);
 
   console.log(`\n  ── Samenvatting ${"─".repeat(42)}`);
   for (const r of results) {
-    console.log(`     ${r.table.padEnd(32)} ${fmt(r.inserted ?? 0).padStart(8)} rijen`);
+    const detail = FLAG_DRY
+      ? `${fmt(r.inserted)} rijen`
+      : `${fmt(r.inserted)} nieuw, ${fmt(r.updated)} bijgewerkt`;
+    console.log(`     ${r.table.padEnd(32)} ${detail}`);
   }
   console.log(`  ${"─".repeat(55)}`);
-  console.log(`     Totaal${" ".repeat(24)} ${fmt(totalInserted).padStart(8)} rijen`);
+  if (FLAG_DRY) {
+    console.log(`     Totaal${" ".repeat(24)} ${fmt(totalInserted)} rijen`);
+  } else {
+    console.log(`     Totaal${" ".repeat(14)} ${fmt(totalInserted)} nieuw, ${fmt(totalUpdated)} bijgewerkt`);
+  }
   console.log(`     Tijd   : ${elapsed}s\n`);
 
   if (FLAG_DRY) {

@@ -38,6 +38,7 @@ const FLAG_REGISTER  = flagStr("--register");
 const FLAG_LIMIT     = flagStr("--limit");
 const FLAG_DRY       = flagBool("--dry-run");
 const FLAG_NO_QUAL   = flagBool("--no-quality");
+const FLAG_TARGET    = flagStr("--target") ?? "dev";
 
 const ALL_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"];
 const TARGET_LANGS = FLAG_LANGS ? FLAG_LANGS.split(",").map(l => l.trim()) : ALL_LANGS;
@@ -45,11 +46,12 @@ const TARGET_LANGS = FLAG_LANGS ? FLAG_LANGS.split(",").map(l => l.trim()) : ALL
 // Build passthrough args for each child process
 function buildChildArgs(lang) {
   const childArgs = ["scripts/translate-learning-track-questions.mjs", "--lang", lang];
-  if (FLAG_REGION)   childArgs.push("--region",   FLAG_REGION);
-  if (FLAG_REGISTER) childArgs.push("--register", FLAG_REGISTER);
-  if (FLAG_LIMIT)    childArgs.push("--limit",    FLAG_LIMIT);
-  if (FLAG_DRY)      childArgs.push("--dry-run");
-  if (FLAG_NO_QUAL)  childArgs.push("--no-quality");
+  if (FLAG_REGION)          childArgs.push("--region",   FLAG_REGION);
+  if (FLAG_REGISTER)        childArgs.push("--register", FLAG_REGISTER);
+  if (FLAG_LIMIT)           childArgs.push("--limit",    FLAG_LIMIT);
+  if (FLAG_DRY)             childArgs.push("--dry-run");
+  if (FLAG_NO_QUAL)         childArgs.push("--no-quality");
+  if (FLAG_TARGET === "prod") childArgs.push("--target", "prod");
   return childArgs;
 }
 
@@ -103,8 +105,9 @@ async function main() {
   if (FLAG_REGION)   console.log(`Region filter    : ${FLAG_REGION}`);
   if (FLAG_REGISTER) console.log(`Register filter  : ${FLAG_REGISTER}`);
   if (FLAG_LIMIT)    console.log(`Limit per lang   : ${FLAG_LIMIT}`);
-  if (FLAG_DRY)      console.log("Mode             : DRY-RUN");
-  if (FLAG_NO_QUAL)  console.log("Quality check    : DISABLED");
+  if (FLAG_DRY)             console.log("Mode             : DRY-RUN");
+  if (FLAG_NO_QUAL)         console.log("Quality check    : DISABLED");
+  if (FLAG_TARGET === "prod") console.log("Target DB        : ⚠ PRODUCTION");
   console.log("═".repeat(70));
 
   const results = await runInGroups(TARGET_LANGS, Math.max(1, FLAG_PARALLEL));

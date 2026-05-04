@@ -45,6 +45,7 @@ import { fileURLToPath } from "url";
 import { jsonrepair } from "jsonrepair";
 import {
   checkDailyBudget,
+  startWorkerRun,
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
@@ -333,6 +334,13 @@ function parseTranslation(raw, scenario) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 async function main() {
   const runStartedAt = new Date();
+
+  // Insert a "running" row immediately so active-run detection works in the UI.
+  await startWorkerRun({
+    sweeper: SWEEPER_NAME,
+    metadata: { lang: FLAG_LANG ?? null },
+  });
+
   console.log("SOWISO Scenario Translation Worker");
   console.log(`Mode:    ${FLAG_DRY_RUN ? "DRY RUN — no database writes" : "LIVE — translations will be saved"}`);
   if (FLAG_LANG) console.log(`Filter:  lang = ${FLAG_LANG}`);
@@ -537,6 +545,7 @@ async function main() {
     model: MODEL,
     status: failed > 0 ? "partial" : "ok",
     metadata: {
+      lang: FLAG_LANG ?? null,
       targetLangs: TARGET_LANGS,
       skipped,
       failed,

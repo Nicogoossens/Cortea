@@ -2383,6 +2383,33 @@ router.get("/admin/onboarding-funnel", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Translation Control Panel: Weekly Cost Aggregate ──────────────────────────
+
+/** GET /admin/translation/week-cost — total AI spend for translation sweepers in the last 7 days.
+ *  Returns { ok, week_usd } — aggregates ALL rows (no pagination limit).
+ */
+router.get("/admin/translation/week-cost", requireAdmin, async (req, res) => {
+  try {
+    const result = await db.execute(
+      sql`SELECT COALESCE(SUM(estimated_usd), 0)::float8 AS usd
+          FROM worker_runs
+          WHERE started_at >= NOW() - INTERVAL '7 days'
+            AND (
+              sweeper LIKE 'ltq-translation%'
+              OR sweeper LIKE 'scenario-translation%'
+              OR sweeper LIKE 'compass-content-translation%'
+              OR sweeper LIKE 'compass-translation%'
+              OR sweeper LIKE 'counsel-seed%'
+            )`
+    );
+    const weekUsd = Number((result.rows[0] as { usd: number }).usd ?? 0);
+    return res.json({ ok: true, week_usd: weekUsd });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: translation/week-cost failed");
+    return res.status(500).json({ error: "Failed to compute weekly translation cost." });
+  }
+});
+
 // ── Translation Control Panel: Worker Runs ─────────────────────────────────────
 
 /** GET /admin/worker-runs — recent worker run history.
@@ -2739,12 +2766,11 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
   }
   const { lang, id, force } = parsed.data;
 
-  // Duplicate-active-run guard
-  const scenSweeper = lang ? `scenario-translation-${lang}` : "scenario-translation";
+  // Duplicate-active-run guard — scenario always writes sweeper = "scenario-translation"
   const scenActiveRows = await db
     .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
     .from(workerRunsTable)
-    .where(sql`sweeper = ${scenSweeper} AND finished_at IS NULL AND status != 'failed'`)
+    .where(sql`sweeper = 'scenario-translation' AND finished_at IS NULL AND status != 'failed'`)
     .limit(1);
   if (scenActiveRows.length > 0) {
     return res.status(409).json({
@@ -2851,12 +2877,11 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   }
   const { lang, region, force } = parsed.data;
 
-  // Duplicate-active-run guard (sweeper = "compass-content-translation" or per-lang variant)
-  const compassSweeper = lang ? `compass-content-translation-${lang}` : "compass-content-translation";
+  // Duplicate-active-run guard — compass always writes sweeper = "compass-content-translation"
   const compassActiveRows = await db
     .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
     .from(workerRunsTable)
-    .where(sql`sweeper = ${compassSweeper} AND finished_at IS NULL AND status != 'failed'`)
+    .where(sql`sweeper = 'compass-content-translation' AND finished_at IS NULL AND status != 'failed'`)
     .limit(1);
   if (compassActiveRows.length > 0) {
     return res.status(409).json({

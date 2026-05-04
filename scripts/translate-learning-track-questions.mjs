@@ -46,6 +46,7 @@ import { fileURLToPath } from "url";
 import { jsonrepair } from "jsonrepair";
 import {
   checkDailyBudget,
+  startWorkerRun,
   recordWorkerRun,
   closeWorkerCostPool,
 } from "./lib/worker-cost.mjs";
@@ -393,6 +394,12 @@ async function evaluateQuality(questionText, lang, register) {
 async function main() {
   const startedAt = new Date();
   const lang = FLAG_LANG;
+
+  // Insert a "running" row immediately so active-run detection works in the UI.
+  await startWorkerRun({
+    sweeper: SWEEPER_NAME,
+    metadata: { lang, region: FLAG_REGION ?? null, register: FLAG_REGISTER ?? null },
+  });
 
   console.log(`LTQ Translator → ${lang.toUpperCase()}  quality=${!FLAG_NO_QUALITY}  mode=${FLAG_DRY ? "DRY-RUN" : "LIVE"}  model=${MODEL}`);
   if (FLAG_REGION)   console.log(`  filter: region   = ${FLAG_REGION}`);

@@ -3409,14 +3409,17 @@ function WorkerRunsLog({ runs }: { runs: WorkerRun[] }) {
                     avgScore >= 8.0 ? "text-emerald-700" :
                     avgScore >= 7.0 ? "text-amber-700" : "text-rose-700";
 
-                  // Extract module / taal / register / regio from sweeper + metadata
+                  // Extract module / taal / register / regio from sweeper + metadata.
+                  // Sweeper suffix is reliable for LTQ (ltq-translation-nl).
+                  // For Scenario/Compass the sweeper is unsuffixed; use metadata.lang.
+                  const metaLang = typeof meta.lang === "string" ? meta.lang.toUpperCase() : null;
                   const swLang = r.sweeper.startsWith("ltq-translation-")
                     ? r.sweeper.replace("ltq-translation-", "").toUpperCase()
                     : r.sweeper.startsWith("scenario-translation-")
                     ? r.sweeper.replace("scenario-translation-", "").toUpperCase()
                     : r.sweeper.startsWith("compass-content-translation-")
                     ? r.sweeper.replace("compass-content-translation-", "").toUpperCase()
-                    : null;
+                    : metaLang;
                   const moduleName = r.sweeper.startsWith("ltq-translation") ? "LTQ"
                     : r.sweeper.startsWith("scenario-translation") ? "Scenario"
                     : r.sweeper.startsWith("compass-content-translation") || r.sweeper.startsWith("compass-translation") ? "Compass"
@@ -3663,6 +3666,8 @@ function TranslationHealthTab() {
   const [loading, setLoading]     = useState(false);
   const [err, setErr]             = useState<string | null>(null);
 
+  const [weekCostUsd, setWeekCostUsd]           = useState<number | null>(null);
+
   const [ltqLaunching, setLtqLaunching]         = useState<string | null>(null);
   const [scenLaunching, setScenLaunching]       = useState<string | null>(null);
   const [compassLaunching, setCompassLaunching] = useState<string | null>(null);
@@ -3679,13 +3684,14 @@ function TranslationHealthTab() {
     setLoading(true);
     setErr(null);
     try {
-      const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes] = await Promise.all([
+      const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes, weekCostRes] = await Promise.all([
         fetch(`${API_BASE}/api/admin/ltq/translation-status`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/scenarios/translation-status`,        { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
         fetch(`${API_BASE}/api/admin/worker-runs?limit=50`,                { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/translation/week-cost`,               { credentials: "include" }),
       ]);
       if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
       if (scenRes.ok)        setScen(await scenRes.json() as ScenarioStatus);
@@ -3693,6 +3699,7 @@ function TranslationHealthTab() {
       if (seedsRes.ok)       setCounselSeeds(await seedsRes.json() as CounselSeedCoverageStatus);
       if (seedsTransRes.ok)  setCounselSeedTrans(await seedsTransRes.json() as CounselSeedTransStatus);
       if (runsRes.ok)        setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
+      if (weekCostRes.ok)    setWeekCostUsd(((await weekCostRes.json()) as { week_usd: number }).week_usd);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -3891,17 +3898,8 @@ function TranslationHealthTab() {
     && scen.langs.every((l) => l.pct >= 100)
     && compass.langs.every((l) => l.pct >= 100);
 
-  // ── Weekly cost computation (from worker_runs in last 7 days) ─────────────
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const weekRuns = runs.filter((r) =>
-    new Date(r.started_at).getTime() >= sevenDaysAgo &&
-    (r.sweeper.startsWith("ltq-translation") ||
-     r.sweeper === "scenario-translation" ||
-     r.sweeper.startsWith("compass-content-translation") ||
-     r.sweeper === "compass-translation" ||
-     r.sweeper.startsWith("counsel-seed"))
-  );
-  const weekCost = weekRuns.reduce((s, r) => s + (r.estimated_usd ?? 0), 0);
+  // ── Weekly cost — comes from dedicated backend endpoint (no row limit) ──────
+  const weekCost = weekCostUsd ?? 0;
 
   // ── Backlog cost estimate — sum remaining work across ALL 9 target langs per module ──
   // Each language that isn't fully translated contributes its remaining items × rate.

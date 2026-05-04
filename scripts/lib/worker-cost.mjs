@@ -88,6 +88,31 @@ export async function checkDailyBudget(sweeper) {
   return { over: spent >= budget, spent, budget };
 }
 
+/**
+ * Insert a "started" row into worker_runs with finished_at = NULL.
+ * Call this at the very start of a worker script so active-run detection works.
+ * Returns the inserted row id (or null on error).
+ */
+export async function startWorkerRun({ sweeper, metadata }) {
+  const pool = getPool();
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO worker_runs
+         (sweeper, started_at, items_processed, input_tokens, output_tokens,
+          estimated_usd, model, status, metadata)
+       VALUES ($1, NOW(), 0, 0, 0, 0, $2, 'running', $3)
+       RETURNING id`,
+      [sweeper, DEFAULT_MODEL, metadata ? JSON.stringify(metadata) : null],
+    );
+    return rows[0]?.id ?? null;
+  } catch (err) {
+    process.stderr.write(
+      `[worker-cost] startWorkerRun failed for ${sweeper}: ${err.message}\n`,
+    );
+    return null;
+  }
+}
+
 export async function recordWorkerRun({
   sweeper,
   startedAt,
@@ -104,14 +129,29 @@ export async function recordWorkerRun({
   const usd = estimateUsd(m, inputTokens, outputTokens);
   const pool = getPool();
   try {
-    await pool.query(
-      `INSERT INTO worker_runs
-         (sweeper, started_at, finished_at, elapsed_ms, items_processed,
-          input_tokens, output_tokens, estimated_usd, model, status, metadata)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+    // Try to UPDATE an existing open "running" row for this sweeper first.
+    // startWorkerRun() inserts these at launch time with finished_at = NULL.
+    // PostgreSQL UPDATE doesn't support ORDER BY/LIMIT, so use a subquery.
+    const { rowCount } = await pool.query(
+      `UPDATE worker_runs
+          SET finished_at    = $1,
+              elapsed_ms     = $2,
+              items_processed= $3,
+              input_tokens   = $4,
+              output_tokens  = $5,
+              estimated_usd  = $6,
+              model          = $7,
+              status         = $8,
+              metadata       = COALESCE($9::jsonb, metadata)
+        WHERE id = (
+          SELECT id FROM worker_runs
+           WHERE sweeper = $10
+             AND finished_at IS NULL
+             AND status = 'running'
+           ORDER BY started_at DESC
+           LIMIT 1
+        )`,
       [
-        sweeper,
-        new Date(startedAt),
         finishedAt,
         elapsedMs,
         itemsProcessed,
@@ -121,11 +161,34 @@ export async function recordWorkerRun({
         m,
         status,
         metadata ? JSON.stringify(metadata) : null,
+        sweeper,
       ],
     );
+    // Fall back to INSERT if no open row was found.
+    if (!rowCount || rowCount === 0) {
+      await pool.query(
+        `INSERT INTO worker_runs
+           (sweeper, started_at, finished_at, elapsed_ms, items_processed,
+            input_tokens, output_tokens, estimated_usd, model, status, metadata)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [
+          sweeper,
+          new Date(startedAt),
+          finishedAt,
+          elapsedMs,
+          itemsProcessed,
+          inputTokens,
+          outputTokens,
+          usd,
+          m,
+          status,
+          metadata ? JSON.stringify(metadata) : null,
+        ],
+      );
+    }
   } catch (err) {
     process.stderr.write(
-      `[worker-cost] failed to insert worker_runs row for ${sweeper}: ${err.message}\n`,
+      `[worker-cost] failed to record worker_runs row for ${sweeper}: ${err.message}\n`,
     );
   }
   // Structured single-line summary so the parent sweeper's stdout pipe can

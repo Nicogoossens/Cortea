@@ -18,10 +18,6 @@
  *   DATABASE_URL=<postgres-url> node scripts/fix-stale-sessions-lang-mismatch.mjs
  *
  * Safe to run multiple times (idempotent: only touches rows still open).
- *
- * Status: EXECUTED on 2026-05-04 against development DB — 1 row closed (id=12,
- * region=BE, started_at=2026-05-03). Production DB should be checked and this
- * script re-run against it if needed.
  */
 
 import pg from "pg";

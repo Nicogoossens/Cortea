@@ -58,7 +58,12 @@ const ALL_TABLES = [
   },
   { name: "badges",                   conflict_col: "slug",          order_col: "slug" },
   { name: "counsel_region_seeds",     conflict_col: "id",            order_col: "id" },
-  { name: "translations",             conflict_col: "id",            order_col: "id" },
+  {
+    name: "translations",
+    conflict_cols: ["language_code", "key"], // unique index, not a named constraint
+    no_update_cols: ["id"],
+    order_col: "id",
+  },
   // LTQ last — largest table, depends on nothing
   { name: "learning_track_questions", conflict_col: "question_hash", order_col: "id" },
 ];
@@ -100,7 +105,7 @@ async function count(pool, table) {
   return Number(rows[0]?.n ?? 0);
 }
 
-async function syncTable({ name, conflict_col, conflict_constraint, no_update_cols, order_col }) {
+async function syncTable({ name, conflict_col, conflict_cols, conflict_constraint, no_update_cols, order_col }) {
   console.log(`\n  ── ${name} ${"─".repeat(Math.max(0, 50 - name.length))}`);
 
   const devCount = await count(devPool, name);
@@ -120,11 +125,14 @@ async function syncTable({ name, conflict_col, conflict_constraint, no_update_co
   // Build the ON CONFLICT target clause
   const conflictTarget = conflict_constraint
     ? `ON CONSTRAINT "${conflict_constraint}"`
-    : `("${conflict_col}")`;
+    : conflict_cols
+      ? `(${conflict_cols.map((c) => `"${c}"`).join(", ")})`
+      : `("${conflict_col}")`;
 
-  // Columns to skip in the SET clause: the single conflict col (if any) + explicit no_update_cols
+  // Columns to skip in the SET clause: conflict col(s) + explicit no_update_cols
   const skipSet = new Set([
-    ...(conflict_col ? [conflict_col] : []),
+    ...(conflict_col  ? [conflict_col]  : []),
+    ...(conflict_cols ?? []),
     ...(no_update_cols ?? []),
   ]);
   const updateCols = columns.filter((c) => !skipSet.has(c));

@@ -14,7 +14,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const NODE = process.execPath;
 
-const LANG_SEQUENCE = ["pt", "nl", "fr", "de", "es", "it", "ar", "ja"];
+const LANG_SEQUENCE = ["pt", "nl", "fr", "de", "es", "it", "ar", "ja", "zh"];
 const BATCH_SIZE = "500";
 
 function run(scriptRelPath, args = []) {
@@ -50,6 +50,9 @@ for (const lang of LANG_SEQUENCE) {
 }
 
 // ── Phase 2: Generate protocols for new countries ──────────────────────────
-run("generate-compass-protocols.mjs", ["--batch-size", "148", "--max-per-region", "5"]);
+run("generate-compass-protocols.mjs", ["--batch-size", "148", "--max-per-region", "8"]);
+
+// ── Phase 3: Ensure scenario zh translations are complete ──────────────────
+run("scenario-translate.mjs", ["--lang", "zh"]);
 
 console.log(`\n✅  All phases complete: ${new Date().toISOString()}`);

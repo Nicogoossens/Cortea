@@ -22,7 +22,6 @@ import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
 import { jsonrepair } from "jsonrepair";
-import { spawn } from "child_process";
 import {
   checkDailyBudget,
   recordWorkerRun,
@@ -366,35 +365,6 @@ async function main() {
   await closeWorkerCostPool();
   await pool.end();
 
-  // ── Auto-chain to next missing language (single-lang mode only) ──────────────
-  // When called with --lang <X>, after completing X, spawn the next language in
-  // the sequence as a detached independent process so the workflow can finish
-  // while the chain continues autonomously.
-  if (FLAG_LANG && !FLAG_DRY_RUN && !FLAG_REGION && !FLAG_ID) {
-    const LANG_SEQUENCE = ["pt", "nl", "fr", "de", "es", "it", "ar", "ja"];
-    const currentIdx = LANG_SEQUENCE.indexOf(FLAG_LANG);
-    const nextLang = LANG_SEQUENCE[currentIdx + 1] ?? null;
-
-    if (nextLang) {
-      console.log(`\n[chain] Spawning next language: ${nextLang}`);
-      const child = spawn(
-        process.execPath,
-        [process.argv[1], "--lang", nextLang, "--batch-size", String(FLAG_BATCH_SIZE)],
-        { detached: true, stdio: "ignore" }
-      );
-      child.unref();
-    } else {
-      // All languages done — spawn the compass protocol generator
-      const genScript = path.resolve(__dirname, "generate-compass-protocols.mjs");
-      console.log("\n[chain] All languages done — spawning Compass Protocol Generator");
-      const gen = spawn(
-        process.execPath,
-        [genScript, "--batch-size", "148", "--max-per-region", "5"],
-        { detached: true, stdio: "ignore" }
-      );
-      gen.unref();
-    }
-  }
 }
 
 main().catch((err) => {

@@ -3193,22 +3193,69 @@ router.get("/admin/counsel-seeds/translation-status", requireAdmin, async (req, 
       langCounts[lang] = Number((r.rows[0] as { n: number })?.n ?? 0);
     }
 
-    const lastRun = await db
-      .select()
-      .from(workerRunsTable)
-      .where(eq(workerRunsTable.sweeper, "counsel-seed-translation"))
-      .orderBy(desc(workerRunsTable.started_at))
-      .limit(1);
+    // Fetch recent worker runs for quality metrics — up to 2 per lang + 2 global
+    type CounselTransRunRow = { sweeper: string; started_at: string; finished_at: string | null; items_processed: number; estimated_usd: number; status: string; metadata?: Record<string, unknown> | null };
+    const allRunRows = await db.execute(
+      sql`SELECT sweeper, started_at, finished_at, items_processed, estimated_usd, status, metadata
+          FROM worker_runs
+          WHERE sweeper = 'counsel-seed-translation'
+             OR sweeper LIKE 'counsel-seed-translation-%'
+          ORDER BY started_at DESC
+          LIMIT 100`
+    );
+    const runByLang: Record<string, CounselTransRunRow> = {};
+    const prevRunByLang: Record<string, CounselTransRunRow> = {};
+    let globalRun: CounselTransRunRow | null = null;
+    let prevGlobalRun: CounselTransRunRow | null = null;
+    for (const r of allRunRows.rows as CounselTransRunRow[]) {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const metaLang = typeof meta.lang === "string" ? meta.lang : null;
+      if (metaLang) {
+        if (!runByLang[metaLang]) runByLang[metaLang] = r;
+        else if (!prevRunByLang[metaLang]) prevRunByLang[metaLang] = r;
+      } else if (!globalRun) {
+        globalRun = r;
+      } else if (!prevGlobalRun) {
+        prevGlobalRun = r;
+      }
+    }
+
+    const extractCounselTransQuality = (row: CounselTransRunRow | null) => {
+      const meta = (row?.metadata ?? {}) as Record<string, unknown>;
+      const score = typeof meta.avg_quality_score === "number" ? meta.avg_quality_score
+        : typeof meta.avg_score === "number" ? meta.avg_score : null;
+      if (score === null) return null;
+      return {
+        avg_score: score,
+        pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
+        pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+      };
+    };
+
+    const globalQuality = extractCounselTransQuality(globalRun);
+    const prevGlobalQuality = extractCounselTransQuality(prevGlobalRun);
+    const lastRun = globalRun ?? (Object.values(runByLang)[0] ?? null);
 
     return res.json({
       ok: true,
       total,
-      langs: COUNSEL_TRANS_LANGS.map((lang) => ({
-        lang,
-        count: langCounts[lang] ?? 0,
-        pct:   total > 0 ? Math.round(((langCounts[lang] ?? 0) / total) * 100) : 0,
-      })),
-      last_run: lastRun[0] ?? null,
+      langs: COUNSEL_TRANS_LANGS.map((lang) => {
+        const langRun = runByLang[lang] ?? null;
+        const prevLangRun = prevRunByLang[lang] ?? null;
+        const quality_metrics = langRun ? extractCounselTransQuality(langRun) : globalQuality;
+        const previous_quality_metrics = langRun
+          ? (prevLangRun ? extractCounselTransQuality(prevLangRun) : globalQuality)
+          : prevGlobalQuality;
+        return {
+          lang,
+          count: langCounts[lang] ?? 0,
+          pct:   total > 0 ? Math.round(((langCounts[lang] ?? 0) / total) * 100) : 0,
+          quality_metrics,
+          previous_quality_metrics,
+          last_run: langRun ?? globalRun ?? null,
+        };
+      }),
+      last_run: lastRun ?? null,
     });
   } catch (err) {
     req.log?.error({ err }, "Admin: counsel-seeds/translation-status failed");

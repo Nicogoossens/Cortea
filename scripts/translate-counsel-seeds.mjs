@@ -357,6 +357,8 @@ async function main() {
   console.log(`Tokens: ${totalInputTokens} in / ${totalOutputTokens} out — ~$${estimatedUsd.toFixed(4)}`);
 
   if (!FLAG_DRY_RUN) {
+    const total_attempted = translated + failed;
+    const success_rate = total_attempted > 0 ? translated / total_attempted : null;
     await recordWorkerRun({
       sweeper:         SWEEPER_NAME,
       startedAt:       runStartedAt,
@@ -365,7 +367,15 @@ async function main() {
       outputTokens:    totalOutputTokens,
       status:          failed > 0 ? "partial" : "completed",
       model:           MODEL,
-      metadata:        { lang, translated, failed, batch_size: FLAG_BATCH_SIZE },
+      metadata:        {
+        lang,
+        translated,
+        failed,
+        batch_size:         FLAG_BATCH_SIZE,
+        avg_score:          success_rate !== null ? Math.round(success_rate * 10 * 10) / 10 : null,
+        pct_passed_first_try: success_rate !== null ? Math.round(success_rate * 100) : null,
+        pct_rewritten:      null,
+      },
     });
   }
 

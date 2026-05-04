@@ -61,6 +61,7 @@ const ALL_TABLES = [
   {
     name: "translations",
     conflict_cols: ["language_code", "key"], // unique index, not a named constraint
+    no_insert_cols: ["id"],   // let prod DB auto-generate IDs; dev IDs may clash
     no_update_cols: ["id"],
     order_col: "id",
   },
@@ -105,7 +106,7 @@ async function count(pool, table) {
   return Number(rows[0]?.n ?? 0);
 }
 
-async function syncTable({ name, conflict_col, conflict_cols, conflict_constraint, no_update_cols, order_col }) {
+async function syncTable({ name, conflict_col, conflict_cols, conflict_constraint, no_insert_cols, no_update_cols, order_col }) {
   console.log(`\n  ── ${name} ${"─".repeat(Math.max(0, 50 - name.length))}`);
 
   const devCount = await count(devPool, name);
@@ -129,15 +130,19 @@ async function syncTable({ name, conflict_col, conflict_cols, conflict_constrain
       ? `(${conflict_cols.map((c) => `"${c}"`).join(", ")})`
       : `("${conflict_col}")`;
 
+  // Columns excluded from INSERT (e.g. serial PKs that prod auto-generates)
+  const skipInsert = new Set(no_insert_cols ?? []);
+  const insertCols = columns.filter((c) => !skipInsert.has(c));
+
   // Columns to skip in the SET clause: conflict col(s) + explicit no_update_cols
   const skipSet = new Set([
     ...(conflict_col  ? [conflict_col]  : []),
     ...(conflict_cols ?? []),
     ...(no_update_cols ?? []),
   ]);
-  const updateCols = columns.filter((c) => !skipSet.has(c));
+  const updateCols = insertCols.filter((c) => !skipSet.has(c));
 
-  const colList   = columns.map((c) => `"${c}"`).join(", ");
+  const colList   = insertCols.map((c) => `"${c}"`).join(", ");
   const setClause = updateCols.map((c) => `"${c}" = EXCLUDED."${c}"`).join(", ");
 
   let offset   = 0;
@@ -160,14 +165,14 @@ async function syncTable({ name, conflict_col, conflict_cols, conflict_constrain
     // Build multi-row INSERT with DO UPDATE; use RETURNING to distinguish inserts vs updates.
     // xmax = 0 → newly inserted row; xmax != 0 → updated (conflict resolved with DO UPDATE).
     const valueClauses = rows.map((_, rowIdx) => {
-      const start = rowIdx * columns.length;
-      const params = columns.map((_, ci) => `$${start + ci + 1}`).join(", ");
+      const start = rowIdx * insertCols.length;
+      const params = insertCols.map((_, ci) => `$${start + ci + 1}`).join(", ");
       return `(${params})`;
     });
     // pg returns JSONB columns as JS objects; re-stringify them so the
     // parameterized query receives a valid JSON string for those columns.
     const flatValues = rows.flatMap((row) =>
-      columns.map((c) => {
+      insertCols.map((c) => {
         const val = row[c] ?? null;
         if (val !== null && typeof val === "object" && !Buffer.isBuffer(val) && !(val instanceof Date)) {
           return JSON.stringify(val);

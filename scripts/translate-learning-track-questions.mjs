@@ -375,7 +375,18 @@ async function evaluateQuality(questionText, lang, register) {
   if (typeof p.score !== "number" || typeof p.rewritten !== "string") {
     throw new Error(`quality-eval: unexpected response shape — score=${p.score} rewritten=${typeof p.rewritten}`);
   }
-  return { score: p.score, rewritten: p.rewritten || questionText };
+  // Hard quality gate: sub-threshold score MUST come with a non-empty rewrite.
+  // Falling back to the original text would store unverified copy — never allowed.
+  if (p.score < 8) {
+    const rw = p.rewritten.trim();
+    if (!rw) {
+      throw new Error(`quality-eval: score ${p.score} < 8 but evaluator returned no rewrite — refusing to store sub-threshold text`);
+    }
+    return { score: p.score, rewritten: rw };
+  }
+  // Score ≥ 8 (passing): rewritten may be empty when evaluator returns the original;
+  // safe to fall back to the source text because quality is confirmed.
+  return { score: p.score, rewritten: p.rewritten.trim() || questionText };
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────

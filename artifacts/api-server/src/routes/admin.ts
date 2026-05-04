@@ -969,9 +969,10 @@ router.post("/admin/content/import", requireAdmin, async (req, res) => {
       ...(ltqTranslationQueued && {
         translation_queued: true,
         // Rough cost estimate: inserted EN questions × 9 target langs × ~$0.008/q
-        // (blended haiku-4-5 rate: translate call + 30%-rewrite quality call, 9 target langs)
+        // 9 = the 8 doeltalen (fr de es pt it ar ja zh) + nl (also a target for new EN imports).
+        // (blended haiku-4-5 rate: translate call + 30%-rewrite quality call)
         translation_estimated_usd: Math.round(inserted * 9 * 0.008 * 100) / 100,
-        translation_note: "LTQ translations into 9 target languages are being generated in the background (2 parallel workers, register-aware prompts + inline quality evaluation). This may take several minutes per language.",
+        translation_note: "LTQ translations into 9 target languages (nl + 8 doeltalen) are being generated in the background (2 parallel workers, register-aware prompts + inline quality evaluation). This may take several minutes per language.",
       }),
     });
   } catch (err) {

@@ -469,8 +469,13 @@ async function main() {
               throw new Error(`quality-eval unexpected shape: score=${qParsed.score} rewritten=${typeof qParsed.rewritten}`);
             }
             qualScore = qParsed.score;
-            if (qualScore < 8 && qParsed.rewritten.trim()) {
-              finalSituation = qParsed.rewritten.trim();
+            if (qualScore < 8) {
+              // Hard quality gate: sub-threshold MUST have a non-empty rewrite.
+              const rw = (qParsed.rewritten || "").trim();
+              if (!rw) {
+                throw new Error(`quality-eval: score ${qualScore} < 8 but no rewrite — refusing to store sub-threshold text`);
+              }
+              finalSituation = rw;
               qualityRewrites++;
               process.stdout.write(`[⚠${qualScore}→rw] `);
             } else {

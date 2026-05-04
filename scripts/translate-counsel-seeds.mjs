@@ -201,11 +201,15 @@ function parseTranslation(raw, originalContent) {
       do_examples:    parsed.do_examples.map(String),
       avoid_examples: parsed.avoid_examples.map(String),
     };
-    // Carry over register_notes if present (translated or original)
+    // register_notes: require the model to translate it when source has it.
+    // If source has register_notes but model omitted/blanked it, return null
+    // so the caller can count this as a partial failure instead of silently
+    // carrying untranslated English through.
     if (typeof parsed.register_notes === "string" && parsed.register_notes.trim()) {
       result.register_notes = parsed.register_notes;
     } else if (originalContent.register_notes) {
-      result.register_notes = originalContent.register_notes;
+      // Model was expected to translate this field but did not.
+      return null;
     }
     return result;
   } catch (e) {

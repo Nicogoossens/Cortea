@@ -2413,8 +2413,13 @@ router.get("/admin/translation/week-cost", requireAdmin, async (req, res) => {
 // ── Translation Control Panel: Worker Runs ─────────────────────────────────────
 
 /** GET /admin/worker-runs — recent worker run history.
- *  ?limit=N  max rows to return (default 50, max 100)
- *  ?sweeper=X  filter to a specific sweeper name prefix (optional)
+ *  ?limit=N     max rows to return (default 50, max 100)
+ *  ?sweeper=X   filter to a specific sweeper name — exact match when ?lang is also provided,
+ *               otherwise prefix match (LIKE sweeper%)
+ *  ?lang=nl     additionally filter by metadata->>'lang' (case-insensitive); used for
+ *               unsuffixed sweepers (scenario-translation, compass-content-translation, etc.)
+ *               that store the target language in metadata rather than in the sweeper name.
+ *  ?active=1    return only currently-running rows (no row limit)
  */
 router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
   try {
@@ -2423,15 +2428,23 @@ router.get("/admin/worker-runs", requireAdmin, async (req, res) => {
       ? Math.min(limitParam, 100) : 50;
     const sweeperFilter = typeof req.query.sweeper === "string" && req.query.sweeper.length > 0
       ? req.query.sweeper : null;
+    const langFilter = typeof req.query.lang === "string" && req.query.lang.length > 0
+      ? req.query.lang.toLowerCase() : null;
     // ?active=1 — return only currently-running rows (finished_at IS NULL), no row limit.
     // Used by the frontend to build activeSweepers independently of the history limit.
     const activeOnly = req.query.active === "1";
 
+    // When ?lang is provided alongside ?sweeper we use an exact sweeper match and add a
+    // metadata lang condition so unsuffixed sweepers return only the relevant language runs.
     const whereClause = activeOnly
-      ? sweeperFilter
+      ? sweeperFilter && langFilter
+        ? sql`sweeper = ${sweeperFilter} AND (LOWER(metadata->>'lang') = ${langFilter} OR LOWER(metadata->>'language') = ${langFilter}) AND finished_at IS NULL AND status = 'running'`
+        : sweeperFilter
         ? sql`sweeper LIKE ${sweeperFilter + "%"} AND finished_at IS NULL AND status = 'running'`
         : sql`finished_at IS NULL AND status = 'running'`
-      : sweeperFilter
+      : sweeperFilter && langFilter
+        ? sql`sweeper = ${sweeperFilter} AND (LOWER(metadata->>'lang') = ${langFilter} OR LOWER(metadata->>'language') = ${langFilter})`
+        : sweeperFilter
         ? sql`sweeper LIKE ${sweeperFilter + "%"}`
         : undefined;
 

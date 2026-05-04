@@ -12,8 +12,11 @@ import {
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
   BookOpen, Cpu, Save, ClipboardList, ThumbsUp, KeyRound, Copy, Check, Plus, Pencil, X,
   Briefcase, BarChart3, Tag, Languages, Vote, Mail, ArrowRight, TrendingUp,
-  Clock, Play, Grid2x2,
+  Clock, Play, Grid2x2, History,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger,
+} from "@/components/ui/dialog";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -3205,8 +3208,41 @@ function CoverageCard({
               <div key={l.lang} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-1">
                   <div className="flex items-center gap-1 min-w-0">
-                    <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
-                    {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} previous={l.previous_quality_metrics} />}
+                    {/* LTQ stores sweeper as "ltq-translation-{lang}" (lang-suffixed).
+                        All other modules store sweeper unsuffixed and put lang in metadata.
+                        The entire badge row (label + quality badge + icon) is the trigger. */}
+                    {sweeper.startsWith("ltq-translation") ? (
+                      <LangRunHistoryModal
+                        sweeper={`${sweeper}-${l.lang}`}
+                        label={`${TRANS_LABELS[l.lang]} · ${sweeper}-${l.lang}`}
+                      >
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity"
+                          title={`Rungeschiedenis voor ${TRANS_LABELS[l.lang]}`}
+                        >
+                          <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                          {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} previous={l.previous_quality_metrics} />}
+                          <History className="w-3 h-3 text-muted-foreground/50" />
+                        </button>
+                      </LangRunHistoryModal>
+                    ) : (
+                      <LangRunHistoryModal
+                        sweeper={sweeper}
+                        langParam={l.lang}
+                        label={`${TRANS_LABELS[l.lang]} · ${sweeper}`}
+                      >
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 cursor-pointer hover:opacity-70 transition-opacity"
+                          title={`Rungeschiedenis voor ${TRANS_LABELS[l.lang]}`}
+                        >
+                          <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
+                          {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} previous={l.previous_quality_metrics} />}
+                          <History className="w-3 h-3 text-muted-foreground/50" />
+                        </button>
+                      </LangRunHistoryModal>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -3395,6 +3431,153 @@ function sweeperLabel(sweeper: string): string {
   if (sweeper === "counsel-seed")             return "Atelier-distillaten";
   if (sweeper === "counsel-seed-translation") return "Atelier-distillaten (Vertaling)";
   return sweeper;
+}
+
+// ── Per-language run history modal ────────────────────────────────────────────
+/**
+ * sweeper: the sweeper name to filter by (exact or prefix)
+ * langParam: when set, adds &lang=<langParam> for metadata-based lang filtering
+ *            (used by unsuffixed sweepers like scenario-translation, compass-content-translation)
+ * label: human-readable label for the modal title
+ * children: trigger element(s); defaults to a small History icon button when omitted
+ */
+function LangRunHistoryModal({
+  sweeper, langParam, label, children,
+}: {
+  sweeper: string; langParam?: string; label: string; children?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [runs, setRuns] = useState<WorkerRun[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const params = new URLSearchParams({ sweeper, limit: "50" });
+      if (langParam) params.set("lang", langParam);
+      const res = await fetch(
+        `${API_BASE}/api/admin/worker-runs?${params.toString()}`,
+        { credentials: "include" },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as { runs: WorkerRun[] };
+      setRuns(data.runs);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, [sweeper, langParam]);
+
+  const handleOpen = (v: boolean) => {
+    setOpen(v);
+    if (v) load();
+  };
+
+  const defaultTrigger = (
+    <button
+      type="button"
+      className="text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+      title={`Rungeschiedenis voor ${label}`}
+      aria-label={`Rungeschiedenis voor ${label}`}
+    >
+      <History className="w-3 h-3" />
+    </button>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogTrigger asChild>
+        {children ?? defaultTrigger}
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-mono text-sm uppercase tracking-widest">
+            Rungeschiedenis — {label}
+          </DialogTitle>
+          <DialogDescription className="text-xs font-mono text-muted-foreground">
+            sweeper: {sweeper} · laatste 50 runs
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading && (
+          <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground font-mono">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Laden…
+          </div>
+        )}
+        {err && (
+          <p className="text-xs font-mono text-rose-600 py-2">{err}</p>
+        )}
+        {!loading && !err && runs.length === 0 && (
+          <p className="text-xs font-mono text-muted-foreground py-4">Geen runs gevonden voor deze sweeper.</p>
+        )}
+        {!loading && runs.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs font-mono">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b border-border/40">
+                  <th className="py-1.5 pr-4 font-normal whitespace-nowrap">tijdstip</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">items</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">kosten</th>
+                  <th className="py-1.5 pr-3 font-normal text-right">kwaliteit</th>
+                  <th className="py-1.5 font-normal">status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((r, idx) => {
+                  const meta = (r.metadata ?? {}) as Record<string, unknown>;
+                  const avgScore = typeof meta.avg_score === "number" ? meta.avg_score
+                    : typeof meta.avg_quality_score === "number" ? meta.avg_quality_score : null;
+
+                  // Trend: compare with next entry (idx+1 = older run since sorted desc)
+                  const prevRun = runs[idx + 1];
+                  const prevMeta = (prevRun?.metadata ?? {}) as Record<string, unknown>;
+                  const prevScore = prevRun
+                    ? typeof prevMeta.avg_score === "number" ? prevMeta.avg_score
+                      : typeof prevMeta.avg_quality_score === "number" ? prevMeta.avg_quality_score : null
+                    : null;
+
+                  const scoreDelta = avgScore !== null && prevScore !== null
+                    ? +(avgScore - prevScore).toFixed(2) : null;
+
+                  const scoreColor = avgScore === null ? "" :
+                    avgScore >= 8.0 ? "text-emerald-700" :
+                    avgScore >= 7.0 ? "text-amber-700" : "text-rose-700";
+
+                  return (
+                    <tr key={r.id} className="border-t border-border/20 hover:bg-muted/20">
+                      <td className="py-1.5 pr-4 text-muted-foreground whitespace-nowrap">
+                        {formatRelative(r.started_at)}
+                      </td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">{r.items_processed}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">${r.estimated_usd.toFixed(3)}</td>
+                      <td className="py-1.5 pr-3 text-right tabular-nums">
+                        {avgScore !== null ? (
+                          <span className={scoreColor}>
+                            ⭐{avgScore.toFixed(1)}
+                            {scoreDelta !== null && Math.abs(scoreDelta) >= 0.05 && (
+                              <span className={scoreDelta > 0 ? "text-emerald-600" : "text-rose-600"}>
+                                {scoreDelta > 0 ? "↑" : "↓"}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="py-1.5"><StatusPill status={r.status} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 // ── Worker Runs Log ───────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 {
-  "id": "1445c396-255c-4a9f-9fa0-5c5b7f4ccfc0",
+  "id": "fb62f89b-82ba-4576-8f47-520a4a783871",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -3457,6 +3457,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "content_i18n": {
+          "name": "content_i18n",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "eval_score": {
           "name": "eval_score",

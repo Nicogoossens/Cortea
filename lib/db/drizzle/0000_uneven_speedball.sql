@@ -483,6 +483,7 @@ CREATE TABLE "counsel_region_seeds" (
 	"region_code" text NOT NULL,
 	"domain" text NOT NULL,
 	"content" jsonb NOT NULL,
+	"content_i18n" jsonb,
 	"eval_score" integer,
 	"eval_notes" text,
 	"status" text DEFAULT 'draft' NOT NULL,

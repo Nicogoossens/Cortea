@@ -2562,12 +2562,17 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
     type QualCell = { avg_score: number; pct_passed: number | null; pct_rewritten: number | null };
 
     const lastRunByLang: Record<string, QualRunRow> = {};
+    const prevRunByLang: Record<string, QualRunRow> = {};
     // gridQuality[region|"__all__"][register|"__all__"][lang] = best (most-specific) quality
     const rawQual: Record<string, Record<string, Record<string, QualCell>>> = {};
 
     for (const r of qualRuns.rows as QualRunRow[]) {
       const lang = r.sweeper.replace("ltq-translation-", "");
-      if (!lastRunByLang[lang]) lastRunByLang[lang] = r;
+      if (!lastRunByLang[lang]) {
+        lastRunByLang[lang] = r;
+      } else if (!prevRunByLang[lang]) {
+        prevRunByLang[lang] = r;
+      }
 
       const meta = (r.metadata ?? {}) as Record<string, unknown>;
       const avgScore = typeof meta.avg_score === "number" ? meta.avg_score : null;
@@ -2620,21 +2625,24 @@ router.get("/admin/ltq/translation-status", requireAdmin, async (req, res) => {
       grid_quality: gridQuality,
       langs: SUPPORTED_LANGS.map((lang) => {
         const run = lastRunByLang[lang];
-        const meta = (run?.metadata ?? {}) as Record<string, unknown>;
-        const quality_metrics =
-          typeof meta.avg_score === "number"
+        const prevRun = prevRunByLang[lang];
+        const extractLtqQuality = (r: QualRunRow | undefined) => {
+          const m = (r?.metadata ?? {}) as Record<string, unknown>;
+          return typeof m.avg_score === "number"
             ? {
-                avg_score: meta.avg_score,
-                pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
-                pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+                avg_score: m.avg_score,
+                pct_passed: typeof m.pct_passed_first_try === "number" ? m.pct_passed_first_try : null,
+                pct_rewritten: typeof m.pct_rewritten === "number" ? m.pct_rewritten : null,
               }
             : null;
+        };
         return {
           lang,
           ...(perLang[lang] ?? { count: 0, pct: 0 }),
           by_register: perLangReg[lang] ?? {},
           last_run: run ?? null,
-          quality_metrics,
+          quality_metrics: extractLtqQuality(run),
+          previous_quality_metrics: extractLtqQuality(prevRun),
         };
       }),
     });
@@ -2779,16 +2787,21 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
           LIMIT 100`
     );
     const runByLang: Record<string, ScenRunRow> = {};
+    const prevRunByLang: Record<string, ScenRunRow> = {};
     let orchestratorRun: ScenRunRow | null = null;
+    let prevOrchestratorRun: ScenRunRow | null = null;
     for (const r of allRunRows.rows as ScenRunRow[]) {
       const meta = (r.metadata ?? {}) as Record<string, unknown>;
       const metaLang = typeof meta.lang === "string" ? meta.lang : null;
       if (metaLang) {
-        // Per-lang run (identified by metadata.lang): keep most recent per lang
+        // Per-lang run (identified by metadata.lang): keep most recent two per lang
         if (!runByLang[metaLang]) runByLang[metaLang] = r;
+        else if (!prevRunByLang[metaLang]) prevRunByLang[metaLang] = r;
       } else if (!orchestratorRun) {
-        // Multi-lang run or orchestrator: keep most recent
+        // Multi-lang run or orchestrator: keep most recent two
         orchestratorRun = r;
+      } else if (!prevOrchestratorRun) {
+        prevOrchestratorRun = r;
       }
     }
     const lastRun = orchestratorRun ?? (Object.values(runByLang)[0] ?? null);
@@ -2805,6 +2818,7 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
       };
     };
     const globalQuality = extractQuality(orchestratorRun);
+    const prevGlobalQuality = extractQuality(prevOrchestratorRun);
 
     return res.json({
       ok: true,
@@ -2812,12 +2826,17 @@ router.get("/admin/scenarios/translation-status", requireAdmin, async (req, res)
       langs: SUPPORTED_LANGS.map((lang) => {
         const n = perLang[lang] ?? 0;
         const langRun = runByLang[lang] ?? null;
+        const prevLangRun = prevRunByLang[lang] ?? null;
         const quality_metrics = langRun ? extractQuality(langRun) : globalQuality;
+        const previous_quality_metrics = langRun
+          ? (prevLangRun ? extractQuality(prevLangRun) : globalQuality)
+          : prevGlobalQuality;
         return {
           lang,
           count: n,
           pct: total > 0 ? Math.round((n / total) * 100) : 0,
           quality_metrics,
+          previous_quality_metrics,
           last_run: langRun ?? orchestratorRun ?? null,
         };
       }),
@@ -2920,21 +2939,62 @@ router.get("/admin/compass/translation-status", requireAdmin, async (req, res) =
       perLang[r.lang] = Number(r.cnt);
     }
 
-    const lastRun = await db
+    const compassRuns = await db
       .select()
       .from(workerRunsTable)
       .where(sql`sweeper = 'compass-content-translation' OR sweeper LIKE 'compass-content-translation-%'`)
       .orderBy(desc(workerRunsTable.started_at))
-      .limit(1);
+      .limit(20);
+
+    type CompassRunRow = { sweeper: string; started_at: string; metadata?: Record<string, unknown> | null; [k: string]: unknown };
+    const compassRunByLang: Record<string, CompassRunRow> = {};
+    const compassPrevRunByLang: Record<string, CompassRunRow> = {};
+    let compassLastRun: CompassRunRow | null = null;
+    let compassPrevLastRun: CompassRunRow | null = null;
+
+    for (const r of compassRuns as CompassRunRow[]) {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const metaLang = typeof meta.lang === "string" ? meta.lang : null;
+      if (metaLang) {
+        if (!compassRunByLang[metaLang]) compassRunByLang[metaLang] = r;
+        else if (!compassPrevRunByLang[metaLang]) compassPrevRunByLang[metaLang] = r;
+      } else if (!compassLastRun) {
+        compassLastRun = r;
+      } else if (!compassPrevLastRun) {
+        compassPrevLastRun = r;
+      }
+    }
+
+    const extractCompassQuality = (row: CompassRunRow | null) => {
+      const meta = (row?.metadata ?? {}) as Record<string, unknown>;
+      const score = typeof meta.avg_quality_score === "number" ? meta.avg_quality_score
+        : typeof meta.avg_score === "number" ? meta.avg_score : null;
+      if (score === null) return null;
+      return {
+        avg_score: score,
+        pct_passed: typeof meta.pct_passed_first_try === "number" ? meta.pct_passed_first_try : null,
+        pct_rewritten: typeof meta.pct_rewritten === "number" ? meta.pct_rewritten : null,
+      };
+    };
 
     return res.json({
       ok: true,
       total,
       langs: SUPPORTED_LANGS.map((lang) => {
         const n = perLang[lang] ?? 0;
-        return { lang, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+        const langRun = compassRunByLang[lang] ?? null;
+        const prevLangRun = compassPrevRunByLang[lang] ?? null;
+        const quality_metrics = langRun ? extractCompassQuality(langRun) : extractCompassQuality(compassLastRun);
+        const previous_quality_metrics = langRun
+          ? (prevLangRun ? extractCompassQuality(prevLangRun) : extractCompassQuality(compassLastRun))
+          : extractCompassQuality(compassPrevLastRun);
+        return {
+          lang, count: n, pct: total > 0 ? Math.round((n / total) * 100) : 0,
+          quality_metrics,
+          previous_quality_metrics,
+        };
       }),
-      last_run: lastRun[0] ?? null,
+      last_run: compassLastRun ?? null,
     });
   } catch (err) {
     req.log?.error({ err }, "Admin: compass/translation-status failed");

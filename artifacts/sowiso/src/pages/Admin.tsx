@@ -2978,6 +2978,7 @@ interface LangCoverage {
   lang: TransLang; count: number; pct: number; last_run?: unknown;
   by_register?: Record<string, RegCoverage>;
   quality_metrics?: QualityMetrics | null;
+  previous_quality_metrics?: QualityMetrics | null;
 }
 
 interface LtqGridCell { count: number; pct: number }
@@ -3045,7 +3046,7 @@ function CovBar({ pct, count }: { pct: number; count: number }) {
   );
 }
 
-function QualityBadge({ metrics }: { metrics: QualityMetrics }) {
+function QualityBadge({ metrics, previous }: { metrics: QualityMetrics; previous?: QualityMetrics | null }) {
   const score = metrics.avg_score;
   // Thresholds: ≥8.0 green, 7.0–7.9 orange, <7.0 red (per task spec)
   const colorClass =
@@ -3054,17 +3055,30 @@ function QualityBadge({ metrics }: { metrics: QualityMetrics }) {
                    "bg-rose-500/15 text-rose-700 border-rose-300/40";
   const passed = metrics.pct_passed != null ? `${Math.round(metrics.pct_passed)}% direct geslaagd` : null;
   const rewritten = metrics.pct_rewritten != null ? `${Math.round(metrics.pct_rewritten)}% herschreven` : null;
+
+  const delta = previous != null ? +(score - previous.avg_score).toFixed(2) : null;
+  const deltaTip = delta != null
+    ? `prev avg ${previous!.avg_score.toFixed(1)} → now ${score.toFixed(1)} (${delta >= 0 ? "+" : ""}${delta.toFixed(1)})`
+    : null;
+
   const tooltip = [
     `avg ${score.toFixed(1)}/10`,
     passed,
     rewritten,
+    deltaTip,
   ].filter(Boolean).join(" · ");
+
   return (
     <span
       title={tooltip}
-      className={`inline-flex items-center px-1 py-0.5 rounded border text-[10px] font-mono tabular-nums cursor-default ${colorClass}`}
+      className={`inline-flex items-center gap-0.5 px-1 py-0.5 rounded border text-[10px] font-mono tabular-nums cursor-default ${colorClass}`}
     >
       {score.toFixed(1)}
+      {delta != null && Math.abs(delta) >= 0.05 && (
+        <span className={delta > 0 ? "text-emerald-600" : "text-rose-600"}>
+          {delta > 0 ? "↑" : "↓"}
+        </span>
+      )}
     </span>
   );
 }
@@ -3191,7 +3205,7 @@ function CoverageCard({
                 <div className="flex items-center justify-between gap-1">
                   <div className="flex items-center gap-1 min-w-0">
                     <span className="text-xs font-mono font-semibold text-foreground/80">{TRANS_LABELS[l.lang]}</span>
-                    {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} />}
+                    {l.quality_metrics && <QualityBadge metrics={l.quality_metrics} previous={l.previous_quality_metrics} />}
                   </div>
                   <button
                     className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors shrink-0"

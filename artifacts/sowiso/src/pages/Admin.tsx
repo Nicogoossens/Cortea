@@ -2998,6 +2998,11 @@ interface CounselSeedCoverageStatus {
   domains: CounselDomainCoverage[];
   last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
 }
+interface CounselSeedTransStatus {
+  ok: boolean; total: number;
+  langs: LangCoverage[];
+  last_run?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
+}
 interface WorkerRun {
   id: number; sweeper: string; started_at: string; finished_at: string | null;
   items_processed: number; estimated_usd: number; status: string;
@@ -3092,11 +3097,12 @@ interface CoverageCardProps {
   onTranslateLang: (lang: TransLang) => Promise<void>;
   launching: string | null;
   lastRun?: { started_at: string; status: string; items_processed: number; estimated_usd: number } | null;
+  hideAllButton?: boolean;
 }
 function CoverageCard({
   title, description, actionLabel, total, langs, showRegisterBars,
   costPerItem, itemsPerMinute,
-  onTranslateAll, onTranslateLang, launching, lastRun,
+  onTranslateAll, onTranslateLang, launching, lastRun, hideAllButton,
 }: CoverageCardProps) {
   const allDone = langs.every((l) => l.pct >= 100);
   const totalRemaining = langs.reduce((s, l) => s + Math.max(0, total - l.count), 0);
@@ -3130,17 +3136,19 @@ function CoverageCard({
               )}
             </p>
           </div>
-          <Button
-            size="sm"
-            variant={allDone ? "outline" : "default"}
-            className="font-mono text-xs gap-1.5 shrink-0"
-            disabled={launching !== null}
-            onClick={onTranslateAll}
-            title={`Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
-          >
-            {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Alle talen vertalen
-          </Button>
+          {!hideAllButton && (
+            <Button
+              size="sm"
+              variant={allDone ? "outline" : "default"}
+              className="font-mono text-xs gap-1.5 shrink-0"
+              disabled={launching !== null}
+              onClick={onTranslateAll}
+              title={`Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
+            >
+              {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Alle talen vertalen
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -3322,7 +3330,8 @@ function sweeperLabel(sweeper: string): string {
   }
   if (sweeper === "scenario-translation") return "Scenario's (alle talen)";
   if (sweeper === "compass-translation")  return "Landenprotocollen";
-  if (sweeper === "counsel-seed")         return "Atelier-distillaten";
+  if (sweeper === "counsel-seed")             return "Atelier-distillaten";
+  if (sweeper === "counsel-seed-translation") return "Atelier-distillaten (Vertaling)";
   return sweeper;
 }
 
@@ -3378,6 +3387,7 @@ function TranslationHealthTab() {
   const [scen, setScen]           = useState<ScenarioStatus | null>(null);
   const [compass, setCompass]     = useState<CompassStatus | null>(null);
   const [counselSeeds, setCounselSeeds] = useState<CounselSeedCoverageStatus | null>(null);
+  const [counselSeedTrans, setCounselSeedTrans] = useState<CounselSeedTransStatus | null>(null);
   const [runs, setRuns]           = useState<WorkerRun[]>([]);
   const [loading, setLoading]     = useState(false);
   const [err, setErr]             = useState<string | null>(null);
@@ -3385,7 +3395,8 @@ function TranslationHealthTab() {
   const [ltqLaunching, setLtqLaunching]         = useState<string | null>(null);
   const [scenLaunching, setScenLaunching]       = useState<string | null>(null);
   const [compassLaunching, setCompassLaunching] = useState<string | null>(null);
-  const [seedsLaunching, setSeedsLaunching]     = useState<string | null>(null);
+  const [seedsLaunching, setSeedsLaunching]         = useState<string | null>(null);
+  const [seedTransLaunching, setSeedTransLaunching] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -3397,18 +3408,20 @@ function TranslationHealthTab() {
     setLoading(true);
     setErr(null);
     try {
-      const [ltqRes, scenRes, compassRes, seedsRes, runsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/ltq/translation-status`,      { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/scenarios/translation-status`, { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/compass/translation-status`,   { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,       { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/worker-runs`,                  { credentials: "include" }),
+      const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/admin/ltq/translation-status`,              { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/scenarios/translation-status`,        { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
+        fetch(`${API_BASE}/api/admin/worker-runs`,                         { credentials: "include" }),
       ]);
-      if (ltqRes.ok)     setLtq(await ltqRes.json() as LtqStatus);
-      if (scenRes.ok)    setScen(await scenRes.json() as ScenarioStatus);
-      if (compassRes.ok) setCompass(await compassRes.json() as CompassStatus);
-      if (seedsRes.ok)   setCounselSeeds(await seedsRes.json() as CounselSeedCoverageStatus);
-      if (runsRes.ok)    setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
+      if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
+      if (scenRes.ok)        setScen(await scenRes.json() as ScenarioStatus);
+      if (compassRes.ok)     setCompass(await compassRes.json() as CompassStatus);
+      if (seedsRes.ok)       setCounselSeeds(await seedsRes.json() as CounselSeedCoverageStatus);
+      if (seedsTransRes.ok)  setCounselSeedTrans(await seedsTransRes.json() as CounselSeedTransStatus);
+      if (runsRes.ok)        setRuns(((await runsRes.json()) as { runs: WorkerRun[] }).runs);
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -3510,6 +3523,22 @@ function TranslationHealthTab() {
       showToast(d.message ?? `Compass [${lang}] launched.`);
     } catch { showToast(`Failed to launch compass [${lang}].`); }
     finally { setCompassLaunching(null); }
+  };
+
+  // Counsel seed translation launcher (per-lang only, no "all" button per cost policy)
+  const launchSeedTransLang = async (lang: TransLang) => {
+    setSeedTransLaunching(lang);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang }),
+      });
+      const d = await res.json();
+      showToast(d.message ?? `Vertaalworker voor Atelier-distillaten [${lang.toUpperCase()}] gestart.`);
+    } catch { showToast(`Kon vertaalworker voor [${lang.toUpperCase()}] niet starten.`); }
+    finally { setSeedTransLaunching(null); }
   };
 
   // Counsel seed launchers
@@ -3645,7 +3674,7 @@ function TranslationHealthTab() {
         />
       )}
 
-      {/* Atelier-distillaten */}
+      {/* Atelier-distillaten — regio-dekking */}
       {counselSeeds && (
         <DomainCoverageCard
           data={counselSeeds}
@@ -3655,13 +3684,33 @@ function TranslationHealthTab() {
         />
       )}
 
+      {/* Atelier-distillaten — vertaling per taal */}
+      {counselSeedTrans && (
+        <CoverageCard
+          title="Atelier-distillaten (Vertaling)"
+          description="De Engelstalige kennisdistillaten per regio × domein worden per taal vertaald. Enkel actieve seeds worden vertaald. Elke taal moet afzonderlijk worden gestart — er is geen 'Alle talen'-knop om de kosten beheersbaar te houden."
+          actionLabel="start de vertaling van alle actieve Atelier-distillaten naar die taal (max. 50 seeds per run)."
+          total={counselSeedTrans.total}
+          langs={counselSeedTrans.langs as LangCoverage[]}
+          sweeper="counsel-seed-translation"
+          costPerItem={0.004}
+          itemsPerMinute={15}
+          onTranslateAll={async () => {}}
+          onTranslateLang={launchSeedTransLang}
+          launching={seedTransLaunching}
+          lastRun={counselSeedTrans.last_run ?? null}
+          hideAllButton
+        />
+      )}
+
       {/* Worker run log */}
       {runs.length > 0 && (
         <WorkerRunsLog runs={runs.filter((r) =>
           r.sweeper.startsWith("ltq-translation") ||
           r.sweeper === "scenario-translation" ||
           r.sweeper === "compass-translation" ||
-          r.sweeper === "counsel-seed"
+          r.sweeper === "counsel-seed" ||
+          r.sweeper === "counsel-seed-translation"
         )} />
       )}
 

@@ -2780,4 +2780,97 @@ router.post("/admin/counsel-seeds/generate", requireAdmin, async (req, res) => {
   });
 });
 
+// ── Counsel Seeds — Translation Status & Trigger ──────────────────────────────
+
+const COUNSEL_TRANS_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
+type CounselTransLang = typeof COUNSEL_TRANS_LANGS[number];
+
+const CounselSeedTranslateSchema = z.object({
+  lang: z.enum(COUNSEL_TRANS_LANGS),
+  batch_size: z.number().int().min(1).max(200).optional(),
+  force: z.boolean().optional(),
+});
+
+/**
+ * GET /admin/counsel-seeds/translation-status
+ * Per-language count of active seeds that already have a content_i18n entry.
+ */
+router.get("/admin/counsel-seeds/translation-status", requireAdmin, async (req, res) => {
+  try {
+    // Total active seeds
+    const totalRows = await db.execute(
+      sql`SELECT COUNT(*)::int AS total FROM counsel_region_seeds WHERE status = 'active'`
+    );
+    const total = Number((totalRows.rows[0] as { total: number })?.total ?? 0);
+
+    // Per-language: count seeds whose content_i18n has an entry for that lang
+    const langCounts: Record<string, number> = {};
+    for (const lang of COUNSEL_TRANS_LANGS) {
+      const r = await db.execute(
+        sql`SELECT COUNT(*)::int AS n
+            FROM counsel_region_seeds
+            WHERE status = 'active'
+              AND content_i18n IS NOT NULL
+              AND content_i18n->>${lang} IS NOT NULL`
+      );
+      langCounts[lang] = Number((r.rows[0] as { n: number })?.n ?? 0);
+    }
+
+    const lastRun = await db
+      .select()
+      .from(workerRunsTable)
+      .where(eq(workerRunsTable.sweeper, "counsel-seed-translation"))
+      .orderBy(desc(workerRunsTable.started_at))
+      .limit(1);
+
+    return res.json({
+      ok: true,
+      total,
+      langs: COUNSEL_TRANS_LANGS.map((lang) => ({
+        lang,
+        count: langCounts[lang] ?? 0,
+        pct:   total > 0 ? Math.round(((langCounts[lang] ?? 0) / total) * 100) : 0,
+      })),
+      last_run: lastRun[0] ?? null,
+    });
+  } catch (err) {
+    req.log?.error({ err }, "Admin: counsel-seeds/translation-status failed");
+    return res.status(500).json({ error: "Failed to compute counsel seeds translation status." });
+  }
+});
+
+/**
+ * POST /admin/counsel-seeds/translate
+ * Spawns scripts/translate-counsel-seeds.mjs for ONE language (manual, no sweeper).
+ * Body: { lang: string (required), batch_size?: number, force?: boolean }
+ */
+router.post("/admin/counsel-seeds/translate", requireAdmin, async (req, res) => {
+  const parsed = CounselSeedTranslateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Ongeldige parameters. `lang` is verplicht en moet een van de 9 doeltalen zijn.",
+      details: parsed.error.flatten(),
+    });
+  }
+  const { lang, batch_size, force } = parsed.data;
+
+  const childArgs = ["scripts/translate-counsel-seeds.mjs", "--lang", lang];
+  if (batch_size) childArgs.push("--batch-size", String(batch_size));
+  if (force)      childArgs.push("--force");
+
+  const child = spawn("node", childArgs, {
+    cwd: WORKSPACE_ROOT,
+    env: { ...process.env },
+    stdio: "ignore",
+  });
+
+  req.log?.info({ lang, batch_size, force }, "Admin: counsel seed translation worker spawned");
+
+  return res.json({
+    ok:      true,
+    message: `Vertaalworker voor Atelier-distillaten [${lang.toUpperCase()}] gestart.`,
+    pid:     child.pid,
+  });
+});
+
 export default router;

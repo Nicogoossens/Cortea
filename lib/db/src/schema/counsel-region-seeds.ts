@@ -44,6 +44,12 @@ export const counselRegionSeedsTable = pgTable(
      *   }
      */
     content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+    /**
+     * Translated seed content keyed by BCP-47 language code
+     * (nl, fr, de, es, pt, it, ar, ja, zh). Same shape as `content`.
+     * Populated by scripts/translate-counsel-seeds.mjs on admin demand.
+     */
+    content_i18n: jsonb("content_i18n").$type<Record<string, Record<string, unknown>>>(),
     /** Raw quality score from the evaluation pass (0–100). NULL until evaluated. */
     eval_score: integer("eval_score"),
     /** Free-form rationale from the eval pass; useful for admin review. */

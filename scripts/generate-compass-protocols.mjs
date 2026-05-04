@@ -18,6 +18,9 @@
  *   --include-unpublished  Also process unpublished regions.
  *   --dry-run              Print planned output; do not write to database.
  *   --force                Re-generate for regions that already have protocols.
+ *   --only-missing-pillars Target only regions that have some protocols but are missing at least one
+ *                          pillar; generate only the absent pillars. Safe for re-runs: ON CONFLICT
+ *                          DO NOTHING skips rows that already exist.
  *   --verbose              Print generated content.
  */
 
@@ -50,13 +53,14 @@ function flag(name) {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : null;
 }
-const FLAG_REGION       = flag("--region")?.toUpperCase() ?? null;
-const FLAG_BATCH_SIZE   = flag("--batch-size")   ? parseInt(flag("--batch-size"), 10)   : 20;
-const FLAG_MAX_REGION   = flag("--max-per-region") ? parseInt(flag("--max-per-region"), 10) : 5;
-const FLAG_DRY_RUN      = args.includes("--dry-run");
-const FLAG_FORCE        = args.includes("--force");
-const FLAG_VERBOSE      = args.includes("--verbose");
-const FLAG_INCLUDE_UNPUB = args.includes("--include-unpublished");
+const FLAG_REGION            = flag("--region")?.toUpperCase() ?? null;
+const FLAG_BATCH_SIZE        = flag("--batch-size")    ? parseInt(flag("--batch-size"), 10)    : 20;
+const FLAG_MAX_REGION        = flag("--max-per-region") ? parseInt(flag("--max-per-region"), 10) : 5;
+const FLAG_DRY_RUN           = args.includes("--dry-run");
+const FLAG_FORCE             = args.includes("--force");
+const FLAG_ONLY_MISSING      = args.includes("--only-missing-pillars");
+const FLAG_VERBOSE           = args.includes("--verbose");
+const FLAG_INCLUDE_UNPUB     = args.includes("--include-unpublished");
 
 // ── Pillar definitions ─────────────────────────────────────────────────────────
 const PILLARS = [
@@ -150,6 +154,50 @@ async function fetchRegions() {
   return rows;
 }
 
+// ── Fetch regions with missing pillars (--only-missing-pillars mode) ───────────
+async function fetchRegionsWithMissingPillars() {
+  const allPillarIds = PILLARS.map((p) => p.id);
+  const params = [];
+  const conditions = [];
+
+  if (!FLAG_INCLUDE_UNPUB) {
+    conditions.push("cr.is_published = true");
+  }
+
+  if (FLAG_REGION) {
+    params.push(FLAG_REGION);
+    conditions.push(`cr.region_code = $${params.length}`);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  params.push(FLAG_BATCH_SIZE);
+  const { rows } = await pool.query(
+    `SELECT
+       cr.region_code,
+       cr.flag_emoji,
+       cr.content,
+       cr.is_published,
+       ARRAY_AGG(DISTINCT cp.pillar) FILTER (WHERE cp.pillar IS NOT NULL) AS present_pillars
+     FROM compass_regions cr
+     LEFT JOIN culture_protocols cp ON cp.region_code = cr.region_code
+     ${where}
+     GROUP BY cr.region_code, cr.flag_emoji, cr.content, cr.is_published
+     HAVING
+       -- Has at least one protocol (gap-fill targets partial, not empty regions)
+       COUNT(cp.id) > 0
+       -- But is missing at least one of the required pillars
+       AND NOT (ARRAY[${allPillarIds.join(",")}]::int[] <@ COALESCE(ARRAY_AGG(DISTINCT cp.pillar) FILTER (WHERE cp.pillar IS NOT NULL), ARRAY[]::int[]))
+     ORDER BY cr.is_published DESC, cr.region_code
+     LIMIT $${params.length}`,
+    params,
+  );
+  return rows.map((r) => ({
+    ...r,
+    missing_pillars: allPillarIds.filter((id) => !(r.present_pillars ?? []).includes(id)),
+  }));
+}
+
 // ── Extract English context from compass_regions.content ───────────────────────
 function extractContext(content) {
   if (!content || typeof content !== "object") return null;
@@ -162,7 +210,9 @@ function extractContext(content) {
 }
 
 // ── System prompt ──────────────────────────────────────────────────────────────
-function buildSystemPrompt(regionCode, ctx) {
+// pillarsToGenerate: array of pillar objects to include (defaults to all PILLARS)
+function buildSystemPrompt(regionCode, ctx, pillarsToGenerate = null) {
+  const activePillars = pillarsToGenerate ?? PILLARS.slice(0, FLAG_MAX_REGION);
   const regionName = ctx?.region_name ?? regionCode;
   const ctxBlock = ctx ? `
 REGION PROFILE — ${regionCode} (${regionName}):
@@ -180,10 +230,10 @@ You are generating culturally-accurate etiquette protocols for the Cultural Comp
 
 ${ctxBlock}
 
-TASK: Generate exactly ${FLAG_MAX_REGION} etiquette protocols for ${regionCode} — one per pillar — and translate each into 9 languages.
+TASK: Generate exactly ${activePillars.length} etiquette protocol(s) for ${regionCode} — one per pillar listed below — and translate each into 9 languages.
 
 PILLAR ASSIGNMENTS (one protocol per pillar):
-${PILLARS.slice(0, FLAG_MAX_REGION).map((p) => `- Pillar ${p.id}: ${p.theme}`).join("\n")}
+${activePillars.map((p) => `- Pillar ${p.id}: ${p.theme}`).join("\n")}
 
 Each protocol must be:
 - Specific to ${regionCode} culture — never generic or copy-pasted from another country.
@@ -236,9 +286,11 @@ OUTPUT SCHEMA:
 }`;
 }
 
-function buildUserPrompt(regionCode, ctx) {
+function buildUserPrompt(regionCode, ctx, pillarsToGenerate = null) {
+  const activePillars = pillarsToGenerate ?? PILLARS.slice(0, FLAG_MAX_REGION);
   const regionName = ctx?.region_name ?? regionCode;
-  return `Generate ${FLAG_MAX_REGION} culturally-specific etiquette protocols for ${regionCode} (${regionName}), one per pillar, with all 9 language translations included.`;
+  const pillarList = activePillars.map((p) => `Pillar ${p.id}`).join(", ");
+  return `Generate ${activePillars.length} culturally-specific etiquette protocol(s) for ${regionCode} (${regionName}) covering ${pillarList}, with all 9 language translations included.`;
 }
 
 // ── Parse generated protocols ─────────────────────────────────────────────────
@@ -318,8 +370,9 @@ async function main() {
   console.log(`Mode:            ${FLAG_DRY_RUN ? "DRY RUN — no database writes" : "LIVE — protocols will be inserted"}`);
   console.log(`Batch size:      ${FLAG_BATCH_SIZE} countries`);
   console.log(`Per region:      ${FLAG_MAX_REGION} protocols`);
-  if (FLAG_REGION)  console.log(`Region filter:   ${FLAG_REGION}`);
-  if (FLAG_FORCE)   console.log("Force:           re-generating for regions that already have protocols");
+  if (FLAG_REGION)       console.log(`Region filter:   ${FLAG_REGION}`);
+  if (FLAG_FORCE)        console.log("Force:           re-generating for regions that already have protocols");
+  if (FLAG_ONLY_MISSING) console.log("Mode:            only-missing-pillars (gap-fill — skips complete regions)");
   console.log("─".repeat(60));
 
   const budget = await checkDailyBudget(SWEEPER_NAME);
@@ -338,7 +391,10 @@ async function main() {
     return;
   }
 
-  const regions = await fetchRegions();
+  const regions = FLAG_ONLY_MISSING
+    ? await fetchRegionsWithMissingPillars()
+    : await fetchRegions();
+
   console.log(`Found ${regions.length} region(s) to process.\n`);
 
   let totalInserted = 0;
@@ -349,10 +405,21 @@ async function main() {
     const ctx = extractContext(content);
     const regionName = ctx?.region_name ?? region_code;
 
-    process.stdout.write(`[${i + 1}/${regions.length}] ${region.flag_emoji ?? ""} ${region_code} (${regionName}) … `);
+    // In --only-missing-pillars mode, only generate for the absent pillars.
+    const pillarsToGenerate = FLAG_ONLY_MISSING && region.missing_pillars?.length > 0
+      ? PILLARS.filter((p) => region.missing_pillars.includes(p.id))
+      : null; // null = all pillars (standard mode)
 
-    const sysPrompt = buildSystemPrompt(region_code, ctx);
-    const usrPrompt = buildUserPrompt(region_code, ctx);
+    const pillarLabel = pillarsToGenerate
+      ? `missing pillars [${pillarsToGenerate.map((p) => p.id).join(",")}]`
+      : `${FLAG_MAX_REGION} protocols`;
+
+    process.stdout.write(
+      `[${i + 1}/${regions.length}] ${region.flag_emoji ?? ""} ${region_code} (${regionName}) — ${pillarLabel} … `
+    );
+
+    const sysPrompt = buildSystemPrompt(region_code, ctx, pillarsToGenerate);
+    const usrPrompt = buildUserPrompt(region_code, ctx, pillarsToGenerate);
 
     let raw;
     try {
@@ -420,6 +487,7 @@ async function main() {
       failed: totalFailed,
       maxPerRegion: FLAG_MAX_REGION,
       dryRun: FLAG_DRY_RUN,
+      onlyMissingPillars: FLAG_ONLY_MISSING,
     },
   });
   await closeWorkerCostPool();

@@ -18,10 +18,6 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Culture Protocols PT Translator"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "sowiso-tier-access-tests"
 
 [[workflows.workflow.tasks]]
@@ -44,16 +40,9 @@ args = "AE Question Generator"
 task = "workflow.run"
 args = "LTQ Translator NL"
 
-[[workflows.workflow]]
-name = "Culture Protocols PT Translator"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/run-all-culture-translations.mjs"
+task = "workflow.run"
+args = "Culture Protocol Full Sweep"
 
 [[workflows.workflow]]
 name = "sowiso-tier-access-tests"
@@ -117,6 +106,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/translate-learning-track-questions.mjs"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Culture Protocol Full Sweep"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/run-all-culture-translations.mjs"
 
 [workflows.workflow.metadata]
 outputType = "console"

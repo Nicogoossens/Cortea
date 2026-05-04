@@ -3919,25 +3919,23 @@ function TranslationHealthTab() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Cost summary badges */}
-          {runs.length > 0 && (
-            <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground border border-border/60 rounded-sm px-2.5 py-1.5 bg-muted/20">
-              <span className="text-foreground/60 uppercase tracking-wide">AI-kosten</span>
-              <span className="text-foreground font-medium">
-                ${weekCost.toFixed(2)}
-                <span className="text-muted-foreground font-normal"> / 7 dagen</span>
-              </span>
-              {backlogCost > 0.01 && (
-                <>
-                  <span className="text-border">·</span>
-                  <span className="text-amber-700">
-                    ~${backlogCost.toFixed(2)}
-                    <span className="text-muted-foreground font-normal"> achterstand</span>
-                  </span>
-                </>
-              )}
-            </div>
-          )}
+          {/* Cost summary badges — always rendered (shows $0.00 when no runs yet) */}
+          <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground border border-border/60 rounded-sm px-2.5 py-1.5 bg-muted/20">
+            <span className="text-foreground/60 uppercase tracking-wide">AI-kosten</span>
+            <span className="text-foreground font-medium">
+              ${weekCost.toFixed(2)}
+              <span className="text-muted-foreground font-normal"> / 7 dagen</span>
+            </span>
+            {backlogCost > 0.01 && (
+              <>
+                <span className="text-border">·</span>
+                <span className="text-amber-700">
+                  ~${backlogCost.toFixed(2)}
+                  <span className="text-muted-foreground font-normal"> achterstand</span>
+                </span>
+              </>
+            )}
+          </div>
           <Button
             size="sm"
             variant="outline"

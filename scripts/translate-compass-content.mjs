@@ -393,7 +393,16 @@ async function main() {
   await pool.end();
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error("Fatal error:", err.message);
+  // Close the open "running" row so the admin panel never stays permanently locked.
+  try {
+    await recordWorkerRun({
+      sweeper: SWEEPER_NAME,
+      startedAt: new Date(),
+      status: "failed",
+      metadata: { error: String(err.message).slice(0, 500) },
+    });
+  } catch {}
   process.exit(1);
 });

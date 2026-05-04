@@ -2658,12 +2658,12 @@ router.post("/admin/ltq/translate", requireAdmin, async (req, res) => {
     ? await db
         .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
         .from(workerRunsTable)
-        .where(sql`sweeper = ${"ltq-translation-" + lang} AND finished_at IS NULL AND status != 'failed'`)
+        .where(sql`sweeper = ${"ltq-translation-" + lang} AND finished_at IS NULL AND status = 'running' AND started_at >= NOW() - INTERVAL '2 hours'`)
         .limit(1)
     : await db
         .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
         .from(workerRunsTable)
-        .where(sql`sweeper LIKE 'ltq-translation%' AND finished_at IS NULL AND status != 'failed'`)
+        .where(sql`sweeper LIKE 'ltq-translation%' AND finished_at IS NULL AND status = 'running' AND started_at >= NOW() - INTERVAL '2 hours'`)
         .limit(1);
   if (activeRunRows.length > 0) {
     return res.status(409).json({
@@ -2831,7 +2831,7 @@ router.post("/admin/scenarios/translate", requireAdmin, async (req, res) => {
   const scenActiveRows = await db
     .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
     .from(workerRunsTable)
-    .where(sql`sweeper = 'scenario-translation' AND finished_at IS NULL AND status != 'failed'`)
+    .where(sql`sweeper = 'scenario-translation' AND finished_at IS NULL AND status = 'running' AND started_at >= NOW() - INTERVAL '2 hours'`)
     .limit(1);
   if (scenActiveRows.length > 0) {
     return res.status(409).json({
@@ -2942,7 +2942,7 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   const compassActiveRows = await db
     .select({ id: workerRunsTable.id, started_at: workerRunsTable.started_at })
     .from(workerRunsTable)
-    .where(sql`sweeper = 'compass-content-translation' AND finished_at IS NULL AND status != 'failed'`)
+    .where(sql`sweeper = 'compass-content-translation' AND finished_at IS NULL AND status = 'running' AND started_at >= NOW() - INTERVAL '2 hours'`)
     .limit(1);
   if (compassActiveRows.length > 0) {
     return res.status(409).json({

@@ -22,6 +22,7 @@ import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
 import { jsonrepair } from "jsonrepair";
+import { spawn } from "child_process";
 import {
   checkDailyBudget,
   recordWorkerRun,
@@ -119,38 +120,54 @@ Return ONLY this JSON shape:
 // ── DB pool ───────────────────────────────────────────────────────────────────
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// ── Anthropic fetch ───────────────────────────────────────────────────────────
-async function callAnthropic(systemPrompt, userPrompt) {
+// ── Anthropic fetch (with exponential backoff for rate limits) ─────────────────
+async function callAnthropic(systemPrompt, userPrompt, retries = 6) {
   const base = process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL;
   const key  = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY;
   if (!base || !key) {
     throw new Error("AI_INTEGRATIONS_ANTHROPIC_BASE_URL and AI_INTEGRATIONS_ANTHROPIC_API_KEY must be set.");
   }
 
-  const response = await fetch(`${base}/messages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  });
+  let attempt = 0;
+  while (attempt <= retries) {
+    const response = await fetch(`${base}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Anthropic API error ${response.status}: ${text}`);
+    if (response.status === 429) {
+      attempt++;
+      if (attempt > retries) {
+        const text = await response.text();
+        throw new Error(`Anthropic API error 429 (after ${retries} retries): ${text}`);
+      }
+      const delay = Math.min(2000 * Math.pow(2, attempt - 1), 60000);
+      process.stdout.write(`[rate-limit: waiting ${delay / 1000}s] `);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Anthropic API error ${response.status}: ${text}`);
+    }
+
+    const data = await response.json();
+    totalInputTokens  += Number(data.usage?.input_tokens  ?? 0) || 0;
+    totalOutputTokens += Number(data.usage?.output_tokens ?? 0) || 0;
+    return data.content?.[0]?.text?.trim() ?? "";
   }
-
-  const data = await response.json();
-  totalInputTokens  += Number(data.usage?.input_tokens  ?? 0) || 0;
-  totalOutputTokens += Number(data.usage?.output_tokens ?? 0) || 0;
-  return data.content?.[0]?.text?.trim() ?? "";
+  throw new Error("callAnthropic: exhausted retries");
 }
 
 // ── Parse translation response ────────────────────────────────────────────────
@@ -348,6 +365,36 @@ async function main() {
   });
   await closeWorkerCostPool();
   await pool.end();
+
+  // ── Auto-chain to next missing language (single-lang mode only) ──────────────
+  // When called with --lang <X>, after completing X, spawn the next language in
+  // the sequence as a detached independent process so the workflow can finish
+  // while the chain continues autonomously.
+  if (FLAG_LANG && !FLAG_DRY_RUN && !FLAG_REGION && !FLAG_ID) {
+    const LANG_SEQUENCE = ["pt", "nl", "fr", "de", "es", "it", "ar", "ja"];
+    const currentIdx = LANG_SEQUENCE.indexOf(FLAG_LANG);
+    const nextLang = LANG_SEQUENCE[currentIdx + 1] ?? null;
+
+    if (nextLang) {
+      console.log(`\n[chain] Spawning next language: ${nextLang}`);
+      const child = spawn(
+        process.execPath,
+        [process.argv[1], "--lang", nextLang, "--batch-size", String(FLAG_BATCH_SIZE)],
+        { detached: true, stdio: "ignore" }
+      );
+      child.unref();
+    } else {
+      // All languages done — spawn the compass protocol generator
+      const genScript = path.resolve(__dirname, "generate-compass-protocols.mjs");
+      console.log("\n[chain] All languages done — spawning Compass Protocol Generator");
+      const gen = spawn(
+        process.execPath,
+        [genScript, "--batch-size", "148", "--max-per-region", "5"],
+        { detached: true, stdio: "ignore" }
+      );
+      gen.unref();
+    }
+  }
 }
 
 main().catch((err) => {

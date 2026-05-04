@@ -18,108 +18,18 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "sowiso-tier-access-tests"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "AE Question Generator"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "LTQ Translator NL"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "google-oauth-backend-tests"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "e2e-google-signin"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Scenario ZH Translator"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Culture Protocols ZH Translator"
+args = "Culture Protocols PT Translator"
 
 [[workflows.workflow]]
-name = "sowiso-tier-access-tests"
+name = "Culture Protocols PT Translator"
 author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/sowiso test"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "AE Question Generator"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/generate-learning-track-questions.mjs --region AE --batch-size 15 --max-per-slot 80"
 
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "LTQ Translator NL"
-author = "agent"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node scripts/translate-learning-track-questions.mjs"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "google-oauth-backend-tests"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/api-server test"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "e2e-google-signin"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "ENABLE_TEST_DEBUG_ROUTES=true API_BASE_URL=http://localhost:8080 npx playwright test e2e/google-sign-in.spec.ts --reporter=list"
-
-[[workflows.workflow]]
-name = "Scenario ZH Translator"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/scenario-translate.mjs --lang zh"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "Culture Protocols ZH Translator"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/translate-culture-protocols.mjs --lang zh"
-
-[workflows.workflow.metadata]
-outputType = "console"
+args = "node scripts/run-all-culture-translations.mjs"
 
 [agent]
 stack = "PNPM_WORKSPACE"

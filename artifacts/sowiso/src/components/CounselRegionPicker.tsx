@@ -47,8 +47,6 @@ export function CounselRegionPicker({
     return ACTIVE_REGIONS.has(code) && !availableCodes.has(code);
   }
 
-  const isSearching = search.trim().length > 0;
-
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return COMPASS_REGIONS;
@@ -157,15 +155,9 @@ export function CounselRegionPicker({
         )}
       </div>
 
-      {/* Region groups */}
-      {isSearching ? (
-        <div className="flex flex-wrap gap-1.5">
-          {filtered.length === 0 ? (
-            <p className="text-xs text-muted-foreground/50 font-mono px-1">—</p>
-          ) : (
-            filtered.map(renderRegion)
-          )}
-        </div>
+      {/* Region groups — continent sections collapse when empty (including during search) */}
+      {filtered.length === 0 ? (
+        <p className="text-xs text-muted-foreground/50 font-mono px-1">—</p>
       ) : (
         CONTINENT_ORDER.map((continent) => {
           const regions = byContinent.get(continent) ?? [];

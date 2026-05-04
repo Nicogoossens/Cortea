@@ -80,19 +80,16 @@ export default function Counsel() {
   const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(null);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
 
-  // Data-driven region availability — fetched once on mount.
-  // Fallback to ACTIVE_REGIONS so the picker works even if the API is slow.
-  const [availableRegionCodes, setAvailableRegionCodes] = useState<Set<string>>(
-    () => new Set(["GB", "AU", "CN", "US", "JP", "DE", "IT", "FR", "BE", "CH",
-                   "BR", "ES", "SG", "IN", "MX", "AE", "CO", "NL", "CA", "PT", "ZA"])
-  );
+  // Data-driven region availability — fully controlled by DB content.
+  // Starts empty (no region shows as available) until the API responds.
+  const [availableRegionCodes, setAvailableRegionCodes] = useState<Set<string>>(new Set());
   useEffect(() => {
     fetch(`${API_BASE}/api/regions/available`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .then((data: { codes?: string[] } | null) => {
-        if (data?.codes && data.codes.length > 0) {
-          setAvailableRegionCodes(new Set(data.codes));
-        }
+        // Always apply the API response — including an empty array — so
+        // selectability is entirely driven by DB content, never by stale defaults.
+        setAvailableRegionCodes(new Set(data?.codes ?? []));
       })
       .catch(() => undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps

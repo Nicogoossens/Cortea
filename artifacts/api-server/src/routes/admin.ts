@@ -2670,7 +2670,7 @@ router.post("/admin/compass/translate", requireAdmin, async (req, res) => {
   }
   const { lang, region, force } = parsed.data;
 
-  const childArgs = ["scripts/compass-translate.mjs"];
+  const childArgs = ["scripts/translate-compass-content.mjs"];
   if (lang)   { childArgs.push("--lang",   lang); }
   if (region) { childArgs.push("--region", region); }
   if (force)  { childArgs.push("--force"); }

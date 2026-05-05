@@ -26,10 +26,6 @@ args = "google-oauth-backend-tests"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "AE Question Generator"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "LTQ Translator NL"
 
 [[workflows.workflow]]
@@ -55,26 +51,15 @@ args = "pnpm --filter @workspace/api-server test"
 outputType = "console"
 
 [[workflows.workflow]]
-name = "AE Question Generator"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/generate-learning-track-questions.mjs --region AE --batch-size 15 --max-per-slot 80"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
 name = "LTQ Translator NL"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/translate-learning-track-questions.mjs"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo 'Workflow stopped to reduce costs'"
 
 [agent]
 stack = "PNPM_WORKSPACE"

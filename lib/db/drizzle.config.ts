@@ -2,8 +2,8 @@ import { defineConfig } from "drizzle-kit";
 import path from "path";
 
 const url =
-  process.env.NODE_ENV === "production"
-    ? (process.env.PROD_DATABASE_URL ?? process.env.DATABASE_URL)
+  process.env.NODE_ENV !== "development" && process.env.PROD_DATABASE_URL
+    ? process.env.PROD_DATABASE_URL
     : process.env.DATABASE_URL;
 
 if (!url) {

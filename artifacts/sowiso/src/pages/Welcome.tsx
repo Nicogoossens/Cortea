@@ -440,7 +440,7 @@ export default function Welcome() {
                 <div className="flex items-start gap-4 p-5 rounded-sm border border-transparent hover:border-border/40 hover:bg-card/60 transition-all duration-200 group cursor-pointer">
                   <Icon className="w-5 h-5 mt-0.5 text-primary/60 group-hover:text-primary/80 transition-colors shrink-0" aria-hidden="true" />
                   <div className="flex-1 min-w-0 space-y-1">
-                    <div className="font-serif text-sm text-foreground">{t(labelKey as Parameters<typeof t>[0])}</div>
+                    <div className="font-serif text-sm text-foreground text-center">{t(labelKey as Parameters<typeof t>[0])}</div>
                     <div className="text-xs text-muted-foreground font-light leading-relaxed">{t(descKey as Parameters<typeof t>[0])}</div>
                   </div>
                   <ArrowRight className="w-3.5 h-3.5 text-primary/30 group-hover:text-primary/60 transition-colors shrink-0 mt-0.5" aria-hidden="true" />

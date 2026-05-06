@@ -359,6 +359,7 @@ export default function Welcome() {
         />
         <div className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-12 max-w-4xl mx-auto w-full space-y-14">
 
+          {/* 1. Hero */}
           <div className="space-y-6 text-center animate-in fade-in duration-700">
             <p className="text-xs font-mono uppercase tracking-[0.4em] text-muted-foreground">
               {t("app.tagline")}
@@ -372,7 +373,67 @@ export default function Welcome() {
             </p>
           </div>
 
-          {/* "Cortéa is for everyone…" — moved above the region picker so visitors immediately know what this is about */}
+          {/* 2. Join the Founding 100 — moved up, directly after hero */}
+          <div className="w-full border-t border-border/30 pt-10">
+            <WaitlistHeroBanner />
+          </div>
+
+          {/* 3. Three modules — moved up AND made prominent */}
+          <div className="w-full border-t border-border/20 pt-10 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "200ms" }}>
+            <p className="text-center text-[10px] font-mono uppercase tracking-[0.35em] text-muted-foreground/60">
+              {t("welcome.modules_eyebrow", "What you'll find inside")}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: BookOpen,
+                  labelKey: "nav.atelier" as const,
+                  descKey: "welcome.module_atelier_desc" as const,
+                  href: "/atelier",
+                  accent: "bg-primary/8 border-primary/20 text-primary",
+                  iconBg: "bg-primary/10",
+                },
+                {
+                  icon: Shield,
+                  labelKey: "nav.counsel" as const,
+                  descKey: "welcome.module_counsel_desc" as const,
+                  href: "/counsel",
+                  accent: "bg-violet-500/8 border-violet-500/20 text-violet-700",
+                  iconBg: "bg-violet-500/10",
+                },
+                {
+                  icon: Compass,
+                  labelKey: "nav.compass" as const,
+                  descKey: "welcome.module_compass_desc" as const,
+                  href: "/compass",
+                  accent: "bg-sky-500/8 border-sky-500/20 text-sky-700",
+                  iconBg: "bg-sky-500/10",
+                },
+              ].map(({ icon: Icon, labelKey, descKey, href, accent, iconBg }) => (
+                <Link key={labelKey} href={href}>
+                  <div className={`group relative flex flex-col gap-4 p-6 rounded-sm border ${accent} hover:shadow-sm transition-all duration-200 cursor-pointer h-full`}>
+                    <div className={`flex items-center justify-center w-11 h-11 rounded-sm ${iconBg} shrink-0`}>
+                      <Icon className="w-5 h-5" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <h3 className="font-serif text-base text-foreground">
+                        {t(labelKey)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-light leading-relaxed">
+                        {t(descKey)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-mono uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+                      {t("common.explore", "Explore")}
+                      <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* 4. Audience section */}
           <div className="w-full border-t border-border/20 pt-10 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
             <h2 className="text-center font-serif text-lg text-foreground/80">
               {t("welcome.audience_section_title")}
@@ -400,14 +461,12 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="w-full border-t border-border/30 pt-10">
-            <WaitlistHeroBanner />
-          </div>
-
+          {/* 5. Region picker */}
           <div className="w-full border-t border-border/30 pt-10">
             <RegionPicker />
           </div>
 
+          {/* 6. Begin button + sign in */}
           <div className="flex flex-col items-center gap-6 animate-in fade-in duration-700" style={{ animationDelay: "400ms" }}>
             <Button
               size="lg"
@@ -430,25 +489,7 @@ export default function Welcome() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full border-t border-border/20 pt-8 animate-in fade-in duration-700" style={{ animationDelay: "500ms" }}>
-            {[
-              { icon: BookOpen,  labelKey: "nav.atelier", descKey: "welcome.module_atelier_desc", href: "/atelier" },
-              { icon: Shield,    labelKey: "nav.counsel", descKey: "welcome.module_counsel_desc", href: "/counsel" },
-              { icon: Compass,   labelKey: "nav.compass", descKey: "welcome.module_compass_desc", href: "/compass" },
-            ].map(({ icon: Icon, labelKey, descKey, href }) => (
-              <Link key={labelKey} href={href}>
-                <div className="flex items-start gap-4 p-5 rounded-sm border border-transparent hover:border-border/40 hover:bg-card/60 transition-all duration-200 group cursor-pointer">
-                  <Icon className="w-5 h-5 mt-0.5 text-primary/60 group-hover:text-primary/80 transition-colors shrink-0" aria-hidden="true" />
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="font-serif text-sm text-foreground text-center">{t(labelKey as Parameters<typeof t>[0])}</div>
-                    <div className="text-xs text-muted-foreground font-light leading-relaxed">{t(descKey as Parameters<typeof t>[0])}</div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-primary/30 group-hover:text-primary/60 transition-colors shrink-0 mt-0.5" aria-hidden="true" />
-                </div>
-              </Link>
-            ))}
-          </div>
-
+          {/* 7. Membership CTA */}
           <Link href="/membership">
             <div
               data-testid="link-welcome-upgrade-cta"

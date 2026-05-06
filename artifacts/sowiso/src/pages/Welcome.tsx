@@ -373,12 +373,7 @@ export default function Welcome() {
             </p>
           </div>
 
-          {/* 2. Join the Founding 100 — moved up, directly after hero */}
-          <div className="w-full border-t border-border/30 pt-10">
-            <WaitlistHeroBanner />
-          </div>
-
-          {/* 3. Three modules — moved up AND made prominent */}
+          {/* 2. Three modules — moved up AND made prominent */}
           <div className="w-full border-t border-border/20 pt-10 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "200ms" }}>
             <p className="text-center text-[10px] font-mono uppercase tracking-[0.35em] text-muted-foreground/60">
               {t("welcome.modules_eyebrow", "What you'll find inside")}
@@ -489,7 +484,12 @@ export default function Welcome() {
             </p>
           </div>
 
-          {/* 7. Membership CTA */}
+          {/* 7. Join the Founding 100 — below sign in */}
+          <div className="w-full border-t border-border/30 pt-10">
+            <WaitlistHeroBanner />
+          </div>
+
+          {/* 8. Membership CTA */}
           <Link href="/membership">
             <div
               data-testid="link-welcome-upgrade-cta"

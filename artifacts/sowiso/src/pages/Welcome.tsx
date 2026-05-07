@@ -141,153 +141,66 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-type LandingSortMode = "popular" | "available_first" | "az" | "za";
-
 function RegionPicker() {
   const { activeRegion, setActiveRegion, getRegionName, getCurrentRegion } = useActiveRegion();
   const { t } = useLanguage();
-  const [sortMode, setSortMode] = useState<LandingSortMode>("popular");
-  const [popularity, setPopularity] = useState<Record<string, number>>({});
-  const [topPopular, setTopPopular] = useState<RegionCode[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE}/api/regions/popularity`)
-      .then((r) => (r.ok ? r.json() : { regions: [] }))
-      .then((data: { regions: { region_code: string; learners: number }[] }) => {
-        if (cancelled) return;
-        const map: Record<string, number> = {};
-        for (const r of data.regions) map[r.region_code] = r.learners;
-        setPopularity(map);
-        const top = [...COMPASS_REGIONS]
-          .filter((r) => isRegionActive(r.code))
-          .sort((a, b) => (map[b.code] || 0) - (map[a.code] || 0))
-          .slice(0, 3)
-          .map((r) => r.code);
-        setTopPopular(top);
-      })
-      .catch(() => { /* no-op: keep alphabetical fallback */ });
-    return () => { cancelled = true; };
-  }, []);
 
   const sorted = [...COMPASS_REGIONS].sort((a, b) => {
     const aAvail = isRegionActive(a.code) ? 1 : 0;
     const bAvail = isRegionActive(b.code) ? 1 : 0;
-    if (sortMode === "available_first" && aAvail !== bAvail) return bAvail - aAvail;
-    if (sortMode === "popular") {
-      if (aAvail !== bAvail) return bAvail - aAvail;
-      const diff = (popularity[b.code] || 0) - (popularity[a.code] || 0);
-      if (diff !== 0) return diff;
-    }
-    const an = getRegionName(a.code);
-    const bn = getRegionName(b.code);
-    return sortMode === "za" ? bn.localeCompare(an) : an.localeCompare(bn);
+    if (aAvail !== bAvail) return bAvail - aAvail;
+    return getRegionName(a.code).localeCompare(getRegionName(b.code));
   });
 
   const current = getCurrentRegion();
-  const currentLearners = popularity[current.code];
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-500" style={{ animationDelay: "200ms" }}>
       <div className="flex items-center gap-2">
-        <MapPin className="w-4 h-4 text-muted-foreground/60" aria-hidden="true" />
-        <span className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70">
+        <MapPin className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+        <span className="text-sm font-mono uppercase tracking-widest text-muted-foreground font-semibold">
           {t("landing.your_region")}
         </span>
       </div>
-      <p className="text-sm text-muted-foreground font-light">
-        {t("landing.region_intro")}
+      <p className="text-sm text-foreground/80 font-light">
+        The following regions are available in our lessons — with more cultures added regularly.
       </p>
 
-      {topPopular.length > 0 && sortMode === "popular" && (
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-amber-700/70 bg-amber-500/5 border border-amber-500/20 rounded-sm px-3 py-2">
-          <TrendingUp className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-          <span className="text-amber-800/80 font-medium">{t("landing.popularity_eyebrow", "Today's most chosen")}:</span>
-          <span className="flex items-center gap-2 flex-wrap">
-            {topPopular.map((code, i) => (
-              <span key={code} className="flex items-center gap-1 normal-case font-sans text-foreground/75">
-                <FlagEmoji code={code} size="sm" />
-                {getRegionName(code)}
-                {i < topPopular.length - 1 ? <span className="text-muted-foreground/40">·</span> : null}
-              </span>
-            ))}
-          </span>
-        </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={activeRegion} onValueChange={(v) => setActiveRegion(v as RegionCode)}>
-          <SelectTrigger className="flex-1 h-11 text-sm">
-            <SelectValue>
-              <span className="flex items-center gap-2">
-                <FlagEmoji code={current.code} size="sm" />
-                <span className="font-medium">{getRegionName(current.code)}</span>
-                {typeof currentLearners === "number" && currentLearners > 0 ? (
-                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground ml-1">
-                    {currentLearners.toLocaleString()} {t("landing.learners_short", "learners")}
+      <Select value={activeRegion} onValueChange={(v) => setActiveRegion(v as RegionCode)}>
+        <SelectTrigger className="w-full sm:max-w-xs h-11 text-sm rounded-xl">
+          <SelectValue>
+            <span className="flex items-center gap-2">
+              <FlagEmoji code={current.code} size="sm" />
+              <span className="font-medium">{getRegionName(current.code)}</span>
+            </span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="max-h-[360px]">
+          {sorted.map((region) => {
+            const available = isRegionActive(region.code);
+            return (
+              <SelectItem
+                key={region.code}
+                value={region.code}
+                disabled={!available}
+                className={!available ? "opacity-40" : ""}
+              >
+                <span className="flex items-center gap-2 w-full">
+                  <FlagEmoji code={region.code} size="sm" />
+                  <span className={available ? "" : "line-through decoration-muted-foreground/40"}>
+                    {getRegionName(region.code)}
                   </span>
-                ) : null}
-              </span>
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="max-h-[360px]">
-            {sorted.map((region) => {
-              const available = isRegionActive(region.code);
-              const learners = popularity[region.code] || 0;
-              const isTop = topPopular.includes(region.code);
-              return (
-                <SelectItem
-                  key={region.code}
-                  value={region.code}
-                  disabled={!available}
-                  className={!available ? "opacity-50" : ""}
-                >
-                  <span className="flex items-center gap-2 w-full">
-                    <FlagEmoji code={region.code} size="sm" />
-                    <span className={available ? "" : "line-through decoration-muted-foreground/40"}>
-                      {getRegionName(region.code)}
+                  {!available ? (
+                    <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">
+                      {t("landing.region_soon", "coming soon")}
                     </span>
-                    {isTop && available ? (
-                      <TrendingUp className="w-3 h-3 text-amber-600/70 shrink-0" aria-hidden="true" />
-                    ) : null}
-                    {available && learners > 0 ? (
-                      <span className="ml-auto text-[10px] font-mono text-muted-foreground/70 tabular-nums">
-                        {learners.toLocaleString()}
-                      </span>
-                    ) : null}
-                    {!available ? (
-                      <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">
-                        {t("landing.region_soon", "coming soon")}
-                      </span>
-                    ) : null}
-                  </span>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={sortMode} onValueChange={(v) => setSortMode(v as LandingSortMode)}>
-          <SelectTrigger className="sm:w-[210px] h-11 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popular">
-              <span className="flex items-center gap-2">
-                <TrendingUp className="w-3.5 h-3.5 text-amber-600/70" aria-hidden="true" />
-                {t("landing.sort_popular", "Most chosen")}
-              </span>
-            </SelectItem>
-            <SelectItem value="available_first">
-              <span className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
-                {t("landing.sort_available", "Available first")}
-              </span>
-            </SelectItem>
-            <SelectItem value="az">{t("landing.sort_az", "Name A → Z")}</SelectItem>
-            <SelectItem value="za">{t("landing.sort_za", "Name Z → A")}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+                  ) : null}
+                </span>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -490,13 +403,13 @@ export default function Welcome() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
-              { icon: BookOpen, labelKey: "nav.atelier" as const, descKey: "welcome.module_atelier_desc" as const, href: "/atelier", borderCls: "border-primary/60",   iconCls: "bg-primary/20 text-primary",       titleCls: "text-primary" },
-              { icon: Shield,   labelKey: "nav.counsel" as const, descKey: "welcome.module_counsel_desc" as const, href: "/counsel", borderCls: "border-violet-600/50", iconCls: "bg-violet-500/20 text-violet-700",  titleCls: "text-violet-800" },
-              { icon: Compass,  labelKey: "nav.compass" as const, descKey: "welcome.module_compass_desc" as const, href: "/compass", borderCls: "border-sky-600/50",    iconCls: "bg-sky-500/20 text-sky-700",        titleCls: "text-sky-800" },
-            ].map(({ icon: Icon, labelKey, descKey, href, borderCls, iconCls, titleCls }) => (
+              { icon: BookOpen, labelKey: "nav.atelier" as const, descKey: "welcome.module_atelier_desc" as const, href: "/atelier", cardCls: "bg-primary/[0.07] border-primary/55",    iconCls: "bg-primary/25 text-primary",      titleCls: "text-primary" },
+              { icon: Shield,   labelKey: "nav.counsel" as const, descKey: "welcome.module_counsel_desc" as const, href: "/counsel", cardCls: "bg-violet-500/[0.07] border-violet-500/55", iconCls: "bg-violet-500/25 text-violet-700", titleCls: "text-violet-800" },
+              { icon: Compass,  labelKey: "nav.compass" as const, descKey: "welcome.module_compass_desc" as const, href: "/compass", cardCls: "bg-sky-500/[0.07] border-sky-500/55",      iconCls: "bg-sky-500/25 text-sky-700",      titleCls: "text-sky-800" },
+            ].map(({ icon: Icon, labelKey, descKey, href, cardCls, iconCls, titleCls }) => (
               <Link key={labelKey} href={href}>
-                <div className={`group relative flex flex-col gap-4 p-6 rounded-sm border-2 bg-card ${borderCls} hover:shadow-md transition-all duration-200 cursor-pointer h-full`}>
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-sm ${iconCls} shrink-0`}>
+                <div className={`group relative flex flex-col gap-4 p-6 rounded-xl border-2 ${cardCls} hover:shadow-md transition-all duration-200 cursor-pointer h-full`}>
+                  <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${iconCls} shrink-0`}>
                     <Icon className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <div className="flex-1 space-y-2">
@@ -520,12 +433,12 @@ export default function Welcome() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,      iconCls: "text-emerald-700 bg-emerald-500/20",  borderCls: "border-emerald-500/40" },
-              { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,     iconCls: "text-sky-700 bg-sky-500/20",          borderCls: "border-sky-500/40" },
-              { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,      iconCls: "text-violet-700 bg-violet-500/20",    borderCls: "border-violet-500/40" },
-              { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, iconCls: "text-amber-700 bg-amber-500/20",      borderCls: "border-amber-500/40" },
-            ].map(({ headingKey, bodyKey, Icon, iconCls, borderCls }) => (
-              <div key={headingKey} className={`flex gap-4 items-start px-5 py-5 rounded-sm border-2 bg-card ${borderCls}`}>
+              { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,      iconCls: "text-emerald-800 bg-emerald-400/30",  cardCls: "bg-emerald-50/80 border-emerald-500/55" },
+              { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,     iconCls: "text-sky-800 bg-sky-400/30",          cardCls: "bg-sky-50/80 border-sky-500/55" },
+              { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,      iconCls: "text-violet-800 bg-violet-400/30",    cardCls: "bg-violet-50/80 border-violet-500/55" },
+              { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, iconCls: "text-amber-800 bg-amber-400/30",      cardCls: "bg-amber-50/80 border-amber-500/55" },
+            ].map(({ headingKey, bodyKey, Icon, iconCls, cardCls }) => (
+              <div key={headingKey} className={`flex gap-4 items-start px-5 py-5 rounded-xl border-2 ${cardCls}`}>
                 <span className={`mt-0.5 shrink-0 flex items-center justify-center w-10 h-10 rounded-full ${iconCls}`} aria-hidden="true">
                   <Icon className="w-5 h-5" />
                 </span>
@@ -578,7 +491,7 @@ export default function Welcome() {
         <Link href="/membership">
           <div
             data-testid="link-welcome-upgrade-cta"
-            className="group relative overflow-hidden rounded-sm border-2 border-amber-500/60 bg-gradient-to-br from-amber-50/80 via-card to-card hover:border-amber-500/80 hover:from-amber-50 transition-all duration-300 cursor-pointer animate-in fade-in duration-700"
+            className="group relative overflow-hidden rounded-xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-50/80 via-card to-card hover:border-amber-500/80 hover:from-amber-50 transition-all duration-300 cursor-pointer animate-in fade-in duration-700"
             style={{ animationDelay: "550ms" }}
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500/40 via-amber-400/60 to-amber-500/40" aria-hidden="true" />

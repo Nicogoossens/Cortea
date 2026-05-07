@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import {
   COMPASS_REGIONS,
@@ -37,6 +37,11 @@ export function CounselRegionPicker({
 }: CounselRegionPickerProps) {
   const { t } = useLanguage();
   const [search, setSearch] = useState("");
+  const selectedRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    selectedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, []);
 
   function classify(code: RegionCode): RegionAvailability {
     if (availableCodes.has(code)) return "available";
@@ -112,6 +117,7 @@ export function CounselRegionPicker({
     return (
       <button
         key={region.code}
+        ref={isSelected ? selectedRef : undefined}
         type="button"
         onClick={() => onSelect(region.code)}
         title={name}

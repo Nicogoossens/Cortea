@@ -39,6 +39,7 @@ CREATE TABLE "users" (
 	"situational_interests" json DEFAULT '[]'::json NOT NULL,
 	"privacy_settings" jsonb,
 	"profiling_consent" boolean DEFAULT true NOT NULL,
+	"explicit_language_choice" boolean DEFAULT false NOT NULL,
 	"password_hash" text,
 	"daily_streak" integer DEFAULT 0 NOT NULL,
 	"last_activity_date" text,

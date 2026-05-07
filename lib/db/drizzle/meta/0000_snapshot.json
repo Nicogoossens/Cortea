@@ -1,5 +1,5 @@
 {
-  "id": "f02b73fe-1ed5-4465-ab81-f15a0a1b2210",
+  "id": "df1410b4-4340-47af-9c42-634c377b4550",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -264,6 +264,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "explicit_language_choice": {
+          "name": "explicit_language_choice",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "password_hash": {
           "name": "password_hash",

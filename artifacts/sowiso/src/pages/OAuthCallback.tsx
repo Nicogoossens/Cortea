@@ -38,6 +38,7 @@ export default function OAuthCallback() {
         const profile = profileRes.ok ? await profileRes.json() as {
           onboarding_completed?: boolean;
           language_code?: string;
+          explicit_language_choice?: boolean;
           active_region?: string;
         } : null;
         // Prefer the authoritative isNewUser flag from /auth/redeem; fall back
@@ -49,13 +50,21 @@ export default function OAuthCallback() {
           isAdmin: data.isAdmin,
         });
 
-        if (profile?.language_code && !hasStoredLocalePreference() && !hasSupportedBrowserLocale()) {
-          const langCode = profile.language_code;
-          const regionCode = profile.active_region;
-          const resolved = ALL_LOCALES.find(
-            (l) => l === `${langCode}-${regionCode}` || l.startsWith(langCode + "-")
-          ) as SupportedLocale | undefined;
-          if (resolved) setLocale(resolved);
+        if (profile?.language_code) {
+          // Apply the stored language when the user has explicitly chosen it
+          // (cross-device sync), OR when there is no local preference and the
+          // browser language is not already supported (registration-default path).
+          const shouldApply =
+            profile.explicit_language_choice === true ||
+            (!hasStoredLocalePreference() && !hasSupportedBrowserLocale());
+          if (shouldApply) {
+            const langCode = profile.language_code;
+            const regionCode = profile.active_region;
+            const resolved = ALL_LOCALES.find(
+              (l) => l === `${langCode}-${regionCode}` || l.startsWith(langCode + "-")
+            ) as SupportedLocale | undefined;
+            if (resolved) setLocale(resolved);
+          }
         }
         if (profile?.active_region) {
           const validCodes = COMPASS_REGIONS.map((r) => r.code);

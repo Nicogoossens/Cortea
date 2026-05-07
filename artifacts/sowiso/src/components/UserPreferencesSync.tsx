@@ -36,16 +36,24 @@ export function UserPreferencesSync() {
     fetch(`${API_BASE}/api/users/profile`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : null)
       .catch(() => null)
-      .then((profile: { language_code?: string; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
+      .then((profile: { language_code?: string; explicit_language_choice?: boolean; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
         if (!profile) return;
 
-        if (profile.language_code && !hasStoredLocalePreference() && !hasSupportedBrowserLocale()) {
-          const serverLang = profile.language_code;
-          const matchedLocale = ALL_LOCALES.find(
-            (l) => l === serverLang || l.startsWith(serverLang + "-")
-          ) as SupportedLocale | undefined;
-          if (matchedLocale && matchedLocale !== locale) {
-            setLocale(matchedLocale);
+        if (profile.language_code) {
+          // Apply the stored language when the user has explicitly chosen it
+          // (cross-device sync), OR when there is no local preference and the
+          // browser language is not already supported (registration-default path).
+          const shouldApply =
+            profile.explicit_language_choice === true ||
+            (!hasStoredLocalePreference() && !hasSupportedBrowserLocale());
+          if (shouldApply) {
+            const serverLang = profile.language_code;
+            const matchedLocale = ALL_LOCALES.find(
+              (l) => l === serverLang || l.startsWith(serverLang + "-")
+            ) as SupportedLocale | undefined;
+            if (matchedLocale && matchedLocale !== locale) {
+              setLocale(matchedLocale);
+            }
           }
         }
 

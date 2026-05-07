@@ -97,6 +97,11 @@ export const usersTable = pgTable("users", {
   // GDPR Art. 21 — right to object to behavioural profiling.
   // When false, Bolton/EQ/Mehrabian writes are suppressed for this user.
   profiling_consent: boolean("profiling_consent").notNull().default(true),
+  // Language preference: true when the user deliberately chose a language via
+  // the switcher (as opposed to the registration default). When true, the app
+  // applies this language on every new device sign-in, overriding the browser
+  // locale. When false/null the browser locale takes precedence on new devices.
+  explicit_language_choice: boolean("explicit_language_choice").notNull().default(false),
   // Password-based authentication
   password_hash: text("password_hash"),
   // Gamification layer — streak, avatar, wardrobe

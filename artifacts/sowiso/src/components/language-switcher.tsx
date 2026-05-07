@@ -33,7 +33,7 @@ export function LanguageSwitcher() {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language_code: baseLang }),
+        body: JSON.stringify({ language_code: baseLang, explicit_language_choice: true }),
       }).catch(() => {});
     }
   }

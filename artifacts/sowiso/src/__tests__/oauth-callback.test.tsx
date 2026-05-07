@@ -28,10 +28,12 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 // ─── mock @/lib/i18n ─────────────────────────────────────────────────────────
+const mockSetLocale = vi.fn();
+
 vi.mock("@/lib/i18n", () => ({
   useLanguage: () => ({
     t: (key: string) => key,
-    setLocale: vi.fn(),
+    setLocale: mockSetLocale,
   }),
   ALL_LOCALES: ["en-GB", "nl-NL"],
 }));
@@ -105,9 +107,21 @@ function makeProfileResponse(overrides: {
 
 // ─── Setup / teardown ────────────────────────────────────────────────────────
 
+const STORAGE_KEY = "sowiso_locale";
+
+function setNavigatorLanguage(lang: string) {
+  Object.defineProperty(navigator, "language", {
+    value: lang,
+    configurable: true,
+  });
+}
+
 beforeEach(() => {
   mockSetLocation.mockClear();
   mockLogin.mockClear();
+  mockSetLocale.mockClear();
+  localStorage.clear();
+  setNavigatorLanguage("xx-XX"); // default: no supported browser locale
   vi.stubGlobal("fetch", vi.fn());
 });
 
@@ -305,6 +319,91 @@ describe("OAuthCallback — onboarding incomplete fallback", () => {
 
     await waitFor(() => {
       expect(mockSetLocation).toHaveBeenCalledWith("/onboarding");
+    });
+  });
+});
+
+// ─── Scenario 7: explicit_language_choice — language override on sign-in ───────
+
+describe("OAuthCallback — explicit_language_choice language application", () => {
+  function makeFetchPair(profileOverrides: {
+    onboarding_completed?: boolean;
+    language_code?: string;
+    explicit_language_choice?: boolean;
+    active_region?: string;
+  }) {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => makeRedeemResponse({ isNewUser: false }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ onboarding_completed: true, active_region: "GB", ...profileOverrides }),
+      } as Response);
+  }
+
+  it("applies server language when explicit_language_choice is true, even with a stored local preference", async () => {
+    localStorage.setItem(STORAGE_KEY, "en-GB"); // user has a local pref
+    setNavigatorLanguage("xx-XX");
+    makeFetchPair({ language_code: "nl", explicit_language_choice: true });
+
+    renderWithCode("?code=explicit-lang-code");
+
+    await waitFor(() => {
+      expect(mockSetLocale).toHaveBeenCalledWith("nl-NL");
+    });
+  });
+
+  it("applies server language when explicit_language_choice is true, even when the browser locale is supported", async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setNavigatorLanguage("en-GB"); // browser locale matches a supported locale
+    makeFetchPair({ language_code: "nl", explicit_language_choice: true });
+
+    renderWithCode("?code=explicit-lang-browser-code");
+
+    await waitFor(() => {
+      expect(mockSetLocale).toHaveBeenCalledWith("nl-NL");
+    });
+  });
+
+  it("does NOT apply server language when explicit_language_choice is false and localStorage has a preference", async () => {
+    localStorage.setItem(STORAGE_KEY, "en-GB"); // local pref wins
+    setNavigatorLanguage("xx-XX");
+    makeFetchPair({ language_code: "nl", explicit_language_choice: false });
+
+    renderWithCode("?code=non-explicit-local-pref-code");
+
+    await waitFor(() => {
+      expect(mockSetLocation).toHaveBeenCalledWith("/");
+    });
+
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+
+  it("does NOT apply server language when explicit_language_choice is false and browser locale is supported", async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setNavigatorLanguage("en-GB"); // browser locale is supported
+    makeFetchPair({ language_code: "nl", explicit_language_choice: false });
+
+    renderWithCode("?code=non-explicit-browser-code");
+
+    await waitFor(() => {
+      expect(mockSetLocation).toHaveBeenCalledWith("/");
+    });
+
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+
+  it("applies server language via fallback path (no explicit flag, no local pref, unsupported browser)", async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setNavigatorLanguage("xx-XX"); // unsupported browser locale
+    makeFetchPair({ language_code: "nl" }); // no explicit_language_choice field
+
+    renderWithCode("?code=fallback-apply-code");
+
+    await waitFor(() => {
+      expect(mockSetLocale).toHaveBeenCalledWith("nl-NL");
     });
   });
 });

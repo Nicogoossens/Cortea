@@ -161,6 +161,46 @@ describe("UserPreferencesSync — setLocale IS called when all guard conditions 
   });
 });
 
+describe("UserPreferencesSync — explicit_language_choice overrides guards", () => {
+  it("calls setLocale even when localStorage has a stored preference, if explicit_language_choice is true", async () => {
+    localStorage.setItem(STORAGE_KEY, "fr-FR"); // user previously chose French locally
+    setNavigatorLanguage("xx-XX");
+    vi.stubGlobal("fetch", makeProfileFetch({ language_code: "nl", explicit_language_choice: true, is_admin: false, id: "u1" }));
+
+    render(<UserPreferencesSync />);
+
+    await waitFor(() => {
+      expect(mockSetLocale).toHaveBeenCalledWith("nl-NL");
+    });
+  });
+
+  it("calls setLocale even when the browser language matches a supported locale, if explicit_language_choice is true", async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setNavigatorLanguage("nl-NL"); // browser picks a supported locale
+    vi.stubGlobal("fetch", makeProfileFetch({ language_code: "de", explicit_language_choice: true, is_admin: false, id: "u1" }));
+
+    render(<UserPreferencesSync />);
+
+    await waitFor(() => {
+      expect(mockSetLocale).toHaveBeenCalledWith("de-DE");
+    });
+  });
+
+  it("does NOT call setLocale when explicit_language_choice is false and localStorage has a preference", async () => {
+    localStorage.setItem(STORAGE_KEY, "fr-FR");
+    setNavigatorLanguage("xx-XX");
+    vi.stubGlobal("fetch", makeProfileFetch({ language_code: "nl", explicit_language_choice: false, is_admin: false, id: "u1" }));
+
+    render(<UserPreferencesSync />);
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalled();
+    });
+
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+});
+
 describe("UserPreferencesSync — fetch failure does not crash the component", () => {
   it("silently swallows a network error and does not call setLocale", async () => {
     localStorage.removeItem(STORAGE_KEY);

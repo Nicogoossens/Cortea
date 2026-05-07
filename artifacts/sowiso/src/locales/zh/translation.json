@@ -189,6 +189,7 @@
   "profile.not_authenticated": "请登录以查看您的个人档案。",
   "profile.sign_in": "登录",
   "auth.or_sign_with": "或通过以下方式登录",
+  "auth.google_signin": "使用 Google 继续",
   "auth.or_register_with": "或通过以下方式注册",
   "auth.coming_soon": "即将推出",
   "auth.social_coming_soon": "社交账户登录即将推出。",

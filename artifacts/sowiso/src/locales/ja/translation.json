@@ -200,6 +200,7 @@
   "profile.not_authenticated": "プロフィールをご覧になるにはサインインしてください。",
   "profile.sign_in": "サインイン",
   "auth.or_sign_with": "または以下でサインイン",
+  "auth.google_signin": "Google で続ける",
   "auth.or_register_with": "または以下で登録",
   "auth.coming_soon": "近日公開予定",
   "auth.social_coming_soon": "ソーシャルアカウントでのサインインは近日公開予定です。",

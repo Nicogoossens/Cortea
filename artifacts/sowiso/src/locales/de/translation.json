@@ -193,6 +193,7 @@
   "profile.not_authenticated": "Bitte melden Sie sich an, um Ihr Profil zu sehen.",
   "profile.sign_in": "Anmelden",
   "auth.or_sign_with": "oder anmelden mit",
+  "auth.google_signin": "Mit Google fortfahren",
   "auth.or_register_with": "oder registrieren mit",
   "auth.coming_soon": "demnächst",
   "auth.social_coming_soon": "Die Anmeldung mit sozialen Konten ist bald verfügbar.",

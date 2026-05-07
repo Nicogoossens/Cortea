@@ -203,6 +203,7 @@
   "profile.not_authenticated": "Meld u aan om uw profiel te bekijken.",
   "profile.sign_in": "Aanmelden",
   "auth.or_sign_with": "of aanmelden met",
+  "auth.google_signin": "Doorgaan met Google",
   "auth.or_register_with": "of registreren met",
   "auth.coming_soon": "binnenkort",
   "auth.social_coming_soon": "Aanmelden met sociale accounts is binnenkort beschikbaar.",

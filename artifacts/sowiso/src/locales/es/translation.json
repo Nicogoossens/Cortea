@@ -187,6 +187,7 @@
   "profile.not_authenticated": "Por favor, inicie sesión para ver su perfil.",
   "profile.sign_in": "Iniciar sesión",
   "auth.or_sign_with": "o iniciar sesión con",
+  "auth.google_signin": "Continuar con Google",
   "auth.or_register_with": "o registrarse con",
   "auth.coming_soon": "próximamente",
   "auth.social_coming_soon": "El inicio de sesión con cuentas sociales estará disponible pronto.",

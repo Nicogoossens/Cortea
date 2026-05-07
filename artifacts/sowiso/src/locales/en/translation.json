@@ -225,6 +225,7 @@
   "profile.not_authenticated": "Please sign in to view your profile.",
   "profile.sign_in": "Sign In",
   "auth.or_sign_with": "or sign in with",
+  "auth.google_signin": "Continue with Google",
   "auth.or_register_with": "or register with",
   "auth.coming_soon": "coming soon",
   "auth.social_coming_soon": "Sign in with social accounts is coming soon.",

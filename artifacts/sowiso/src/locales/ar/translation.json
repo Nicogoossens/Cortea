@@ -219,6 +219,7 @@
   "profile.not_authenticated": "يرجى تسجيل الدخول لعرض ملفك الشخصي.",
   "profile.sign_in": "تسجيل الدخول",
   "auth.or_sign_with": "أو تسجيل الدخول عبر",
+  "auth.google_signin": "المتابعة باستخدام Google",
   "auth.or_register_with": "أو التسجيل عبر",
   "auth.coming_soon": "قريباً",
   "auth.social_coming_soon": "تسجيل الدخول عبر حسابات التواصل الاجتماعي قريباً.",

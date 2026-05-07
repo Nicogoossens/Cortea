@@ -37,7 +37,7 @@ function isRtl(lang: string): boolean {
   return RTL_LANGS.has(lang);
 }
 
-function detectLocale(): SupportedLocale {
+export function detectLocale(): SupportedLocale {
   // ?lang=xx query parameter takes highest priority (enables hreflang URL variants)
   try {
     const params = new URLSearchParams(window.location.search);

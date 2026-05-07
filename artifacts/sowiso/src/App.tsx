@@ -5,14 +5,14 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useLanguage, type SupportedLocale } from "@/lib/i18n";
-import { LanguageProvider, hasStoredLocalePreference, hasSupportedBrowserLocale } from "@/lib/language-provider";
-import { ALL_LOCALES } from "@/lib/i18n-locales";
+import { useLanguage } from "@/lib/i18n";
+import { LanguageProvider } from "@/lib/language-provider";
 import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { AccessibilityProvider, useAccessibility } from "@/lib/accessibility";
+import { AccessibilityProvider } from "@/lib/accessibility";
 import { PrivacyProvider } from "@/lib/privacy";
 import { useEffect, useRef } from "react";
+import { UserPreferencesSync } from "@/components/UserPreferencesSync";
 import { HelmetProvider } from "react-helmet-async";
 import { captureUtmParams } from "@/lib/utm";
 import { captureReferralCode, getStoredReferralCode, clearStoredReferralCode } from "@/lib/referral-capture";
@@ -76,67 +76,13 @@ function AppWithRegion({ children }: { children: React.ReactNode }) {
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
+/** Redirects legacy /situations URLs to /counsel, preserving query params. */
 function SituationsRedirect() {
   const [, navigate] = useLocation();
   useEffect(() => {
     const params = window.location.search;
     navigate(`/counsel${params}`);
   }, [navigate]);
-  return null;
-}
-
-/** Age groups that warrant automatic large-font promotion. */
-const AGE_FONT_GROUPS = new Set(["senior_elder", "established_practitioner"]);
-
-/**
- * After the user logs in (or on cold start with a stored session) this
- * component applies two server-side preferences:
- *  1. `language_code` — overrides the localStorage locale so the UI matches
- *     the profile the user last saved (cross-device).
- *  2. `age_group`     — server-side Noble Score age estimation.
- * Auth is via HttpOnly session cookie (credentials: 'include').
- */
-function UserPreferencesSync() {
-  const { isAuthenticated, userId, login } = useAuth();
-  const { locale, setLocale } = useLanguage();
-  const { autoApplyAgeFont } = useAccessibility();
-  const syncedRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      syncedRef.current = null;
-      return;
-    }
-
-    if (syncedRef.current === userId) return;
-    syncedRef.current = userId;
-
-    fetch(`${API_BASE}/api/users/profile`, { credentials: "include" })
-      .then((r) => r.ok ? r.json() : null)
-      .catch(() => null)
-      .then((profile: { language_code?: string; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
-        if (!profile) return;
-
-        if (profile.language_code && !hasStoredLocalePreference() && !hasSupportedBrowserLocale()) {
-          const serverLang = profile.language_code;
-          const matchedLocale = ALL_LOCALES.find(
-            (l) => l === serverLang || l.startsWith(serverLang + "-")
-          ) as SupportedLocale | undefined;
-          if (matchedLocale && matchedLocale !== locale) {
-            setLocale(matchedLocale);
-          }
-        }
-
-        if (profile.age_group && AGE_FONT_GROUPS.has(profile.age_group)) {
-          autoApplyAgeFont("large");
-        }
-
-        if (profile.is_admin !== undefined) {
-          login(profile.id ?? "", { isAdmin: profile.is_admin });
-        }
-      });
-  }, [isAuthenticated, userId, locale, setLocale, autoApplyAgeFont, login]);
-
   return null;
 }
 

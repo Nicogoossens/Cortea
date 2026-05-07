@@ -163,7 +163,7 @@ function RegionPicker() {
         </span>
       </div>
       <p className="text-sm text-foreground/80 font-light">
-        The following regions are available in our lessons — with more cultures added regularly.
+        {t("landing.region_subtitle")}
       </p>
 
       <Select value={activeRegion} onValueChange={(v) => setActiveRegion(v as RegionCode)}>

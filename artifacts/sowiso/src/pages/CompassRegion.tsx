@@ -15,7 +15,7 @@ import { ArrowLeft, AlertTriangle, CheckCircle2, Utensils, MessageSquare, Gift, 
 import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { LockOverlay } from "@/components/LockOverlay";
-import { FlagEmoji } from "@/lib/active-region";
+import { FlagEmoji, COMPASS_REGIONS } from "@/lib/active-region";
 import { SEOHead } from "@/components/SEOHead";
 import { useState, useEffect } from "react";
 import { VenueCard, type Venue, type VenueCategory, type OccasionTag } from "@/components/VenueCard";
@@ -465,18 +465,10 @@ export default function CompassRegion() {
     );
   }
 
-  if (!detail) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="font-serif text-2xl">{t("common.not_found")}</h2>
-        <Link href="/compass" className="text-primary hover:underline mt-4 inline-block">
-          {t("compass.back")}
-        </Link>
-      </div>
-    );
-  }
-
   if (isCompassRegionDetailLocked(isAuthenticated, GUEST_UNLOCKED_REGIONS, regionCode)) {
+    const staticRegion = COMPASS_REGIONS.find((r) => r.code === regionCode);
+    const displayName = detail?.region_name ?? staticRegion?.names.en ?? regionCode;
+    const displayCode = detail?.region_code ?? regionCode;
     return (
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16">
         <Link href="/compass" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
@@ -484,10 +476,10 @@ export default function CompassRegion() {
           {t("compass.back")}
         </Link>
         <div className="flex items-center gap-4 md:gap-6">
-          <FlagEmoji code={detail.region_code} size="lg" className="drop-shadow-sm flex-shrink-0" ariaLabel={detail.region_name} />
+          <FlagEmoji code={displayCode} size="lg" className="drop-shadow-sm flex-shrink-0" ariaLabel={displayName} />
           <div>
-            <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-2">{detail.region_name}</h1>
-            <p className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{detail.region_code}</p>
+            <h1 className="text-4xl md:text-5xl font-serif text-foreground mb-2">{displayName}</h1>
+            <p className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{displayCode}</p>
           </div>
         </div>
         <div className="relative min-h-[200px]">
@@ -505,6 +497,17 @@ export default function CompassRegion() {
             isAuthenticated={isAuthenticated}
           />
         </div>
+      </div>
+    );
+  }
+
+  if (!detail) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="font-serif text-2xl">{t("common.not_found")}</h2>
+        <Link href="/compass" className="text-primary hover:underline mt-4 inline-block">
+          {t("compass.back")}
+        </Link>
       </div>
     );
   }

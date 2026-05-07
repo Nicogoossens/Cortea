@@ -26,7 +26,7 @@
   "welcome.hero_title_1": "Quão refinado",
   "welcome.hero_title_2": "é você?",
   "welcome.hero_subtitle": "Eleve a sua comunicação e etiqueta entre culturas. Aprenda as tradições de diferentes regiões e construa relações mais fortes e significativas — onde quer que esteja no mundo.",
-  "welcome.begin": "Iniciar a avaliação",
+  "welcome.begin": "Experimente por si mesmo",
   "welcome.module_atelier_desc": "Exercícios baseados em cenários que dissecam situações sociais reais — de apresentações em sala de conselho a jantares diplomáticos.",
   "welcome.module_counsel_desc": "Um conselheiro discreto que responde às perguntas de etiqueta que se hesita em formular em voz alta.",
   "welcome.module_compass_desc": "Um atlas cultural com as regras não escritas e costumes das sociedades de todo o mundo.",
@@ -1398,5 +1398,6 @@
   "votes.no_results": "Nenhum país encontrado.",
   "votes.error_load": "Não foi possível carregar a lista. Por favor, tente novamente.",
   "votes.error_cast": "Não foi possível guardar o seu voto.",
-  "votes.error_remove": "Não foi possível remover o seu voto."
+  "votes.error_remove": "Não foi possível remover o seu voto.",
+  "landing.region_subtitle": "As seguintes regiões estão disponíveis nas nossas lições — com mais culturas adicionadas regularmente."
 }

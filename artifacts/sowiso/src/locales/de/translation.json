@@ -32,7 +32,7 @@
   "welcome.hero_title_1": "Wie kultiviert",
   "welcome.hero_title_2": "sind Sie?",
   "welcome.hero_subtitle": "Verfeinern Sie Ihre Kommunikation und Etikette über Kulturgrenzen hinweg. Lernen Sie die Traditionen verschiedener Regionen kennen und pflegen Sie stärkere, bedeutungsvollere Beziehungen — wo auch immer Sie sich befinden.",
-  "welcome.begin": "Bewertung starten",
+  "welcome.begin": "Probieren Sie es selbst aus",
   "welcome.module_atelier_desc": "Szenariobasierte Übungen, die reale gesellschaftliche Situationen sezieren — von Boardroom-Vorstellungen bis zu diplomatischen Diners.",
   "welcome.module_counsel_desc": "Ein diskreter Berater, der die Etikette-Fragen beantwortet, die man zögert laut auszusprechen.",
   "welcome.module_compass_desc": "Ein Kulturatlas mit den ungeschriebenen Regeln und Bräuchen der Gesellschaften weltweit.",
@@ -1398,5 +1398,6 @@
   "votes.no_results": "Keine Länder gefunden.",
   "votes.error_load": "Liste konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
   "votes.error_cast": "Ihre Stimme konnte nicht gespeichert werden.",
-  "votes.error_remove": "Stimme konnte nicht entfernt werden."
+  "votes.error_remove": "Stimme konnte nicht entfernt werden.",
+  "landing.region_subtitle": "Die folgenden Regionen sind in unseren Lektionen verfügbar — mit regelmäßig hinzukommenden Kulturen."
 }

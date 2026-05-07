@@ -104,10 +104,8 @@
   --secondary-foreground: 40 20% 96%;
 
   --muted: 40 15% 90%;
-  /* WCAG 2.1 AA audit: HSL(150 10% 40%) on HSL(40 20% 96%) → contrast ≈ 4.93:1 ✓ (normal text, ≥4.5:1 required).
-     Opacity variants /60 and /40 are used exclusively on inactive/decorative elements
-     (coming-soon labels, placeholder hints) — exempt per WCAG 1.4.3 §1. */
-  --muted-foreground: 150 10% 40%;
+  /* WCAG 2.1 AA: raised to 150 15% 28% → contrast ≈ 7.2:1 on parchment background ✓ */
+  --muted-foreground: 150 15% 28%;
 
   --accent: 40 20% 90%;
   --accent-foreground: 150 30% 12%;
@@ -196,51 +194,72 @@
   font-size: 125%; /* 20px base */
 }
 
-/* ── High-contrast mode (WCAG 2.1 AA ≥ 4.5:1) ───────────────────────────── */
+/* ── High-contrast mode (WCAG 2.1 AAA ≥ 7:1) ────────────────────────────── */
 .high-contrast {
-  /* Text and backgrounds */
-  --foreground: 150 40% 5%;
-  --background: 0 0% 100%;
-  --border: 150 30% 30%;
-  --input: 150 30% 75%;
-  --ring: 150 60% 15%;
+  /* Pure black-on-white — maximum legibility */
+  --foreground: 0 0% 4%;          /* near-black */
+  --background: 0 0% 100%;        /* pure white */
+  --border: 0 0% 20%;             /* dark border — always visible */
+  --input: 0 0% 70%;
+  --ring: 150 80% 10%;
 
-  /* Cards — pure white for max contrast against text */
+  /* Cards */
   --card: 0 0% 100%;
-  --card-foreground: 150 40% 5%;
-  --card-border: 150 30% 30%;
+  --card-foreground: 0 0% 4%;
+  --card-border: 0 0% 20%;
 
-  /* Muted — only slightly lighter than main foreground */
-  --muted: 0 0% 92%;
-  --muted-foreground: 150 30% 15%;
+  /* Muted — near-black so even /50 opacity stays readable */
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 8%;    /* near-black → at /50 on white = ~grey 54% → still 3.5:1; ok for decorative */
 
-  /* Primary — deep forest stays but much darker */
-  --primary: 150 60% 8%;
+  /* Primary — deep forest, maximum saturation */
+  --primary: 150 80% 8%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary — rich brass stays legible */
-  --secondary: 38 80% 30%;
+  /* Secondary */
+  --secondary: 38 90% 25%;
   --secondary-foreground: 0 0% 100%;
 
-  /* Sidebar keeps dark background, but text becomes full white */
-  --sidebar: 150 50% 8%;
+  /* Sidebar */
+  --sidebar: 150 60% 5%;
   --sidebar-foreground: 0 0% 100%;
-  --sidebar-border: 150 30% 20%;
-  --sidebar-accent: 150 40% 15%;
+  --sidebar-border: 0 0% 20%;
+  --sidebar-accent: 150 50% 12%;
   --sidebar-accent-foreground: 0 0% 100%;
 
   /* Popover */
   --popover: 0 0% 100%;
-  --popover-foreground: 150 40% 5%;
-  --popover-border: 150 30% 30%;
+  --popover-foreground: 0 0% 4%;
+  --popover-border: 0 0% 20%;
 
   /* Accent */
   --accent: 0 0% 88%;
-  --accent-foreground: 150 40% 5%;
+  --accent-foreground: 0 0% 4%;
 
   /* Destructive */
-  --destructive: 0 80% 30%;
+  --destructive: 0 90% 28%;
   --destructive-foreground: 0 0% 100%;
+}
+
+/* Force text elements to full opacity in high-contrast mode */
+.high-contrast p,
+.high-contrast span,
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3,
+.high-contrast h4,
+.high-contrast li,
+.high-contrast a,
+.high-contrast button,
+.high-contrast label,
+.high-contrast div {
+  --tw-text-opacity: 1 !important;
+}
+
+/* Force borders to full opacity in high-contrast mode */
+.high-contrast * {
+  --tw-border-opacity: 1 !important;
+  --tw-ring-opacity: 1 !important;
 }
 
 /* ── Minimum touch target enforcement (WCAG 2.5.5: 44×44px) ─────────────── */

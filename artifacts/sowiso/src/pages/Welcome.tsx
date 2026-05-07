@@ -471,41 +471,41 @@ export default function Welcome() {
 
         {/* 1. Hero */}
         <div className="space-y-6 text-center animate-in fade-in duration-700">
-          <p className="text-xs font-mono uppercase tracking-[0.4em] text-muted-foreground/70">
+          <p className="text-xs font-mono uppercase tracking-[0.4em] text-muted-foreground font-semibold">
             {t("app.tagline")}
           </p>
           <h1 className="text-5xl md:text-7xl font-serif text-foreground leading-tight">
             {t("welcome.hero_title_1")}<br />
             <span className="text-primary">{t("welcome.hero_title_2")}</span>
           </h1>
-          <p className="text-xl text-foreground/70 font-light leading-relaxed max-w-xl mx-auto">
+          <p className="text-xl text-foreground/85 font-light leading-relaxed max-w-xl mx-auto">
             {t("welcome.hero_subtitle")}
           </p>
         </div>
 
         {/* 2. Three modules */}
-        <div className="w-full border-t border-border/30 pt-12 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
-          <p className="text-center text-xs font-mono uppercase tracking-[0.35em] text-muted-foreground/60">
+        <div className="w-full border-t border-border pt-12 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
+          <p className="text-center text-xs font-mono uppercase tracking-[0.35em] text-muted-foreground font-semibold">
             {t("welcome.modules_eyebrow", "What you will find inside")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
-              { icon: BookOpen, labelKey: "nav.atelier" as const, descKey: "welcome.module_atelier_desc" as const, href: "/atelier", accent: "bg-primary/[0.06] border-primary/25 text-primary", iconBg: "bg-primary/12" },
-              { icon: Shield,   labelKey: "nav.counsel" as const, descKey: "welcome.module_counsel_desc" as const, href: "/counsel", accent: "bg-violet-500/[0.06] border-violet-500/25 text-violet-700", iconBg: "bg-violet-500/12" },
-              { icon: Compass,  labelKey: "nav.compass" as const, descKey: "welcome.module_compass_desc" as const, href: "/compass", accent: "bg-sky-500/[0.06] border-sky-500/25 text-sky-700", iconBg: "bg-sky-500/12" },
-            ].map(({ icon: Icon, labelKey, descKey, href, accent, iconBg }) => (
+              { icon: BookOpen, labelKey: "nav.atelier" as const, descKey: "welcome.module_atelier_desc" as const, href: "/atelier", borderCls: "border-primary/60",   iconCls: "bg-primary/20 text-primary",       titleCls: "text-primary" },
+              { icon: Shield,   labelKey: "nav.counsel" as const, descKey: "welcome.module_counsel_desc" as const, href: "/counsel", borderCls: "border-violet-600/50", iconCls: "bg-violet-500/20 text-violet-700",  titleCls: "text-violet-800" },
+              { icon: Compass,  labelKey: "nav.compass" as const, descKey: "welcome.module_compass_desc" as const, href: "/compass", borderCls: "border-sky-600/50",    iconCls: "bg-sky-500/20 text-sky-700",        titleCls: "text-sky-800" },
+            ].map(({ icon: Icon, labelKey, descKey, href, borderCls, iconCls, titleCls }) => (
               <Link key={labelKey} href={href}>
-                <div className={`group relative flex flex-col gap-4 p-6 rounded-sm border ${accent} hover:shadow-sm transition-all duration-200 cursor-pointer h-full`}>
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-sm ${iconBg} shrink-0`}>
+                <div className={`group relative flex flex-col gap-4 p-6 rounded-sm border-2 bg-card ${borderCls} hover:shadow-md transition-all duration-200 cursor-pointer h-full`}>
+                  <div className={`flex items-center justify-center w-12 h-12 rounded-sm ${iconCls} shrink-0`}>
                     <Icon className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <div className="flex-1 space-y-2">
-                    <h3 className="font-serif text-lg text-foreground">{t(labelKey)}</h3>
-                    <p className="text-sm text-foreground/60 font-light leading-relaxed">{t(descKey)}</p>
+                    <h3 className={`font-serif text-lg ${titleCls}`}>{t(labelKey)}</h3>
+                    <p className="text-sm text-foreground/80 font-light leading-relaxed">{t(descKey)}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest opacity-50 group-hover:opacity-90 transition-opacity">
+                  <div className={`flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest font-semibold ${titleCls} group-hover:opacity-80 transition-opacity`}>
                     {t("common.explore", "Explore")}
-                    <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                    <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   </div>
                 </div>
               </Link>
@@ -520,23 +520,23 @@ export default function Welcome() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,      accent: "text-emerald-600 bg-emerald-500/10" },
-              { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,     accent: "text-sky-600 bg-sky-500/10" },
-              { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,      accent: "text-violet-600 bg-violet-500/10" },
-              { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, accent: "text-amber-600 bg-amber-500/10" },
-            ].map(({ headingKey, bodyKey, Icon, accent }) => (
-              <div key={headingKey} className="flex gap-4 items-start px-5 py-5 rounded-sm border border-border/30 bg-card/50">
-                <span className={`mt-0.5 shrink-0 flex items-center justify-center w-9 h-9 rounded-full ${accent}`} aria-hidden="true">
-                  <Icon className="w-4 h-4" />
+              { headingKey: "welcome.audience_everyday_heading",     bodyKey: "welcome.audience_everyday_body",     Icon: User,      iconCls: "text-emerald-700 bg-emerald-500/20",  borderCls: "border-emerald-500/40" },
+              { headingKey: "welcome.audience_curious_heading",      bodyKey: "welcome.audience_curious_body",      Icon: Globe,     iconCls: "text-sky-700 bg-sky-500/20",          borderCls: "border-sky-500/40" },
+              { headingKey: "welcome.audience_refined_heading",      bodyKey: "welcome.audience_refined_body",      Icon: Star,      iconCls: "text-violet-700 bg-violet-500/20",    borderCls: "border-violet-500/40" },
+              { headingKey: "welcome.audience_professional_heading", bodyKey: "welcome.audience_professional_body", Icon: Briefcase, iconCls: "text-amber-700 bg-amber-500/20",      borderCls: "border-amber-500/40" },
+            ].map(({ headingKey, bodyKey, Icon, iconCls, borderCls }) => (
+              <div key={headingKey} className={`flex gap-4 items-start px-5 py-5 rounded-sm border-2 bg-card ${borderCls}`}>
+                <span className={`mt-0.5 shrink-0 flex items-center justify-center w-10 h-10 rounded-full ${iconCls}`} aria-hidden="true">
+                  <Icon className="w-5 h-5" />
                 </span>
                 <div className="space-y-1.5">
-                  <h3 className="font-serif text-base text-foreground">{t(headingKey as Parameters<typeof t>[0])}</h3>
-                  <p className="text-sm text-foreground/60 font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
+                  <h3 className="font-serif text-base text-foreground font-semibold">{t(headingKey as Parameters<typeof t>[0])}</h3>
+                  <p className="text-sm text-foreground/80 font-light leading-relaxed">{t(bodyKey as Parameters<typeof t>[0])}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-sm text-foreground/50 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
+          <p className="text-sm text-foreground/75 font-light leading-relaxed max-w-2xl text-center mx-auto pt-2">
             {t("welcome.foundation_sentence")}
           </p>
         </div>
@@ -556,7 +556,7 @@ export default function Welcome() {
             {t("welcome.begin")}
             <ChevronRight className="w-5 h-5" aria-hidden="true" />
           </Button>
-          <p className="text-base text-foreground/60 font-light">
+          <p className="text-base text-foreground/80 font-light">
             {t("landing.signin_prompt")}{" "}
             <a
               href="#"
@@ -578,27 +578,27 @@ export default function Welcome() {
         <Link href="/membership">
           <div
             data-testid="link-welcome-upgrade-cta"
-            className="group relative overflow-hidden rounded-sm border border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-card to-card hover:border-amber-500/50 hover:from-amber-500/10 transition-all duration-300 cursor-pointer animate-in fade-in duration-700"
+            className="group relative overflow-hidden rounded-sm border-2 border-amber-500/60 bg-gradient-to-br from-amber-50/80 via-card to-card hover:border-amber-500/80 hover:from-amber-50 transition-all duration-300 cursor-pointer animate-in fade-in duration-700"
             style={{ animationDelay: "550ms" }}
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500/40 via-amber-400/60 to-amber-500/40" aria-hidden="true" />
             <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6">
-              <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-sm bg-amber-500/10 border border-amber-500/20">
-                <Crown className="h-6 w-6 text-amber-600" aria-hidden="true" />
+              <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-sm bg-amber-500/25 border-2 border-amber-500/50">
+                <Crown className="h-6 w-6 text-amber-700" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0 space-y-2">
-                <p className="text-xs font-mono uppercase tracking-widest text-amber-700/70">
+                <p className="text-xs font-mono uppercase tracking-widest text-amber-800 font-semibold">
                   {t("home.upgrade_eyebrow")}
                 </p>
                 <h2 className="font-serif text-xl md:text-2xl text-foreground">
                   {t("home.upgrade_title")}
                 </h2>
-                <p className="text-base text-foreground/60 font-light leading-relaxed">
+                <p className="text-base text-foreground/80 font-light leading-relaxed">
                   {t("home.upgrade_description")}
                 </p>
               </div>
               <div className="shrink-0">
-                <span className="inline-flex items-center gap-2 px-5 py-3 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-700 text-sm font-medium tracking-wide group-hover:bg-amber-500/20 transition-colors">
+                <span className="inline-flex items-center gap-2 px-5 py-3 rounded-sm bg-amber-500/20 border-2 border-amber-500/60 text-amber-800 text-sm font-semibold tracking-wide group-hover:bg-amber-500/30 transition-colors">
                   {t("home.upgrade_cta")}
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </span>
@@ -626,7 +626,7 @@ export default function Welcome() {
                     if (currentQ === 0) { setQuizOpen(false); }
                     else { setCurrentQ(currentQ - 1); setRevealed(answers[currentQ - 1] !== null); }
                   }}
-                  className="flex items-center gap-1.5 text-sm font-mono text-muted-foreground/70 hover:text-foreground transition-colors shrink-0"
+                  className="flex items-center gap-1.5 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   aria-label={t("welcome.quiz_back")}
                 >
                   <ArrowLeft className="w-4 h-4" aria-hidden="true" />

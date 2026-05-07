@@ -457,29 +457,34 @@ const SPHERE_TO_COMPASS_FIELDS: Record<string, string[]> = {
   music_entertainment: ["dos", "donts"],
 };
 
-router.get("/culture/compass/:regionCode", requireAuthUser, async (req, res) => {
-  try {
-    const userTierRow = await resolveUserTier(req);
-    const tier = (userTierRow?.subscription_tier ?? "guest") as SubscriptionTier;
-    if (!TIER_FEATURES[tier].fullCulturalCompass) {
-      return res.status(403).json({ code: "TIER_REQUIRED", error: "A paid subscription is required to access the Cultural Compass." });
-    }
+const GUEST_UNLOCKED_COMPASS_REGIONS = ["GB"];
 
+router.get("/culture/compass/:regionCode", async (req, res) => {
+  try {
     const paramParsed = RegionCodeParamSchema.safeParse(req.params);
     if (!paramParsed.success) {
       return res.status(400).json({ error: "The region code provided is not valid." });
+    }
+
+    const regionCode = paramParsed.data.regionCode.toUpperCase();
+    const isGuestUnlocked = GUEST_UNLOCKED_COMPASS_REGIONS.includes(regionCode);
+
+    const userTierRow = await resolveUserTier(req);
+    const tier = (userTierRow?.subscription_tier ?? "guest") as SubscriptionTier;
+
+    if (!isGuestUnlocked) {
+      if (!TIER_FEATURES[tier].fullCulturalCompass) {
+        return res.status(403).json({ code: "TIER_REQUIRED", error: "A paid subscription is required to access the Cultural Compass." });
+      }
+      if (!canAccessRegion(tier, userTierRow?.active_region ?? "", regionCode)) {
+        return res.status(403).json({ error: "Your current membership does not include access to this region." });
+      }
     }
 
     const queryParsed = CompassQuerySchema.safeParse(req.query);
     const locale = queryParsed.success ? queryParsed.data.locale : DEFAULT_LOCALE;
     const rawSpheres = queryParsed.success ? (queryParsed.data.situational_interests ?? "") : "";
     const spheres = rawSpheres.split(",").map((s) => s.trim()).filter(Boolean);
-
-    const regionCode = paramParsed.data.regionCode.toUpperCase();
-
-    if (!canAccessRegion(tier, userTierRow?.active_region ?? "", regionCode)) {
-      return res.status(403).json({ error: "Your current membership does not include access to this region." });
-    }
 
     const rows = await db.select()
       .from(compassRegionsTable)

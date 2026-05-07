@@ -192,12 +192,12 @@ export default function Register() {
         </div>
         <div className="space-y-3">
           <Link href="/waitlist">
-            <Button className="w-full font-mono text-xs gap-2">
+            <Button className="w-full font-mono text-xs gap-2 rounded-xl bg-stone-700 hover:bg-stone-600 text-stone-50">
               {t("register.closed_join_waitlist")}
             </Button>
           </Link>
           <Link href="/signin">
-            <Button variant="outline" className="w-full font-mono text-xs">
+            <Button variant="outline" className="w-full font-mono text-xs rounded-xl">
               {t("register.closed_already_member")}
             </Button>
           </Link>

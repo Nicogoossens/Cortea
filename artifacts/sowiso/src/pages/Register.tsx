@@ -103,7 +103,7 @@ export default function Register() {
     setError(null);
 
     try {
-      const baseLang = locale.split("-")[0];
+      const baseLang = (navigator.language || locale).split("-")[0];
       const utmParams = getStoredUtmParams();
       const body: Record<string, unknown> = {
         email: form.email.trim(),

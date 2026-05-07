@@ -3,9 +3,13 @@ import { Globe, ChevronDown, Check } from "lucide-react";
 import { useLocale, type SupportedLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS, getLocaleDefinition } from "@/lib/i18n-locales";
 import { FlagEmoji } from "@/lib/active-region";
+import { useAuth } from "@/lib/auth";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useLocale();
+  const { isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const current = getLocaleDefinition(locale);
@@ -23,6 +27,15 @@ export function LanguageSwitcher() {
   function handleSelect(l: SupportedLocale) {
     setLocale(l);
     setOpen(false);
+    if (isAuthenticated) {
+      const baseLang = l.split("-")[0];
+      fetch(`${API_BASE}/api/users/profile`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language_code: baseLang }),
+      }).catch(() => {});
+    }
   }
 
   return (

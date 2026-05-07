@@ -10,6 +10,25 @@ import { LocaleContext, type LocaleContextValue } from "@/lib/i18n";
 const STORAGE_KEY = "sowiso_locale";
 const RTL_LANGS: Set<string> = new Set(["ar"]);
 
+export function hasStoredLocalePreference(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function hasSupportedBrowserLocale(): boolean {
+  try {
+    const browserLocale = navigator.language;
+    if (ALL_LOCALES.includes(browserLocale as SupportedLocale)) return true;
+    const browserBase = browserLocale.split("-")[0];
+    return ALL_LOCALES.some((l) => l.startsWith(browserBase + "-"));
+  } catch {
+    return false;
+  }
+}
+
 function localeToBaseLang(locale: SupportedLocale): SupportedLanguage {
   return locale.split("-")[0] as SupportedLanguage;
 }

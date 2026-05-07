@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
-import { LanguageProvider } from "@/lib/language-provider";
+import { LanguageProvider, hasStoredLocalePreference, hasSupportedBrowserLocale } from "@/lib/language-provider";
 import { ALL_LOCALES } from "@/lib/i18n-locales";
 import { ActiveRegionProvider } from "@/lib/active-region";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -117,7 +117,7 @@ function UserPreferencesSync() {
       .then((profile: { language_code?: string; age_group?: string; is_admin?: boolean; id?: string; full_name?: string } | null) => {
         if (!profile) return;
 
-        if (profile.language_code) {
+        if (profile.language_code && !hasStoredLocalePreference() && !hasSupportedBrowserLocale()) {
           const serverLang = profile.language_code;
           const matchedLocale = ALL_LOCALES.find(
             (l) => l === serverLang || l.startsWith(serverLang + "-")

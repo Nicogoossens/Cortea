@@ -4,6 +4,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/lib/auth";
 import { useLanguage, type SupportedLocale } from "@/lib/i18n";
 import { ALL_LOCALES } from "@/lib/i18n-locales";
+import { hasStoredLocalePreference, hasSupportedBrowserLocale } from "@/lib/language-provider";
 import { useActiveRegion, COMPASS_REGIONS, type RegionCode } from "@/lib/active-region";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -48,7 +49,7 @@ export default function OAuthCallback() {
           isAdmin: data.isAdmin,
         });
 
-        if (profile?.language_code) {
+        if (profile?.language_code && !hasStoredLocalePreference() && !hasSupportedBrowserLocale()) {
           const langCode = profile.language_code;
           const regionCode = profile.active_region;
           const resolved = ALL_LOCALES.find(

@@ -680,39 +680,33 @@ function VisitorAtelierTeaser({
 
       {/* Three feature cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" aria-hidden="true" />
-              {t("atelier.guest.teaser.feat1.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground leading-relaxed">
-            {t("atelier.guest.teaser.feat1.body")}
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-              {t("atelier.guest.teaser.feat2.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground leading-relaxed">
-            {t("atelier.guest.teaser.feat2.body")}
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-base flex items-center gap-2">
-              <Users2 className="w-4 h-4 text-primary" aria-hidden="true" />
-              {t("atelier.guest.teaser.feat3.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground leading-relaxed">
-            {t("atelier.guest.teaser.feat3.body")}
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border-2 border-primary/50 bg-primary/[0.06] p-6 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5 text-primary" aria-hidden="true" />
+            </div>
+            <h3 className="font-serif text-base text-primary leading-snug">{t("atelier.guest.teaser.feat1.title")}</h3>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">{t("atelier.guest.teaser.feat1.body")}</p>
+        </div>
+        <div className="rounded-xl border-2 border-amber-500/50 bg-amber-500/[0.06] p-6 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+              <Award className="w-5 h-5 text-amber-700" aria-hidden="true" />
+            </div>
+            <h3 className="font-serif text-base text-amber-800 leading-snug">{t("atelier.guest.teaser.feat2.title")}</h3>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">{t("atelier.guest.teaser.feat2.body")}</p>
+        </div>
+        <div className="rounded-xl border-2 border-violet-500/50 bg-violet-500/[0.06] p-6 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0">
+              <Users2 className="w-5 h-5 text-violet-700" aria-hidden="true" />
+            </div>
+            <h3 className="font-serif text-base text-violet-800 leading-snug">{t("atelier.guest.teaser.feat3.title")}</h3>
+          </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">{t("atelier.guest.teaser.feat3.body")}</p>
+        </div>
       </div>
 
       {/* Faded mock of a live session, with a lock-overlay register CTA. */}

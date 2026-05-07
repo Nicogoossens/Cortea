@@ -51,21 +51,21 @@ export function TierGate({ feature, requiredTier, children, inline = false, isAu
   }
 
   return (
-    <div className="border border-border/40 rounded-sm bg-muted/10 px-6 py-8 space-y-3">
-      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
+    <div className="border-2 border-primary/35 rounded-xl bg-primary/[0.04] px-6 py-8 space-y-3">
+      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground font-semibold">
         <Lock className="h-3.5 w-3.5" aria-hidden="true" />
         <span>{feature}</span>
       </div>
       {teaser && (
-        <p className="text-muted-foreground font-light leading-relaxed text-sm">{teaser}</p>
+        <p className="text-foreground/80 font-light leading-relaxed text-sm">{teaser}</p>
       )}
-      <p className="text-muted-foreground font-light leading-relaxed">
+      <p className="text-foreground/80 font-light leading-relaxed">
         This domain belongs to the repertoire of{" "}
         <span className="text-foreground font-medium">{TIER_NAMES[requiredTier]}</span>.
         {" "}Shall we expand your access?
       </p>
       <Link href={href}>
-        <div className="inline-flex items-center gap-2 mt-2 text-sm text-primary cursor-pointer hover:underline underline-offset-2 group">
+        <div className="inline-flex items-center gap-2 mt-2 text-sm text-primary font-medium cursor-pointer hover:underline underline-offset-2 group">
           {ctaText}
           <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
         </div>

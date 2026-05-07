@@ -379,7 +379,7 @@ export default function InnerCircle() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
-            <div className="relative rounded-sm overflow-hidden bg-muted border border-border p-8 flex flex-col items-center justify-center gap-6 min-h-[240px]">
+            <div className="relative rounded-xl overflow-hidden bg-muted border-2 border-primary/30 p-8 flex flex-col items-center justify-center gap-6 min-h-[240px]">
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-muted-foreground blur-[2px]" aria-hidden="true">
                 <Users className="h-10 w-10 opacity-20" />
                 <p className="text-sm font-light">Members present across the world.</p>

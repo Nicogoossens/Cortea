@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Shield, Send, Loader2, MapPin, RotateCcw, ChevronDown, X, Lock, UserPlus, ArrowRight, CalendarCheck, BookOpen, Info, AlertTriangle, LifeBuoy } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { useActiveRegion, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
+import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, type RegionCode, isRegionActive } from "@/lib/active-region";
 import {
   useGetProfile,
   useGetCultureProtocols,
@@ -37,6 +37,35 @@ function incrementStoredCount(userId: string | null): void {
   if (!userId) return;
   const count = getStoredQuestionCount(userId);
   localStorage.setItem(`counsel_q_${userId}`, String(count + 1));
+}
+
+const LAST_REGION_KEY = "counsel_last_region";
+const VALID_REGION_CODES = new Set(COMPASS_REGIONS.map((r) => r.code));
+
+function getStoredLastRegion(): RegionCode | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem(LAST_REGION_KEY);
+    if (stored && VALID_REGION_CODES.has(stored as RegionCode)) {
+      return stored as RegionCode;
+    }
+  } catch {
+    // localStorage unavailable (e.g. private mode restrictions)
+  }
+  return null;
+}
+
+function storeLastRegion(code: RegionCode | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (code === null) {
+      localStorage.removeItem(LAST_REGION_KEY);
+    } else {
+      localStorage.setItem(LAST_REGION_KEY, code);
+    }
+  } catch {
+    // localStorage unavailable — silently skip persistence
+  }
 }
 
 type CounselMode = "standard" | "emergency";
@@ -77,7 +106,12 @@ export default function Counsel() {
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(null);
+  const [sessionRegion, setSessionRegion] = useState<RegionCode | null>(getStoredLastRegion);
+
+  function applySessionRegion(code: RegionCode | null): void {
+    storeLastRegion(code);
+    setSessionRegion(code);
+  }
   const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   // Data-driven region availability — fully controlled by DB content.
@@ -494,8 +528,8 @@ export default function Counsel() {
             availableCodes={availableRegionCodes}
             sessionRegion={sessionRegion}
             getRegionName={getRegionName}
-            onSelect={(code) => { setSessionRegion(code); setShowContextRegionPicker(false); }}
-            onReset={() => { setSessionRegion(null); setShowContextRegionPicker(false); }}
+            onSelect={(code) => { applySessionRegion(code); setShowContextRegionPicker(false); }}
+            onReset={() => { applySessionRegion(null); setShowContextRegionPicker(false); }}
           />
         </div>
       )}
@@ -792,7 +826,7 @@ export default function Counsel() {
                 <span className="font-medium text-foreground/80">{getRegionName(effectiveRegion)}</span>
                 {isOverriding && (
                   <button
-                    onClick={() => { setSessionRegion(null); setShowRegionPicker(false); }}
+                    onClick={() => { applySessionRegion(null); setShowRegionPicker(false); }}
                     className="ml-auto flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/70 border border-primary/20 rounded-[2px] px-1.5 py-0.5 transition-colors"
                     aria-label={t("counsel.session_override_reset")}
                   >
@@ -819,8 +853,8 @@ export default function Counsel() {
                     availableCodes={availableRegionCodes}
                     sessionRegion={sessionRegion}
                     getRegionName={getRegionName}
-                    onSelect={(code) => { setSessionRegion(code); setShowRegionPicker(false); }}
-                    onReset={() => { setSessionRegion(null); setShowRegionPicker(false); }}
+                    onSelect={(code) => { applySessionRegion(code); setShowRegionPicker(false); }}
+                    onReset={() => { applySessionRegion(null); setShowRegionPicker(false); }}
                   />
                 </div>
               )}

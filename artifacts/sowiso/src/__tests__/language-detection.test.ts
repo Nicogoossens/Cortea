@@ -149,6 +149,64 @@ describe("detectLocale — ?lang= query param takes highest priority", () => {
   });
 });
 
+describe("detectLocale — ?lang= param is persisted to localStorage", () => {
+  it("writes the resolved locale to localStorage when a valid ?lang= param is present", () => {
+    clearStoredLocale();
+    Object.defineProperty(window, "location", {
+      value: { search: "?lang=nl-NL" },
+      configurable: true,
+    });
+    detectLocale();
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("nl-NL");
+  });
+
+  it("persists the resolved locale even when localStorage previously held a different preference", () => {
+    setStoredLocale("en-GB");
+    Object.defineProperty(window, "location", {
+      value: { search: "?lang=fr-FR" },
+      configurable: true,
+    });
+    detectLocale();
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("fr-FR");
+  });
+
+  it("persists the expanded locale when a base-lang param is used", () => {
+    clearStoredLocale();
+    Object.defineProperty(window, "location", {
+      value: { search: "?lang=es" },
+      configurable: true,
+    });
+    detectLocale();
+    expect(localStorage.getItem(STORAGE_KEY)).toBe("es-ES");
+  });
+
+  it("does NOT write to localStorage when ?lang= value is unsupported", () => {
+    clearStoredLocale();
+    Object.defineProperty(window, "location", {
+      value: { search: "?lang=xx" },
+      configurable: true,
+    });
+    detectLocale();
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("subsequent call without ?lang= returns the persisted locale", () => {
+    clearStoredLocale();
+    Object.defineProperty(window, "location", {
+      value: { search: "?lang=de-DE" },
+      configurable: true,
+    });
+    detectLocale(); // first call: param present, writes de-DE to storage
+
+    // Simulate page reload without the param
+    Object.defineProperty(window, "location", {
+      value: { search: "" },
+      configurable: true,
+    });
+    expect(detectLocale()).toBe("de-DE");
+  });
+});
+
 // ── hasStoredLocalePreference ────────────────────────────────────────────────
 
 describe("hasStoredLocalePreference", () => {

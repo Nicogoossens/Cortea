@@ -38,14 +38,23 @@ function isRtl(lang: string): boolean {
 }
 
 export function detectLocale(): SupportedLocale {
-  // ?lang=xx query parameter takes highest priority (enables hreflang URL variants)
+  // ?lang=xx query parameter takes highest priority (enables hreflang URL variants).
+  // When it resolves, persist it to localStorage so subsequent navigations without
+  // the param continue to use the same language instead of silently reverting.
   try {
     const params = new URLSearchParams(window.location.search);
     const langParam = params.get("lang");
     if (langParam) {
-      if (ALL_LOCALES.includes(langParam as SupportedLocale)) return langParam as SupportedLocale;
-      const match = ALL_LOCALES.find((l) => l.startsWith(langParam + "-") || l === langParam);
-      if (match) return match;
+      let resolved: SupportedLocale | undefined;
+      if (ALL_LOCALES.includes(langParam as SupportedLocale)) {
+        resolved = langParam as SupportedLocale;
+      } else {
+        resolved = ALL_LOCALES.find((l) => l.startsWith(langParam + "-") || l === langParam);
+      }
+      if (resolved) {
+        try { localStorage.setItem(STORAGE_KEY, resolved); } catch { /* storage unavailable */ }
+        return resolved;
+      }
     }
   } catch { /* SSR/test safety */ }
 

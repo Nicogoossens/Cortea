@@ -289,7 +289,8 @@ CREATE TABLE "learning_track_sessions" (
 	"started_at" timestamp DEFAULT now() NOT NULL,
 	"completed_at" timestamp,
 	"remediated_at" timestamp,
-	"remediates_session_id" integer
+	"remediates_session_id" integer,
+	"lang" text DEFAULT 'en' NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user_country_interests" (

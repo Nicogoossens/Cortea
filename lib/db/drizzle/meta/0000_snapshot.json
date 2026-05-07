@@ -1,5 +1,5 @@
 {
-  "id": "7d58c1b6-ed54-404b-b2c4-a108150c8bb3",
+  "id": "8af60376-f1d6-4356-9251-a5e4a671ac58",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -2046,6 +2046,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "lang": {
+          "name": "lang",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'en'"
         }
       },
       "indexes": {

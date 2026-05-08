@@ -6,9 +6,44 @@ import {
   type SupportedLanguage,
 } from "@/lib/i18n-locales";
 import { LocaleContext, type LocaleContextValue } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
 
 const STORAGE_KEY = "sowiso_locale";
 const RTL_LANGS: Set<string> = new Set(["ar"]);
+const STORAGE_WARNING_KEY = "sowiso_storage_warning_shown";
+
+function isStorageAvailable(): boolean {
+  try {
+    localStorage.setItem("__storage_test__", "1");
+    localStorage.removeItem("__storage_test__");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function hasShownStorageWarning(): boolean {
+  try {
+    return sessionStorage.getItem(STORAGE_WARNING_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markStorageWarningShown(): void {
+  try {
+    sessionStorage.setItem(STORAGE_WARNING_KEY, "1");
+  } catch {
+    // sessionStorage also unavailable — best effort
+  }
+}
+
+const STORAGE_TOAST_PAYLOAD = {
+  title: "Language preference can't be saved",
+  description:
+    "Your browser is blocking storage (e.g. private browsing mode). Your language choice will reset when you reload the page.",
+  variant: "destructive" as const,
+};
 
 export function hasStoredLocalePreference(): boolean {
   try {
@@ -58,8 +93,10 @@ export function detectLocale(): SupportedLocale {
     }
   } catch { /* SSR/test safety */ }
 
-  const stored = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null;
-  if (stored && ALL_LOCALES.includes(stored)) return stored;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null;
+    if (stored && ALL_LOCALES.includes(stored)) return stored;
+  } catch { /* storage unavailable */ }
 
   const browserLocale = navigator.language as SupportedLocale;
   if (ALL_LOCALES.includes(browserLocale)) return browserLocale;
@@ -81,9 +118,18 @@ export function detectLocale(): SupportedLocale {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<SupportedLocale>(detectLocale);
   const [, forceUpdate] = useState(0);
+  const { toast } = useToast();
 
   const language: SupportedLanguage = localeToBaseLang(locale);
   const dir: "ltr" | "rtl" = isRtl(language) ? "rtl" : "ltr";
+
+  useEffect(() => {
+    if (!hasShownStorageWarning() && !isStorageAvailable()) {
+      markStorageWarningShown();
+      toast(STORAGE_TOAST_PAYLOAD);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const baseLang = localeToBaseLang(locale);
@@ -109,7 +155,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   const setLocale = useCallback((newLocale: SupportedLocale) => {
     setLocaleState(newLocale);
-    localStorage.setItem(STORAGE_KEY, newLocale);
+    try {
+      localStorage.setItem(STORAGE_KEY, newLocale);
+    } catch {
+      if (!hasShownStorageWarning()) {
+        markStorageWarningShown();
+        toast(STORAGE_TOAST_PAYLOAD);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const t = useCallback(

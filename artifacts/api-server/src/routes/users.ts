@@ -40,12 +40,32 @@ function computeAgeGroup(
 
 router.get("/users/profile", requireAuthUser, async (req, res) => {
   try {
-    const userId = getResolvedUserId(req);
+    const authUserId = getResolvedUserId(req);
+    // Optional ?user_id= for public-view mode (viewing another user's profile).
+    const queriedUserId = typeof req.query.user_id === "string" && req.query.user_id.length > 0
+      ? req.query.user_id
+      : null;
+    const isPublicView = queriedUserId !== null && queriedUserId !== authUserId;
+    const targetUserId = isPublicView ? queriedUserId : authUserId;
 
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, targetUserId)).limit(1);
 
     if (!user) {
-      return res.status(404).json({ error: "Your profile has not yet been established." });
+      return res.status(404).json({ error: "Profile not found." });
+    }
+
+    // Public view — return only the fields needed for the profile page
+    // privacy placeholder (elite_privacy_mode, noble_score, display_name).
+    // Sensitive fields (email, behavior_profile, signals) are never exposed.
+    if (isPublicView) {
+      return res.json({
+        id: user.id,
+        display_name: user.display_name,
+        elite_privacy_mode: user.elite_privacy_mode ?? false,
+        noble_score: user.noble_score,
+        age_group: computeAgeGroup(user.birth_year, user.noble_score),
+        privacy_settings: user.privacy_settings ?? null,
+      });
     }
 
     const { session_token: _st, verification_token: _vt, password_hash: _ph, ...safeUser } = user;
@@ -943,6 +963,58 @@ router.get("/users/register-bias-signals", requireAuthUser, async (req, res) => 
   } catch (err) {
     req.log.error({ err }, "Failed to fetch register bias signals");
     return res.status(500).json({ error: "Register signals temporarily unavailable." });
+  }
+});
+
+// ─── POST /users/register-bias ────────────────────────────────────────────────
+// Manually sets the user's register_bias (with optional lock).
+// Called by Profile "Toon beide werelden gelijkmatig" action (§10.2).
+router.post("/users/register-bias", requireAuthUser, async (req, res) => {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Niet ingelogd." });
+
+    const { bias, locked } = z.object({
+      bias:   z.enum(["middle_class", "elite", "balanced"]),
+      locked: z.boolean().optional(),
+    }).parse(req.body);
+
+    const updates: Record<string, unknown> = { register_bias: bias };
+    if (locked !== undefined) updates.register_bias_locked = locked;
+
+    await db.update(usersTable).set(updates).where(eq(usersTable.id, userId));
+
+    return res.json({ ok: true, register_bias: bias });
+  } catch (err) {
+    req.log.error({ err }, "Failed to set register bias");
+    return res.status(500).json({ error: "Register bias update temporarily unavailable." });
+  }
+});
+
+// ─── POST /users/register-bias/recompute ─────────────────────────────────────
+// Re-infers register_bias from accumulated signals and unlocks it.
+// Called by Profile "Aanbevelingen herijken" action (§10.2).
+router.post("/users/register-bias/recompute", requireAuthUser, async (req, res) => {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Niet ingelogd." });
+
+    const [user] = await db
+      .select({ register_bias_signals: usersTable.register_bias_signals })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+
+    const signals = (user?.register_bias_signals ?? []) as PureRegisterBiasSignal[];
+    const newBias = inferRegisterBias(signals);
+
+    await db.update(usersTable)
+      .set({ register_bias: newBias, register_bias_locked: false })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ ok: true, register_bias: newBias });
+  } catch (err) {
+    req.log.error({ err }, "Failed to recompute register bias");
+    return res.status(500).json({ error: "Register bias recompute temporarily unavailable." });
   }
 });
 

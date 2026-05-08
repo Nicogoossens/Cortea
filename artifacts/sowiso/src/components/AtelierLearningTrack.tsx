@@ -89,6 +89,25 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
 
   const hasManuallyChanged = useRef(false);
   const lastAutoKey = useRef<string>("");
+  const prevRegisterBias = useRef(registerBias);
+
+  // Sync register/registerBothMode when registerBias prop arrives async (after
+  // useGetProfile() resolves) — but only if the user hasn't manually chosen yet.
+  useEffect(() => {
+    if (registerBias === prevRegisterBias.current) return;
+    prevRegisterBias.current = registerBias;
+    if (hasManuallyChanged.current) return;
+    if (registerBias === "balanced") {
+      setRegisterBothMode(true);
+    } else if (registerBias === "elite" && tier === "ambassador") {
+      setRegisterBothMode(false);
+      setRegister("elite");
+    } else if (registerBias === "middle_class") {
+      setRegisterBothMode(false);
+      setRegister("middle_class");
+    }
+  }, [registerBias, tier]);
+
   // Tracks which session_id we have already aligned currentQuestionIdx to.
   // Without this, reloading mid-session always shows question[0] which has
   // already been answered → 409 ANSWER_ALREADY_RECORDED on the next submit.

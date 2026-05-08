@@ -18,7 +18,7 @@ const APP_URL = (process.env.APP_URL ?? `https://sowiso-01.replit.app${BASE_PATH
 
 function buildActivationLink(founderCode: string | null): string | null {
   if (!founderCode) return null;
-  return `${APP_URL}/register?waitlist=1&code=${founderCode}`;
+  return `${APP_URL}/register?invite=${founderCode}`;
 }
 
 const router = Router();

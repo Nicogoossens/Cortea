@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq, count, sql } from "drizzle-orm";
+import { usersTable, waitlistSignupsTable } from "@workspace/db";
+import { eq, count, sql, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
@@ -66,19 +66,34 @@ const RegisterBodySchema = z.object({
 
 router.post("/auth/register", async (req, res) => {
   try {
-    // Closed-beta gate: when CLOSED_BETA=true, require BETA_INVITE_CODE either
-    // as ?invite=… query param or as `invite` field in the JSON body. This lets
-    // the team keep developing while public registration is hidden behind the
-    // Founding-100 waitlist.
+    // Closed-beta gate: when CLOSED_BETA=true, registration requires either:
+    //   (a) the shared BETA_INVITE_CODE env var, or
+    //   (b) a personal Founding-100 founder code (FNDR-…) that exists in the
+    //       waitlist DB — this is how pre-approved founders activate their account.
     const closedBeta = (process.env.CLOSED_BETA ?? "").toLowerCase() === "true";
     if (closedBeta) {
-      const requiredCode = (process.env.BETA_INVITE_CODE ?? "").trim();
       const submittedCode = (
         (req.query?.invite as string | undefined) ??
+        (req.query?.code as string | undefined) ??
         (req.body?.invite as string | undefined) ??
         ""
       ).toString().trim();
-      if (!requiredCode || submittedCode !== requiredCode) {
+
+      const betaCode = (process.env.BETA_INVITE_CODE ?? "").trim();
+      const matchesBetaCode = betaCode && submittedCode === betaCode;
+
+      // Accept FNDR-… codes by looking them up in the waitlist DB
+      let matchesFounderCode = false;
+      if (!matchesBetaCode && submittedCode.startsWith("FNDR-")) {
+        const [row] = await db
+          .select({ id: waitlistSignupsTable.id })
+          .from(waitlistSignupsTable)
+          .where(eq(waitlistSignupsTable.founder_code, submittedCode))
+          .limit(1);
+        matchesFounderCode = !!row;
+      }
+
+      if (!matchesBetaCode && !matchesFounderCode) {
         return res.status(403).json({
           error: "Public registration is currently closed. Please join the Founding 100 waitlist.",
           closed_beta: true,

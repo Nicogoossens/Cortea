@@ -50,9 +50,10 @@ export function useRegistrationStatus(): RegistrationStatus {
   return status;
 }
 
-/** Read the `?invite=…` query param from the current URL. */
+/** Read the `?invite=…` (or legacy `?code=…`) query param from the current URL. */
 export function getInviteFromUrl(): string | null {
   if (typeof window === "undefined") return null;
-  const v = new URLSearchParams(window.location.search).get("invite");
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get("invite") ?? params.get("code");
   return v ? v.trim() : null;
 }

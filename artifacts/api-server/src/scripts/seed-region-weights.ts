@@ -2,6 +2,10 @@
  * Seed the region_dimension_weights table.
  * Applies culturally-calibrated multipliers per Compass dimension (§9.7).
  *
+ * Only priority regions are seeded explicitly (55 entries). All other
+ * country/region codes fall back to 1.0 for every dimension at runtime —
+ * see learning-engine-pure.ts: `const w = weights[pillar] ?? 1.0`.
+ *
  * Usage:
  *   pnpm --filter @workspace/api-server tsx src/scripts/seed-region-weights.ts
  *

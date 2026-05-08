@@ -52,8 +52,8 @@ const CompleteBodySchema = z.object({
 });
 
 function tierAllows(register: Register, tier: string): boolean {
-  if (tier !== "traveller" && tier !== "ambassador") return false;
-  if (register === "elite" && tier !== "ambassador") return false;
+  if (tier !== "traveller" && tier !== "ambassador" && tier !== "founding") return false;
+  if (register === "elite" && tier !== "ambassador" && tier !== "founding") return false;
   return true;
 }
 

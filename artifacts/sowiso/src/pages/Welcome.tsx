@@ -397,7 +397,7 @@ export default function Welcome() {
         </div>
 
         {/* 2. Three modules */}
-        <div className="w-full border-t border-border pt-12 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
+        <div id="region-detect-sentinel" className="w-full border-t border-border pt-12 space-y-6 animate-in fade-in duration-700" style={{ animationDelay: "150ms" }}>
           <p className="text-center text-xs font-mono uppercase tracking-[0.35em] text-muted-foreground font-semibold">
             {t("welcome.modules_eyebrow", "What you will find inside")}
           </p>

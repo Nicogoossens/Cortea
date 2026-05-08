@@ -8,17 +8,84 @@ import { SPHERE_OPTIONS } from "@/lib/profile-options";
 import { WORLD_COUNTRIES } from "@/lib/world-countries";
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Loader2, Sparkles, Globe, Crown, Star,
+  AlertTriangle,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// ─── Step 1: Objectives ───────────────────────────────────────────────────────
 const OBJECTIVES = [
-  { id: "business", icon: "◈", label_key: "onboarding.obj_business", desc_key: "onboarding.obj_business_desc" },
-  { id: "elite", icon: "◇", label_key: "onboarding.obj_elite", desc_key: "onboarding.obj_elite_desc" },
-  { id: "romantic", icon: "◉", label_key: "onboarding.obj_romantic", desc_key: "onboarding.obj_romantic_desc" },
-  { id: "world_traveller", icon: "◎", label_key: "onboarding.obj_travel", desc_key: "onboarding.obj_travel_desc" },
+  { id: "business",        icon: "◈", label_key: "onboarding.obj_business",  desc_key: "onboarding.obj_business_desc" },
+  { id: "elite",           icon: "◇", label_key: "onboarding.obj_elite",     desc_key: "onboarding.obj_elite_desc" },
+  { id: "romantic",        icon: "◉", label_key: "onboarding.obj_romantic",  desc_key: "onboarding.obj_romantic_desc" },
+  { id: "world_traveller", icon: "◎", label_key: "onboarding.obj_travel",    desc_key: "onboarding.obj_travel_desc" },
 ] as const;
 
+// ─── Step 4: World choice ─────────────────────────────────────────────────────
+const WORLD_OPTIONS = [
+  {
+    id: "A" as const,
+    label_key:    "onboarding.world_A",
+    desc_key:     "onboarding.world_A_desc",
+    icon:         "◎",
+  },
+  {
+    id: "B" as const,
+    label_key:    "onboarding.world_B",
+    desc_key:     "onboarding.world_B_desc",
+    icon:         "◇",
+  },
+  {
+    id: "C" as const,
+    label_key:    "onboarding.world_C",
+    desc_key:     "onboarding.world_C_desc",
+    icon:         "◈",
+  },
+] as const;
+
+// ─── Step 5: Archetypes ───────────────────────────────────────────────────────
+const ARCHETYPE_OPTIONS = [
+  { id: "diplomate",    label_key: "onboarding.archetype_diplomate",    desc_key: "onboarding.archetype_diplomate_desc",    pillar_key: "onboarding.archetype_diplomate_pillar" },
+  { id: "urbanist",     label_key: "onboarding.archetype_urbanist",     desc_key: "onboarding.archetype_urbanist_desc",     pillar_key: "onboarding.archetype_urbanist_pillar" },
+  { id: "aesthete",     label_key: "onboarding.archetype_aesthete",     desc_key: "onboarding.archetype_aesthete_desc",     pillar_key: "onboarding.archetype_aesthete_pillar" },
+  { id: "scholar",      label_key: "onboarding.archetype_scholar",      desc_key: "onboarding.archetype_scholar_desc",      pillar_key: "onboarding.archetype_scholar_pillar" },
+  { id: "cosmopolite",  label_key: "onboarding.archetype_cosmopolite",  desc_key: "onboarding.archetype_cosmopolite_desc",  pillar_key: "onboarding.archetype_cosmopolite_pillar" },
+  { id: "virtuose",     label_key: "onboarding.archetype_virtuose",     desc_key: "onboarding.archetype_virtuose_desc",     pillar_key: "onboarding.archetype_virtuose_pillar" },
+] as const;
+
+// ─── Step 6: Social circles (placeholder — catalog content is END1) ───────────
+const SOCIAL_CIRCLE_OPTIONS = [
+  { id: "corporate_executive",  label_key: "onboarding.circle_corporate_executive" },
+  { id: "old_money",            label_key: "onboarding.circle_old_money" },
+  { id: "diplomatic_corps",     label_key: "onboarding.circle_diplomatic_corps" },
+  { id: "arts_patronage",       label_key: "onboarding.circle_arts_patronage" },
+  { id: "academia",             label_key: "onboarding.circle_academia" },
+  { id: "religious_leadership", label_key: "onboarding.circle_religious_leadership" },
+  { id: "landed_gentry",        label_key: "onboarding.circle_landed_gentry" },
+  { id: "haute_cuisine",        label_key: "onboarding.circle_haute_cuisine" },
+  { id: "fashion_world",        label_key: "onboarding.circle_fashion_world" },
+  { id: "philanthropy",         label_key: "onboarding.circle_philanthropy" },
+  { id: "yacht_set",            label_key: "onboarding.circle_yacht_set" },
+  { id: "hunting_set",          label_key: "onboarding.circle_hunting_set" },
+];
+
+// ─── Step 7: Cultural interests (placeholder — catalog content is END1) ───────
+const CULTURAL_INTEREST_OPTIONS = [
+  { id: "classical_music",  label_key: "onboarding.culture_classical_music" },
+  { id: "fine_art",         label_key: "onboarding.culture_fine_art" },
+  { id: "opera",            label_key: "onboarding.culture_opera" },
+  { id: "ballet",           label_key: "onboarding.culture_ballet" },
+  { id: "literature",       label_key: "onboarding.culture_literature" },
+  { id: "architecture",     label_key: "onboarding.culture_architecture" },
+  { id: "wine_culture",     label_key: "onboarding.culture_wine_culture" },
+  { id: "gastronomy",       label_key: "onboarding.culture_gastronomy" },
+  { id: "antiquities",      label_key: "onboarding.culture_antiquities" },
+  { id: "heritage_travel",  label_key: "onboarding.culture_heritage_travel" },
+  { id: "interior_design",  label_key: "onboarding.culture_interior_design" },
+  { id: "horology",         label_key: "onboarding.culture_horology" },
+];
+
+// ─── Step 8: Sports / gastronomy / dresscode ──────────────────────────────────
 const SPORTS_OPTIONS = [
   { id: "polo",         label_key: "onboarding.sport_polo" },
   { id: "golf",         label_key: "onboarding.sport_golf" },
@@ -32,90 +99,99 @@ const SPORTS_OPTIONS = [
 ];
 
 const CUISINE_OPTIONS = [
-  { id: "French",        label_key: "onboarding.cuisine_french" },
-  { id: "Japanese",      label_key: "onboarding.cuisine_japanese" },
-  { id: "Italian",       label_key: "onboarding.cuisine_italian" },
-  { id: "Indian",        label_key: "onboarding.cuisine_indian" },
-  { id: "Scandinavian",  label_key: "onboarding.cuisine_scandinavian" },
-  { id: "Spanish",       label_key: "onboarding.cuisine_spanish" },
-  { id: "British",       label_key: "onboarding.cuisine_british" },
-  { id: "Chinese",       label_key: "onboarding.cuisine_chinese" },
-  { id: "Lebanese",      label_key: "onboarding.cuisine_lebanese" },
-  { id: "Peruvian",      label_key: "onboarding.cuisine_peruvian" },
+  { id: "French",       label_key: "onboarding.cuisine_french" },
+  { id: "Japanese",     label_key: "onboarding.cuisine_japanese" },
+  { id: "Italian",      label_key: "onboarding.cuisine_italian" },
+  { id: "Indian",       label_key: "onboarding.cuisine_indian" },
+  { id: "Scandinavian", label_key: "onboarding.cuisine_scandinavian" },
+  { id: "Spanish",      label_key: "onboarding.cuisine_spanish" },
+  { id: "British",      label_key: "onboarding.cuisine_british" },
+  { id: "Chinese",      label_key: "onboarding.cuisine_chinese" },
+  { id: "Lebanese",     label_key: "onboarding.cuisine_lebanese" },
+  { id: "Peruvian",     label_key: "onboarding.cuisine_peruvian" },
 ];
 
 const DRESS_OPTIONS = [
-  { id: "business",     label_key: "onboarding.dress_business" },
-  { id: "black tie",    label_key: "onboarding.dress_black_tie" },
-  { id: "cocktail",     label_key: "onboarding.dress_cocktail" },
-  { id: "casual chic",  label_key: "onboarding.dress_casual_chic" },
-  { id: "country",      label_key: "onboarding.dress_country" },
+  { id: "business",    label_key: "onboarding.dress_business" },
+  { id: "black tie",   label_key: "onboarding.dress_black_tie" },
+  { id: "cocktail",    label_key: "onboarding.dress_cocktail" },
+  { id: "casual chic", label_key: "onboarding.dress_casual_chic" },
+  { id: "country",     label_key: "onboarding.dress_country" },
 ];
 
-type Step = 1 | 2 | 3 | 4 | 5;
+// ─── Step 9: Learning intent pillars ─────────────────────────────────────────
+const LEARNING_PILLARS = [
+  { id: "P1", label_key: "onboarding.pillar_P1" },
+  { id: "P2", label_key: "onboarding.pillar_P2" },
+  { id: "P3", label_key: "onboarding.pillar_P3" },
+  { id: "P4", label_key: "onboarding.pillar_P4" },
+  { id: "P5", label_key: "onboarding.pillar_P5" },
+];
+
+const INTENT_OPTIONS = [
+  { id: "surface",   label_key: "onboarding.intent_surface",   desc_key: "onboarding.intent_surface_desc" },
+  { id: "competent", label_key: "onboarding.intent_competent", desc_key: "onboarding.intent_competent_desc" },
+  { id: "mastery",   label_key: "onboarding.intent_mastery",   desc_key: "onboarding.intent_mastery_desc" },
+] as const;
+
+// ─── Plan step types ──────────────────────────────────────────────────────────
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 type PaidTier = "student" | "traveller" | "ambassador";
 
 interface Plan {
-  productId: string;
-  tier: PaidTier | "guest" | "concierge";
-  displayName: string;
-  monthlyPriceId: string | null;
-  monthlyAmount: number | null;
-  yearlyPriceId: string | null;
-  yearlyAmount: number | null;
-  currency: string;
-  trialDays?: number;
+  productId:       string;
+  tier:            PaidTier | "guest" | "concierge";
+  displayName:     string;
+  monthlyPriceId:  string | null;
+  monthlyAmount:   number | null;
+  yearlyPriceId:   string | null;
+  yearlyAmount:    number | null;
+  currency:        string;
+  trialDays?:      number;
 }
 
 const PAID_TIER_META: Record<PaidTier, {
-  icon: typeof Globe;
-  accent: string;
-  labelKey: string;
-  taglineKey: string;
-  ctaKey: string;
-  defaultName: string;
+  icon:           typeof Globe;
+  accent:         string;
+  labelKey:       string;
+  taglineKey:     string;
+  ctaKey:         string;
+  defaultName:    string;
   defaultTagline: string;
-  defaultCta: string;
+  defaultCta:     string;
 }> = {
   student: {
-    icon: Star,
-    accent: "#4a7c9b",
-    labelKey: "membership.student.tagline",
-    taglineKey: "onboarding.plan_student_tagline",
-    ctaKey: "membership.cta_student",
-    defaultName: "The Student",
+    icon:           Star,
+    accent:         "#4a7c9b",
+    labelKey:       "membership.student.tagline",
+    taglineKey:     "onboarding.plan_student_tagline",
+    ctaKey:         "membership.cta_student",
+    defaultName:    "The Student",
     defaultTagline: "An apprentice's path",
-    defaultCta: "Begin your formation",
+    defaultCta:     "Begin your formation",
   },
   traveller: {
-    icon: Globe,
-    accent: "var(--primary)",
-    labelKey: "membership.traveller.tagline",
-    taglineKey: "onboarding.plan_traveller_tagline",
-    ctaKey: "membership.cta_traveller",
-    defaultName: "The Traveller",
+    icon:           Globe,
+    accent:         "var(--primary)",
+    labelKey:       "membership.traveller.tagline",
+    taglineKey:     "onboarding.plan_traveller_tagline",
+    ctaKey:         "membership.cta_traveller",
+    defaultName:    "The Traveller",
     defaultTagline: "Expand your world",
-    defaultCta: "Expand your world",
+    defaultCta:     "Expand your world",
   },
   ambassador: {
-    icon: Crown,
-    accent: "#9b7c4a",
-    labelKey: "membership.ambassador.tagline",
-    taglineKey: "onboarding.plan_ambassador_tagline",
-    ctaKey: "membership.cta_ambassador",
-    defaultName: "The Ambassador",
+    icon:           Crown,
+    accent:         "#9b7c4a",
+    labelKey:       "membership.ambassador.tagline",
+    taglineKey:     "onboarding.plan_ambassador_tagline",
+    ctaKey:         "membership.cta_ambassador",
+    defaultName:    "The Ambassador",
     defaultTagline: "Refine your presence",
-    defaultCta: "Elevate your standing",
+    defaultCta:     "Elevate your standing",
   },
 };
 
-/**
- * Recommend a paid tier based on the objectives the user picked in step 2.
- * Priority order:
- *   - Elite Society or Professional Refinement → Ambassador
- *   - World Traveller or Romantic Pursuit → Traveller
- *   - No clear signal (skipped step 2) → Student (the gentle entry point)
- */
 function recommendTier(objectives: string[]): PaidTier {
   if (objectives.includes("elite") || objectives.includes("business")) return "ambassador";
   if (objectives.includes("world_traveller") || objectives.includes("romantic")) return "traveller";
@@ -125,8 +201,8 @@ function recommendTier(objectives: string[]): PaidTier {
 function formatPrice(amount: number | null, currency: string): string {
   if (amount === null) return "—";
   return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: currency.toUpperCase(),
+    style:                 "currency",
+    currency:              currency.toUpperCase(),
     minimumFractionDigits: 0,
   }).format(amount / 100);
 }
@@ -138,28 +214,48 @@ export default function Onboarding() {
   const [, navigate] = useLocation();
 
   const [step, setStep] = useState<Step>(() => {
-    // Restore the step the user was on before being redirected to sign-in.
     const saved = sessionStorage.getItem("onboarding_resume_step");
     if (saved) {
       sessionStorage.removeItem("onboarding_resume_step");
       const n = parseInt(saved, 10);
-      if (n >= 1 && n <= 5) return n as Step;
+      if (n >= 1 && n <= 11) return n as Step;
     }
     return 1;
   });
+
+  // ── Step 1 ────────────────────────────────────────────────────────────────
   const [country, setCountry] = useState("");
+  // ── Step 2 ────────────────────────────────────────────────────────────────
   const [objectives, setObjectives] = useState<string[]>([]);
+  // ── Step 3 ────────────────────────────────────────────────────────────────
+  const [spheres, setSpheres] = useState<string[]>([]);
+  // ── Step 4 ────────────────────────────────────────────────────────────────
+  const [worldChoice, setWorldChoice] = useState<"A" | "B" | "C" | null>(null);
+  // ── Step 5 ────────────────────────────────────────────────────────────────
+  const [archetype, setArchetype] = useState<string | null>(null);
+  const [secondaryArchetype, setSecondaryArchetype] = useState<string | null>(null);
+  const [showSecondary, setShowSecondary] = useState(false);
+  // ── Step 6 ────────────────────────────────────────────────────────────────
+  const [socialCircles, setSocialCircles] = useState<string[]>([]);
+  // ── Step 7 ────────────────────────────────────────────────────────────────
+  const [culturalInterests, setCulturalInterests] = useState<string[]>([]);
+  // ── Step 8 ────────────────────────────────────────────────────────────────
   const [sports, setSports] = useState<string[]>([]);
   const [cuisine, setCuisine] = useState<string[]>([]);
   const [dressCode, setDressCode] = useState<string[]>([]);
-  const [spheres, setSpheres] = useState<string[]>([]);
+  // ── Step 9 ────────────────────────────────────────────────────────────────
+  const defaultIntent: Record<string, "surface" | "competent" | "mastery"> =
+    Object.fromEntries(LEARNING_PILLARS.map((p) => [p.id, "competent"]));
+  const [learningIntent, setLearningIntent] = useState<Record<string, "surface" | "competent" | "mastery">>(defaultIntent);
+  // ── Step 10 ───────────────────────────────────────────────────────────────
+  const [placementSkipped, setPlacementSkipped] = useState(false);
+  // ── Global ────────────────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [checkingOut, setCheckingOut] = useState<PaidTier | null>(null);
 
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 10;
 
-  // Pre-fetch the plan list so step 5 renders instantly with live prices.
   useEffect(() => {
     fetch(`${API_BASE}/api/subscription/plans`)
       .then((r) => (r.ok ? r.json() : []))
@@ -167,94 +263,116 @@ export default function Onboarding() {
       .catch(() => setPlans([]));
   }, []);
 
-  function toggleArr(arr: string[], val: string, set: (v: string[]) => void) {
-    set(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
+  function toggleArr<T extends string>(arr: T[], val: T, set: (v: T[]) => void) {
+    set(arr.includes(val) ? arr.filter((x) => x !== val) : ([...arr, val] as T[]));
   }
 
-  // Records what the user did on the plan-choice step so we can analyse
-  // drop-off in deployment logs. Best-effort only — never blocks the user.
+  function toggleMax<T extends string>(arr: T[], val: T, set: (v: T[]) => void, max: number) {
+    if (arr.includes(val)) {
+      set(arr.filter((x) => x !== val) as T[]);
+    } else if (arr.length < max) {
+      set([...arr, val] as T[]);
+    }
+  }
+
+  // ── Best-effort save to the new onboarding endpoint ──────────────────────
+  async function saveOnboarding(body: Record<string, unknown>): Promise<void> {
+    if (!isAuthenticated) return;
+    try {
+      await fetch(`${API_BASE}/api/users/me/onboarding`, {
+        method:      "PUT",
+        credentials: "include",
+        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+        body:        JSON.stringify(body),
+      });
+    } catch {
+      /* non-fatal — the user can proceed */
+    }
+  }
+
+  // ── Save steps 1-3 to the existing profile endpoint ──────────────────────
+  async function saveProfileFields(body: Record<string, unknown>): Promise<void> {
+    if (!isAuthenticated) return;
+    try {
+      await fetch(`${API_BASE}/api/users/profile`, {
+        method:      "PUT",
+        credentials: "include",
+        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+        body:        JSON.stringify(body),
+      });
+    } catch {
+      /* non-fatal */
+    }
+  }
+
   function trackPlanChoice(action: "selected_tier" | "skipped" | "skipped_unauth", tier?: PaidTier | null) {
     try {
       void fetch(`${API_BASE}/api/onboarding/plan-choice`, {
-        method: "POST",
+        method:      "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          action,
-          tier: tier ?? null,
-          recommendedTier: recommendTier(objectives),
-          objectives,
-        }),
-        keepalive: true,
+        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+        body:        JSON.stringify({ action, tier: tier ?? null, recommendedTier: recommendTier(objectives), objectives }),
+        keepalive:   true,
       }).catch(() => {});
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }
 
-  /**
-   * Persists the profile (with onboarding_completed=true) and advances to
-   * step 5. We mark onboarding as complete here — not on step 4 finish — so
-   * users who close the tab on the plan-choice step don't get re-prompted.
-   */
-  async function handleAdvanceToPlanStep() {
+  // ── Advance from step 3 → 4 (save profile basics) ────────────────────────
+  async function handleAdvanceFromStep3() {
     setSaving(true);
     try {
-      await fetch(`${API_BASE}/api/users/profile`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          country_of_origin: country || null,
-          objectives,
-          interests_sports: sports,
-          interests_cuisine: cuisine,
-          interests_dress_code: dressCode,
-          situational_interests: spheres,
-          onboarding_completed: true,
-        }),
+      await saveProfileFields({
+        country_of_origin:       country || null,
+        objectives,
+        situational_interests:   spheres,
       });
-    } catch {
-      /* ignore — advancing the user is more important than a save failure */
     } finally {
       setSaving(false);
-      setStep(5);
+      setStep(4);
     }
   }
 
+  // ── Advance from step 9 → 10 (save learning intent + mark completed) ──────
+  async function handleAdvanceFromStep9() {
+    setSaving(true);
+    try {
+      await saveOnboarding({
+        learning_intent:      learningIntent,
+        onboarding_completed: true,
+      });
+    } finally {
+      setSaving(false);
+      setStep(10);
+    }
+  }
+
+  // ── Plan step: select a tier ──────────────────────────────────────────────
   async function handleSelectTier(tier: PaidTier) {
-    const plan = plans.find((p) => p.tier === tier);
+    const plan    = plans.find((p) => p.tier === tier);
     const priceId = plan?.monthlyPriceId ?? null;
     trackPlanChoice("selected_tier", tier);
 
     if (!priceId) {
-      // Stripe not yet configured. For unauthenticated users: prompt sign-in.
-      // For authenticated users: activate a direct 60-day free trial in the DB.
       if (!isAuthenticated) {
-        // Preserve the plan-selection step so the user lands back here after sign-in.
-        sessionStorage.setItem("onboarding_resume_step", "5");
+        sessionStorage.setItem("onboarding_resume_step", "11");
         navigate("/signin?return=/onboarding");
         return;
       }
       setCheckingOut(tier);
       try {
         const trialRes = await fetch(`${API_BASE}/api/subscription/start-trial`, {
-          method: "POST",
+          method:      "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify({ tier }),
+          headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+          body:        JSON.stringify({ tier }),
         });
         if (trialRes.status === 401) {
-          sessionStorage.setItem("onboarding_resume_step", "5");
+          sessionStorage.setItem("onboarding_resume_step", "11");
           navigate("/signin?return=/onboarding");
           return;
         }
-        // Trial activated (or already active — both are fine).
-        // Use a full page reload so React Query profile cache is cleared and
-        // the Atelier page shows the updated subscription tier immediately.
         window.location.href = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/atelier?upgrade=success`;
       } catch {
-        // Network error — let them try from the membership page.
         navigate("/membership");
       } finally {
         setCheckingOut(null);
@@ -265,13 +383,12 @@ export default function Onboarding() {
     setCheckingOut(tier);
     try {
       const res = await fetch(`${API_BASE}/api/subscription/checkout`, {
-        method: "POST",
+        method:      "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ priceId }),
+        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+        body:        JSON.stringify({ priceId }),
       });
       if (res.status === 401) {
-        // Session expired mid-flow — redirect to sign-in, back to onboarding after auth.
         trackPlanChoice("skipped_unauth", tier);
         navigate("/signin?return=/onboarding");
         return;
@@ -280,7 +397,6 @@ export default function Onboarding() {
       if (url) {
         window.location.href = url;
       } else {
-        // Checkout URL missing — go to membership page to retry.
         navigate("/membership");
       }
     } catch {
@@ -294,36 +410,106 @@ export default function Onboarding() {
     navigate("/");
   }
 
+  // ── Step labels (progress indicator) ─────────────────────────────────────
   const stepLabels: Record<Step, string> = {
-    1: t("onboarding.step1_label"),
-    2: t("onboarding.step2_label"),
-    3: t("onboarding.step3_label"),
-    4: t("onboarding.step4_label"),
-    5: t("onboarding.step5_label", "Your Path"),
+    1:  t("onboarding.step1_label"),
+    2:  t("onboarding.step2_label"),
+    3:  t("onboarding.step4_label"),                 // "Social World" (existing key)
+    4:  t("onboarding.step_world_label"),
+    5:  t("onboarding.step_archetype_label"),
+    6:  t("onboarding.step_circles_label"),
+    7:  t("onboarding.step_culture_label"),
+    8:  t("onboarding.step3_label"),                 // "Interests" (existing key)
+    9:  t("onboarding.step_intent_label"),
+    10: t("onboarding.step_placement_label"),
+    11: t("onboarding.step5_label", "Your Path"),
   };
+
+  // ── Shared pill button ────────────────────────────────────────────────────
+  function PillButton({ id, label, selected, disabled, onClick }: {
+    id: string; label: string; selected: boolean; disabled?: boolean; onClick: () => void;
+  }) {
+    return (
+      <button
+        key={id}
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
+          selected
+            ? "bg-primary text-primary-foreground border-primary"
+            : disabled
+              ? "border-border/40 text-muted-foreground/50 cursor-not-allowed"
+              : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+        }`}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  // ── Nav buttons ────────────────────────────────────────────────────────────
+  function NavBack({ to }: { to: Step }) {
+    return (
+      <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(to)}>
+        <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+        {t("onboarding.back")}
+      </Button>
+    );
+  }
+
+  function NavNext({
+    to, disabled, loading, onAdvance,
+  }: {
+    to?: Step; disabled?: boolean; loading?: boolean; onAdvance?: () => void;
+  }) {
+    return (
+      <Button
+        className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px]"
+        disabled={disabled || loading}
+        aria-busy={loading}
+        onClick={() => { if (onAdvance) { onAdvance(); } else if (to) { setStep(to); } }}
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <>
+            {t("onboarding.next")}
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </>
+        )}
+      </Button>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-10 animate-in fade-in duration-500 py-10">
 
-      {/* Progress dots */}
-      <div className="flex justify-center gap-3">
-        {([1, 2, 3, 4, 5] as Step[]).map((s) => (
-          <div
-            key={s}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              s === step ? "w-10 bg-primary" : s < step ? "w-4 bg-primary/50" : "w-4 bg-border"
-            }`}
-          />
-        ))}
-      </div>
+      {/* Progress dots (steps 1-10; step 11 = plan is outside indicator) */}
+      {step <= 10 && (
+        <div className="flex justify-center gap-2 flex-wrap">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
+            <div
+              key={s}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                s === step ? "w-8 bg-primary" : s < step ? "w-3 bg-primary/50" : "w-3 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
-      <div className="text-center space-y-1">
-        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          {t("onboarding.step_of", { current: step, total: TOTAL_STEPS })} — {stepLabels[step]}
-        </p>
-      </div>
+      {step <= 10 && (
+        <div className="text-center space-y-1">
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            {t("onboarding.step_of", { current: step, total: TOTAL_STEPS })} — {stepLabels[step]}
+          </p>
+        </div>
+      )}
 
-      {/* Step 1: Country of origin */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 1: Country of origin
+         ══════════════════════════════════════════════════════════════════════ */}
       {step === 1 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -352,18 +538,14 @@ export default function Onboarding() {
             <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => navigate("/")}>
               {t("onboarding.skip")}
             </Button>
-            <Button
-              className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => setStep(2)}
-            >
-              {t("onboarding.next")}
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </Button>
+            <NavNext to={2} />
           </div>
         </div>
       )}
 
-      {/* Step 2: Objectives */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 2: Objectives
+         ══════════════════════════════════════════════════════════════════════ */}
       {step === 2 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -394,140 +576,28 @@ export default function Onboarding() {
                       <div className="text-xs text-muted-foreground font-light mt-1 leading-relaxed">{t(obj.desc_key)}</div>
                     </div>
                   </div>
-                  {selected && (
-                    <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-primary" aria-hidden="true" />
-                  )}
+                  {selected && <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-primary" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
 
           <div className="flex justify-between gap-3">
-            <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(1)}>
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-              {t("onboarding.back")}
-            </Button>
+            <NavBack to={1} />
             <div className="flex gap-2">
               <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(3)}>
                 {t("onboarding.skip")}
               </Button>
-              <Button
-                className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => setStep(3)}
-              >
-                {t("onboarding.next")}
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Button>
+              <NavNext to={3} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Step 3: Interests */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 3: Social Spheres (situational_interests)
+         ══════════════════════════════════════════════════════════════════════ */}
       {step === 3 && (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step3_title")}</h1>
-            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step3_subtitle")}</p>
-          </div>
-
-          <div className="space-y-6">
-            {/* Sports */}
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_sports")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {SPORTS_OPTIONS.map((opt) => {
-                  const sel = sports.includes(opt.id);
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => toggleArr(sports, opt.id, setSports)}
-                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
-                        sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      {t(opt.label_key)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Cuisine */}
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_cuisine")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {CUISINE_OPTIONS.map((opt) => {
-                  const sel = cuisine.includes(opt.id);
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => toggleArr(cuisine, opt.id, setCuisine)}
-                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
-                        sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      {t(opt.label_key)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Dress code */}
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_dress")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {DRESS_OPTIONS.map((opt) => {
-                  const sel = dressCode.includes(opt.id);
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => toggleArr(dressCode, opt.id, setDressCode)}
-                      className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
-                        sel ? "bg-primary text-primary-foreground border-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      {t(opt.label_key)}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-between gap-3">
-            <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(2)}>
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-              {t("onboarding.back")}
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(4)}>
-                {t("onboarding.skip")}
-              </Button>
-              <Button
-                className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => setStep(4)}
-              >
-                {t("onboarding.next")}
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Social Spheres */}
-      {step === 4 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
             <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step4_title")}</h1>
@@ -557,31 +627,453 @@ export default function Onboarding() {
           </div>
 
           <div className="flex justify-between gap-3">
-            <Button variant="outline" className="font-serif gap-2" onClick={() => setStep(3)}>
-              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-              {t("onboarding.back")}
-            </Button>
-            <Button
-              className="font-serif gap-2 bg-primary hover:bg-primary/90 text-primary-foreground min-w-[140px]"
-              onClick={handleAdvanceToPlanStep}
-              disabled={saving}
-              aria-busy={saving}
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <>
-                  {t("onboarding.next")}
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </>
-              )}
-            </Button>
+            <NavBack to={2} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => { void handleAdvanceFromStep3(); }}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext loading={saving} onAdvance={() => { void handleAdvanceFromStep3(); }} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Step 5: Plan choice */}
-      {step === 5 && (() => {
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 4: World choice → register_bias
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 4 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_world_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_world_subtitle")}</p>
+          </div>
+
+          <div className="space-y-3">
+            {WORLD_OPTIONS.map((opt) => {
+              const selected = worldChoice === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setWorldChoice(opt.id)}
+                  className={`relative w-full text-left p-5 rounded-sm border transition-all duration-200 ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "border-border/60 hover:border-primary/30 hover:bg-muted/20"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl text-primary/60 font-serif leading-none mt-0.5" aria-hidden="true">
+                      {opt.icon}
+                    </span>
+                    <div>
+                      <div className="font-serif text-base text-foreground">{t(opt.label_key)}</div>
+                      <div className="text-xs text-muted-foreground font-light mt-1 leading-relaxed">{t(opt.desc_key)}</div>
+                    </div>
+                  </div>
+                  {selected && <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-primary" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={3} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(5)}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext
+                to={5}
+                onAdvance={() => {
+                  if (worldChoice) void saveOnboarding({ world_choice: worldChoice });
+                  setStep(5);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 5: Archetype
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 5 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_archetype_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_archetype_subtitle")}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {ARCHETYPE_OPTIONS.map((arc) => {
+              const selected = archetype === arc.id;
+              return (
+                <button
+                  key={arc.id}
+                  type="button"
+                  onClick={() => {
+                    setArchetype(selected ? null : arc.id);
+                    if (selected) setSecondaryArchetype(null);
+                  }}
+                  className={`relative p-4 rounded-sm border text-left transition-all duration-200 ${
+                    selected
+                      ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                      : "border-border/60 hover:border-primary/30 hover:bg-muted/20"
+                  }`}
+                >
+                  <div className="font-serif text-base text-foreground">{t(arc.label_key)}</div>
+                  <div className="text-xs text-muted-foreground font-light mt-1 leading-relaxed">{t(arc.desc_key)}</div>
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-primary/60 mt-2">{t(arc.pillar_key)}</div>
+                  {selected && <CheckCircle2 className="absolute top-3 right-3 w-4 h-4 text-primary" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Optional secondary archetype */}
+          {archetype && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowSecondary(!showSecondary)}
+                className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+              >
+                {showSecondary ? "▾" : "▸"} {t("onboarding.secondary_archetype_label")}
+              </button>
+              {showSecondary && (
+                <div className="flex flex-wrap gap-2 pl-1">
+                  {ARCHETYPE_OPTIONS.filter((a) => a.id !== archetype).map((arc) => {
+                    const sel = secondaryArchetype === arc.id;
+                    return (
+                      <button
+                        key={arc.id}
+                        type="button"
+                        onClick={() => setSecondaryArchetype(sel ? null : arc.id)}
+                        className={`px-3 py-1.5 rounded-sm text-xs border transition-all ${
+                          sel
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        }`}
+                      >
+                        {t(arc.label_key)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={4} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(6)}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext
+                to={6}
+                onAdvance={() => {
+                  if (archetype) void saveOnboarding({ archetype, secondary_archetype: secondaryArchetype });
+                  setStep(6);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 6: Social circles
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 6 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_circles_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_circles_subtitle")}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {SOCIAL_CIRCLE_OPTIONS.map((opt) => {
+              const sel = socialCircles.includes(opt.id);
+              const atMax = !sel && socialCircles.length >= 4;
+              return (
+                <PillButton
+                  key={opt.id}
+                  id={opt.id}
+                  label={t(opt.label_key)}
+                  selected={sel}
+                  disabled={atMax}
+                  onClick={() => toggleMax(socialCircles, opt.id, setSocialCircles, 4)}
+                />
+              );
+            })}
+          </div>
+          {socialCircles.length > 0 && (
+            <p className="text-xs text-muted-foreground font-light text-center">
+              {socialCircles.length} / 4 {t("onboarding.max_selected")}
+            </p>
+          )}
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={5} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(7)}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext
+                to={7}
+                onAdvance={() => {
+                  if (socialCircles.length > 0) void saveOnboarding({ social_circles: socialCircles });
+                  setStep(7);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 7: Cultural interests
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 7 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_culture_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_culture_subtitle")}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {CULTURAL_INTEREST_OPTIONS.map((opt) => {
+              const sel = culturalInterests.includes(opt.id);
+              const atMax = !sel && culturalInterests.length >= 4;
+              return (
+                <PillButton
+                  key={opt.id}
+                  id={opt.id}
+                  label={t(opt.label_key)}
+                  selected={sel}
+                  disabled={atMax}
+                  onClick={() => toggleMax(culturalInterests, opt.id, setCulturalInterests, 4)}
+                />
+              );
+            })}
+          </div>
+          {culturalInterests.length > 0 && (
+            <p className="text-xs text-muted-foreground font-light text-center">
+              {culturalInterests.length} / 4 {t("onboarding.max_selected")}
+            </p>
+          )}
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={6} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(8)}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext
+                to={8}
+                onAdvance={() => {
+                  if (culturalInterests.length > 0) void saveOnboarding({ cultural_interests: culturalInterests });
+                  setStep(8);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 8: Sports / gastronomy / dresscode (→ selected_interests)
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 8 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step3_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step3_subtitle")}</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                {t("onboarding.interests_sports")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SPORTS_OPTIONS.map((opt) => (
+                  <PillButton
+                    key={opt.id}
+                    id={opt.id}
+                    label={t(opt.label_key)}
+                    selected={sports.includes(opt.id)}
+                    onClick={() => toggleArr(sports, opt.id, setSports)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                {t("onboarding.interests_cuisine")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CUISINE_OPTIONS.map((opt) => (
+                  <PillButton
+                    key={opt.id}
+                    id={opt.id}
+                    label={t(opt.label_key)}
+                    selected={cuisine.includes(opt.id)}
+                    onClick={() => toggleArr(cuisine, opt.id, setCuisine)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                {t("onboarding.interests_dress")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {DRESS_OPTIONS.map((opt) => (
+                  <PillButton
+                    key={opt.id}
+                    id={opt.id}
+                    label={t(opt.label_key)}
+                    selected={dressCode.includes(opt.id)}
+                    onClick={() => toggleArr(dressCode, opt.id, setDressCode)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={7} />
+            <div className="flex gap-2">
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(9)}>
+                {t("onboarding.skip")}
+              </Button>
+              <NavNext
+                to={9}
+                onAdvance={() => {
+                  const combined = [...sports, ...cuisine, ...dressCode];
+                  void saveOnboarding({
+                    selected_interests:   combined,
+                    interests_sports:     sports,
+                    interests_cuisine:    cuisine,
+                    interests_dress_code: dressCode,
+                  });
+                  setStep(9);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 9: Learning intent per pillar
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 9 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_intent_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_intent_subtitle")}</p>
+          </div>
+
+          <div className="space-y-5">
+            {LEARNING_PILLARS.map((pillar) => {
+              const current = learningIntent[pillar.id] ?? "competent";
+              return (
+                <div key={pillar.id} className="space-y-2">
+                  <p className="text-sm font-serif text-foreground">{t(pillar.label_key)}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {INTENT_OPTIONS.map((intent) => {
+                      const sel = current === intent.id;
+                      return (
+                        <button
+                          key={intent.id}
+                          type="button"
+                          onClick={() => setLearningIntent((prev) => ({ ...prev, [pillar.id]: intent.id }))}
+                          className={`px-3 py-2 rounded-sm border text-left transition-all flex-1 min-w-[90px] ${
+                            sel
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                              : "border-border/60 hover:border-primary/30 hover:bg-muted/20"
+                          }`}
+                        >
+                          <div className="text-xs font-serif text-foreground">{t(intent.label_key)}</div>
+                          <div className="text-[10px] text-muted-foreground font-light mt-0.5 leading-relaxed">{t(intent.desc_key)}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-between gap-3">
+            <NavBack to={8} />
+            <NavNext loading={saving} onAdvance={() => { void handleAdvanceFromStep9(); }} />
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 10: Placement assessment link (Task D connection point)
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 10 && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_placement_title")}</h1>
+            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_placement_subtitle")}</p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => {
+                setPlacementSkipped(false);
+                navigate("/atelier?placement=true");
+              }}
+              className="w-full text-left p-5 rounded-sm border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all duration-200 group"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-serif text-base text-foreground">{t("onboarding.placement_cta")}</div>
+                  <div className="text-xs text-muted-foreground font-light mt-1">{t("onboarding.placement_cta_desc")}</div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-primary shrink-0 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPlacementSkipped(true);
+                setStep(11);
+              }}
+              className="w-full text-left p-4 rounded-sm border border-dashed border-border/60 hover:border-border transition-all duration-200 group"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-4 h-4 mt-0.5 text-muted-foreground/70 shrink-0" aria-hidden="true" />
+                <div>
+                  <div className="font-serif text-sm text-foreground">{t("onboarding.placement_skip")}</div>
+                  <div className="text-xs text-muted-foreground font-light mt-1">{t("onboarding.placement_skip_warning")}</div>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex justify-start">
+            <NavBack to={9} />
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Step 11: Plan choice (outside numbered steps)
+         ══════════════════════════════════════════════════════════════════════ */}
+      {step === 11 && (() => {
         const recommended = recommendTier(objectives);
         const tierOrder: PaidTier[] = ["student", "traveller", "ambassador"];
         return (
@@ -595,16 +1087,25 @@ export default function Onboarding() {
               </p>
             </div>
 
+            {placementSkipped && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-sm border border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
+                <p className="text-xs text-amber-700 dark:text-amber-400 font-light leading-relaxed">
+                  {t("onboarding.placement_skip_warning")}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
               {tierOrder.map((tier) => {
-                const meta = PAID_TIER_META[tier];
-                const Icon = meta.icon;
-                const plan = plans.find((p) => p.tier === tier);
-                const amount = plan?.monthlyAmount ?? null;
-                const currency = plan?.currency ?? "eur";
-                const trialDays = plan?.trialDays || 60;
+                const meta       = PAID_TIER_META[tier];
+                const Icon       = meta.icon;
+                const plan       = plans.find((p) => p.tier === tier);
+                const amount     = plan?.monthlyAmount ?? null;
+                const currency   = plan?.currency ?? "eur";
+                const trialDays  = plan?.trialDays || 60;
                 const isRecommended = tier === recommended;
-                const isLoading = checkingOut === tier;
+                const isLoading  = checkingOut === tier;
 
                 return (
                   <button
@@ -621,42 +1122,27 @@ export default function Onboarding() {
                     }`}
                   >
                     {isRecommended && (
-                      <span
-                        className="absolute -top-2 left-5 text-[10px] font-mono uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5 rounded-[2px]"
-                        data-testid={`onboarding-recommended-${tier}`}
-                      >
+                      <span className="absolute -top-2 left-5 text-[10px] font-mono uppercase tracking-widest bg-primary text-primary-foreground px-2 py-0.5 rounded-[2px]" data-testid={`onboarding-recommended-${tier}`}>
                         {t("onboarding.plan_recommended", "Recommended for you")}
                       </span>
                     )}
                     <div className="flex items-start gap-4">
-                      <Icon
-                        className="w-6 h-6 mt-1 shrink-0"
-                        style={{ color: meta.accent }}
-                        aria-hidden="true"
-                      />
+                      <Icon className="w-6 h-6 mt-1 shrink-0" style={{ color: meta.accent }} aria-hidden="true" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                          <div className="font-serif text-lg text-foreground">
-                            {plan?.displayName ?? meta.defaultName}
-                          </div>
+                          <div className="font-serif text-lg text-foreground">{plan?.displayName ?? meta.defaultName}</div>
                           <div className="text-right">
                             {amount !== null ? (
                               <div className="font-serif text-base text-foreground">
                                 {formatPrice(amount, currency)}
-                                <span className="text-xs text-muted-foreground font-light ml-1">
-                                  /{t("membership.billing_per_month", "mo")}
-                                </span>
+                                <span className="text-xs text-muted-foreground font-light ml-1">/{t("membership.billing_per_month", "mo")}</span>
                               </div>
                             ) : (
-                              <div className="text-xs text-muted-foreground font-light italic">
-                                {t("membership.price_not_configured", "Pricing not yet configured")}
-                              </div>
+                              <div className="text-xs text-muted-foreground font-light italic">{t("membership.price_not_configured", "Pricing not yet configured")}</div>
                             )}
                           </div>
                         </div>
-                        <p className="text-xs text-muted-foreground font-light mt-1">
-                          {t(meta.labelKey, meta.defaultTagline)}
-                        </p>
+                        <p className="text-xs text-muted-foreground font-light mt-1">{t(meta.labelKey, meta.defaultTagline)}</p>
                         <div className="flex items-center gap-2 mt-3">
                           <span className="text-[10px] font-mono uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5 rounded-[2px] border border-primary/20">
                             {t("membership.trial_badge", { days: trialDays }) || `${trialDays}-day free trial`}
@@ -681,12 +1167,8 @@ export default function Onboarding() {
                 <div className="flex items-start gap-3">
                   <Sparkles className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" aria-hidden="true" />
                   <div className="flex-1">
-                    <div className="font-serif text-base text-foreground">
-                      {t("onboarding.plan_skip_title", "Decide later")}
-                    </div>
-                    <p className="text-xs text-muted-foreground font-light mt-1 leading-relaxed">
-                      {t("onboarding.plan_skip_subtitle", "Continue as a Guest. You can choose your path from your profile at any time.")}
-                    </p>
+                    <div className="font-serif text-base text-foreground">{t("onboarding.plan_skip_title", "Decide later")}</div>
+                    <p className="text-xs text-muted-foreground font-light mt-1 leading-relaxed">{t("onboarding.plan_skip_subtitle", "Continue as a Guest. You can choose your path from your profile at any time.")}</p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-muted-foreground mt-1 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                 </div>
@@ -698,7 +1180,7 @@ export default function Onboarding() {
                 variant="ghost"
                 size="sm"
                 className="font-serif gap-2 text-muted-foreground"
-                onClick={() => setStep(4)}
+                onClick={() => setStep(10)}
                 disabled={!!checkingOut}
               >
                 <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />

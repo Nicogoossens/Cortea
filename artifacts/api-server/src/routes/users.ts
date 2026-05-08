@@ -1,7 +1,8 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings } from "@workspace/db";
-import { eq, and, or, ne, desc, isNull } from "drizzle-orm";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, learningTrackProgressTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings, type RegisterBiasSignal } from "@workspace/db";
+import { eq, and, or, ne, desc, isNull, sql } from "drizzle-orm";
+import { inferRegisterBias, type PureRegisterBiasSignal } from "../lib/learning-engine-pure";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import { getFounderCodeForEmail } from "./waitlist";
@@ -562,6 +563,141 @@ router.delete("/users/profile", requireAuthUser, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Failed to delete user profile");
     return res.status(500).json({ error: "A difficulty arose while removing your profile." });
+  }
+});
+
+// ─── Master Framework v1.1 §11.5 — Onboarding extended fields ───────────────
+
+const OnboardingBodySchema = z.object({
+  world_choice:        z.enum(["A", "B", "C"]).optional(),
+  archetype:           z.string().max(50).optional().nullable(),
+  secondary_archetype: z.string().max(50).optional().nullable(),
+  social_circles:      z.array(z.string().max(100)).max(4).optional(),
+  cultural_interests:  z.array(z.string().max(100)).max(4).optional(),
+  selected_interests:  z.array(z.string().max(200)).optional(),
+  interests_sports:    z.array(z.string()).optional(),
+  interests_cuisine:   z.array(z.string()).optional(),
+  interests_dress_code: z.array(z.string()).optional(),
+  learning_intent:     z.record(z.string(), z.enum(["surface", "competent", "mastery"])).optional(),
+  onboarding_completed: z.boolean().optional(),
+});
+
+/**
+ * PUT /api/users/me/onboarding
+ *
+ * Dedicated endpoint for the 10-step onboarding extended fields.
+ * Called incrementally after each new step (4-10) — the client submits only
+ * the fields that were updated in that step.
+ *
+ * Register-bias resolution:
+ *  - Step 4 (world_choice): adds a ±30 signal and immediately computes bias.
+ *  - Step 8 (selected_interests): re-runs inferRegisterBias on the full
+ *    accumulated signal stack to produce the authoritative final result.
+ *
+ * Learning intent:
+ *  - Step 9: upserts learning_track_progress rows for each pillar supplied,
+ *    using the user's current active_region and register = "middle_class".
+ *
+ * Onboarding-completed gate:
+ *  - Only sets onboarding_completed = true once (never reverts existing users).
+ */
+router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Response) => {
+  try {
+    const userId = getResolvedUserId(req);
+
+    const parsed = OnboardingBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "The information provided does not meet the required form." });
+    }
+
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ error: "Your profile has not yet been established." });
+    }
+
+    const data = parsed.data;
+    const updates: Record<string, unknown> = {};
+
+    // ── Step 4: World choice → register_bias signal ──────────────────────────
+    if (data.world_choice !== undefined) {
+      const WORLD_SIGNAL_MAP = {
+        A: { signal: "onboarding_world_choice_A", weight: -30 },
+        B: { signal: "onboarding_world_choice_B", weight: +30 },
+        C: { signal: "onboarding_world_choice_C", weight:   0 },
+      } as const;
+      const mapping = WORLD_SIGNAL_MAP[data.world_choice];
+      const newSignal: RegisterBiasSignal = {
+        signal:      mapping.signal,
+        weight:      mapping.weight,
+        recorded_at: new Date().toISOString(),
+      };
+      // Replace any previous onboarding_world_choice signal (idempotent).
+      const existing_signals: RegisterBiasSignal[] = Array.isArray(existing.register_bias_signals)
+        ? (existing.register_bias_signals as RegisterBiasSignal[])
+        : [];
+      const pruned = existing_signals.filter((s) => !s.signal.startsWith("onboarding_world_choice_"));
+      const allSignals: PureRegisterBiasSignal[] = [...pruned, newSignal];
+
+      updates.register_bias_signals = allSignals;
+      updates.register_bias        = inferRegisterBias(allSignals);
+      updates.elite_privacy_mode   = data.world_choice === "B" ? true : existing.elite_privacy_mode;
+    }
+
+    // ── Step 5: Archetype ────────────────────────────────────────────────────
+    if (data.archetype !== undefined)           updates.archetype           = data.archetype;
+    if (data.secondary_archetype !== undefined)  updates.secondary_archetype = data.secondary_archetype;
+
+    // ── Step 6: Social circles ───────────────────────────────────────────────
+    if (data.social_circles !== undefined) updates.social_circles = data.social_circles;
+
+    // ── Step 7: Cultural interests ───────────────────────────────────────────
+    if (data.cultural_interests !== undefined) updates.cultural_interests = data.cultural_interests;
+
+    // ── Step 8: Sports / gastronomy / dresscode + selected_interests ─────────
+    if (data.selected_interests !== undefined)  updates.selected_interests  = data.selected_interests;
+    if (data.interests_sports !== undefined)     updates.interests_sports     = data.interests_sports;
+    if (data.interests_cuisine !== undefined)    updates.interests_cuisine    = data.interests_cuisine;
+    if (data.interests_dress_code !== undefined) updates.interests_dress_code = data.interests_dress_code;
+
+    // After step 8: re-run inferRegisterBias with the full signal stack.
+    if (data.selected_interests !== undefined) {
+      const finalSignals = (
+        (updates.register_bias_signals as PureRegisterBiasSignal[] | undefined)
+        ?? (existing.register_bias_signals as PureRegisterBiasSignal[])
+        ?? []
+      );
+      updates.register_bias = inferRegisterBias(finalSignals);
+    }
+
+    // ── onboarding_completed — only set to true, never revert ────────────────
+    if (data.onboarding_completed === true && !existing.onboarding_completed) {
+      updates.onboarding_completed = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await db.update(usersTable).set(updates).where(eq(usersTable.id, userId));
+    }
+
+    // ── Step 9: Learning intent → upsert learning_track_progress ─────────────
+    if (data.learning_intent && Object.keys(data.learning_intent).length > 0) {
+      const regionCode = existing.active_region;
+      for (const [pillar, intent] of Object.entries(data.learning_intent)) {
+        await db.execute(sql`
+          INSERT INTO learning_track_progress
+            (user_id, register, region_code, research_pillar, phase, learning_intent)
+          VALUES
+            (${userId}, 'middle_class', ${regionCode}, ${pillar}, 1, ${intent})
+          ON CONFLICT (user_id, register, region_code, research_pillar, phase)
+            WHERE research_pillar IS NOT NULL
+          DO UPDATE SET learning_intent = EXCLUDED.learning_intent
+        `);
+      }
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to save onboarding step");
+    return res.status(500).json({ error: "A difficulty arose while saving your onboarding progress." });
   }
 });
 

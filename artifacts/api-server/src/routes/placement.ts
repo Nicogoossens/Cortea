@@ -589,38 +589,8 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
     const cfg = getRegisterConfig(register);
     const clampedLevel = Math.max(1, Math.min(cfg.maxLevel, placementLevel));
 
-    // ── Idempotency check ─────────────────────────────────────────────────────
-    // If this run was already finalized (a log row with this trigger exists),
-    // return a stable 200 without re-awarding score or badges.
     const finalizationTrigger = `placement_finalized:${rootId}`;
-    const [existingFinalization] = await db
-      .select({ id: nobleScoreLogTable.id })
-      .from(nobleScoreLogTable)
-      .where(
-        and(
-          eq(nobleScoreLogTable.user_id, userId),
-          eq(nobleScoreLogTable.trigger, finalizationTrigger),
-        ),
-      )
-      .limit(1);
 
-    if (existingFinalization) {
-      return res.json({
-        placement_level: clampedLevel,
-        noble_score_added: 0,
-        badge: null,
-        skipped_content_note: clampedLevel > 1
-          ? "Content from earlier levels is available in the Library."
-          : null,
-      });
-    }
-
-    // ── Atomic side-effects transaction ──────────────────────────────────────
-    // All writes (progress upsert, score credit, recalibration reset,
-    // finalization marker, skipped-content audit) happen in a single
-    // transaction.  The finalization marker row acts as the idempotency key:
-    // if the tx commits, the run is definitively finalized; if it rolls back,
-    // no partial state is persisted.
     const progressWhere = and(
       eq(learningTrackProgressTable.user_id, userId),
       eq(learningTrackProgressTable.register, register),
@@ -631,10 +601,47 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
         : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
     );
 
+    let alreadyFinalized = false;
     let privacyMode = false;
     let nobleScoreAdded = 0;
 
+    // ── Atomic side-effects transaction ──────────────────────────────────────
+    // We acquire a FOR UPDATE lock on the user row first so that concurrent
+    // /complete calls for the same user are serialized at the DB level.  The
+    // idempotency check then runs inside that lock, making the
+    // check-then-insert sequence race-safe: the second concurrent request will
+    // find the finalization log row that the first request already inserted and
+    // short-circuit without awarding score a second time.
     await db.transaction(async (tx) => {
+      // Lock the user row to serialize concurrent finalization attempts
+      const [userRow] = await tx
+        .select({
+          noble_score:         usersTable.noble_score,
+          elite_privacy_mode:  usersTable.elite_privacy_mode,
+          needs_recalibration: usersTable.needs_recalibration,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .for("update")
+        .limit(1);
+
+      // Idempotency check — inside the lock so it is race-safe
+      const [existingFinalization] = await tx
+        .select({ id: nobleScoreLogTable.id })
+        .from(nobleScoreLogTable)
+        .where(
+          and(
+            eq(nobleScoreLogTable.user_id, userId),
+            eq(nobleScoreLogTable.trigger, finalizationTrigger),
+          ),
+        )
+        .limit(1);
+
+      if (existingFinalization) {
+        alreadyFinalized = true;
+        return;
+      }
+
       const [existingProgress] = await tx
         .select({ id: learningTrackProgressTable.id })
         .from(learningTrackProgressTable)
@@ -660,16 +667,6 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
         });
       }
 
-      const [userRow] = await tx
-        .select({
-          noble_score:         usersTable.noble_score,
-          elite_privacy_mode:  usersTable.elite_privacy_mode,
-          needs_recalibration: usersTable.needs_recalibration,
-        })
-        .from(usersTable)
-        .where(eq(usersTable.id, userId))
-        .limit(1);
-
       privacyMode = userRow?.elite_privacy_mode ?? false;
       nobleScoreAdded = privacyMode ? 0 : 50 * (clampedLevel - 1);
 
@@ -687,7 +684,8 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
           .where(eq(usersTable.id, userId));
       }
 
-      // Finalization marker — also serves as the idempotency key for repeat calls
+      // Finalization marker — written inside the lock; acts as the race-safe
+      // idempotency key so re-checks inside concurrent transactions see it
       await tx.insert(nobleScoreLogTable).values({
         user_id: userId,
         score_delta: nobleScoreAdded,
@@ -705,6 +703,17 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
         });
       }
     });
+
+    if (alreadyFinalized) {
+      return res.json({
+        placement_level: clampedLevel,
+        noble_score_added: 0,
+        badge: null,
+        skipped_content_note: clampedLevel > 1
+          ? "Content from earlier levels is available in the Library."
+          : null,
+      });
+    }
 
     // Badge award runs after the transaction so that a badge-service failure
     // does not roll back the already-committed finalization.

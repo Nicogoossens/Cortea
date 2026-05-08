@@ -67,7 +67,7 @@ export default function Atelier() {
   const showUpgradeBanner = new URLSearchParams(search).get("upgrade") === "success";
   const showPlacement = new URLSearchParams(search).get("placement") === "true";
   const placementRegister = (new URLSearchParams(search).get("register") ?? "middle_class") as "middle_class" | "elite";
-  const placementPillar = new URLSearchParams(search).get("pillar") ?? "P1";
+  const placementPillar = new URLSearchParams(search).get("pillar") ?? null;
   const placementPhase = parseInt(new URLSearchParams(search).get("phase") ?? "1", 10) || 1;
   const [placementActive, setPlacementActive] = useState(showPlacement);
   const [upgradeBannerVisible, setUpgradeBannerVisible] = useState(showUpgradeBanner);

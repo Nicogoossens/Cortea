@@ -103,7 +103,11 @@ export default function Register() {
     setError(null);
 
     try {
-      const baseLang = (navigator.language || locale).split("-")[0];
+      const storedLocale = localStorage.getItem("sowiso_locale");
+      const hasExplicitChoice = storedLocale !== null;
+      const baseLang = hasExplicitChoice
+        ? storedLocale.split("-")[0]
+        : (navigator.language || locale).split("-")[0];
       const utmParams = getStoredUtmParams();
       const body: Record<string, unknown> = {
         email: form.email.trim(),
@@ -113,6 +117,7 @@ export default function Register() {
         locale: baseLang,
         language_code: baseLang,
         active_region: activeRegion,
+        ...(hasExplicitChoice ? { explicit_language_choice: true } : {}),
         ...(homeCountry ? { country_of_origin: homeCountry } : {}),
         ...utmParams,
       };

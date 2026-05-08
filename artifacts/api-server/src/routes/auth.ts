@@ -54,6 +54,7 @@ const RegisterBodySchema = z.object({
   locale: z.string().optional().default("en"),
   ambition_level: z.enum(["casual", "professional", "diplomatic"]).optional().default("casual"),
   language_code: z.string().regex(/^[a-z]{2,3}$/).optional().default("en"),
+  explicit_language_choice: z.boolean().optional().default(false),
   active_region: z.string().regex(/^[A-Z]{2,3}$/).optional().default("GB"),
   password: z.string().min(8).max(128).optional(),
   utm_source: z.string().max(200).optional(),
@@ -93,7 +94,7 @@ router.post("/auth/register", async (req, res) => {
       });
     }
 
-    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, active_region, password, utm_source, utm_medium, utm_campaign, utm_content, utm_term } = parsed.data;
+    const { email, full_name, birth_year, gender_identity, locale, ambition_level, language_code, explicit_language_choice, active_region, password, utm_source, utm_medium, utm_campaign, utm_content, utm_term } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
     const utmFields = {
       ...(utm_source ? { utm_source } : {}),
@@ -131,17 +132,19 @@ router.post("/auth/register", async (req, res) => {
             session_token: sessionToken,
             verification_token: null,
             token_expires_at: null,
+            ...(explicit_language_choice ? { language_code, explicit_language_choice: true } : {}),
           })
           .where(eq(usersTable.id, existing[0].id));
 
+        const effectiveLanguageCode = explicit_language_choice ? language_code : (existing[0].language_code ?? language_code);
         setSessionCookie(res, sessionToken);
-        await maybeSendFounderWelcome(req, normalizedEmail, full_name, existing[0].language_code ?? language_code);
+        await maybeSendFounderWelcome(req, normalizedEmail, full_name, effectiveLanguageCode);
         return res.json({
           message: "Your account has been activated.",
           user_id: existing[0].id,
           full_name,
           is_admin: existing[0].is_admin,
-          language_code: existing[0].language_code,
+          language_code: effectiveLanguageCode,
           active_region: existing[0].active_region,
         });
       }
@@ -162,6 +165,7 @@ router.post("/auth/register", async (req, res) => {
           gender_identity: gender_identity ?? null,
           ambition_level,
           language_code,
+          explicit_language_choice,
           active_region,
           noble_score: 0,
           subscription_tier: "guest",
@@ -201,6 +205,7 @@ router.post("/auth/register", async (req, res) => {
           ...(utm_campaign && !existing[0].utm_campaign ? { utm_campaign } : {}),
           ...(utm_content && !existing[0].utm_content ? { utm_content } : {}),
           ...(utm_term && !existing[0].utm_term ? { utm_term } : {}),
+          ...(explicit_language_choice ? { language_code, explicit_language_choice: true } : {}),
         })
         .where(eq(usersTable.id, existing[0].id));
 
@@ -228,6 +233,7 @@ router.post("/auth/register", async (req, res) => {
         gender_identity: gender_identity ?? null,
         ambition_level,
         language_code,
+        explicit_language_choice,
         active_region,
         noble_score: 0,
         subscription_tier: "guest",

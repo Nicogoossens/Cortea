@@ -1228,12 +1228,6 @@ export default function Profile() {
         </div>
       )}
 
-      {/* ── Referrals ──
-          Personal referral link, share buttons, and reward summary.
-          Sits just above Badges so the user can see, share and track in
-          one glance. */}
-      <ReferralCard />
-
       {/* ── Badges ──
           Hier verplaatst (was eerder verder onderaan de pagina) zodat de
           gebruiker meteen na het identiteitsblok zijn behaalde
@@ -1320,12 +1314,6 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>}
-
-      {/* ── Per-region learning progress ──
-          Surfaces the per-country progress the platform already tracks
-          silently. Placed directly under "Mijn badges" so the user sees
-          their full learning history before the personal-data block. */}
-      <CountryProgressOverview />
 
       {/* ── Personal Details + Preferences ── */}
       <div className="grid grid-cols-1 gap-6">
@@ -1938,6 +1926,10 @@ export default function Profile() {
         </CollapsibleSection>
       )}
 
+      {/* ── My Learning Tracks ──
+          Per-region learning progress the platform tracks silently. */}
+      <CountryProgressOverview />
+
       {/* Countries of Interest — multi-track progress (independent per country). */}
       <CollapsibleSection
         title={t("profile.countries_interest_title", "Countries you're learning")}
@@ -2099,6 +2091,10 @@ export default function Profile() {
           )}
         </CardContent>
       </CollapsibleSection>
+
+      {/* ── Referrals ──
+          Personal referral link, share buttons, and reward summary. */}
+      <ReferralCard />
 
       {/* ── Noble Standing + Domain Mastery ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -1484,5 +1484,6 @@
   "onboarding.placement_cta_desc": "Aproximadamente 5 minutos — disponível agora.",
   "onboarding.placement_skip": "Ignorar — começar no Nível 1",
   "onboarding.placement_skip_warning": "O senhor iniciará no Nível 1. Poderá realizar a avaliação de posicionamento no seu perfil a qualquer momento.",
-  "onboarding.max_selected": "selecionado"
+  "onboarding.max_selected": "selecionado",
+  "onboarding.show_other_world": "Apresentar igualmente as opções do outro mundo"
 }

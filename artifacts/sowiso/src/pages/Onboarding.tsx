@@ -53,36 +53,36 @@ const ARCHETYPE_OPTIONS = [
   { id: "virtuose",     label_key: "onboarding.archetype_virtuose",     desc_key: "onboarding.archetype_virtuose_desc",     pillar_key: "onboarding.archetype_virtuose_pillar" },
 ] as const;
 
-// ─── Step 6: Social circles (placeholder — catalog content is END1) ───────────
-const SOCIAL_CIRCLE_OPTIONS = [
-  { id: "corporate_executive",  label_key: "onboarding.circle_corporate_executive" },
-  { id: "old_money",            label_key: "onboarding.circle_old_money" },
-  { id: "diplomatic_corps",     label_key: "onboarding.circle_diplomatic_corps" },
-  { id: "arts_patronage",       label_key: "onboarding.circle_arts_patronage" },
-  { id: "academia",             label_key: "onboarding.circle_academia" },
-  { id: "religious_leadership", label_key: "onboarding.circle_religious_leadership" },
-  { id: "landed_gentry",        label_key: "onboarding.circle_landed_gentry" },
-  { id: "haute_cuisine",        label_key: "onboarding.circle_haute_cuisine" },
-  { id: "fashion_world",        label_key: "onboarding.circle_fashion_world" },
-  { id: "philanthropy",         label_key: "onboarding.circle_philanthropy" },
-  { id: "yacht_set",            label_key: "onboarding.circle_yacht_set" },
-  { id: "hunting_set",          label_key: "onboarding.circle_hunting_set" },
+// ─── Step 6: Social circles (fallback when catalog is empty — content is END1) ─
+const SOCIAL_CIRCLE_FALLBACK = [
+  { id: "old_money",            label_key: "onboarding.circle_old_money",            registers: ["elite"] },
+  { id: "diplomatic_corps",     label_key: "onboarding.circle_diplomatic_corps",     registers: ["elite"] },
+  { id: "landed_gentry",        label_key: "onboarding.circle_landed_gentry",        registers: ["elite"] },
+  { id: "arts_patronage",       label_key: "onboarding.circle_arts_patronage",       registers: ["elite", "middle_class"] },
+  { id: "yacht_set",            label_key: "onboarding.circle_yacht_set",            registers: ["elite"] },
+  { id: "hunting_set",          label_key: "onboarding.circle_hunting_set",          registers: ["elite"] },
+  { id: "fashion_world",        label_key: "onboarding.circle_fashion_world",        registers: ["elite", "middle_class"] },
+  { id: "haute_cuisine",        label_key: "onboarding.circle_haute_cuisine",        registers: ["elite", "middle_class"] },
+  { id: "philanthropy",         label_key: "onboarding.circle_philanthropy",         registers: ["middle_class", "elite"] },
+  { id: "corporate_executive",  label_key: "onboarding.circle_corporate_executive",  registers: ["middle_class"] },
+  { id: "academia",             label_key: "onboarding.circle_academia",             registers: ["middle_class"] },
+  { id: "religious_leadership", label_key: "onboarding.circle_religious_leadership", registers: ["middle_class"] },
 ];
 
-// ─── Step 7: Cultural interests (placeholder — catalog content is END1) ───────
-const CULTURAL_INTEREST_OPTIONS = [
-  { id: "classical_music",  label_key: "onboarding.culture_classical_music" },
-  { id: "fine_art",         label_key: "onboarding.culture_fine_art" },
-  { id: "opera",            label_key: "onboarding.culture_opera" },
-  { id: "ballet",           label_key: "onboarding.culture_ballet" },
-  { id: "literature",       label_key: "onboarding.culture_literature" },
-  { id: "architecture",     label_key: "onboarding.culture_architecture" },
-  { id: "wine_culture",     label_key: "onboarding.culture_wine_culture" },
-  { id: "gastronomy",       label_key: "onboarding.culture_gastronomy" },
-  { id: "antiquities",      label_key: "onboarding.culture_antiquities" },
-  { id: "heritage_travel",  label_key: "onboarding.culture_heritage_travel" },
-  { id: "interior_design",  label_key: "onboarding.culture_interior_design" },
-  { id: "horology",         label_key: "onboarding.culture_horology" },
+// ─── Step 7: Cultural interests (fallback when catalog is empty — content is END1)
+const CULTURAL_INTEREST_FALLBACK = [
+  { id: "horology",        label_key: "onboarding.culture_horology",        registers: ["elite"] },
+  { id: "wine_culture",    label_key: "onboarding.culture_wine_culture",    registers: ["elite"] },
+  { id: "antiquities",     label_key: "onboarding.culture_antiquities",     registers: ["elite"] },
+  { id: "fine_art",        label_key: "onboarding.culture_fine_art",        registers: ["elite", "middle_class"] },
+  { id: "opera",           label_key: "onboarding.culture_opera",           registers: ["elite", "middle_class"] },
+  { id: "interior_design", label_key: "onboarding.culture_interior_design", registers: ["elite", "middle_class"] },
+  { id: "gastronomy",      label_key: "onboarding.culture_gastronomy",      registers: ["elite", "middle_class"] },
+  { id: "classical_music", label_key: "onboarding.culture_classical_music", registers: ["middle_class", "elite"] },
+  { id: "ballet",          label_key: "onboarding.culture_ballet",          registers: ["middle_class", "elite"] },
+  { id: "architecture",    label_key: "onboarding.culture_architecture",    registers: ["middle_class", "elite"] },
+  { id: "heritage_travel", label_key: "onboarding.culture_heritage_travel", registers: ["middle_class"] },
+  { id: "literature",      label_key: "onboarding.culture_literature",      registers: ["middle_class"] },
 ];
 
 // ─── Step 8: Sports / gastronomy / dresscode ──────────────────────────────────
@@ -237,8 +237,12 @@ export default function Onboarding() {
   const [showSecondary, setShowSecondary] = useState(false);
   // ── Step 6 ────────────────────────────────────────────────────────────────
   const [socialCircles, setSocialCircles] = useState<string[]>([]);
+  const [showOtherWorld6, setShowOtherWorld6] = useState(false);
+  const [catalogCircles, setCatalogCircles] = useState<{ id: string; label_key: string; registers: string[] }[] | null>(null);
   // ── Step 7 ────────────────────────────────────────────────────────────────
   const [culturalInterests, setCulturalInterests] = useState<string[]>([]);
+  const [showOtherWorld7, setShowOtherWorld7] = useState(false);
+  const [catalogCulture, setCatalogCulture] = useState<{ id: string; label_key: string; registers: string[] }[] | null>(null);
   // ── Step 8 ────────────────────────────────────────────────────────────────
   const [sports, setSports] = useState<string[]>([]);
   const [cuisine, setCuisine] = useState<string[]>([]);
@@ -262,6 +266,38 @@ export default function Onboarding() {
       .then((data: unknown) => setPlans(Array.isArray(data) ? (data as Plan[]) : []))
       .catch(() => setPlans([]));
   }, []);
+
+  useEffect(() => {
+    if (step === 6 && catalogCircles === null) {
+      fetch(`${API_BASE}/api/catalog/interests?taxonomy=social_circles`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((rows: unknown) => {
+          if (Array.isArray(rows) && rows.length > 0) {
+            setCatalogCircles((rows as Array<{ slug: string; label_i18n_key: string; registers: string[] }>)
+              .map((r) => ({ id: r.slug, label_key: r.label_i18n_key, registers: r.registers })));
+          } else {
+            setCatalogCircles([]);
+          }
+        })
+        .catch(() => setCatalogCircles([]));
+    }
+  }, [step, catalogCircles]);
+
+  useEffect(() => {
+    if (step === 7 && catalogCulture === null) {
+      fetch(`${API_BASE}/api/catalog/interests?taxonomy=cultural_interests`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((rows: unknown) => {
+          if (Array.isArray(rows) && rows.length > 0) {
+            setCatalogCulture((rows as Array<{ slug: string; label_i18n_key: string; registers: string[] }>)
+              .map((r) => ({ id: r.slug, label_key: r.label_i18n_key, registers: r.registers })));
+          } else {
+            setCatalogCulture([]);
+          }
+        })
+        .catch(() => setCatalogCulture([]));
+    }
+  }, [step, catalogCulture]);
 
   function toggleArr<T extends string>(arr: T[], val: T, set: (v: T[]) => void) {
     set(arr.includes(val) ? arr.filter((x) => x !== val) : ([...arr, val] as T[]));
@@ -786,102 +822,182 @@ export default function Onboarding() {
       {/* ══════════════════════════════════════════════════════════════════════
           Step 6: Social circles
          ══════════════════════════════════════════════════════════════════════ */}
-      {step === 6 && (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_circles_title")}</h1>
-            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_circles_subtitle")}</p>
-          </div>
+      {step === 6 && (() => {
+        const allCircles = catalogCircles && catalogCircles.length > 0 ? catalogCircles : SOCIAL_CIRCLE_FALLBACK;
+        const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
+        const primaryCircles = primaryRegister ? allCircles.filter((o) => o.registers.includes(primaryRegister)) : allCircles;
+        const otherCircles   = primaryRegister ? allCircles.filter((o) => !o.registers.includes(primaryRegister)) : [];
+        const showToggle = otherCircles.length > 0;
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_circles_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_circles_subtitle")}</p>
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            {SOCIAL_CIRCLE_OPTIONS.map((opt) => {
-              const sel = socialCircles.includes(opt.id);
-              const atMax = !sel && socialCircles.length >= 4;
-              return (
-                <PillButton
-                  key={opt.id}
-                  id={opt.id}
-                  label={t(opt.label_key)}
-                  selected={sel}
-                  disabled={atMax}
-                  onClick={() => toggleMax(socialCircles, opt.id, setSocialCircles, 4)}
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {primaryCircles.map((opt) => {
+                  const sel = socialCircles.includes(opt.id);
+                  const atMax = !sel && socialCircles.length >= 4;
+                  return (
+                    <PillButton
+                      key={opt.id}
+                      id={opt.id}
+                      label={t(opt.label_key)}
+                      selected={sel}
+                      disabled={atMax}
+                      onClick={() => toggleMax(socialCircles, opt.id, setSocialCircles, 4)}
+                    />
+                  );
+                })}
+              </div>
+
+              {showToggle && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowOtherWorld6(!showOtherWorld6)}
+                    className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    {showOtherWorld6 ? "▾" : "▸"} {t("onboarding.show_other_world")}
+                  </button>
+                  {showOtherWorld6 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {otherCircles.map((opt) => {
+                        const sel = socialCircles.includes(opt.id);
+                        const atMax = !sel && socialCircles.length >= 4;
+                        return (
+                          <PillButton
+                            key={opt.id}
+                            id={opt.id}
+                            label={t(opt.label_key)}
+                            selected={sel}
+                            disabled={atMax}
+                            onClick={() => toggleMax(socialCircles, opt.id, setSocialCircles, 4)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {socialCircles.length > 0 && (
+              <p className="text-xs text-muted-foreground font-light text-center">
+                {socialCircles.length} / 4 {t("onboarding.max_selected")}
+              </p>
+            )}
+
+            <div className="flex justify-between gap-3">
+              <NavBack to={5} />
+              <div className="flex gap-2">
+                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(7)}>
+                  {t("onboarding.skip")}
+                </Button>
+                <NavNext
+                  to={7}
+                  onAdvance={() => {
+                    if (socialCircles.length > 0) void saveOnboarding({ social_circles: socialCircles });
+                    setStep(7);
+                  }}
                 />
-              );
-            })}
-          </div>
-          {socialCircles.length > 0 && (
-            <p className="text-xs text-muted-foreground font-light text-center">
-              {socialCircles.length} / 4 {t("onboarding.max_selected")}
-            </p>
-          )}
-
-          <div className="flex justify-between gap-3">
-            <NavBack to={5} />
-            <div className="flex gap-2">
-              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(7)}>
-                {t("onboarding.skip")}
-              </Button>
-              <NavNext
-                to={7}
-                onAdvance={() => {
-                  if (socialCircles.length > 0) void saveOnboarding({ social_circles: socialCircles });
-                  setStep(7);
-                }}
-              />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ══════════════════════════════════════════════════════════════════════
           Step 7: Cultural interests
          ══════════════════════════════════════════════════════════════════════ */}
-      {step === 7 && (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_culture_title")}</h1>
-            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_culture_subtitle")}</p>
-          </div>
+      {step === 7 && (() => {
+        const allCulture = catalogCulture && catalogCulture.length > 0 ? catalogCulture : CULTURAL_INTEREST_FALLBACK;
+        const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
+        const primaryCulture = primaryRegister ? allCulture.filter((o) => o.registers.includes(primaryRegister)) : allCulture;
+        const otherCulture   = primaryRegister ? allCulture.filter((o) => !o.registers.includes(primaryRegister)) : [];
+        const showToggle = otherCulture.length > 0;
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_culture_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_culture_subtitle")}</p>
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            {CULTURAL_INTEREST_OPTIONS.map((opt) => {
-              const sel = culturalInterests.includes(opt.id);
-              const atMax = !sel && culturalInterests.length >= 4;
-              return (
-                <PillButton
-                  key={opt.id}
-                  id={opt.id}
-                  label={t(opt.label_key)}
-                  selected={sel}
-                  disabled={atMax}
-                  onClick={() => toggleMax(culturalInterests, opt.id, setCulturalInterests, 4)}
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {primaryCulture.map((opt) => {
+                  const sel = culturalInterests.includes(opt.id);
+                  const atMax = !sel && culturalInterests.length >= 4;
+                  return (
+                    <PillButton
+                      key={opt.id}
+                      id={opt.id}
+                      label={t(opt.label_key)}
+                      selected={sel}
+                      disabled={atMax}
+                      onClick={() => toggleMax(culturalInterests, opt.id, setCulturalInterests, 4)}
+                    />
+                  );
+                })}
+              </div>
+
+              {showToggle && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowOtherWorld7(!showOtherWorld7)}
+                    className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    {showOtherWorld7 ? "▾" : "▸"} {t("onboarding.show_other_world")}
+                  </button>
+                  {showOtherWorld7 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {otherCulture.map((opt) => {
+                        const sel = culturalInterests.includes(opt.id);
+                        const atMax = !sel && culturalInterests.length >= 4;
+                        return (
+                          <PillButton
+                            key={opt.id}
+                            id={opt.id}
+                            label={t(opt.label_key)}
+                            selected={sel}
+                            disabled={atMax}
+                            onClick={() => toggleMax(culturalInterests, opt.id, setCulturalInterests, 4)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {culturalInterests.length > 0 && (
+              <p className="text-xs text-muted-foreground font-light text-center">
+                {culturalInterests.length} / 4 {t("onboarding.max_selected")}
+              </p>
+            )}
+
+            <div className="flex justify-between gap-3">
+              <NavBack to={6} />
+              <div className="flex gap-2">
+                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(8)}>
+                  {t("onboarding.skip")}
+                </Button>
+                <NavNext
+                  to={8}
+                  onAdvance={() => {
+                    if (culturalInterests.length > 0) void saveOnboarding({ cultural_interests: culturalInterests });
+                    setStep(8);
+                  }}
                 />
-              );
-            })}
-          </div>
-          {culturalInterests.length > 0 && (
-            <p className="text-xs text-muted-foreground font-light text-center">
-              {culturalInterests.length} / 4 {t("onboarding.max_selected")}
-            </p>
-          )}
-
-          <div className="flex justify-between gap-3">
-            <NavBack to={6} />
-            <div className="flex gap-2">
-              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(8)}>
-                {t("onboarding.skip")}
-              </Button>
-              <NavNext
-                to={8}
-                onAdvance={() => {
-                  if (culturalInterests.length > 0) void saveOnboarding({ cultural_interests: culturalInterests });
-                  setStep(8);
-                }}
-              />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ══════════════════════════════════════════════════════════════════════
           Step 8: Sports / gastronomy / dresscode (→ selected_interests)

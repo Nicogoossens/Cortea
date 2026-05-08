@@ -1484,5 +1484,6 @@
   "onboarding.placement_cta_desc": "حوالي 5 دقائق — متاح الآن.",
   "onboarding.placement_skip": "تخطّي — ابدأ من المستوى الأول",
   "onboarding.placement_skip_warning": "سوف تبدأ من المستوى الأول. يمكنك إجراء تقييم التوضع من ملفك الشخصي في أي وقت تشاء.",
-  "onboarding.max_selected": "مختار"
+  "onboarding.max_selected": "مختار",
+  "onboarding.show_other_world": "إظهار الخيارات من العالم الآخر أيضاً"
 }

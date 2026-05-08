@@ -1484,5 +1484,6 @@
   "onboarding.placement_cta_desc": "Ongeveer 5 minuten — beschikbaar nu.",
   "onboarding.placement_skip": "Overslaan — begin op Niveau 1",
   "onboarding.placement_skip_warning": "U zult aanvangen op Niveau 1. U kunt de plaatsingstoets op elk moment uit uw profiel ondernemen.",
-  "onboarding.max_selected": "geselecteerd"
+  "onboarding.max_selected": "geselecteerd",
+  "onboarding.show_other_world": "Toon eveneens opties uit de andere wereld"
 }

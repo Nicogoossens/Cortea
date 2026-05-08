@@ -1484,5 +1484,6 @@
   "onboarding.placement_cta_desc": "約五分間 — 現在ご利用可能です。",
   "onboarding.placement_skip": "スキップ — レベル1より開始いたします",
   "onboarding.placement_skip_warning": "レベル1より開始いたします。ご自身のプロフィールからいつでも適性判定試験をお受けになることができます。",
-  "onboarding.max_selected": "選択済み"
+  "onboarding.max_selected": "選択済み",
+  "onboarding.show_other_world": "他方の世界からの選択肢もご提示いたします"
 }

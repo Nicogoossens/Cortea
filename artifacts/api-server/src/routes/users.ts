@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, learningTrackProgressTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings, type RegisterBiasSignal } from "@workspace/db";
+import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, learningTrackProgressTable, interestCatalogTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings, type RegisterBiasSignal } from "@workspace/db";
 import { eq, and, or, ne, desc, isNull, sql } from "drizzle-orm";
 import { inferRegisterBias, type PureRegisterBiasSignal } from "../lib/learning-engine-pure";
 import { z } from "zod";
@@ -566,14 +566,41 @@ router.delete("/users/profile", requireAuthUser, async (req, res) => {
   }
 });
 
+// ─── GET /api/catalog/interests — interest_catalog query ─────────────────────
+router.get("/catalog/interests", async (req: Request, res: Response) => {
+  try {
+    const taxonomy = typeof req.query.taxonomy === "string" ? req.query.taxonomy : null;
+    const register = typeof req.query.register === "string" ? req.query.register : null;
+
+    let rows = await db
+      .select({
+        slug:           interestCatalogTable.slug,
+        taxonomy:       interestCatalogTable.taxonomy,
+        label_i18n_key: interestCatalogTable.label_i18n_key,
+        registers:      interestCatalogTable.registers,
+        display_order:  interestCatalogTable.display_order,
+      })
+      .from(interestCatalogTable)
+      .orderBy(interestCatalogTable.display_order);
+
+    if (taxonomy) rows = rows.filter((r) => r.taxonomy === taxonomy);
+    if (register) rows = rows.filter((r) => (r.registers as string[]).includes(register));
+
+    return res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to query interest catalog");
+    return res.status(500).json({ error: "Could not retrieve catalog entries." });
+  }
+});
+
 // ─── Master Framework v1.1 §11.5 — Onboarding extended fields ───────────────
 
 const OnboardingBodySchema = z.object({
   world_choice:        z.enum(["A", "B", "C"]).optional(),
   archetype:           z.string().max(50).optional().nullable(),
   secondary_archetype: z.string().max(50).optional().nullable(),
-  social_circles:      z.array(z.string().max(100)).max(4).optional(),
-  cultural_interests:  z.array(z.string().max(100)).max(4).optional(),
+  social_circles:      z.array(z.string().max(100)).min(1).max(4).optional(),
+  cultural_interests:  z.array(z.string().max(100)).min(1).max(4).optional(),
   selected_interests:  z.array(z.string().max(200)).optional(),
   interests_sports:    z.array(z.string()).optional(),
   interests_cuisine:   z.array(z.string()).optional(),
@@ -647,11 +674,56 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
     if (data.archetype !== undefined)           updates.archetype           = data.archetype;
     if (data.secondary_archetype !== undefined)  updates.secondary_archetype = data.secondary_archetype;
 
+    // ── Interest weight maps for signal construction ─────────────────────────
+    const CIRCLE_WEIGHTS: Record<string, number> = {
+      old_money: 20, diplomatic_corps: 20, landed_gentry: 15, yacht_set: 20,
+      hunting_set: 10, arts_patronage: 10, fashion_world: 10, haute_cuisine: 5,
+      philanthropy: 5, corporate_executive: 5, academia: 0, religious_leadership: 0,
+    };
+    const CULTURE_WEIGHTS: Record<string, number> = {
+      horology: 20, wine_culture: 15, antiquities: 15, fine_art: 10, opera: 10,
+      interior_design: 10, gastronomy: 10, classical_music: 5, ballet: 5,
+      architecture: 5, heritage_travel: 5, literature: 0,
+    };
+    const SPORTS_WEIGHTS: Record<string, number> = {
+      polo: 25, horse_riding: 20, sailing: 20, hunting: 20, fencing: 15,
+      rowing: 10, golf: 10, tennis: 5, squash: 5,
+    };
+
+    function avgWeight(ids: string[], map: Record<string, number>): number {
+      if (ids.length === 0) return 0;
+      return Math.round(ids.reduce((s, id) => s + (map[id] ?? 0), 0) / ids.length);
+    }
+
     // ── Step 6: Social circles ───────────────────────────────────────────────
-    if (data.social_circles !== undefined) updates.social_circles = data.social_circles;
+    if (data.social_circles !== undefined) {
+      updates.social_circles = data.social_circles;
+      const w = avgWeight(data.social_circles, CIRCLE_WEIGHTS);
+      const currentSignals: PureRegisterBiasSignal[] = Array.isArray(updates.register_bias_signals)
+        ? (updates.register_bias_signals as PureRegisterBiasSignal[])
+        : Array.isArray(existing.register_bias_signals)
+          ? (existing.register_bias_signals as PureRegisterBiasSignal[])
+          : [];
+      const pruned = currentSignals.filter((s) => s.signal !== "onboarding_social_circles");
+      const merged: PureRegisterBiasSignal[] = [...pruned, { signal: "onboarding_social_circles", weight: w, recorded_at: new Date().toISOString() }];
+      updates.register_bias_signals = merged;
+      updates.register_bias = inferRegisterBias(merged);
+    }
 
     // ── Step 7: Cultural interests ───────────────────────────────────────────
-    if (data.cultural_interests !== undefined) updates.cultural_interests = data.cultural_interests;
+    if (data.cultural_interests !== undefined) {
+      updates.cultural_interests = data.cultural_interests;
+      const w = avgWeight(data.cultural_interests, CULTURE_WEIGHTS);
+      const currentSignals: PureRegisterBiasSignal[] = Array.isArray(updates.register_bias_signals)
+        ? (updates.register_bias_signals as PureRegisterBiasSignal[])
+        : Array.isArray(existing.register_bias_signals)
+          ? (existing.register_bias_signals as PureRegisterBiasSignal[])
+          : [];
+      const pruned = currentSignals.filter((s) => s.signal !== "onboarding_cultural_interests");
+      const merged: PureRegisterBiasSignal[] = [...pruned, { signal: "onboarding_cultural_interests", weight: w, recorded_at: new Date().toISOString() }];
+      updates.register_bias_signals = merged;
+      updates.register_bias = inferRegisterBias(merged);
+    }
 
     // ── Step 8: Sports / gastronomy / dresscode + selected_interests ─────────
     if (data.selected_interests !== undefined)  updates.selected_interests  = data.selected_interests;
@@ -659,14 +731,19 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
     if (data.interests_cuisine !== undefined)    updates.interests_cuisine    = data.interests_cuisine;
     if (data.interests_dress_code !== undefined) updates.interests_dress_code = data.interests_dress_code;
 
-    // After step 8: re-run inferRegisterBias with the full signal stack.
+    // After step 8: add sports signal then re-run inferRegisterBias on all accumulated signals.
     if (data.selected_interests !== undefined) {
-      const finalSignals = (
-        (updates.register_bias_signals as PureRegisterBiasSignal[] | undefined)
-        ?? (existing.register_bias_signals as PureRegisterBiasSignal[])
-        ?? []
-      );
-      updates.register_bias = inferRegisterBias(finalSignals);
+      const sportsIds = data.interests_sports ?? [];
+      const w = avgWeight(sportsIds, SPORTS_WEIGHTS);
+      const currentSignals: PureRegisterBiasSignal[] = Array.isArray(updates.register_bias_signals)
+        ? (updates.register_bias_signals as PureRegisterBiasSignal[])
+        : Array.isArray(existing.register_bias_signals)
+          ? (existing.register_bias_signals as PureRegisterBiasSignal[])
+          : [];
+      const pruned = currentSignals.filter((s) => s.signal !== "onboarding_sports");
+      const allSignals: PureRegisterBiasSignal[] = [...pruned, { signal: "onboarding_sports", weight: w, recorded_at: new Date().toISOString() }];
+      updates.register_bias_signals = allSignals;
+      updates.register_bias = inferRegisterBias(allSignals);
     }
 
     // ── onboarding_completed — only set to true, never revert ────────────────

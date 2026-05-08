@@ -555,6 +555,7 @@
   "onboarding.placement_skip": "Skip — begin at Level 1",
   "onboarding.placement_skip_warning": "You will start at Level 1. You may take the placement assessment from your profile at any time.",
   "onboarding.max_selected": "selected",
+  "onboarding.show_other_world": "Also show options from the other world",
   "admin.title": "Administration",
   "admin.subtitle": "Search, review and manage member accounts.",
   "admin.search_placeholder": "Search by name or email…",

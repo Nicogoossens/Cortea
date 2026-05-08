@@ -1484,5 +1484,6 @@
   "onboarding.placement_cta_desc": "Approximativement 5 minutes — disponible dès maintenant.",
   "onboarding.placement_skip": "Ignorer — débuter au Niveau 1",
   "onboarding.placement_skip_warning": "Vous débuterez au Niveau 1. Vous pourrez effectuer l'évaluation de positionnement à partir de votre profil à tout moment.",
-  "onboarding.max_selected": "sélectionné"
+  "onboarding.max_selected": "sélectionné",
+  "onboarding.show_other_world": "Afficher également les options de l'autre univers"
 }

@@ -296,6 +296,18 @@ router.post("/noble-score/submit", async (req, res) => {
     const STREAK_MILESTONES = new Set([3, 7, 14, 30]);
 
     if (userId) {
+      // Master Framework v1.1 §12 — load user BEFORE any write so elite
+      // privacy-mode users are blocked before side effects begin.
+      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+      if (user) {
+        const privacyErr = enforceElitePrivacy(
+          { elite_privacy_mode: (user as { elite_privacy_mode?: boolean | null }).elite_privacy_mode ?? false },
+          "write",
+        );
+        if (privacyErr) return res.status(403).json(privacyErr);
+      }
+
       await ensurePillarProgress(userId);
 
       const [pillarRow] = await db.select().from(zuil_voortgangTable)
@@ -315,18 +327,6 @@ router.post("/noble-score/submit", async (req, res) => {
           eq(zuil_voortgangTable.user_id, userId),
           eq(zuil_voortgangTable.pillar, scenario.pillar),
         ));
-
-      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-
-      // Master Framework v1.1 §12 — block noble_score/wardrobe writes when
-      // elite_privacy_mode is active so private-mode users are never tracked.
-      if (user) {
-        const privacyErr = enforceElitePrivacy(
-          { elite_privacy_mode: (user as { elite_privacy_mode?: boolean | null }).elite_privacy_mode ?? false },
-          "write",
-        );
-        if (privacyErr) return res.status(403).json(privacyErr);
-      }
 
       const oldTotalScore = user?.noble_score ?? 0;
       newTotalScore = Math.min(100, Math.max(0, oldTotalScore + Math.round(scoreDelta * 0.5)));

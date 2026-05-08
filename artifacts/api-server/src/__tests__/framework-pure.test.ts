@@ -14,6 +14,10 @@ import {
   type PureBehaviorProfile,
   type PureRegisterBiasSignal,
 } from "../lib/learning-engine-pure";
+import {
+  enforceElitePrivacy,
+  stripPrivateFields,
+} from "../middleware/elite-privacy";
 
 // ─── projectBehaviorToCompass ─────────────────────────────────────────────────
 
@@ -237,5 +241,101 @@ describe("updateBehaviorProfileFromSession", () => {
     const updated = updateBehaviorProfileFromSession(minProfile, 0, 10);
     expect(updated.listening_score).toBeGreaterThanOrEqual(0);
     expect(updated.nonverbal_awareness).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ─── enforceElitePrivacy ──────────────────────────────────────────────────────
+
+describe("enforceElitePrivacy", () => {
+  it("returns null for users with elite_privacy_mode=false (write intent)", () => {
+    expect(enforceElitePrivacy({ elite_privacy_mode: false }, "write")).toBeNull();
+  });
+
+  it("returns null for users with elite_privacy_mode=false (read intent)", () => {
+    expect(enforceElitePrivacy({ elite_privacy_mode: false }, "read")).toBeNull();
+  });
+
+  it("returns an error for privacy-mode users attempting a write", () => {
+    const err = enforceElitePrivacy({ elite_privacy_mode: true }, "write");
+    expect(err).not.toBeNull();
+    expect(err?.code).toBe("ELITE_PRIVACY_BLOCKED");
+    expect(err?.error).toContain("written");
+  });
+
+  it("returns an error for privacy-mode users on read intent", () => {
+    const err = enforceElitePrivacy({ elite_privacy_mode: true }, "read");
+    expect(err).not.toBeNull();
+    expect(err?.code).toBe("ELITE_PRIVACY_BLOCKED");
+    expect(err?.error).toContain("private");
+  });
+
+  it("defaults intent to 'read' when omitted", () => {
+    const err = enforceElitePrivacy({ elite_privacy_mode: true });
+    expect(err?.code).toBe("ELITE_PRIVACY_BLOCKED");
+    expect(err?.error).toContain("private");
+  });
+
+  it("write error message differs from read error message", () => {
+    const writeErr = enforceElitePrivacy({ elite_privacy_mode: true }, "write");
+    const readErr  = enforceElitePrivacy({ elite_privacy_mode: true }, "read");
+    expect(writeErr?.error).not.toBe(readErr?.error);
+  });
+});
+
+// ─── stripPrivateFields ───────────────────────────────────────────────────────
+
+describe("stripPrivateFields", () => {
+  const fullProfile = {
+    username: "test_user",
+    noble_score: 42,
+    wardrobe_unlocks: [{ id: "italian_suit" }],
+    compass_scores: { attentiveness: 70 },
+    attentiveness: 70,
+    composure: 80,
+    discernment: 60,
+    diplomacy: 75,
+    presence: 65,
+    badges: ["badge_1"],
+    new_badges: ["badge_2"],
+    compass_history: [],
+  } as Record<string, unknown>;
+
+  it("passes through all fields when elite_privacy_mode=false", () => {
+    const result = stripPrivateFields(fullProfile, false);
+    expect(result.noble_score).toBe(42);
+    expect(result.wardrobe_unlocks).toBeDefined();
+    expect(result.attentiveness).toBe(70);
+    expect(result.username).toBe("test_user");
+  });
+
+  it("strips noble_score when elite_privacy_mode=true", () => {
+    const result = stripPrivateFields(fullProfile, true);
+    expect(result.noble_score).toBeUndefined();
+  });
+
+  it("strips wardrobe_unlocks when elite_privacy_mode=true", () => {
+    const result = stripPrivateFields(fullProfile, true);
+    expect(result.wardrobe_unlocks).toBeUndefined();
+  });
+
+  it("strips all compass dimensions when elite_privacy_mode=true", () => {
+    const result = stripPrivateFields(fullProfile, true);
+    expect(result.attentiveness).toBeUndefined();
+    expect(result.composure).toBeUndefined();
+    expect(result.discernment).toBeUndefined();
+    expect(result.diplomacy).toBeUndefined();
+    expect(result.presence).toBeUndefined();
+  });
+
+  it("strips badges and compass_history when elite_privacy_mode=true", () => {
+    const result = stripPrivateFields(fullProfile, true);
+    expect(result.badges).toBeUndefined();
+    expect(result.new_badges).toBeUndefined();
+    expect(result.compass_history).toBeUndefined();
+  });
+
+  it("preserves non-private fields when elite_privacy_mode=true", () => {
+    const result = stripPrivateFields(fullProfile, true);
+    expect(result.username).toBe("test_user");
   });
 });

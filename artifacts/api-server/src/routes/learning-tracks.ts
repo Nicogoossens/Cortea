@@ -33,6 +33,7 @@ import {
   type PureBehaviorProfile,
 } from "../lib/learning-engine-pure";
 import { compassHistoryTable } from "@workspace/db";
+import { enforceElitePrivacy } from "../middleware/elite-privacy";
 
 const router = Router();
 
@@ -788,12 +789,20 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
             behavior_profile: usersTable.behavior_profile,
             profiling_consent: usersTable.profiling_consent,
             needs_recalibration: usersTable.needs_recalibration,
+            elite_privacy_mode: usersTable.elite_privacy_mode,
           })
           .from(usersTable)
           .where(eq(usersTable.id, userId))
           .limit(1);
 
-        if (userProfile?.profiling_consent !== false) {
+        // Master Framework v1.1 §12 — skip Compass/profile writes for
+        // privacy-mode users; their behavioral data must never be stored.
+        const privacyBlocked = enforceElitePrivacy(
+          { elite_privacy_mode: userProfile?.elite_privacy_mode ?? false },
+          "write",
+        );
+
+        if (!privacyBlocked && userProfile?.profiling_consent !== false) {
           const DEFAULT_PROFILE: PureBehaviorProfile = {
             listening_score: 50,
             assertiveness_style: "assertive",

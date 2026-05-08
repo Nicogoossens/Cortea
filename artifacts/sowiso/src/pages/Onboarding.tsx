@@ -86,37 +86,37 @@ const CULTURAL_INTEREST_FALLBACK = [
 ];
 
 // ─── Step 8: Sports / gastronomy / dresscode ──────────────────────────────────
-const SPORTS_OPTIONS = [
-  { id: "polo",         label_key: "onboarding.sport_polo" },
-  { id: "golf",         label_key: "onboarding.sport_golf" },
-  { id: "sailing",      label_key: "onboarding.sport_sailing" },
-  { id: "rowing",       label_key: "onboarding.sport_rowing" },
-  { id: "horse riding", label_key: "onboarding.sport_horse_riding" },
-  { id: "squash",       label_key: "onboarding.sport_squash" },
-  { id: "tennis",       label_key: "onboarding.sport_tennis" },
-  { id: "fencing",      label_key: "onboarding.sport_fencing" },
-  { id: "hunting",      label_key: "onboarding.sport_hunting" },
+const SPORTS_FALLBACK = [
+  { id: "polo",          label_key: "onboarding.sport_polo",         registers: ["elite"] },
+  { id: "horse riding",  label_key: "onboarding.sport_horse_riding", registers: ["elite"] },
+  { id: "sailing",       label_key: "onboarding.sport_sailing",      registers: ["elite"] },
+  { id: "hunting",       label_key: "onboarding.sport_hunting",      registers: ["elite"] },
+  { id: "fencing",       label_key: "onboarding.sport_fencing",      registers: ["elite", "middle_class"] },
+  { id: "rowing",        label_key: "onboarding.sport_rowing",       registers: ["elite", "middle_class"] },
+  { id: "golf",          label_key: "onboarding.sport_golf",         registers: ["elite", "middle_class"] },
+  { id: "tennis",        label_key: "onboarding.sport_tennis",       registers: ["middle_class", "elite"] },
+  { id: "squash",        label_key: "onboarding.sport_squash",       registers: ["middle_class"] },
 ];
 
-const CUISINE_OPTIONS = [
-  { id: "French",       label_key: "onboarding.cuisine_french" },
-  { id: "Japanese",     label_key: "onboarding.cuisine_japanese" },
-  { id: "Italian",      label_key: "onboarding.cuisine_italian" },
-  { id: "Indian",       label_key: "onboarding.cuisine_indian" },
-  { id: "Scandinavian", label_key: "onboarding.cuisine_scandinavian" },
-  { id: "Spanish",      label_key: "onboarding.cuisine_spanish" },
-  { id: "British",      label_key: "onboarding.cuisine_british" },
-  { id: "Chinese",      label_key: "onboarding.cuisine_chinese" },
-  { id: "Lebanese",     label_key: "onboarding.cuisine_lebanese" },
-  { id: "Peruvian",     label_key: "onboarding.cuisine_peruvian" },
+const CUISINE_FALLBACK = [
+  { id: "French",        label_key: "onboarding.cuisine_french",       registers: ["elite", "middle_class"] },
+  { id: "Japanese",      label_key: "onboarding.cuisine_japanese",     registers: ["elite", "middle_class"] },
+  { id: "Italian",       label_key: "onboarding.cuisine_italian",      registers: ["elite", "middle_class"] },
+  { id: "Scandinavian",  label_key: "onboarding.cuisine_scandinavian", registers: ["elite"] },
+  { id: "British",       label_key: "onboarding.cuisine_british",      registers: ["elite", "middle_class"] },
+  { id: "Spanish",       label_key: "onboarding.cuisine_spanish",      registers: ["middle_class", "elite"] },
+  { id: "Indian",        label_key: "onboarding.cuisine_indian",       registers: ["middle_class"] },
+  { id: "Chinese",       label_key: "onboarding.cuisine_chinese",      registers: ["middle_class"] },
+  { id: "Lebanese",      label_key: "onboarding.cuisine_lebanese",     registers: ["middle_class"] },
+  { id: "Peruvian",      label_key: "onboarding.cuisine_peruvian",     registers: ["middle_class"] },
 ];
 
-const DRESS_OPTIONS = [
-  { id: "business",    label_key: "onboarding.dress_business" },
-  { id: "black tie",   label_key: "onboarding.dress_black_tie" },
-  { id: "cocktail",    label_key: "onboarding.dress_cocktail" },
-  { id: "casual chic", label_key: "onboarding.dress_casual_chic" },
-  { id: "country",     label_key: "onboarding.dress_country" },
+const DRESS_FALLBACK = [
+  { id: "black tie",     label_key: "onboarding.dress_black_tie",   registers: ["elite"] },
+  { id: "cocktail",      label_key: "onboarding.dress_cocktail",    registers: ["elite", "middle_class"] },
+  { id: "business",      label_key: "onboarding.dress_business",    registers: ["middle_class", "elite"] },
+  { id: "casual chic",   label_key: "onboarding.dress_casual_chic", registers: ["middle_class"] },
+  { id: "country",       label_key: "onboarding.dress_country",     registers: ["elite", "middle_class"] },
 ];
 
 // ─── Step 9: Learning intent pillars ─────────────────────────────────────────
@@ -247,6 +247,10 @@ export default function Onboarding() {
   const [sports, setSports] = useState<string[]>([]);
   const [cuisine, setCuisine] = useState<string[]>([]);
   const [dressCode, setDressCode] = useState<string[]>([]);
+  const [showOtherWorld8, setShowOtherWorld8] = useState(false);
+  const [catalogSports, setCatalogSports] = useState<{ id: string; label_key: string; registers: string[] }[] | null>(null);
+  const [catalogCuisine, setCatalogCuisine] = useState<{ id: string; label_key: string; registers: string[] }[] | null>(null);
+  const [catalogDress, setCatalogDress] = useState<{ id: string; label_key: string; registers: string[] }[] | null>(null);
   // ── Step 9 ────────────────────────────────────────────────────────────────
   const defaultIntent: Record<string, "surface" | "competent" | "mastery"> =
     Object.fromEntries(LEARNING_PILLARS.map((p) => [p.id, "competent"]));
@@ -311,6 +315,47 @@ export default function Onboarding() {
     }
   }
 
+  useEffect(() => {
+    if (step === 8) {
+      if (catalogSports === null) {
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=sports`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((rows: unknown) => {
+            const arr = Array.isArray(rows) && rows.length > 0
+              ? (rows as Array<{ slug: string; label_i18n_key: string; registers: string[] }>)
+                  .map((r) => ({ id: r.slug, label_key: r.label_i18n_key, registers: r.registers }))
+              : [];
+            setCatalogSports(arr);
+          })
+          .catch(() => setCatalogSports([]));
+      }
+      if (catalogCuisine === null) {
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=gastronomy`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((rows: unknown) => {
+            const arr = Array.isArray(rows) && rows.length > 0
+              ? (rows as Array<{ slug: string; label_i18n_key: string; registers: string[] }>)
+                  .map((r) => ({ id: r.slug, label_key: r.label_i18n_key, registers: r.registers }))
+              : [];
+            setCatalogCuisine(arr);
+          })
+          .catch(() => setCatalogCuisine([]));
+      }
+      if (catalogDress === null) {
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=dress_codes`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((rows: unknown) => {
+            const arr = Array.isArray(rows) && rows.length > 0
+              ? (rows as Array<{ slug: string; label_i18n_key: string; registers: string[] }>)
+                  .map((r) => ({ id: r.slug, label_key: r.label_i18n_key, registers: r.registers }))
+              : [];
+            setCatalogDress(arr);
+          })
+          .catch(() => setCatalogDress([]));
+      }
+    }
+  }, [step, catalogSports, catalogCuisine, catalogDress]);
+
   // ── Best-effort save to the new onboarding endpoint ──────────────────────
   async function saveOnboarding(body: Record<string, unknown>): Promise<void> {
     if (!isAuthenticated) return;
@@ -353,14 +398,14 @@ export default function Onboarding() {
     } catch { /* ignore */ }
   }
 
-  // ── Advance from step 3 → 4 (save profile basics) ────────────────────────
+  // ── Advance from step 3 → 4 (save steps 1-3 via canonical endpoint) ────────
   async function handleAdvanceFromStep3() {
     setSaving(true);
     try {
-      await saveProfileFields({
-        country_of_origin:       country || null,
+      await saveOnboarding({
+        country_of_origin:      country || null,
         objectives,
-        situational_interests:   spheres,
+        situational_interests:  spheres,
       });
     } finally {
       setSaving(false);
@@ -543,9 +588,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 1: Country of origin
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 1: Country of origin */}
       {step === 1 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -579,9 +622,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 2: Objectives
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 2: Objectives */}
       {step === 2 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -630,9 +671,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 3: Social Spheres (situational_interests)
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 3: Social Spheres */}
       {step === 3 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -674,9 +713,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 4: World choice → register_bias
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 4: World choice */}
       {step === 4 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -731,9 +768,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 5: Archetype
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 5: Archetype */}
       {step === 5 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -819,9 +854,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 6: Social circles
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 6: Social circles */}
       {step === 6 && (() => {
         const allCircles = catalogCircles && catalogCircles.length > 0 ? catalogCircles : SOCIAL_CIRCLE_FALLBACK;
         const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
@@ -909,9 +942,7 @@ export default function Onboarding() {
         );
       })()}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 7: Cultural interests
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 7: Cultural interests */}
       {step === 7 && (() => {
         const allCulture = catalogCulture && catalogCulture.length > 0 ? catalogCulture : CULTURAL_INTEREST_FALLBACK;
         const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
@@ -999,96 +1030,134 @@ export default function Onboarding() {
         );
       })()}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 8: Sports / gastronomy / dresscode (→ selected_interests)
-         ══════════════════════════════════════════════════════════════════════ */}
-      {step === 8 && (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step3_title")}</h1>
-            <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step3_subtitle")}</p>
-          </div>
+      {/* Step 8: Sports / gastronomy / dresscode */}
+      {step === 8 && (() => {
+        const allSports  = catalogSports  && catalogSports.length  > 0 ? catalogSports  : SPORTS_FALLBACK;
+        const allCuisine = catalogCuisine && catalogCuisine.length > 0 ? catalogCuisine : CUISINE_FALLBACK;
+        const allDress   = catalogDress   && catalogDress.length   > 0 ? catalogDress   : DRESS_FALLBACK;
+        const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
+        const filterPrimary = <T extends { registers: string[] }>(opts: T[]) =>
+          primaryRegister ? opts.filter((o) => o.registers.includes(primaryRegister)) : opts;
+        const filterOther = <T extends { registers: string[] }>(opts: T[]) =>
+          primaryRegister ? opts.filter((o) => !o.registers.includes(primaryRegister)) : [];
+        const primarySports  = filterPrimary(allSports);
+        const primaryCuisine = filterPrimary(allCuisine);
+        const primaryDress   = filterPrimary(allDress);
+        const otherSports    = filterOther(allSports);
+        const otherCuisine   = filterOther(allCuisine);
+        const otherDress     = filterOther(allDress);
+        const hasOther = otherSports.length > 0 || otherCuisine.length > 0 || otherDress.length > 0;
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step3_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step3_subtitle")}</p>
+            </div>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_sports")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {SPORTS_OPTIONS.map((opt) => (
-                  <PillButton
-                    key={opt.id}
-                    id={opt.id}
-                    label={t(opt.label_key)}
-                    selected={sports.includes(opt.id)}
-                    onClick={() => toggleArr(sports, opt.id, setSports)}
-                  />
-                ))}
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  {t("onboarding.interests_sports")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {primarySports.map((opt) => (
+                    <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                      selected={sports.includes(opt.id)} onClick={() => toggleArr(sports, opt.id, setSports)} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  {t("onboarding.interests_cuisine")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {primaryCuisine.map((opt) => (
+                    <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                      selected={cuisine.includes(opt.id)} onClick={() => toggleArr(cuisine, opt.id, setCuisine)} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                  {t("onboarding.interests_dress")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {primaryDress.map((opt) => (
+                    <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                      selected={dressCode.includes(opt.id)} onClick={() => toggleArr(dressCode, opt.id, setDressCode)} />
+                  ))}
+                </div>
+              </div>
+
+              {hasOther && (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowOtherWorld8(!showOtherWorld8)}
+                    className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                  >
+                    {showOtherWorld8 ? "▾" : "▸"} {t("onboarding.show_other_world")}
+                  </button>
+                  {showOtherWorld8 && (
+                    <div className="space-y-4 pt-1">
+                      {otherSports.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {otherSports.map((opt) => (
+                            <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                              selected={sports.includes(opt.id)} onClick={() => toggleArr(sports, opt.id, setSports)} />
+                          ))}
+                        </div>
+                      )}
+                      {otherCuisine.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {otherCuisine.map((opt) => (
+                            <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                              selected={cuisine.includes(opt.id)} onClick={() => toggleArr(cuisine, opt.id, setCuisine)} />
+                          ))}
+                        </div>
+                      )}
+                      {otherDress.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {otherDress.map((opt) => (
+                            <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
+                              selected={dressCode.includes(opt.id)} onClick={() => toggleArr(dressCode, opt.id, setDressCode)} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between gap-3">
+              <NavBack to={7} />
+              <div className="flex gap-2">
+                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(9)}>
+                  {t("onboarding.skip")}
+                </Button>
+                <NavNext
+                  to={9}
+                  onAdvance={() => {
+                    const combined = [...sports, ...cuisine, ...dressCode];
+                    void saveOnboarding({
+                      selected_interests:   combined,
+                      interests_sports:     sports,
+                      interests_cuisine:    cuisine,
+                      interests_dress_code: dressCode,
+                    });
+                    setStep(9);
+                  }}
+                />
               </div>
             </div>
-
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_cuisine")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {CUISINE_OPTIONS.map((opt) => (
-                  <PillButton
-                    key={opt.id}
-                    id={opt.id}
-                    label={t(opt.label_key)}
-                    selected={cuisine.includes(opt.id)}
-                    onClick={() => toggleArr(cuisine, opt.id, setCuisine)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("onboarding.interests_dress")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {DRESS_OPTIONS.map((opt) => (
-                  <PillButton
-                    key={opt.id}
-                    id={opt.id}
-                    label={t(opt.label_key)}
-                    selected={dressCode.includes(opt.id)}
-                    onClick={() => toggleArr(dressCode, opt.id, setDressCode)}
-                  />
-                ))}
-              </div>
-            </div>
           </div>
+        );
+      })()}
 
-          <div className="flex justify-between gap-3">
-            <NavBack to={7} />
-            <div className="flex gap-2">
-              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(9)}>
-                {t("onboarding.skip")}
-              </Button>
-              <NavNext
-                to={9}
-                onAdvance={() => {
-                  const combined = [...sports, ...cuisine, ...dressCode];
-                  void saveOnboarding({
-                    selected_interests:   combined,
-                    interests_sports:     sports,
-                    interests_cuisine:    cuisine,
-                    interests_dress_code: dressCode,
-                  });
-                  setStep(9);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 9: Learning intent per pillar
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 9: Learning intent per pillar */}
       {step === 9 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -1134,9 +1203,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 10: Placement assessment link (Task D connection point)
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 10: Placement assessment */}
       {step === 10 && (
         <div className="space-y-8 animate-in fade-in duration-300">
           <div className="text-center space-y-3">
@@ -1186,9 +1253,7 @@ export default function Onboarding() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          Step 11: Plan choice (outside numbered steps)
-         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Step 11: Plan choice */}
       {step === 11 && (() => {
         const recommended = recommendTier(objectives);
         const tierOrder: PaidTier[] = ["student", "traveller", "ambassador"];

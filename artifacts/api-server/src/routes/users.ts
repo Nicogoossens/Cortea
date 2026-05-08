@@ -596,16 +596,19 @@ router.get("/catalog/interests", async (req: Request, res: Response) => {
 // ─── Master Framework v1.1 §11.5 — Onboarding extended fields ───────────────
 
 const OnboardingBodySchema = z.object({
-  world_choice:        z.enum(["A", "B", "C"]).optional(),
-  archetype:           z.string().max(50).optional().nullable(),
-  secondary_archetype: z.string().max(50).optional().nullable(),
-  social_circles:      z.array(z.string().max(100)).min(1).max(4).optional(),
-  cultural_interests:  z.array(z.string().max(100)).min(1).max(4).optional(),
-  selected_interests:  z.array(z.string().max(200)).optional(),
-  interests_sports:    z.array(z.string()).optional(),
-  interests_cuisine:   z.array(z.string()).optional(),
+  country_of_origin:    z.string().max(5).optional().nullable(),
+  objectives:           z.array(z.string().max(50)).optional(),
+  situational_interests: z.array(z.string().max(100)).optional(),
+  world_choice:         z.enum(["A", "B", "C"]).optional(),
+  archetype:            z.string().max(50).optional().nullable(),
+  secondary_archetype:  z.string().max(50).optional().nullable(),
+  social_circles:       z.array(z.string().max(100)).min(1).max(4).optional(),
+  cultural_interests:   z.array(z.string().max(100)).min(1).max(4).optional(),
+  selected_interests:   z.array(z.string().max(200)).optional(),
+  interests_sports:     z.array(z.string()).optional(),
+  interests_cuisine:    z.array(z.string()).optional(),
   interests_dress_code: z.array(z.string()).optional(),
-  learning_intent:     z.record(z.string(), z.enum(["surface", "competent", "mastery"])).optional(),
+  learning_intent:      z.record(z.string(), z.enum(["surface", "competent", "mastery"])).optional(),
   onboarding_completed: z.boolean().optional(),
 });
 
@@ -644,6 +647,11 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
 
     const data = parsed.data;
     const updates: Record<string, unknown> = {};
+
+    // ── Steps 1–3: Basic profile fields routed through canonical endpoint ────
+    if (data.country_of_origin !== undefined)    updates.country_of_origin    = data.country_of_origin;
+    if (data.objectives !== undefined)           updates.objectives           = data.objectives;
+    if (data.situational_interests !== undefined) updates.situational_interests = data.situational_interests;
 
     // ── Step 4: World choice → register_bias signal ──────────────────────────
     if (data.world_choice !== undefined) {
@@ -748,6 +756,12 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
 
     // ── onboarding_completed — only set to true, never revert ────────────────
     if (data.onboarding_completed === true && !existing.onboarding_completed) {
+      const resolvedCountry = data.country_of_origin !== undefined
+        ? data.country_of_origin
+        : existing.country_of_origin;
+      if (!resolvedCountry) {
+        return res.status(400).json({ error: "Country of origin is required to complete onboarding." });
+      }
       updates.onboarding_completed = true;
     }
 

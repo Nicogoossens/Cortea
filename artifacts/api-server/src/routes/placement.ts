@@ -5,6 +5,7 @@ import {
   learningTrackProgressTable,
   learningTrackAttemptsTable,
   learningTrackSessionsTable,
+  nobleScoreLogTable,
   usersTable,
 } from "@workspace/db";
 import { awardPlacementBadge } from "../lib/badge-service";
@@ -588,6 +589,38 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
     const cfg = getRegisterConfig(register);
     const clampedLevel = Math.max(1, Math.min(cfg.maxLevel, placementLevel));
 
+    // ── Idempotency check ─────────────────────────────────────────────────────
+    // If this run was already finalized (a log row with this trigger exists),
+    // return a stable 200 without re-awarding score or badges.
+    const finalizationTrigger = `placement_finalized:${rootId}`;
+    const [existingFinalization] = await db
+      .select({ id: nobleScoreLogTable.id })
+      .from(nobleScoreLogTable)
+      .where(
+        and(
+          eq(nobleScoreLogTable.user_id, userId),
+          eq(nobleScoreLogTable.trigger, finalizationTrigger),
+        ),
+      )
+      .limit(1);
+
+    if (existingFinalization) {
+      return res.json({
+        placement_level: clampedLevel,
+        noble_score_added: 0,
+        badge: null,
+        skipped_content_note: clampedLevel > 1
+          ? "Content from earlier levels is available in the Library."
+          : null,
+      });
+    }
+
+    // ── Atomic side-effects transaction ──────────────────────────────────────
+    // All writes (progress upsert, score credit, recalibration reset,
+    // finalization marker, skipped-content audit) happen in a single
+    // transaction.  The finalization marker row acts as the idempotency key:
+    // if the tx commits, the run is definitively finalized; if it rolls back,
+    // no partial state is persisted.
     const progressWhere = and(
       eq(learningTrackProgressTable.user_id, userId),
       eq(learningTrackProgressTable.register, register),
@@ -598,59 +631,84 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
         : sql`${learningTrackProgressTable.research_pillar} IS NULL`,
     );
 
-    const [existingProgress] = await db
-      .select()
-      .from(learningTrackProgressTable)
-      .where(progressWhere)
-      .limit(1);
+    let privacyMode = false;
+    let nobleScoreAdded = 0;
 
-    if (existingProgress) {
-      await db
-        .update(learningTrackProgressTable)
-        .set({ current_level: clampedLevel, last_updated: new Date() })
-        .where(eq(learningTrackProgressTable.id, existingProgress.id));
-    } else {
-      await db.insert(learningTrackProgressTable).values({
+    await db.transaction(async (tx) => {
+      const [existingProgress] = await tx
+        .select({ id: learningTrackProgressTable.id })
+        .from(learningTrackProgressTable)
+        .where(progressWhere)
+        .limit(1);
+
+      if (existingProgress) {
+        await tx
+          .update(learningTrackProgressTable)
+          .set({ current_level: clampedLevel, last_updated: new Date() })
+          .where(eq(learningTrackProgressTable.id, existingProgress.id));
+      } else {
+        await tx.insert(learningTrackProgressTable).values({
+          user_id: userId,
+          register,
+          research_pillar: pillarVal,
+          phase,
+          region_code: regionCode,
+          current_level: clampedLevel,
+          questions_done: 0,
+          correct_streak: 0,
+          mastered: false,
+        });
+      }
+
+      const [userRow] = await tx
+        .select({
+          noble_score:         usersTable.noble_score,
+          elite_privacy_mode:  usersTable.elite_privacy_mode,
+          needs_recalibration: usersTable.needs_recalibration,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .limit(1);
+
+      privacyMode = userRow?.elite_privacy_mode ?? false;
+      nobleScoreAdded = privacyMode ? 0 : 50 * (clampedLevel - 1);
+
+      if (nobleScoreAdded > 0) {
+        await tx
+          .update(usersTable)
+          .set({ noble_score: (userRow?.noble_score ?? 0) + nobleScoreAdded })
+          .where(eq(usersTable.id, userId));
+      }
+
+      if (userRow?.needs_recalibration) {
+        await tx
+          .update(usersTable)
+          .set({ needs_recalibration: false })
+          .where(eq(usersTable.id, userId));
+      }
+
+      // Finalization marker — also serves as the idempotency key for repeat calls
+      await tx.insert(nobleScoreLogTable).values({
         user_id: userId,
-        register,
-        research_pillar: pillarVal,
-        phase,
-        region_code: regionCode,
-        current_level: clampedLevel,
-        questions_done: 0,
-        correct_streak: 0,
-        mastered: false,
+        score_delta: nobleScoreAdded,
+        trigger: finalizationTrigger,
+        level_name_after: `placement_level_${clampedLevel}`,
       });
-    }
 
-    const [userRow] = await db
-      .select({
-        noble_score:          usersTable.noble_score,
-        elite_privacy_mode:   usersTable.elite_privacy_mode,
-        needs_recalibration:  usersTable.needs_recalibration,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.id, userId))
-      .limit(1);
+      // Persisted audit trail: skipped content made available in the Library
+      if (clampedLevel > 1) {
+        await tx.insert(nobleScoreLogTable).values({
+          user_id: userId,
+          score_delta: 0,
+          trigger: `placement_content_skipped:${rootId}`,
+          level_name_after: `placement_level_${clampedLevel}`,
+        });
+      }
+    });
 
-    const privacyMode = userRow?.elite_privacy_mode ?? false;
-    const nobleScoreAdded = privacyMode ? 0 : 50 * (clampedLevel - 1);
-
-    if (nobleScoreAdded > 0) {
-      await db
-        .update(usersTable)
-        .set({ noble_score: (userRow?.noble_score ?? 0) + nobleScoreAdded })
-        .where(eq(usersTable.id, userId));
-    }
-
+    // Badge award runs after the transaction so that a badge-service failure
+    // does not roll back the already-committed finalization.
     const awardedBadge = await awardPlacementBadge(userId, register, regionCode, privacyMode);
-
-    if (userRow?.needs_recalibration) {
-      await db
-        .update(usersTable)
-        .set({ needs_recalibration: false })
-        .where(eq(usersTable.id, userId));
-    }
 
     return res.json({
       placement_level: clampedLevel,

@@ -403,18 +403,50 @@ export function RefineCompass({
                 />
               </div>
 
-              {isHovered && (
-                <div className="space-y-0.5 animate-in fade-in duration-150">
-                  <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed">
-                    {DIMENSION_DEFS[key]}
-                  </p>
-                  {reasonText && (
-                    <p className="text-[11px] text-muted-foreground/60 font-light italic leading-relaxed">
-                      Reden: {reasonText}
+              {isHovered && (() => {
+                // Derive per-dimension session changes from history:
+                // each point where this dimension's value changed counts
+                // as a "recent session that influenced the score".
+                const dimChanges = historyInWindow.reduce<Array<{ date: string; delta: number }>>((acc, point, idx) => {
+                  if (idx === 0) return acc;
+                  const prev = historyInWindow[idx - 1];
+                  const d = Math.round(point[key] - prev[key]);
+                  if (d !== 0) {
+                    acc.push({
+                      date: new Date(point.recorded_at).toLocaleDateString("nl-BE", { day: "numeric", month: "short" }),
+                      delta: d,
+                    });
+                  }
+                  return acc;
+                }, []);
+                return (
+                  <div className="space-y-0.5 animate-in fade-in duration-150">
+                    <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed">
+                      {DIMENSION_DEFS[key]}
                     </p>
-                  )}
-                </div>
-              )}
+                    {reasonText && (
+                      <p className="text-[11px] text-muted-foreground/60 font-light italic leading-relaxed">
+                        Reden: {reasonText}
+                      </p>
+                    )}
+                    {dimChanges.length > 0 && (
+                      <div className="pt-0.5 space-y-0.5">
+                        <p className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-wider leading-none">
+                          Recente sessies
+                        </p>
+                        {dimChanges.slice(-3).reverse().map((s, sIdx) => (
+                          <p key={sIdx} className="text-[11px] text-muted-foreground/55 font-light leading-snug">
+                            {s.date}&nbsp;
+                            <span className={s.delta > 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}>
+                              {s.delta > 0 ? `+${s.delta}` : String(s.delta)}
+                            </span>
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}

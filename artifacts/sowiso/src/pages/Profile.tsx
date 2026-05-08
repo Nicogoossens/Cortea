@@ -448,23 +448,33 @@ export default function Profile() {
     // user's record. When viewedUid is set we're in public-view mode.
     // Auth still flows via the HttpOnly `cortea_session` cookie.
     const profileUrl = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(targetUserId)}`;
-    Promise.all([
+    // In public-view mode we only need the viewed user's profile (for
+    // elite_privacy_mode). Behavior-profile and subscription-status are
+    // always scoped to the authenticated user, so fetching them when
+    // viewing another user's profile would expose the wrong data.
+    const requests: Promise<unknown>[] = [
       fetch(profileUrl, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-      fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-    ])
+    ];
+    if (isOwnProfile) {
+      requests.push(
+        fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+        fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+      );
+    }
+    Promise.all(requests)
       .then(([data, bp, subStatus]) => {
-        setProfileData(data);
-        setUsernameInput(data?.username ?? "");
-        setFullNameInput(data?.full_name ?? "");
-        setCountryInput(data?.country_of_origin ?? "");
-        setCountryInputCourse(data?.country_of_origin ?? "");
-        if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
-        if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
-        // Sync privacy mode from persisted backend value (field added in Task B/C).
-        // Only apply to own profile — public views should never mutate local state.
-        const persistedPrivacy = (data as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode;
-        if (isOwnProfile && typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
+        setProfileData(data as UserProfileData | null);
+        if (isOwnProfile) {
+          setUsernameInput((data as UserProfileData | null)?.username ?? "");
+          setFullNameInput((data as UserProfileData | null)?.full_name ?? "");
+          setCountryInput((data as UserProfileData | null)?.country_of_origin ?? "");
+          setCountryInputCourse((data as UserProfileData | null)?.country_of_origin ?? "");
+          if (bp && typeof (bp as { listening_score?: unknown }).listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
+          if (subStatus && typeof (subStatus as { tier?: unknown }).tier === "string") setSubscriptionStatus(subStatus as { tier: string });
+          // Sync privacy mode from persisted backend value (field added in Task B/C).
+          const persistedPrivacy = (data as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode;
+          if (typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
+        }
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -473,7 +483,10 @@ export default function Profile() {
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   useEffect(() => {
-    if (!userId) return;
+    // compass-history and register-bias-signals are always scoped to the
+    // authenticated user. Skip in public-view mode — the viewed user's
+    // compass is either hidden (privacy mode) or shown as an empty state.
+    if (!userId || !isOwnProfile) return;
     fetch(`${API_BASE}/api/users/compass-history`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => { if (Array.isArray(data)) setCompassHistory(data); })
@@ -482,7 +495,7 @@ export default function Profile() {
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => { if (Array.isArray(data)) setBiasSignals(data); })
       .catch(() => {});
-  }, [userId]);
+  }, [userId, isOwnProfile]);
 
   // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
   // from the Atelier "Wijzig uw actieve regio" link or the read-only region

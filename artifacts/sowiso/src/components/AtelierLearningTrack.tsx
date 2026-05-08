@@ -332,7 +332,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         // Refresh the auto-walk pointer: when the student masters this slot,
         // the next call to /learning-tracks/next will return the next pillar
         // (or next phase) and the effect above will advance the UI.
-        queryClient.invalidateQueries({ queryKey: getGetLearningTrackNextQueryKey({ register, region_code: activeRegion }) });
+        queryClient.invalidateQueries({ queryKey: getGetLearningTrackNextQueryKey({ register: effectiveRegister, region_code: activeRegion }) });
         if (r.mastered && (r.new_badges ?? []).length > 0) {
           queryClient.invalidateQueries({ queryKey: getGetLearningTrackBadgesQueryKey() });
         }

@@ -62,26 +62,6 @@ const DIMENSION_KEYS = [
 ] as const;
 type DimensionKey = (typeof DIMENSION_KEYS)[number];
 
-const DIMENSION_LABELS: Record<DimensionKey, string> = {
-  attentiveness: "Attentiveness",
-  composure: "Composure",
-  discernment: "Discernment",
-  diplomacy: "Diplomacy",
-  presence: "Presence",
-};
-
-const DIMENSION_DEFS: Record<DimensionKey, string> = {
-  attentiveness:
-    "Uw vermogen om aanwezig en opmerkzaam te zijn in sociale interacties.",
-  composure:
-    "De kalmte en zelfbeheersing die u uitstraalt, ook onder druk.",
-  discernment:
-    "Scherpzinnigheid in het lezen van situaties, intenties en sociale codes.",
-  diplomacy:
-    "Uw flair om conflicten te navigeren zonder verhoudingen te beschadigen.",
-  presence:
-    "De subtiele non-verbale indruk die u achterlaat bij anderen.",
-};
 
 type FiveValues = [number, number, number, number, number];
 
@@ -247,7 +227,7 @@ export function RefineCompass({
   isPublicView = false,
 }: RefineCompassProps) {
   const [hoveredDim, setHoveredDim] = useState<number | null>(null);
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   if (elitePrivacyMode && isPublicView) {
     return (
@@ -399,7 +379,7 @@ export function RefineCompass({
                 aria-valuenow={current}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={`${t(`profile.compass.${key}`)}: ${current}`}
+                aria-label={t("profile.compass.dot_aria", { dimension: t(`profile.compass.${key}`), score: current })}
               >
                 <div
                   className="h-full bg-primary/70 transition-all duration-700"
@@ -417,7 +397,7 @@ export function RefineCompass({
                   const d = Math.round(point[key] - prev[key]);
                   if (d !== 0) {
                     acc.push({
-                      date: new Date(point.recorded_at).toLocaleDateString("nl-BE", { day: "numeric", month: "short" }),
+                      date: new Date(point.recorded_at).toLocaleDateString(locale, { day: "numeric", month: "short" }),
                       delta: d,
                     });
                   }

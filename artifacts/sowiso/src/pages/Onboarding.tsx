@@ -1211,7 +1211,8 @@ export default function Onboarding() {
               type="button"
               onClick={() => {
                 setPlacementSkipped(false);
-                navigate("/atelier?placement=true&register=middle_class&pillar=P1&phase=1");
+                const derivedRegister = worldChoice === "B" ? "elite" : "middle_class";
+                navigate(`/atelier?placement=true&register=${derivedRegister}&pillar=P1&phase=1`);
               }}
               className="w-full text-left p-5 rounded-sm border border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all duration-200 group"
             >

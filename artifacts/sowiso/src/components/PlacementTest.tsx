@@ -110,6 +110,35 @@ export function PlacementTest({
     setUiPhase("error");
   }, []);
 
+  const loadSession = useCallback((data: StartResponse) => {
+    setSessionId(data.session_id);
+    setQuestions(data.questions);
+    setCurrentQuestionIdx(0);
+    setSelectedOptionIdx(null);
+    setLastAnswer(null);
+    setTotalAnswered(data.total_answered);
+    setCurrentLevel(data.current_level);
+    setUiPhase("question");
+  }, []);
+
+  const resumeSession = useCallback(async (openSessionId: number) => {
+    setUiPhase("loading");
+    try {
+      const resp = await fetch(`${API_BASE}/api/sessions/placement/${openSessionId}`, {
+        credentials: "include",
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({})) as { error?: string };
+        handleError(body.error ?? t("placement.error_generic"));
+        return;
+      }
+      const data = await resp.json() as StartResponse;
+      loadSession(data);
+    } catch {
+      handleError(t("placement.error_generic"));
+    }
+  }, [handleError, t, loadSession]);
+
   const startAssessment = useCallback(async () => {
     setUiPhase("loading");
     setErrorMessage(null);
@@ -128,9 +157,13 @@ export function PlacementTest({
       });
 
       if (!resp.ok) {
-        const body = await resp.json().catch(() => ({})) as { error?: string; code?: string };
+        const body = await resp.json().catch(() => ({})) as { error?: string; code?: string; session_id?: number };
         if (resp.status === 409 && body.code === "PLACEMENT_IN_PROGRESS") {
-          handleError(t("placement.error_generic"));
+          if (body.session_id) {
+            await resumeSession(body.session_id);
+          } else {
+            handleError(t("placement.error_generic"));
+          }
           return;
         }
         if (resp.status === 422 && body.code === "NO_QUESTIONS") {
@@ -142,18 +175,11 @@ export function PlacementTest({
       }
 
       const data = await resp.json() as StartResponse;
-      setSessionId(data.session_id);
-      setQuestions(data.questions);
-      setCurrentQuestionIdx(0);
-      setSelectedOptionIdx(null);
-      setLastAnswer(null);
-      setTotalAnswered(data.total_answered);
-      setCurrentLevel(data.current_level);
-      setUiPhase("question");
+      loadSession(data);
     } catch {
       handleError(t("placement.error_generic"));
     }
-  }, [register, activeRegion, pillar, phase, lang, handleError, t]);
+  }, [register, activeRegion, pillar, phase, lang, handleError, t, resumeSession, loadSession]);
 
   const submitAnswer = useCallback(async () => {
     if (selectedOptionIdx === null || sessionId === null) return;
@@ -191,6 +217,22 @@ export function PlacementTest({
       handleError(t("placement.error_generic"));
     }
   }, [selectedOptionIdx, sessionId, questions, currentQuestionIdx, handleError, t]);
+
+  const abortAndSkip = useCallback(async () => {
+    if (sessionId !== null) {
+      try {
+        await fetch(`${API_BASE}/api/sessions/placement/abort`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+      } catch {
+        // Best-effort — proceed with skip even if abort request fails
+      }
+    }
+    onSkip();
+  }, [sessionId, onSkip]);
 
   const completeSession = useCallback(async (_placementLevel: number) => {
     if (sessionId === null) return;
@@ -299,7 +341,7 @@ export function PlacementTest({
           <Button variant="outline" onClick={() => setUiPhase("idle")} className="flex-1">
             {t("placement.skip_cancel")}
           </Button>
-          <Button variant="destructive" onClick={onSkip} className="flex-1">
+          <Button variant="destructive" onClick={() => void abortAndSkip()} className="flex-1">
             {t("placement.skip_confirm")}
           </Button>
         </div>

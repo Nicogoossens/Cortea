@@ -9,7 +9,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { awardPlacementBadge } from "../lib/badge-service";
-import { eq, and, sql, isNull, or, desc } from "drizzle-orm";
+import { eq, and, sql, isNull, or, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
 import {
@@ -723,6 +723,149 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
   } catch (err) {
     req.log.error({ err }, "Failed to complete placement session");
     return res.status(500).json({ error: "The placement assessment could not be completed." });
+  }
+});
+
+// ─── GET /sessions/placement/:sessionId  (resume) ────────────────────────────
+// Returns unanswered questions and current binary-search state for an open
+// placement session so the frontend can resume after a page reload.
+router.get("/sessions/placement/:sessionId", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const sessionId = parseInt(req.params.sessionId, 10);
+    if (isNaN(sessionId)) return res.status(400).json({ error: "Invalid session ID." });
+
+    const [session] = await db
+      .select({
+        id:                    learningTrackSessionsTable.id,
+        is_placement:          learningTrackSessionsTable.is_placement,
+        level:                 learningTrackSessionsTable.level,
+        served_question_ids:   learningTrackSessionsTable.served_question_ids,
+        answers_given:         learningTrackSessionsTable.answers_given,
+        total_questions:       learningTrackSessionsTable.total_questions,
+        remediates_session_id: learningTrackSessionsTable.remediates_session_id,
+        completed_at:          learningTrackSessionsTable.completed_at,
+      })
+      .from(learningTrackSessionsTable)
+      .where(
+        and(
+          eq(learningTrackSessionsTable.id, sessionId),
+          eq(learningTrackSessionsTable.user_id, userId),
+          eq(learningTrackSessionsTable.is_placement, true),
+        ),
+      )
+      .limit(1);
+
+    if (!session) return res.status(404).json({ error: "Placement session not found." });
+    if (session.completed_at) {
+      return res.status(409).json({ error: "Placement session already completed.", code: "SESSION_COMPLETED" });
+    }
+
+    // Determine which question IDs in this batch have already been answered
+    const answeredRows = await db
+      .select({ question_id: learningTrackAttemptsTable.question_id })
+      .from(learningTrackAttemptsTable)
+      .where(eq(learningTrackAttemptsTable.session_id, session.id));
+    const answeredIds = new Set(answeredRows.map((r) => r.question_id));
+
+    const servedIds = (session.served_question_ids ?? []) as number[];
+    const unansweredIds = servedIds.filter((id) => !answeredIds.has(id));
+
+    const questions =
+      unansweredIds.length > 0
+        ? await db
+            .select({
+              id:                 learningTrackQuestionsTable.id,
+              question_text:      learningTrackQuestionsTable.question_text,
+              historical_context: learningTrackQuestionsTable.historical_context,
+              options:            learningTrackQuestionsTable.options,
+            })
+            .from(learningTrackQuestionsTable)
+            .where(inArray(learningTrackQuestionsTable.id, unansweredIds))
+        : [];
+
+    // Recompute binary-search state from completed siblings
+    const rootId = session.remediates_session_id ?? session.id;
+    const runSessions = await fetchRunSessions(userId, rootId);
+    const completedSessions = runSessions.filter((s) => s.completed_at !== null);
+    const totalAnswered =
+      completedSessions.reduce((sum, s) => sum + s.total_questions, 0) +
+      session.answers_given;
+    const bsState = computeBinarySearchState(completedSessions, totalAnswered);
+
+    return res.json({
+      session_id:        session.id,
+      placement_root_id: rootId,
+      current_level:     session.level,
+      lo:                bsState.lo,
+      hi:                bsState.hi,
+      total_answered:    totalAnswered,
+      max_questions:     PLACEMENT_MAX_QUESTIONS,
+      questions: questions.map((q) => ({
+        id:                 q.id,
+        question_text:      q.question_text,
+        historical_context: q.historical_context,
+        options:            (q.options as { text: string }[]).map((o) => ({ text: o.text })),
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to resume placement session");
+    return res.status(500).json({ error: "The placement session could not be loaded." });
+  }
+});
+
+// ─── POST /sessions/placement/abort ──────────────────────────────────────────
+// Closes all open batches in a placement run so the user is not deadlocked and
+// future starts can proceed.  Marks them completed with passed=false / score=0.
+router.post("/sessions/placement/abort", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const parsed = z.object({ session_id: z.number().int().positive() }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "Invalid request." });
+
+    const { session_id } = parsed.data;
+
+    const [session] = await db
+      .select({
+        id:                    learningTrackSessionsTable.id,
+        is_placement:          learningTrackSessionsTable.is_placement,
+        remediates_session_id: learningTrackSessionsTable.remediates_session_id,
+      })
+      .from(learningTrackSessionsTable)
+      .where(
+        and(
+          eq(learningTrackSessionsTable.id, session_id),
+          eq(learningTrackSessionsTable.user_id, userId),
+        ),
+      )
+      .limit(1);
+
+    if (!session || !session.is_placement) {
+      return res.status(404).json({ error: "Placement session not found." });
+    }
+
+    const rootId = session.remediates_session_id ?? session.id;
+
+    // Mark every open batch in this run as completed (aborted)
+    await db
+      .update(learningTrackSessionsTable)
+      .set({ completed_at: new Date(), passed: false, score_pct: 0 })
+      .where(
+        and(
+          eq(learningTrackSessionsTable.user_id, userId),
+          eq(learningTrackSessionsTable.is_placement, true),
+          isNull(learningTrackSessionsTable.completed_at),
+          or(
+            eq(learningTrackSessionsTable.id, rootId),
+            eq(learningTrackSessionsTable.remediates_session_id, rootId),
+          ),
+        ),
+      );
+
+    return res.json({ aborted: true });
+  } catch (err) {
+    req.log.error({ err }, "Failed to abort placement session");
+    return res.status(500).json({ error: "The placement session could not be aborted." });
   }
 });
 

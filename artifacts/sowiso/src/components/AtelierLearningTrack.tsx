@@ -96,6 +96,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const [showAdvanced, setShowAdvanced] = useState(false);
   // "balanced" bias → start in both-mode so the toggle defaults to "Beide"
   const [registerBothMode, setRegisterBothMode] = useState(() => registerBias === "balanced");
+  // Tracks the active register while "Beide" mode is on. Kept separate from
+  // `register` so switching back to a fixed register restores the user's choice.
+  const [bothModeRegister, setBothModeRegister] = useState<Register>("middle_class");
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
     () => !localStorage.getItem(startCardKey(ambitionLevel))
@@ -153,11 +156,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // Resets every time a new question is shown.
   const [studyAcknowledged, setStudyAcknowledged] = useState(false);
 
-  // In "both" mode: derive the effective register from which pool the selected
-  // phase/pillar belongs to, so the session API receives the correct register.
-  const effectiveRegister: Register = registerBothMode
-    ? (ELITE_PILLARS.some((p) => p.pillar === phase) ? "elite" : "middle_class")
-    : register;
+  // In "both" mode the active register is tracked explicitly in `bothModeRegister`
+  // (updated whenever the user picks from the combined pillar pool). Inferring
+  // register from a phase/pillar ID alone is impossible: both pools use 1–5.
+  const effectiveRegister: Register = registerBothMode ? bothModeRegister : register;
 
   const sessionParams = {
     register: effectiveRegister,
@@ -248,7 +250,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // student should attempt next given their progress in this register × region.
   // The student no longer picks freely; the system walks them sequentially.
   // Manual override is available behind the "Advanced" toggle below.
-  const nextSlotParams = { register, region_code: activeRegion };
+  const nextSlotParams = { register: effectiveRegister, region_code: activeRegion };
   const { data: nextSlot, error: nextSlotError, refetch: refetchNextSlot } = useGetLearningTrackNext(nextSlotParams, {
     query: {
       queryKey: getGetLearningTrackNextQueryKey(nextSlotParams),
@@ -341,9 +343,10 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     resetQuestion();
   }
 
-  function handlePhaseChange(p: number) {
+  function handlePhaseChange(p: number, reg?: Register) {
     hasManuallyChanged.current = true;
     setPhase(p);
+    if (reg !== undefined) setBothModeRegister(reg);
     resetQuestion();
   }
 
@@ -375,8 +378,8 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       data: {
         question_id: currentQuestion.id,
         selected_option_index: selectedOptionIdx,
-        register,
-        research_pillar: register === "middle_class" ? researchPillar : null,
+        register: effectiveRegister,
+        research_pillar: effectiveRegister === "middle_class" ? researchPillar : null,
         phase,
         ...(sessionId ? { session_id: sessionId } : {}),
       },
@@ -403,18 +406,25 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     if (!progressData) return null;
     return progressData.find(
       (p) =>
-        p.register === register &&
+        p.register === effectiveRegister &&
         p.phase === phase &&
         p.region_code === activeRegion &&
-        (register === "middle_class" ? p.research_pillar === researchPillar : !p.research_pillar),
+        (effectiveRegister === "middle_class" ? p.research_pillar === researchPillar : !p.research_pillar),
     );
-  }, [progressData, register, phase, researchPillar, activeRegion]);
+  }, [progressData, effectiveRegister, phase, researchPillar, activeRegion]);
 
   const currentProgress = getProgressForCurrentTrack();
 
-  const phaseOptions = register === "middle_class"
-    ? MIDDLE_CLASS_PHASES.map((ph) => ({ value: ph.phase, label: ph.domainName, subtitle: ph.focus.split(" — ")[0] }))
-    : ELITE_PILLARS.map((p) => ({ value: p.pillar, label: p.domainName, subtitle: p.internalName }));
+  // In "both" mode: combine both pools with an explicit itemRegister tag so the
+  // click handler can update bothModeRegister correctly (phase IDs overlap 1–5).
+  const phaseOptions = registerBothMode
+    ? [
+        ...MIDDLE_CLASS_PHASES.map((ph) => ({ value: ph.phase, label: ph.domainName, subtitle: ph.focus.split(" — ")[0], itemRegister: "middle_class" as Register })),
+        ...ELITE_PILLARS.map((p) => ({ value: p.pillar, label: p.domainName, subtitle: p.internalName, itemRegister: "elite" as Register })),
+      ]
+    : effectiveRegister === "middle_class"
+      ? MIDDLE_CLASS_PHASES.map((ph) => ({ value: ph.phase, label: ph.domainName, subtitle: ph.focus.split(" — ")[0], itemRegister: "middle_class" as Register }))
+      : ELITE_PILLARS.map((p) => ({ value: p.pillar, label: p.domainName, subtitle: p.internalName, itemRegister: "elite" as Register }));
 
   const pillarEntries = Object.entries(RESEARCH_PILLARS).filter(([key]) =>
     ["P1", "P2", "P3"].includes(key)
@@ -617,17 +627,17 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                {register === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
+                {registerBothMode ? "Phase / Pillar" : effectiveRegister === "middle_class" ? t("atelier.track.section_phase") : "Pillar"}
               </p>
               <div className="space-y-1.5">
                 {phaseOptions.map((opt) => {
                   const lockReason = isPhaseLocked(opt.value);
                   const isLocked = lockReason !== null;
-                  const isActive = phase === opt.value;
+                  const isActive = phase === opt.value && effectiveRegister === opt.itemRegister;
                   return (
                     <button
-                      key={opt.value}
-                      onClick={() => !isLocked && handlePhaseChange(opt.value)}
+                      key={`${opt.itemRegister}:${opt.value}`}
+                      onClick={() => !isLocked && handlePhaseChange(opt.value, opt.itemRegister)}
                       disabled={isLocked}
                       title={
                         lockReason === "session"
@@ -657,7 +667,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                 })}
               </div>
             </div>
-            {register === "middle_class" && (
+            {effectiveRegister === "middle_class" && (
               <div className="space-y-2">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   {t("atelier.track.section_pillar")}

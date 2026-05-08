@@ -451,6 +451,9 @@ export default function Profile() {
         setCountryInputCourse(data?.country_of_origin ?? "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
         if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
+        // Sync privacy mode from persisted backend value (field added in Task B/C)
+        const persistedPrivacy = (data as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode;
+        if (typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -2116,7 +2119,21 @@ export default function Profile() {
           {profileData?.subscription_tier === "ambassador" && (
             <button
               type="button"
-              onClick={() => setCompassPrivacyMode((p) => !p)}
+              onClick={async () => {
+                const newValue = !compassPrivacyMode;
+                setCompassPrivacyMode(newValue);
+                // Best-effort persist; field may not exist until Task B/C merge
+                try {
+                  await fetch(`${API_BASE}/api/users/profile`, {
+                    method: "PATCH",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ elite_privacy_mode: newValue }),
+                  });
+                } catch {
+                  // Silently ignore – field not yet in schema
+                }
+              }}
               className="shrink-0 mt-0.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
               title={compassPrivacyMode ? "Toon uw compass-data" : "Verberg compass voor anderen"}
             >
@@ -2208,7 +2225,7 @@ export default function Profile() {
               onClick={() => navigate("/atelier?placement=true")}
               className="font-mono text-xs"
             >
-              Nieuwe kalibratie
+              Doe een nieuwe kalibratie
             </Button>
           </div>
         </CardContent>

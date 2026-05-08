@@ -82,9 +82,17 @@ const DIMENSION_DEFS: Record<DimensionKey, string> = {
     "De subtiele non-verbale indruk die u achterlaat bij anderen.",
 };
 
-interface PentagonWithShadowProps {
-  values: [number, number, number, number, number];
-  shadowValues: [number, number, number, number, number] | null;
+type FiveValues = [number, number, number, number, number];
+
+interface ShadowPolygon {
+  values: FiveValues;
+  fillOpacity: number;
+  strokeOpacity: number;
+}
+
+interface PentagonProps {
+  values: FiveValues;
+  shadowPolygons: ShadowPolygon[];
   labels: [string, string, string, string, string];
   color?: string;
   hoveredIdx: number | null;
@@ -93,12 +101,12 @@ interface PentagonWithShadowProps {
 
 function PentagonWithShadow({
   values,
-  shadowValues,
+  shadowPolygons,
   labels,
   color = "var(--primary)",
   hoveredIdx,
   onHover,
-}: PentagonWithShadowProps) {
+}: PentagonProps) {
   const cx = 130;
   const cy = 130;
   const maxR = 100;
@@ -109,11 +117,7 @@ function PentagonWithShadow({
   }
 
   const gridLevels = [0.25, 0.5, 0.75, 1];
-
   const dataPoints = values.map((v, i) => pt((Math.min(v, 100) / 100) * maxR, i)).join(" ");
-  const shadowPoints = shadowValues
-    ? shadowValues.map((v, i) => pt((Math.min(v, 100) / 100) * maxR, i)).join(" ")
-    : null;
 
   return (
     <svg
@@ -147,18 +151,19 @@ function PentagonWithShadow({
         />
       ))}
 
-      {shadowPoints && (
+      {shadowPolygons.map((sp, idx) => (
         <polygon
-          points={shadowPoints}
+          key={idx}
+          points={sp.values.map((v, i) => pt((Math.min(v, 100) / 100) * maxR, i)).join(" ")}
           fill="currentColor"
-          fillOpacity={0.06}
+          fillOpacity={sp.fillOpacity}
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="1"
           strokeDasharray="3 2"
-          strokeOpacity={0.25}
+          strokeOpacity={sp.strokeOpacity}
           className="text-muted-foreground"
         />
-      )}
+      ))}
 
       <polygon
         points={dataPoints}
@@ -208,7 +213,6 @@ function PentagonWithShadow({
             fontSize="10"
             fontFamily="var(--font-mono, monospace)"
             letterSpacing="0.08em"
-            fill={hoveredIdx === i ? "currentColor" : undefined}
             className={
               hoveredIdx === i
                 ? "fill-foreground"
@@ -252,7 +256,7 @@ export function RefineCompass({
     );
   }
 
-  const currentValues: [number, number, number, number, number] = behaviorProfile
+  const currentValues: FiveValues = behaviorProfile
     ? behaviorToRadar(behaviorProfile)
     : [50, 50, 50, 50, 50];
 
@@ -261,16 +265,37 @@ export function RefineCompass({
   const historyInWindow = compassHistory
     .filter((p) => new Date(p.recorded_at) >= thirtyDaysAgo)
     .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
-  const shadowPoint = historyInWindow.length > 0 ? historyInWindow[0] : null;
-  const shadowValues: [number, number, number, number, number] | null = shadowPoint
+
+  // Build a gradient of shadow polygons: oldest = most transparent, newest = darkest.
+  // Each history point gets opacity proportional to its position in the 30-day window.
+  const shadowPolygons: ShadowPolygon[] = historyInWindow.map((point, idx) => {
+    const fraction = historyInWindow.length === 1 ? 0 : idx / (historyInWindow.length - 1);
+    return {
+      values: [
+        point.attentiveness,
+        point.composure,
+        point.discernment,
+        point.diplomacy,
+        point.presence,
+      ] as FiveValues,
+      fillOpacity: 0.03 + fraction * 0.07,
+      strokeOpacity: 0.12 + fraction * 0.22,
+    };
+  });
+
+  // For delta display and reason text, compare current vs earliest point in window
+  const earliestPoint = historyInWindow.length > 0 ? historyInWindow[0] : null;
+  const earliestValues: FiveValues | null = earliestPoint
     ? [
-        shadowPoint.attentiveness,
-        shadowPoint.composure,
-        shadowPoint.discernment,
-        shadowPoint.diplomacy,
-        shadowPoint.presence,
+        earliestPoint.attentiveness,
+        earliestPoint.composure,
+        earliestPoint.discernment,
+        earliestPoint.diplomacy,
+        earliestPoint.presence,
       ]
     : null;
+
+  const hasHistory = historyInWindow.length > 0;
 
   const LABELS: [string, string, string, string, string] = [
     DIMENSION_LABELS.attentiveness,
@@ -280,19 +305,28 @@ export function RefineCompass({
     DIMENSION_LABELS.presence,
   ];
 
+  function buildReasonText(key: DimensionKey, delta: number | null): string | null {
+    if (delta === null) return null;
+    const label = DIMENSION_LABELS[key];
+    if (delta === 0) return `${label} bleef stabiel de afgelopen 30 dagen.`;
+    const direction = delta > 0 ? "steeg" : "daalde";
+    const formatted = delta > 0 ? `+${delta}` : String(delta);
+    return `${label} ${direction} ${formatted} over de afgelopen 30 dagen.`;
+  }
+
   return (
     <div className="flex flex-col md:flex-row items-start gap-8">
       <div className="flex-shrink-0">
         <PentagonWithShadow
           values={currentValues}
-          shadowValues={shadowValues}
+          shadowPolygons={shadowPolygons}
           labels={LABELS}
           hoveredIdx={hoveredDim}
           onHover={setHoveredDim}
         />
-        {shadowValues && (
+        {hasHistory && (
           <p className="text-center text-[10px] font-mono text-muted-foreground/50 mt-1 leading-snug">
-            ── huidig &nbsp;·&nbsp; ╌ ╌ 30 dagen geleden
+            ── huidig &nbsp;·&nbsp; ╌ ╌ evolutie 30 dagen
           </p>
         )}
       </div>
@@ -300,9 +334,10 @@ export function RefineCompass({
       <div className="flex-1 min-w-0 space-y-1">
         {DIMENSION_KEYS.map((key, i) => {
           const current = currentValues[i];
-          const shadow = shadowValues?.[i] ?? null;
-          const delta = shadow !== null ? current - shadow : null;
+          const historical = earliestValues?.[i] ?? null;
+          const delta = historical !== null ? current - historical : null;
           const isHovered = hoveredDim === i;
+          const reasonText = buildReasonText(key, delta);
 
           return (
             <div
@@ -328,7 +363,16 @@ export function RefineCompass({
                   </button>
                 </div>
                 <div className="flex items-baseline gap-1.5 shrink-0">
-                  <span className="text-xs font-mono text-foreground">{current}</span>
+                  <span className="text-xs font-mono text-foreground">
+                    {historical !== null && historical !== current ? (
+                      <>
+                        {current}{" "}
+                        <span className="text-[10px] text-muted-foreground/50">(was {historical})</span>
+                      </>
+                    ) : (
+                      current
+                    )}
+                  </span>
                   {delta !== null && (
                     <span
                       className={`text-[10px] font-mono ${
@@ -360,9 +404,16 @@ export function RefineCompass({
               </div>
 
               {isHovered && (
-                <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed animate-in fade-in duration-150">
-                  {DIMENSION_DEFS[key]}
-                </p>
+                <div className="space-y-0.5 animate-in fade-in duration-150">
+                  <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed">
+                    {DIMENSION_DEFS[key]}
+                  </p>
+                  {reasonText && (
+                    <p className="text-[11px] text-muted-foreground/60 font-light italic leading-relaxed">
+                      Reden: {reasonText}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           );

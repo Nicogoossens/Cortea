@@ -114,6 +114,8 @@ interface UserProfileData {
   interests_sports?: string[] | null;
   interests_cuisine?: string[] | null;
   interests_dress_code?: string[] | null;
+  social_circles?: string[] | null;
+  cultural_interests?: string[] | null;
   onboarding_completed?: boolean | null;
   situational_interests?: string[] | null;
   profiling_consent?: boolean | null;
@@ -440,6 +442,16 @@ export default function Profile() {
   const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
   const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
   const [spheresSave, setSpheresSave] = useState<SaveState>("idle");
+  const [catalogSave, setCatalogSave] = useState<SaveState>("idle");
+
+  interface CatalogItem {
+    slug: string;
+    taxonomy: string;
+    label_i18n_key: string;
+    registers: string[];
+    display_order: number;
+  }
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
 
   const fetchProfile = useCallback(() => {
     const targetUserId = viewedUid || userId;
@@ -896,6 +908,53 @@ export default function Profile() {
       .then((rows: TrackBadge[]) => setTrackBadges(rows))
       .catch(() => setTrackBadges([]));
   }, [isAuthenticated, profileData?.id]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetch(`${API_BASE}/api/catalog/interests`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : [])
+      .then((items: CatalogItem[]) => setCatalogItems(items))
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  const TAXONOMY_ORDER = ["social_circles", "cultural_interests", "sports", "gastronomy", "dress_codes"] as const;
+
+  function getCatalogSelections(taxonomy: string): string[] {
+    if (taxonomy === "social_circles")    return profileData?.social_circles    ?? [];
+    if (taxonomy === "cultural_interests") return profileData?.cultural_interests ?? [];
+    if (taxonomy === "sports")            return profileData?.interests_sports   ?? [];
+    if (taxonomy === "gastronomy")        return profileData?.interests_cuisine  ?? [];
+    if (taxonomy === "dress_codes")       return profileData?.interests_dress_code ?? [];
+    return [];
+  }
+
+  function taxonomyToProfileField(taxonomy: string): string {
+    if (taxonomy === "social_circles")    return "social_circles";
+    if (taxonomy === "cultural_interests") return "cultural_interests";
+    if (taxonomy === "sports")            return "interests_sports";
+    if (taxonomy === "gastronomy")        return "interests_cuisine";
+    if (taxonomy === "dress_codes")       return "interests_dress_code";
+    return taxonomy;
+  }
+
+  function canSeeInterestItem(item: CatalogItem): boolean {
+    const registers = item.registers as string[];
+    if (registers.includes("middle_class")) return true;
+    const tier = profileData?.subscription_tier ?? "guest";
+    return tier === "ambassador" || tier === "elite" ||
+      (profileData?.register_bias as string | null) === "elite" ||
+      (profileData?.register_bias as string | null) === "balanced";
+  }
+
+  async function handleCatalogInterestToggle(taxonomy: string, slug: string) {
+    if (catalogSave === "saving") return;
+    const current = getCatalogSelections(taxonomy);
+    const next = current.includes(slug)
+      ? current.filter((s) => s !== slug)
+      : [...current, slug];
+    const field = taxonomyToProfileField(taxonomy);
+    await patchProfile({ [field]: next }, setCatalogSave);
+  }
 
   async function toggleInterestRegion(code: string) {
     if (interestsBusy) return;
@@ -1802,6 +1861,82 @@ export default function Profile() {
 
         </CardContent>
       </CollapsibleSection>
+
+      {/* ── My Interests — catalog-backed interest selection ── */}
+      {isOwnProfile && (
+        <CollapsibleSection
+          title={t("profile.my_interests_title")}
+          icon={<BookOpen className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+          description={t("profile.my_interests_desc")}
+          storageKey="my_interests"
+        >
+          <CardContent className="space-y-0 pb-2">
+            {catalogItems.length === 0 ? (
+              <div className="py-6 text-center text-muted-foreground/50">
+                <BookOpen className="w-6 h-6 mx-auto mb-2 opacity-30" aria-hidden="true" />
+                <p className="text-xs font-light">{t("profile.none_added")}</p>
+              </div>
+            ) : (
+              TAXONOMY_ORDER.map((taxonomy) => {
+                const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
+                const visibleItems = items.filter(canSeeInterestItem);
+                const hiddenCount = items.length - visibleItems.length;
+                if (visibleItems.length === 0 && hiddenCount === 0) return null;
+                const selections = getCatalogSelections(taxonomy);
+                const TaxonomyIcon =
+                  taxonomy === "social_circles"    ? Users2Icon
+                  : taxonomy === "cultural_interests" ? Bookmark
+                  : taxonomy === "sports"           ? Target
+                  : taxonomy === "gastronomy"       ? UtensilsCrossed
+                  : Layers;
+                return (
+                  <CollapsibleSubsection
+                    key={taxonomy}
+                    icon={<TaxonomyIcon className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+                    title={t(`profile.taxonomy.${taxonomy}`)}
+                    storageKey={`catalog_${taxonomy}`}
+                  >
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {visibleItems.map((item) => {
+                        const isSelected = selections.includes(item.slug);
+                        const isEliteOnly = !(item.registers as string[]).includes("middle_class");
+                        return (
+                          <button
+                            key={item.slug}
+                            onClick={() => handleCatalogInterestToggle(taxonomy, item.slug)}
+                            disabled={catalogSave === "saving"}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-sm transition-all ${
+                              isSelected
+                                ? "bg-primary/10 border-primary/40 text-primary font-medium"
+                                : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                            }`}
+                          >
+                            {t(item.label_i18n_key)}
+                            {isEliteOnly && (
+                              <span className="text-[9px] font-mono uppercase tracking-wider text-primary/50 border border-primary/20 rounded-full px-1 py-px leading-none">
+                                {t("profile.interests_elite_only")}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                      {hiddenCount > 0 && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground/50 font-light italic">
+                          <Lock className="w-3 h-3" aria-hidden="true" />
+                          +{hiddenCount} {t("profile.interests_elite_only")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 h-4 flex items-center">
+                      <SaveIndicator state={catalogSave} t={t} />
+                    </div>
+                  </CollapsibleSubsection>
+                );
+              })
+            )}
+          </CardContent>
+        </CollapsibleSection>
+      )}
 
       {/* Countries of Interest — multi-track progress (independent per country). */}
       <CollapsibleSection

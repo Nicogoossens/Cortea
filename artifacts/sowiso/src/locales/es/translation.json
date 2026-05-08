@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "Configuración:",
   "profile.elite_level": "Nivel de refinamiento",
   "profile.compass.privacy_tooltip_on": "Mostrar sus datos de The Compass",
-  "profile.compass.privacy_tooltip_off": "Ocultar The Compass a los demás"
+  "profile.compass.privacy_tooltip_off": "Ocultar The Compass a los demás",
+
+  "profile.my_interests_title": "Mis intereses",
+  "profile.my_interests_desc": "Explore nuestro catálogo curado y guarde sus intereses. Sus selecciones personalizan sus recomendaciones en la plataforma.",
+  "profile.taxonomy.social_circles": "Círculos sociales",
+  "profile.taxonomy.cultural_interests": "Intereses culturales",
+  "profile.taxonomy.sports": "Deportes y ocio",
+  "profile.taxonomy.gastronomy": "Gastronomía",
+  "profile.taxonomy.dress_codes": "Códigos de vestimenta",
+  "profile.interests_elite_only": "Embajador"
 }

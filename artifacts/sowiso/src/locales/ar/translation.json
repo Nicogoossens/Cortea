@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "الإعداد:",
   "profile.elite_level": "مستوى الرقي",
   "profile.compass.privacy_tooltip_on": "إظهار بيانات The Compass الخاصة بحضرتك",
-  "profile.compass.privacy_tooltip_off": "إخفاء The Compass عن الآخرين"
+  "profile.compass.privacy_tooltip_off": "إخفاء The Compass عن الآخرين",
+
+  "profile.my_interests_title": "اهتماماتي",
+  "profile.my_interests_desc": "تصفح الفهرس المنتقى واحفظ اهتماماتك. ستعمل اختياراتك على تخصيص توصياتك عبر المنصة.",
+  "profile.taxonomy.social_circles": "الدوائر الاجتماعية",
+  "profile.taxonomy.cultural_interests": "الاهتمامات الثقافية",
+  "profile.taxonomy.sports": "الرياضة والترفيه",
+  "profile.taxonomy.gastronomy": "فن الطهو والمأكولات",
+  "profile.taxonomy.dress_codes": "قواعد اللباس",
+  "profile.interests_elite_only": "السفير"
 }

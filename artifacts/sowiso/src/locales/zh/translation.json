@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "设置：",
   "profile.elite_level": "精英级别",
   "profile.compass.privacy_tooltip_on": "展示阁下之罗盘数据",
-  "profile.compass.privacy_tooltip_off": "向他人隐蔽罗盘信息"
+  "profile.compass.privacy_tooltip_off": "向他人隐蔽罗盘信息",
+
+  "profile.my_interests_title": "我的兴趣",
+  "profile.my_interests_desc": "浏览我们的精选目录并保存您的兴趣。您的选择将在整个平台上个性化您的推荐。",
+  "profile.taxonomy.social_circles": "社交圈子",
+  "profile.taxonomy.cultural_interests": "文化兴趣",
+  "profile.taxonomy.sports": "体育与休闲",
+  "profile.taxonomy.gastronomy": "美食文化",
+  "profile.taxonomy.dress_codes": "着装规范",
+  "profile.interests_elite_only": "大使"
 }

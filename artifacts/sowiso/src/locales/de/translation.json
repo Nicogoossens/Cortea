@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "Einstellung:",
   "profile.elite_level": "Formale Stufe",
   "profile.compass.privacy_tooltip_on": "Ihre Kompass-Daten anzeigen",
-  "profile.compass.privacy_tooltip_off": "Kompass vor anderen verbergen"
+  "profile.compass.privacy_tooltip_off": "Kompass vor anderen verbergen",
+
+  "profile.my_interests_title": "Meine Interessen",
+  "profile.my_interests_desc": "Stöbern Sie in unserem kuratierten Katalog und speichern Sie Ihre Interessen. Ihre Auswahl personalisiert Ihre Empfehlungen.",
+  "profile.taxonomy.social_circles": "Soziale Kreise",
+  "profile.taxonomy.cultural_interests": "Kulturelle Interessen",
+  "profile.taxonomy.sports": "Sport & Freizeit",
+  "profile.taxonomy.gastronomy": "Gastronomie",
+  "profile.taxonomy.dress_codes": "Dresscodes",
+  "profile.interests_elite_only": "Botschafter"
 }

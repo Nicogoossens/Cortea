@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "Impostazione:",
   "profile.elite_level": "Livello formale",
   "profile.compass.privacy_tooltip_on": "Renda visibili i dati della bussola",
-  "profile.compass.privacy_tooltip_off": "Celi la bussola agli altri"
+  "profile.compass.privacy_tooltip_off": "Celi la bussola agli altri",
+
+  "profile.my_interests_title": "I miei interessi",
+  "profile.my_interests_desc": "Sfoglia il nostro catalogo curato e salva i tuoi interessi. Le tue selezioni personalizzano i consigli sulla piattaforma.",
+  "profile.taxonomy.social_circles": "Circoli sociali",
+  "profile.taxonomy.cultural_interests": "Interessi culturali",
+  "profile.taxonomy.sports": "Sport e tempo libero",
+  "profile.taxonomy.gastronomy": "Gastronomia",
+  "profile.taxonomy.dress_codes": "Dress code",
+  "profile.interests_elite_only": "Ambasciatore"
 }

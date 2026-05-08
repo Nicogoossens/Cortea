@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "設定:",
   "profile.elite_level": "エリートレベル",
   "profile.compass.privacy_tooltip_on": "ご自身のコンパス・データを表示いたします",
-  "profile.compass.privacy_tooltip_off": "コンパスを他者より隠匿いたします"
+  "profile.compass.privacy_tooltip_off": "コンパスを他者より隠匿いたします",
+
+  "profile.my_interests_title": "私の関心事",
+  "profile.my_interests_desc": "厳選されたカタログを閲覧し、ご関心事をお選びください。選択内容がプラットフォーム上のおすすめを個別最適化いたします。",
+  "profile.taxonomy.social_circles": "社交サークル",
+  "profile.taxonomy.cultural_interests": "文化的関心",
+  "profile.taxonomy.sports": "スポーツ・レジャー",
+  "profile.taxonomy.gastronomy": "美食・グルメ",
+  "profile.taxonomy.dress_codes": "ドレスコード",
+  "profile.interests_elite_only": "アンバサダー"
 }

@@ -1621,5 +1621,14 @@
   "profile.bias.onboarding_prefix": "Instelling:",
   "profile.elite_level": "Elitaire niveau",
   "profile.compass.privacy_tooltip_on": "Uw Compass-gegevens zichtbaar maken",
-  "profile.compass.privacy_tooltip_off": "Uw Compass voor anderen verbergen"
+  "profile.compass.privacy_tooltip_off": "Uw Compass voor anderen verbergen",
+
+  "profile.my_interests_title": "Mijn interesses",
+  "profile.my_interests_desc": "Blader door onze samengestelde catalogus en sla uw interesses op. Uw keuzes personaliseren uw aanbevelingen.",
+  "profile.taxonomy.social_circles": "Sociale kringen",
+  "profile.taxonomy.cultural_interests": "Culturele interesses",
+  "profile.taxonomy.sports": "Sport en vrije tijd",
+  "profile.taxonomy.gastronomy": "Gastronomie",
+  "profile.taxonomy.dress_codes": "Dresscodes",
+  "profile.interests_elite_only": "Ambassadeur"
 }

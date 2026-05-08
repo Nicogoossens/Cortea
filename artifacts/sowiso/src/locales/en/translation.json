@@ -1631,5 +1631,14 @@
   "profile.bias.toggle_both": "Choice: Both worlds",
   "profile.bias.onboarding_prefix": "Setting:",
 
-  "profile.elite_level": "Elite level"
+  "profile.elite_level": "Elite level",
+
+  "profile.my_interests_title": "My Interests",
+  "profile.my_interests_desc": "Browse and select your interests from our curated catalog. Your selections personalise your recommendations across the platform.",
+  "profile.taxonomy.social_circles": "Social Circles",
+  "profile.taxonomy.cultural_interests": "Cultural Interests",
+  "profile.taxonomy.sports": "Sports & Leisure",
+  "profile.taxonomy.gastronomy": "Gastronomy",
+  "profile.taxonomy.dress_codes": "Dress Codes",
+  "profile.interests_elite_only": "Ambassador"
 }

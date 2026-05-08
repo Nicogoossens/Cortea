@@ -575,15 +575,14 @@ export default function Profile() {
   const logs = rawLogs as EnrichedLogEntry[] | undefined;
 
   function biasLabel(bias?: string | null): string {
-    if (!bias) return "Nog niet bepaald";
-    if (bias === "middle_class")         return "Dagelijkse wereld";
-    if (bias === "elite")                return "Formele wereld";
-    if (bias === "balanced")             return "Gebalanceerd (beide werelden)";
-    if (bias === "toggle_middle_class")  return "Keuze: Dagelijkse wereld";
-    if (bias === "toggle_elite")         return "Keuze: Formele wereld";
-    if (bias === "toggle_both")          return "Keuze: Beide werelden";
-    // Onboarding signals — strip prefix + underscores for readability
-    if (bias.startsWith("onboarding_"))  return `Instelling: ${bias.replace("onboarding_", "").replace(/_/g, " ")}`;
+    if (!bias) return t("profile.bias.unknown");
+    if (bias === "middle_class")         return t("profile.bias.middle_class");
+    if (bias === "elite")                return t("profile.bias.elite");
+    if (bias === "balanced")             return t("profile.bias.balanced");
+    if (bias === "toggle_middle_class")  return t("profile.bias.toggle_middle_class");
+    if (bias === "toggle_elite")         return t("profile.bias.toggle_elite");
+    if (bias === "toggle_both")          return t("profile.bias.toggle_both");
+    if (bias.startsWith("onboarding_"))  return `${t("profile.bias.onboarding_prefix")} ${bias.replace("onboarding_", "").replace(/_/g, " ")}`;
     return bias.replace(/_/g, " ");
   }
 
@@ -2164,10 +2163,10 @@ export default function Profile() {
                 }
               }}
               className="shrink-0 mt-0.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-              title={compassPrivacyMode ? "Toon uw compass-data" : "Verberg compass voor anderen"}
+              title={compassPrivacyMode ? t("profile.compass.privacy_tooltip_on") : t("profile.compass.privacy_tooltip_off")}
             >
               <Lock className="w-3 h-3" aria-hidden="true" />
-              {compassPrivacyMode ? "Toon" : "Verberg"}
+              {compassPrivacyMode ? t("profile.compass.show_privacy") : t("profile.compass.hide_privacy")}
             </button>
           )}
         </CardHeader>
@@ -2185,15 +2184,15 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* ── Hoe Cortéa u leest (§10.2) ── */}
+      {/* ── How Cortéa reads you (§10.2) ── */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-xl flex items-center gap-2">
             <Compass className="w-5 h-5 text-primary/70" aria-hidden="true" />
-            Hoe Cortéa u leest
+            {t("profile.how_cortea.title")}
           </CardTitle>
           <CardDescription className="font-light">
-            Cortéa stelt aanbevelingen bij op basis van uw keuzes en gedrag. U kunt dit hier inzien en bijsturen.
+            {t("profile.how_cortea.desc")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -2201,12 +2200,12 @@ export default function Profile() {
           <div className="flex items-center gap-3 flex-wrap">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
-                Huidige oriëntatie
+                {t("profile.how_cortea.current_orientation")}
               </p>
               <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
                 {biasLabel(profileData?.register_bias)}
                 {profileData?.register_bias_locked && (
-                  <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label="Vergrendeld" />
+                  <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("common.locked")} />
                 )}
               </p>
             </div>
@@ -2216,7 +2215,7 @@ export default function Profile() {
           {isOwnProfile && biasSignals.length > 0 && (
             <div>
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                Recente signalen
+                {t("profile.how_cortea.recent_signals")}
               </p>
               <ul className="space-y-1">
                 {biasSignals.slice(-5).reverse().map((sig, i) => (
@@ -2242,7 +2241,7 @@ export default function Profile() {
                 disabled={biasSaving}
                 className="font-mono text-xs"
               >
-                Toon beide werelden gelijkmatig
+                {t("profile.how_cortea.btn_balanced")}
               </Button>
               <Button
                 variant="outline"
@@ -2251,7 +2250,7 @@ export default function Profile() {
                 disabled={biasSaving}
                 className="font-mono text-xs"
               >
-                Aanbevelingen herijken
+                {t("profile.how_cortea.btn_recalibrate")}
               </Button>
               <Button
                 variant="outline"
@@ -2259,7 +2258,7 @@ export default function Profile() {
                 onClick={() => navigate("/atelier?placement=true")}
                 className="font-mono text-xs"
               >
-                Doe een nieuwe kalibratie
+                {t("profile.how_cortea.btn_new_calibration")}
               </Button>
             </div>
           )}

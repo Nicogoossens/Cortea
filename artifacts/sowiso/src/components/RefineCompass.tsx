@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Lock, Info } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface BehaviorProfile {
   listening_score: number;
@@ -94,6 +95,7 @@ interface PentagonProps {
   values: FiveValues;
   shadowPolygons: ShadowPolygon[];
   labels: [string, string, string, string, string];
+  svgAriaLabel?: string;
   color?: string;
   hoveredIdx: number | null;
   onHover: (idx: number | null) => void;
@@ -103,6 +105,7 @@ function PentagonWithShadow({
   values,
   shadowPolygons,
   labels,
+  svgAriaLabel = "Refinement Compass",
   color = "var(--primary)",
   hoveredIdx,
   onHover,
@@ -126,7 +129,7 @@ function PentagonWithShadow({
       viewBox="0 0 260 260"
       className="mx-auto"
       role="img"
-      aria-label="Refinement Compass radardiagram"
+      aria-label={svgAriaLabel}
     >
       {gridLevels.map((frac) => (
         <polygon
@@ -192,7 +195,7 @@ function PentagonWithShadow({
             onBlur={() => onHover(null)}
             tabIndex={0}
             role="img"
-            aria-label={`${labels[i]}: ${v} van 100`}
+            aria-label={`${labels[i]}: ${v}`}
             className="cursor-default outline-none"
           />
         );
@@ -244,13 +247,14 @@ export function RefineCompass({
   isPublicView = false,
 }: RefineCompassProps) {
   const [hoveredDim, setHoveredDim] = useState<number | null>(null);
+  const { t } = useLanguage();
 
   if (elitePrivacyMode && isPublicView) {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
         <Lock className="w-8 h-8 text-muted-foreground/30" aria-hidden="true" />
         <p className="font-serif text-muted-foreground italic">
-          Refinement is een private aangelegenheid.
+          {t("profile.compass.elite_private")}
         </p>
       </div>
     );
@@ -298,20 +302,19 @@ export function RefineCompass({
   const hasHistory = historyInWindow.length > 0;
 
   const LABELS: [string, string, string, string, string] = [
-    DIMENSION_LABELS.attentiveness,
-    DIMENSION_LABELS.composure,
-    DIMENSION_LABELS.discernment,
-    DIMENSION_LABELS.diplomacy,
-    DIMENSION_LABELS.presence,
+    t("profile.compass.attentiveness"),
+    t("profile.compass.composure"),
+    t("profile.compass.discernment"),
+    t("profile.compass.diplomacy"),
+    t("profile.compass.presence"),
   ];
 
   function buildReasonText(key: DimensionKey, delta: number | null): string | null {
     if (delta === null) return null;
-    const label = DIMENSION_LABELS[key];
-    if (delta === 0) return `${label} bleef stabiel de afgelopen 30 dagen.`;
-    const direction = delta > 0 ? "steeg" : "daalde";
-    const formatted = delta > 0 ? `+${delta}` : String(delta);
-    return `${label} ${direction} ${formatted} over de afgelopen 30 dagen.`;
+    const dimension = t(`profile.compass.${key}`);
+    if (delta === 0) return t("profile.compass.score_stable", { dimension });
+    if (delta > 0) return t("profile.compass.score_rose", { dimension, delta: `+${delta}` });
+    return t("profile.compass.score_fell", { dimension, delta: String(delta) });
   }
 
   return (
@@ -321,12 +324,13 @@ export function RefineCompass({
           values={currentValues}
           shadowPolygons={shadowPolygons}
           labels={LABELS}
+          svgAriaLabel={t("profile.compass.radar_aria")}
           hoveredIdx={hoveredDim}
           onHover={setHoveredDim}
         />
         {hasHistory && (
           <p className="text-center text-[10px] font-mono text-muted-foreground/50 mt-1 leading-snug">
-            ── huidig &nbsp;·&nbsp; ╌ ╌ evolutie 30 dagen
+            {t("profile.compass.legend")}
           </p>
         )}
       </div>
@@ -351,13 +355,13 @@ export function RefineCompass({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                    {DIMENSION_LABELS[key]}
+                    {t(`profile.compass.${key}`)}
                   </span>
                   <button
                     type="button"
                     onClick={() => setHoveredDim(isHovered ? null : i)}
                     className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"
-                    aria-label={`Definitie van ${DIMENSION_LABELS[key]}`}
+                    aria-label={t("profile.compass.def_info_aria", { dimension: t(`profile.compass.${key}`) })}
                   >
                     <Info className="w-3 h-3" aria-hidden="true" />
                   </button>
@@ -367,7 +371,7 @@ export function RefineCompass({
                     {historical !== null && historical !== current ? (
                       <>
                         {current}{" "}
-                        <span className="text-[10px] text-muted-foreground/50">(was {historical})</span>
+                        <span className="text-[10px] text-muted-foreground/50">({t("profile.compass.was_label")} {historical})</span>
                       </>
                     ) : (
                       current
@@ -395,7 +399,7 @@ export function RefineCompass({
                 aria-valuenow={current}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={`${DIMENSION_LABELS[key]}: ${current} van 100`}
+                aria-label={`${t(`profile.compass.${key}`)}: ${current}`}
               >
                 <div
                   className="h-full bg-primary/70 transition-all duration-700"
@@ -422,17 +426,17 @@ export function RefineCompass({
                 return (
                   <div className="space-y-0.5 animate-in fade-in duration-150">
                     <p className="text-[11px] text-muted-foreground/80 font-light leading-relaxed">
-                      {DIMENSION_DEFS[key]}
+                      {t(`profile.compass.dim_def.${key}`)}
                     </p>
                     {reasonText && (
                       <p className="text-[11px] text-muted-foreground/60 font-light italic leading-relaxed">
-                        Reden: {reasonText}
+                        {t("profile.compass.reason_label")} {reasonText}
                       </p>
                     )}
                     {dimChanges.length > 0 && (
                       <div className="pt-0.5 space-y-0.5">
                         <p className="text-[10px] font-mono text-muted-foreground/40 uppercase tracking-wider leading-none">
-                          Recente sessies
+                          {t("profile.compass.recent_sessions")}
                         </p>
                         {dimChanges.slice(-3).reverse().map((s, sIdx) => (
                           <p key={sIdx} className="text-[11px] text-muted-foreground/55 font-light leading-snug">
@@ -451,17 +455,17 @@ export function RefineCompass({
           );
         })}
 
-        <ul className="sr-only" aria-label="Refinement Compass scores">
+        <ul className="sr-only" aria-label={t("profile.compass.title")}>
           {DIMENSION_KEYS.map((key, i) => (
             <li key={key}>
-              {DIMENSION_LABELS[key]}: {currentValues[i]} van 100. {DIMENSION_DEFS[key]}
+              {t(`profile.compass.${key}`)}: {currentValues[i]}. {t(`profile.compass.dim_def.${key}`)}
             </li>
           ))}
         </ul>
 
         {!behaviorProfile && (
           <p className="text-[11px] text-muted-foreground/60 font-light italic pt-3">
-            Scores beginnen bij 50 voor alle dimensies. Ze evolueren naarmate u scenario's oefent.
+            {t("profile.compass.empty_state")}
           </p>
         )}
       </div>

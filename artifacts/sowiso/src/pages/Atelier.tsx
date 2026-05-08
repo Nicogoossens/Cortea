@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { AtelierLearningTrack } from "@/components/AtelierLearningTrack";
+import { PlacementTest } from "@/components/PlacementTest";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -64,6 +65,8 @@ export default function Atelier() {
   const search = useSearch();
   const showSummary = new URLSearchParams(search).get("session_summary") === "1";
   const showUpgradeBanner = new URLSearchParams(search).get("upgrade") === "success";
+  const showPlacement = new URLSearchParams(search).get("placement") === "true";
+  const [placementActive, setPlacementActive] = useState(showPlacement);
   const [upgradeBannerVisible, setUpgradeBannerVisible] = useState(showUpgradeBanner);
   const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
   const [sessionMasterAwarded, setSessionMasterAwarded] = useState<boolean>(false);
@@ -210,6 +213,31 @@ export default function Atelier() {
 
       {/* Active context chips */}
       <ActiveContextChips />
+
+      {/* Placement test — shown when navigating from onboarding step 10 */}
+      {placementActive && isAuthenticated && (
+        <div className="max-w-xl mx-auto py-4">
+          <PlacementTest
+            register="middle_class"
+            activeRegion={activeRegion}
+            phase={1}
+            pillar="P1"
+            lang={locale}
+            onSkip={() => {
+              setPlacementActive(false);
+              const url = new URL(window.location.href);
+              url.searchParams.delete("placement");
+              window.history.replaceState({}, "", url.toString());
+            }}
+            onComplete={(_placementLevel) => {
+              setPlacementActive(false);
+              const url = new URL(window.location.href);
+              url.searchParams.delete("placement");
+              window.history.replaceState({}, "", url.toString());
+            }}
+          />
+        </div>
+      )}
 
       {/* Upgrade success banner — shown once after checkout redirect */}
       {upgradeBannerVisible && (

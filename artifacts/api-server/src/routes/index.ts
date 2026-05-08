@@ -33,6 +33,7 @@ import systemConfigRouter from "./system-config";
 import debugRouter from "./debug";
 import compassBadgeRouter from "./compass-badge";
 import regionsRouter from "./regions";
+import placementRouter from "./placement";
 
 const router: IRouter = Router();
 
@@ -70,5 +71,6 @@ router.use(systemConfigRouter);
 router.use(debugRouter);
 router.use(compassBadgeRouter);
 router.use(regionsRouter);
+router.use(placementRouter);
 
 export default router;

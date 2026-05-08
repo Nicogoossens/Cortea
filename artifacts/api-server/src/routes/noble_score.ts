@@ -4,6 +4,7 @@ import { usersTable, zuil_voortgangTable, nobleScoreLogTable, scenariosTable, us
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { extractToken } from "../lib/auth-middleware";
+import { enforceElitePrivacy } from "../middleware/elite-privacy";
 
 const router = Router();
 
@@ -316,6 +317,17 @@ router.post("/noble-score/submit", async (req, res) => {
         ));
 
       const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+      // Master Framework v1.1 §12 — block noble_score/wardrobe writes when
+      // elite_privacy_mode is active so private-mode users are never tracked.
+      if (user) {
+        const privacyErr = enforceElitePrivacy(
+          { elite_privacy_mode: (user as { elite_privacy_mode?: boolean | null }).elite_privacy_mode ?? false },
+          "write",
+        );
+        if (privacyErr) return res.status(403).json(privacyErr);
+      }
+
       const oldTotalScore = user?.noble_score ?? 0;
       newTotalScore = Math.min(100, Math.max(0, oldTotalScore + Math.round(scoreDelta * 0.5)));
 

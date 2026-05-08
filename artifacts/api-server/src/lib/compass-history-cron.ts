@@ -12,9 +12,12 @@
  * (the same pure function used on session completion). When a user has no
  * behavior_profile yet, DEFAULT_BEHAVIOR_PROFILE is used so the radar chart
  * always has a baseline to render.
+ *
+ * Pagination: processes all users in batches within each tick run — no user
+ * is permanently starved because of a fixed per-tick cap.
  */
 import { db, usersTable, compassHistoryTable } from "@workspace/db";
-import { eq, sql, and, gte } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { logger } from "./logger";
 import {
   projectBehaviorToCompass,
@@ -46,46 +49,54 @@ async function tick(): Promise<void> {
   try {
     const utcDayStart = new Date();
     utcDayStart.setUTCHours(0, 0, 0, 0);
-
-    // Find users who have not yet received a snapshot today.
-    // We left-join compass_history and filter WHERE ch.id IS NULL.
-    const candidates = await db.execute<{
-      id: string;
-      behavior_profile: PureBehaviorProfile | null;
-    }>(sql`
-      SELECT u.id, u.behavior_profile
-      FROM users u
-      LEFT JOIN compass_history ch
-        ON ch.user_id = u.id
-        AND ch.recorded_at >= ${utcDayStart}
-      WHERE ch.id IS NULL
-      LIMIT ${BATCH_SIZE}
-    `);
-
-    const rows = candidates.rows;
-    if (rows.length === 0) return;
-
     const now = new Date();
-    const inserts = rows.map((u) => {
-      const profile = (u.behavior_profile ?? DEFAULT_BEHAVIOR) as PureBehaviorProfile;
-      const scores = projectBehaviorToCompass(profile);
-      return {
-        user_id: u.id,
-        ...scores,
-        recorded_at: now,
-      };
-    });
+    let totalSnapshots = 0;
 
-    // Batch insert; individual failures logged, not re-thrown.
-    for (const row of inserts) {
-      try {
-        await db.insert(compassHistoryTable).values(row);
-      } catch (err) {
-        logger.error({ err, userId: row.user_id }, "Compass-history snapshot failed for user");
+    // Paginate until all users have been processed for today.
+    // Uses cursor-style pagination (lastSeenId) so we never re-scan already-processed
+    // users and the loop terminates even when new users are created mid-run.
+    let lastSeenId: string | null = null;
+    while (true) {
+      const candidates = await db.execute<{
+        id: string;
+        behavior_profile: PureBehaviorProfile | null;
+      }>(sql`
+        SELECT u.id, u.behavior_profile
+        FROM users u
+        LEFT JOIN compass_history ch
+          ON ch.user_id = u.id
+          AND ch.recorded_at >= ${utcDayStart}
+        WHERE ch.id IS NULL
+          ${lastSeenId !== null ? sql`AND u.id > ${lastSeenId}` : sql``}
+        ORDER BY u.id
+        LIMIT ${BATCH_SIZE}
+      `);
+
+      const rows = candidates.rows;
+      if (rows.length === 0) break;
+
+      for (const u of rows) {
+        try {
+          const profile = (u.behavior_profile ?? DEFAULT_BEHAVIOR) as PureBehaviorProfile;
+          const scores = projectBehaviorToCompass(profile);
+          await db.insert(compassHistoryTable).values({
+            user_id: u.id,
+            ...scores,
+            recorded_at: now,
+          });
+          totalSnapshots += 1;
+        } catch (err) {
+          logger.error({ err, userId: u.id }, "Compass-history snapshot failed for user");
+        }
       }
+
+      lastSeenId = rows[rows.length - 1]!.id;
+      if (rows.length < BATCH_SIZE) break;
     }
 
-    logger.info({ snapshotCount: inserts.length }, "Compass-history snapshots written");
+    if (totalSnapshots > 0) {
+      logger.info({ snapshotCount: totalSnapshots }, "Compass-history snapshots written");
+    }
   } catch (err) {
     logger.error({ err }, "Compass-history cron tick failed");
   } finally {

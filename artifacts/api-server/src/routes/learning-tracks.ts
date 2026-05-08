@@ -148,6 +148,13 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       subscription_tier: usersTable.subscription_tier,
       country_of_origin: usersTable.country_of_origin,
       situational_interests: usersTable.situational_interests,
+      // ── Master Framework v1.1 personalisation fields ──────────────────────
+      register_bias: usersTable.register_bias,
+      archetype: usersTable.archetype,
+      secondary_archetype: usersTable.secondary_archetype,
+      social_circles: usersTable.social_circles,
+      cultural_interests: usersTable.cultural_interests,
+      behavior_profile: usersTable.behavior_profile,
     }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
@@ -301,6 +308,16 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           else exhaustedIds.push(qid);
         }
 
+        // Derive Compass scores from behavior_profile for dimension-weakness boost.
+        const DEFAULT_PROFILE_FOR_COMPASS: PureBehaviorProfile = {
+          listening_score: 50, assertiveness_style: "assertive",
+          conflict_mode: "collaborate",
+          eq_dimensions: { self_awareness: 50, self_regulation: 50, empathy: 50, social_skill: 50 },
+          nonverbal_awareness: 50,
+        };
+        const behaviorProfileForCompass = (user.behavior_profile ?? DEFAULT_PROFILE_FOR_COMPASS) as PureBehaviorProfile;
+        const compassScoresForSelection = projectBehaviorToCompass(behaviorProfileForCompass);
+
         const questions = await selectQuestions({
           userId,
           register,
@@ -315,6 +332,13 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           size: cfg.sessionSize,
           forcedIds: filteredForced,
           excludeIds: exhaustedIds,
+          // ── Master Framework v1.1 personalisation ────────────────────────
+          register_bias: user.register_bias ?? null,
+          archetype: user.archetype ?? null,
+          secondary_archetype: user.secondary_archetype ?? null,
+          userCircles: (user.social_circles ?? []) as string[],
+          userCultural: (user.cultural_interests ?? []) as string[],
+          compass_scores: compassScoresForSelection,
         }, tx);
 
         // Never persist an empty session — they become "phantom" rows that

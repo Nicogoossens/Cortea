@@ -448,30 +448,27 @@ export default function Profile() {
     // user's record. When viewedUid is set we're in public-view mode.
     // Auth still flows via the HttpOnly `cortea_session` cookie.
     const profileUrl = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(targetUserId)}`;
-    // In public-view mode we only need the viewed user's profile (for
-    // elite_privacy_mode). Behavior-profile and subscription-status are
-    // always scoped to the authenticated user, so fetching them when
-    // viewing another user's profile would expose the wrong data.
-    const requests: Promise<unknown>[] = [
+    // For behavior-profile, pass user_id so the backend can return the
+    // viewed user's public data when in public-view mode (spec §10.3).
+    // Subscription-status is only relevant for the logged-in user.
+    const bpUrl = `${API_BASE}/api/users/behavior-profile${viewedUid ? `?user_id=${encodeURIComponent(viewedUid)}` : ""}`;
+    Promise.all([
       fetch(profileUrl, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-    ];
-    if (isOwnProfile) {
-      requests.push(
-        fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-        fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
-      );
-    }
-    Promise.all(requests)
+      fetch(bpUrl, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
+      isOwnProfile
+        ? fetch(`${API_BASE}/api/subscription/status`, { credentials: "include" }).then((r) => r.ok ? r.json() : null)
+        : Promise.resolve(null),
+    ])
       .then(([data, bp, subStatus]) => {
         setProfileData(data as UserProfileData | null);
+        setUsernameInput(isOwnProfile ? ((data as UserProfileData | null)?.username ?? "") : "");
+        setFullNameInput(isOwnProfile ? ((data as UserProfileData | null)?.full_name ?? "") : "");
+        setCountryInput(isOwnProfile ? ((data as UserProfileData | null)?.country_of_origin ?? "") : "");
+        setCountryInputCourse(isOwnProfile ? ((data as UserProfileData | null)?.country_of_origin ?? "") : "");
+        if (bp && typeof (bp as { listening_score?: unknown }).listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
+        if (subStatus && typeof (subStatus as { tier?: unknown }).tier === "string") setSubscriptionStatus(subStatus as { tier: string });
+        // Sync privacy toggle only from own profile data
         if (isOwnProfile) {
-          setUsernameInput((data as UserProfileData | null)?.username ?? "");
-          setFullNameInput((data as UserProfileData | null)?.full_name ?? "");
-          setCountryInput((data as UserProfileData | null)?.country_of_origin ?? "");
-          setCountryInputCourse((data as UserProfileData | null)?.country_of_origin ?? "");
-          if (bp && typeof (bp as { listening_score?: unknown }).listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
-          if (subStatus && typeof (subStatus as { tier?: unknown }).tier === "string") setSubscriptionStatus(subStatus as { tier: string });
-          // Sync privacy mode from persisted backend value (field added in Task B/C).
           const persistedPrivacy = (data as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode;
           if (typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
         }
@@ -483,19 +480,22 @@ export default function Profile() {
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   useEffect(() => {
-    // compass-history and register-bias-signals are always scoped to the
-    // authenticated user. Skip in public-view mode — the viewed user's
-    // compass is either hidden (privacy mode) or shown as an empty state.
-    if (!userId || !isOwnProfile) return;
-    fetch(`${API_BASE}/api/users/compass-history`, { credentials: "include" })
+    if (!userId) return;
+    // Compass history: pass user_id so backend can serve the viewed user's
+    // history in public-view mode (spec §10.3 — show real data when not private).
+    const historyTarget = viewedUid || userId;
+    fetch(`${API_BASE}/api/users/compass-history?user_id=${encodeURIComponent(historyTarget)}`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => { if (Array.isArray(data)) setCompassHistory(data); })
       .catch(() => {});
-    fetch(`${API_BASE}/api/users/register-bias-signals`, { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => { if (Array.isArray(data)) setBiasSignals(data); })
-      .catch(() => {});
-  }, [userId, isOwnProfile]);
+    // Register-bias-signals are always scoped to the authenticated user.
+    if (isOwnProfile) {
+      fetch(`${API_BASE}/api/users/register-bias-signals`, { credentials: "include" })
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data) => { if (Array.isArray(data)) setBiasSignals(data); })
+        .catch(() => {});
+    }
+  }, [userId, viewedUid, isOwnProfile]);
 
   // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
   // from the Atelier "Wijzig uw actieve regio" link or the read-only region

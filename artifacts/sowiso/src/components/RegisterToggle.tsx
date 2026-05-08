@@ -44,10 +44,10 @@ export function RegisterToggle({
       aria-label="Register"
     >
       {OPTIONS.map(({ value: opt, labelNL }) => {
-        // Non-ambassador users simply don't see Elite or Both options — no
-        // lock icon, no disabled state, no upgrade prompt (spec §10.1).
-        if (opt !== "middle_class" && !eliteEnabled) return null;
-
+        // All three buttons are always shown to every user (spec §10.1).
+        // Non-ambassador users who select Elite/Both will receive a 403 from
+        // the session API, which is silently handled in AtelierLearningTrack
+        // by reverting to middle_class — no upgrade prompt, no lock icon.
         const isActive = value === opt;
 
         return (

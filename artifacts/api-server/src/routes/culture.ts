@@ -406,7 +406,7 @@ router.get("/culture/compass", async (req, res) => {
 
     const rows = await db.select()
       .from(compassRegionsTable)
-      .where(eq(compassRegionsTable.is_published, true));
+      .orderBy(compassRegionsTable.region_code);
 
     const entries = rows.map((row) => {
       const content = (row.content as unknown as Record<string, Record<string, unknown>>);

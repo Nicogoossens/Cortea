@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Download, Mail, Loader2, Check, Copy } from "lucide-react";
+import { ArrowLeft, Download, Mail, Loader2, Check, Copy, ExternalLink } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -185,14 +185,35 @@ export default function AdminWaitlist() {
                               <code className="block font-mono text-xs text-foreground bg-muted/40 border border-border rounded-sm px-2 py-1.5 break-all whitespace-pre-wrap select-all">
                                 {s.activation_link}
                               </code>
-                              <button
-                                onClick={() => handleCopyLink(s.id, s.activation_link!)}
-                                className="self-start inline-flex items-center gap-1 px-2 py-1 text-xs font-mono rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
-                                title="Kopieer link"
-                              >
-                                {copied === s.id ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
-                                {copied === s.id ? "Gekopieerd" : "Kopieer link"}
-                              </button>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <button
+                                  onClick={() => handleCopyLink(s.id, s.activation_link!)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                                  title="Kopieer productie-link"
+                                >
+                                  {copied === s.id ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+                                  {copied === s.id ? "Gekopieerd" : "Kopieer link"}
+                                </button>
+                                <a
+                                  href={(() => {
+                                    try {
+                                      const u = new URL(s.activation_link!);
+                                      u.host = window.location.host;
+                                      u.protocol = window.location.protocol;
+                                      return u.toString();
+                                    } catch {
+                                      return s.activation_link!;
+                                    }
+                                  })()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-mono rounded-sm border border-primary/40 text-primary/80 hover:text-primary hover:border-primary transition-colors"
+                                  title="Activeer in huidige omgeving (dev/preview)"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Activeer hier
+                                </a>
+                              </div>
                             </div>
                           ) : (
                             <span className="text-muted-foreground/50 text-xs">Geen code</span>

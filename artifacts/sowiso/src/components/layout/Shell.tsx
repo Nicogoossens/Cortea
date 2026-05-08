@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Ear, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon, FileText, MessageSquare } from "lucide-react";
+import { BookOpen, Compass, Shield, User, Menu, X, Landmark, UserPlus, LogIn, LogOut, Crown, Settings2, Scan, Navigation2, Users, ShieldCheck, MapPin, Layers, ShirtIcon, FileText, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,7 +95,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { key: "nav.compass",     href: "/compass",     icon: Compass  },
     { key: "nav.use_cases",    href: "/use-cases",   icon: MapPin,      adminOnly: true       },
     { key: "nav.mirror",       href: "/mirror",       icon: Scan,        adminOnly: true       },
-    { key: "nav.sensory",      href: "/sensory",      icon: Ear,         adminOnly: true       },
     { key: "nav.navigator",    href: "/navigator",    icon: Navigation2, ambassadorOnly: true  },
     { key: "nav.inner_circle", href: "/inner-circle", icon: Users,       ambassadorOnly: true  },
     { key: "nav.wardrobe",     href: "/wardrobe",     icon: ShirtIcon,   adminOnly: true       },

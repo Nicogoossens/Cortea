@@ -26,7 +26,13 @@ export const learningTrackAttemptsTable = pgTable(
     is_correct:       boolean("is_correct").notNull(),
     is_repetition:    boolean("is_repetition").notNull().default(false),
     session_id:       integer("session_id"),                    // soft FK to learning_track_sessions
-    attempted_at:     timestamp("attempted_at").notNull().defaultNow(),
+    attempted_at:          timestamp("attempted_at").notNull().defaultNow(),
+    /**
+     * Master Framework v1.1 — §6
+     * True when this attempt was part of a placement session.
+     * Placement questions are excluded from future normal sessions (anti-cheating).
+     */
+    is_placement_question: boolean("is_placement_question").notNull().default(false),
   },
   (table) => [
     index("lta_progress_window_idx").on(

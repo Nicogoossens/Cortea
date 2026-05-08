@@ -16,6 +16,14 @@ export const learningTrackProgressTable = pgTable(
     correct_streak:  integer("correct_streak").notNull().default(0),
     mastered:        boolean("mastered").notNull().default(false),
     last_updated:    timestamp("last_updated").defaultNow(),
+    /**
+     * Master Framework v1.1 — §5, §8
+     * The user's self-declared learning intent for this (register, region, pillar).
+     * surface    = basic familiarity, stops at L2
+     * competent  = default, progresses through all levels
+     * mastery    = deep expertise, unlocks extended content
+     */
+    learning_intent: text("learning_intent").notNull().default("competent"),
   },
   (table) => [
     /**

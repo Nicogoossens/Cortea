@@ -39,6 +39,12 @@ export const learningTrackSessionsTable = pgTable(
     remediated_at:        timestamp("remediated_at"),
     remediates_session_id: integer("remediates_session_id"),
     lang:                 text("lang").notNull().default("en"),
+    /**
+     * Master Framework v1.1 — §6
+     * True when this session was created by the placement-test flow.
+     * Placement sessions write current_level directly (no pass-window).
+     */
+    is_placement:         boolean("is_placement").notNull().default(false),
   },
   (table) => [
     index("lts_user_register_started_idx").on(table.user_id, table.register, table.started_at),

@@ -29,6 +29,38 @@ export const learningTrackQuestionsTable = pgTable(
      * uses these to re-rank within the matching pool.
      */
     interest_tags:      jsonb("interest_tags").$type<string[]>().notNull().default([]),
+    /**
+     * Master Framework v1.1 — §11.6
+     * Replaces the single `register` field with an array so a question can
+     * belong to multiple registers. Used as a score-boost signal by the
+     * selection engine (never as a hard WHERE filter).
+     */
+    register_relevance:      jsonb("register_relevance").$type<string[]>().notNull().default([]),
+    /**
+     * Archetypes for which this question is most relevant.
+     * Used as a re-rank boost, not as a filter.
+     * Example: ["host_entertainer", "civic_citizen"]
+     */
+    applicable_archetypes:   jsonb("applicable_archetypes").$type<string[]>().notNull().default([]),
+    /**
+     * Social-circle tags from interest_catalog taxonomy = 'social_circles'.
+     * Boosts question ranking when the user's social_circles overlap.
+     */
+    social_circle_tags:      jsonb("social_circle_tags").$type<string[]>().notNull().default([]),
+    /**
+     * Cultural-interest tags from interest_catalog taxonomy = 'cultural_interests'.
+     */
+    cultural_interest_tags:  jsonb("cultural_interest_tags").$type<string[]>().notNull().default([]),
+    /**
+     * Primary Refinement Compass dimension this question trains.
+     * One of: attentiveness | composure | discernment | diplomacy | presence
+     * REQUIRED on every question (import pipeline enforces non-null).
+     */
+    primary_dimension:       text("primary_dimension"),
+    /**
+     * Secondary Compass dimension (optional, lower weight in scoring).
+     */
+    secondary_dimension:     text("secondary_dimension"),
     created_at:         timestamp("created_at").defaultNow(),
     /**
      * Computed hash for idempotent imports.

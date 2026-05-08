@@ -3,6 +3,28 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
+export interface CompassScores {
+  attentiveness: number;
+  composure:     number;
+  discernment:   number;
+  diplomacy:     number;
+  presence:      number;
+}
+
+export const DEFAULT_COMPASS_SCORES: CompassScores = {
+  attentiveness: 50,
+  composure:     50,
+  discernment:   50,
+  diplomacy:     50,
+  presence:      50,
+};
+
+export interface RegisterBiasSignal {
+  signal:      string;  // e.g. "onboarding_world_choice", "social_circle_elite"
+  weight:      number;  // contribution to bias score (positive = elite, negative = middle_class)
+  recorded_at: string;  // ISO timestamp
+}
+
 export interface EQDimensions {
   self_awareness: number;
   self_regulation: number;
@@ -139,6 +161,30 @@ export const usersTable = pgTable("users", {
   // (possibly reward-elevated) subscription_tier so webhook syncs cannot
   // silently revoke an active referral reward.
   billing_tier: text("billing_tier"),
+
+  // ─── Master Framework v1.1 §11.5 ────────────────────────────────────────────
+  // Archetype system
+  archetype:           text("archetype"),
+  secondary_archetype: text("secondary_archetype"),
+
+  // Interest selections written during onboarding §5
+  social_circles:      jsonb("social_circles").$type<string[]>().notNull().default([]),
+  cultural_interests:  jsonb("cultural_interests").$type<string[]>().notNull().default([]),
+  selected_interests:  jsonb("selected_interests").$type<string[]>().notNull().default([]),
+
+  // Register bias (§4.2)
+  // "middle_class" | "elite" | "balanced"
+  register_bias:        text("register_bias"),
+  secondary_register:   text("secondary_register"),
+  register_bias_signals: jsonb("register_bias_signals").$type<RegisterBiasSignal[]>().notNull().default([]),
+  register_bias_locked:  boolean("register_bias_locked").notNull().default(false),
+
+  // Elite privacy mode: when true, noble_score / Compass / badges are never
+  // exposed on public views.
+  elite_privacy_mode:   boolean("elite_privacy_mode").notNull().default(false),
+
+  // Soft-recalibration flag: set when user scores < 50% in first 3 sessions.
+  needs_recalibration:  boolean("needs_recalibration").notNull().default(false),
 }, (t) => [
   check("users_ambition_level_check", sql`${t.ambition_level} IN ('casual', 'professional', 'diplomatic')`),
 ]);

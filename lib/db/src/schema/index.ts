@@ -32,3 +32,7 @@ export * from "./country-votes";
 export * from "./referrals";
 export * from "./waitlist";
 export * from "./onboarding-events";
+export * from "./interest-catalog";
+export * from "./country-archetype-extensions";
+export * from "./region-dimension-weights";
+export * from "./compass-history";

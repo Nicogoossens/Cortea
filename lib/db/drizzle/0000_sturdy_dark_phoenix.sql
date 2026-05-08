@@ -62,6 +62,17 @@ CREATE TABLE "users" (
 	"pre_referral_tier" text,
 	"referral_reward_ends_at" timestamp,
 	"billing_tier" text,
+	"archetype" text,
+	"secondary_archetype" text,
+	"social_circles" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"cultural_interests" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"selected_interests" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"register_bias" text,
+	"secondary_register" text,
+	"register_bias_signals" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"register_bias_locked" boolean DEFAULT false NOT NULL,
+	"elite_privacy_mode" boolean DEFAULT false NOT NULL,
+	"needs_recalibration" boolean DEFAULT false NOT NULL,
 	CONSTRAINT "users_ambition_level_check" CHECK ("users"."ambition_level" IN ('casual', 'professional', 'diplomatic'))
 );
 --> statement-breakpoint
@@ -237,6 +248,12 @@ CREATE TABLE "learning_track_questions" (
 	"options" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"lang" text DEFAULT 'en' NOT NULL,
 	"interest_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"register_relevance" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"applicable_archetypes" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"social_circle_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"cultural_interest_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"primary_dimension" text,
+	"secondary_dimension" text,
 	"created_at" timestamp DEFAULT now(),
 	"question_hash" text GENERATED ALWAYS AS (md5(region_code || '|' || register || '|' || COALESCE(research_pillar, '') || '|' || phase::text || '|' || level::text || '|' || demographic || '|' || lang || '|' || question_text)) STORED
 );
@@ -252,7 +269,8 @@ CREATE TABLE "learning_track_progress" (
 	"questions_done" integer DEFAULT 0 NOT NULL,
 	"correct_streak" integer DEFAULT 0 NOT NULL,
 	"mastered" boolean DEFAULT false NOT NULL,
-	"last_updated" timestamp DEFAULT now()
+	"last_updated" timestamp DEFAULT now(),
+	"learning_intent" text DEFAULT 'competent' NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "learning_track_attempts" (
@@ -268,7 +286,8 @@ CREATE TABLE "learning_track_attempts" (
 	"is_correct" boolean NOT NULL,
 	"is_repetition" boolean DEFAULT false NOT NULL,
 	"session_id" integer,
-	"attempted_at" timestamp DEFAULT now() NOT NULL
+	"attempted_at" timestamp DEFAULT now() NOT NULL,
+	"is_placement_question" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "learning_track_sessions" (
@@ -291,7 +310,8 @@ CREATE TABLE "learning_track_sessions" (
 	"completed_at" timestamp,
 	"remediated_at" timestamp,
 	"remediates_session_id" integer,
-	"lang" text DEFAULT 'en' NOT NULL
+	"lang" text DEFAULT 'en' NOT NULL,
+	"is_placement" boolean DEFAULT false NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user_country_interests" (
@@ -308,6 +328,7 @@ CREATE TABLE "badges" (
 	"title" text NOT NULL,
 	"description" text NOT NULL,
 	"badge_type" text NOT NULL,
+	"kind" text,
 	"register" text NOT NULL,
 	"research_pillar" text,
 	"phase" integer,
@@ -541,6 +562,47 @@ CREATE TABLE "onboarding_events" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "interest_catalog" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"slug" text NOT NULL,
+	"taxonomy" text NOT NULL,
+	"label_i18n_key" text NOT NULL,
+	"registers" jsonb DEFAULT '[]'::jsonb NOT NULL,
+	"region_codes" jsonb DEFAULT 'null'::jsonb,
+	"display_order" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "country_archetype_extensions" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"country_code" text NOT NULL,
+	"archetype" text NOT NULL,
+	"pillar_weights" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "region_dimension_weights" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"region_code" text NOT NULL,
+	"attentiveness" double precision DEFAULT 1 NOT NULL,
+	"composure" double precision DEFAULT 1 NOT NULL,
+	"discernment" double precision DEFAULT 1 NOT NULL,
+	"diplomacy" double precision DEFAULT 1 NOT NULL,
+	"presence" double precision DEFAULT 1 NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+--> statement-breakpoint
+CREATE TABLE "compass_history" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"attentiveness" integer DEFAULT 50 NOT NULL,
+	"composure" integer DEFAULT 50 NOT NULL,
+	"discernment" integer DEFAULT 50 NOT NULL,
+	"diplomacy" integer DEFAULT 50 NOT NULL,
+	"presence" integer DEFAULT 50 NOT NULL,
+	"recorded_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "learning_track_progress" ADD CONSTRAINT "learning_track_progress_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "learning_track_attempts" ADD CONSTRAINT "learning_track_attempts_question_id_learning_track_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."learning_track_questions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -551,6 +613,7 @@ ALTER TABLE "user_badges" ADD CONSTRAINT "user_badges_badge_id_badges_id_fk" FOR
 ALTER TABLE "purchased_guides" ADD CONSTRAINT "purchased_guides_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "purchased_guides" ADD CONSTRAINT "purchased_guides_guide_id_guides_id_fk" FOREIGN KEY ("guide_id") REFERENCES "public"."guides"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "saved_venues" ADD CONSTRAINT "saved_venues_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "compass_history" ADD CONSTRAINT "compass_history_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "translations_lang_key_idx" ON "translations" USING btree ("language_code","key");--> statement-breakpoint
 CREATE INDEX "ltq_lookup_idx" ON "learning_track_questions" USING btree ("region_code","register","phase","research_pillar","demographic","level");--> statement-breakpoint
 CREATE UNIQUE INDEX "ltq_hash_idx" ON "learning_track_questions" USING btree ("question_hash");--> statement-breakpoint
@@ -580,4 +643,9 @@ CREATE UNIQUE INDEX "waitlist_signups_email_unique" ON "waitlist_signups" USING 
 CREATE UNIQUE INDEX "waitlist_signups_founder_code_unique" ON "waitlist_signups" USING btree ("founder_code");--> statement-breakpoint
 CREATE UNIQUE INDEX "waitlist_signups_founder_position_unique" ON "waitlist_signups" USING btree ("founder_position");--> statement-breakpoint
 CREATE INDEX "onboarding_events_event_type_idx" ON "onboarding_events" USING btree ("event_type");--> statement-breakpoint
-CREATE INDEX "onboarding_events_created_at_idx" ON "onboarding_events" USING btree ("created_at");
+CREATE INDEX "onboarding_events_created_at_idx" ON "onboarding_events" USING btree ("created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "ic_slug_idx" ON "interest_catalog" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "ic_taxonomy_idx" ON "interest_catalog" USING btree ("taxonomy");--> statement-breakpoint
+CREATE UNIQUE INDEX "cae_country_archetype_idx" ON "country_archetype_extensions" USING btree ("country_code","archetype");--> statement-breakpoint
+CREATE UNIQUE INDEX "rdw_region_code_idx" ON "region_dimension_weights" USING btree ("region_code");--> statement-breakpoint
+CREATE INDEX "ch_user_recorded_idx" ON "compass_history" USING btree ("user_id","recorded_at");

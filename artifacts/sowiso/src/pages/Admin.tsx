@@ -1088,23 +1088,24 @@ interface VerifiedCCRecord {
 }
 
 function UrgencyBadge({ urgency }: { urgency: number | null }) {
+  const { t } = useLanguage();
   if (urgency === 3) {
     return (
       <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-red-100 text-red-700 border border-red-200">
-        U3 · Kritisch
+        U3 · {t("admin.cc.urgency_critical")}
       </span>
     );
   }
   if (urgency === 2) {
     return (
       <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200">
-        U2 · Belangrijk
+        U2 · {t("admin.cc.urgency_important")}
       </span>
     );
   }
   return (
     <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-widest bg-green-50 text-green-700 border border-green-200">
-      U1 · Nice-to-know
+      U1 · {t("admin.cc.urgency_nice")}
     </span>
   );
 }
@@ -1120,6 +1121,7 @@ function PendingRecordRow({
   onApproved: (id: number) => void;
   onDeleted: (id: number) => void;
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [approveState, setApproveState] = useState<ActionState>("idle");
   const [deleteState, setDeleteState] = useState<ActionState>("idle");
@@ -1171,12 +1173,12 @@ function PendingRecordRow({
         setTimeout(() => setSaveState("idle"), 2000);
       } else {
         const data = await res.json() as { error?: string; message?: string };
-        setSaveError(data.message ?? data.error ?? "Opslaan mislukt.");
+        setSaveError(data.message ?? data.error ?? t("admin.cc.save_error"));
         setSaveState("error");
         setTimeout(() => setSaveState("idle"), 3000);
       }
     } catch {
-      setSaveError("Verbinding mislukt.");
+      setSaveError(t("admin.cc.connection_error"));
       setSaveState("error");
       setTimeout(() => setSaveState("idle"), 3000);
     }
@@ -1257,13 +1259,13 @@ function PendingRecordRow({
         <div className="px-3 pb-3 pt-1 border-t border-border/30 space-y-3 animate-in fade-in duration-150">
           {record.rule_raw && (
             <div className="space-y-1">
-              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern — alleen-lezen)</p>
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.rule_raw_label")}</p>
               <p className="text-xs font-light text-muted-foreground italic bg-muted/30 rounded-sm px-2 py-1.5">{record.rule_raw}</p>
             </div>
           )}
 
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</label>
+            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.rule_cc_label")}</label>
             <textarea
               value={editRuleCc}
               onChange={(e) => setEditRuleCc(e.target.value)}
@@ -1274,7 +1276,7 @@ function PendingRecordRow({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Subcategorie</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_subcategory")}</label>
               <select
                 value={editSubcategory}
                 onChange={(e) => setEditSubcategory(e.target.value)}
@@ -1291,20 +1293,20 @@ function PendingRecordRow({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Urgentie</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_urgency")}</label>
               <select
                 value={editUrgency}
                 onChange={(e) => setEditUrgency(Number(e.target.value))}
                 className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
               >
-                <option value={1}>1 — Nice-to-know</option>
-                <option value={2}>2 — Belangrijk</option>
-                <option value={3}>3 — Kritisch</option>
+                <option value={1}>1 — {t("admin.cc.urgency_nice")}</option>
+                <option value={2}>2 — {t("admin.cc.urgency_important")}</option>
+                <option value={3}>3 — {t("admin.cc.urgency_critical")}</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Regiecode</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_region_code")}</label>
               <input
                 type="text"
                 value={editRegionCode}
@@ -1327,11 +1329,11 @@ function PendingRecordRow({
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 : <Save className="w-3.5 h-3.5" />
               }
-              Wijzigingen opslaan
+              {t("admin.cc.save_changes")}
             </Button>
             {saveState === "done" && (
               <span className="text-xs text-green-600 font-mono flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Opgeslagen
+                <CheckCircle2 className="w-3 h-3" /> {t("admin.cc.saved_ok")}
               </span>
             )}
             {saveState === "error" && saveError && (
@@ -1341,13 +1343,13 @@ function PendingRecordRow({
 
           <div className="text-[10px] font-mono text-muted-foreground space-x-4">
             <span>ID: {record.id}</span>
-            <span>Bron: {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
-            <span>Toegevoegd: {new Date(record.created_at).toLocaleDateString()}</span>
+            <span>{t("admin.cc.source_label")} {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
+            <span>{t("admin.cc.added_label")} {new Date(record.created_at).toLocaleDateString()}</span>
           </div>
 
           {approveState === "done" ? (
             <div className="flex items-center gap-2 text-xs text-green-700 font-mono p-2 bg-green-50 rounded-sm border border-green-200">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Goedgekeurd — record is nu verified: true.
+              <CheckCircle2 className="w-3.5 h-3.5" /> {t("admin.cc.approved_ok")}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2 items-center">
@@ -1356,17 +1358,17 @@ function PendingRecordRow({
                 variant="outline"
                 className="font-mono text-xs gap-1.5 border-green-400/60 text-green-700 hover:bg-green-50 disabled:opacity-40"
                 disabled={approveState === "loading" || deleteState === "loading" || saveState === "loading" || isDirty}
-                title={isDirty ? "Sla eerst de wijzigingen op voordat je goedkeurt" : undefined}
+                title={isDirty ? t("admin.cc.save_first_title") : undefined}
                 onClick={handleApprove}
               >
                 {approveState === "loading"
                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   : <ThumbsUp className="w-3.5 h-3.5" />
                 }
-                Goedkeuren
+                {t("admin.cc.approve")}
               </Button>
               {isDirty && (
-                <span className="text-[10px] text-amber-600 font-mono">Sla wijzigingen op voor goedkeuring</span>
+                <span className="text-[10px] text-amber-600 font-mono">{t("admin.cc.save_first_warn")}</span>
               )}
 
               {!showDeleteConfirm ? (
@@ -1378,7 +1380,7 @@ function PendingRecordRow({
                   onClick={() => setShowDeleteConfirm(true)}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Verwijderen
+                  {t("admin.cc.delete")}
                 </Button>
               ) : (
                 <div className="flex gap-2 items-center">
@@ -1393,7 +1395,7 @@ function PendingRecordRow({
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       : <Trash2 className="w-3.5 h-3.5" />
                     }
-                    Bevestig verwijdering
+                    {t("admin.cc.confirm_delete")}
                   </Button>
                   <Button
                     size="sm"
@@ -1401,13 +1403,13 @@ function PendingRecordRow({
                     className="font-mono text-xs"
                     onClick={() => setShowDeleteConfirm(false)}
                   >
-                    Annuleren
+                    {t("admin.cc.cancel")}
                   </Button>
                 </div>
               )}
 
-              {approveState === "error" && <span className="text-xs text-red-600 font-mono">Goedkeuren mislukt.</span>}
-              {deleteState === "error" && <span className="text-xs text-red-600 font-mono">Verwijderen mislukt.</span>}
+              {approveState === "error" && <span className="text-xs text-red-600 font-mono">{t("admin.cc.approve_error")}</span>}
+              {deleteState === "error" && <span className="text-xs text-red-600 font-mono">{t("admin.cc.delete_error")}</span>}
             </div>
           )}
         </div>
@@ -1417,6 +1419,7 @@ function PendingRecordRow({
 }
 
 function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<string, string>; refreshKey: number }) {
+  const { t } = useLanguage();
   const [records, setRecords] = useState<PendingCCRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -1468,24 +1471,22 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
       <CardHeader>
         <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
           <ClipboardList className="w-4 h-4" />
-          Wachtrij voor review
+          {t("admin.cc.pending_queue")}
           {total > 0 && (
             <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700 font-mono">
-              {total} in wachtrij
+              {t("admin.cc.in_queue", { n: total })}
             </span>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground font-light">
-          Records die door de CC Screening Worker zijn opgeslagen staan hier klaar voor menselijke review.
-          Keur goed om ze zichtbaar te maken in de app, of verwijder ze bij twijfel.
-          Records met urgentie&nbsp;3 zijn rood gemarkeerd voor prioritaire beoordeling.
+          {t("admin.cc.pending_desc")}
         </p>
 
         <div className="flex items-center justify-between">
           <p className="text-xs font-mono text-muted-foreground">
-            {loading ? "Laden…" : `${total} record${total !== 1 ? "s" : ""} in behandeling`}
+            {loading ? t("admin.cc.loading") : t(total === 1 ? "admin.cc.records_pending_one" : "admin.cc.records_pending_other", { n: total })}
           </p>
           <Button
             variant="outline"
@@ -1495,7 +1496,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
             disabled={loading}
           >
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Vernieuwen
+            {t("admin.cc.refresh")}
           </Button>
         </div>
 
@@ -1506,7 +1507,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
         ) : records.length === 0 ? (
           <div className="py-8 text-center">
             <CheckCircle2 className="w-8 h-8 mx-auto text-green-400 mb-2" />
-            <p className="text-sm text-muted-foreground font-light">Geen records in behandeling. Alles is beoordeeld.</p>
+            <p className="text-sm text-muted-foreground font-light">{t("admin.cc.no_pending")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -1531,7 +1532,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
               disabled={page <= 1 || loading}
               onClick={() => fetchPending(page - 1)}
             >
-              ← Vorige
+              {t("admin.cc.prev_page")}
             </Button>
             <span className="text-xs font-mono text-muted-foreground px-2">
               {page} / {totalPages}
@@ -1543,7 +1544,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
               disabled={page >= totalPages || loading}
               onClick={() => fetchPending(page + 1)}
             >
-              Volgende →
+              {t("admin.cc.next_page")}
             </Button>
           </div>
         )}
@@ -1563,6 +1564,7 @@ function VerifiedRecordRow({
   onRemoved: (id: number) => void;
   onUnverified: (id: number) => void;
 }) {
+  const { t, locale } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [saveState, setSaveState] = useState<ActionState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -1616,12 +1618,12 @@ function VerifiedRecordRow({
         setTimeout(() => setSaveState("idle"), 2000);
       } else {
         const data = await res.json().catch(() => ({} as { error?: string }));
-        setSaveError(data.error ?? "Opslaan mislukt.");
+        setSaveError(data.error ?? t("admin.cc.save_error"));
         setSaveState("error");
         setTimeout(() => setSaveState("idle"), 3000);
       }
     } catch {
-      setSaveError("Verbinding mislukt.");
+      setSaveError(t("admin.cc.connection_error"));
       setSaveState("error");
       setTimeout(() => setSaveState("idle"), 3000);
     }
@@ -1690,9 +1692,9 @@ function VerifiedRecordRow({
             {editRuleCc ? editRuleCc.slice(0, 120) + (editRuleCc.length > 120 ? "…" : "") : "—"}
           </p>
           <p className="text-[10px] font-mono text-green-700/80">
-            Beoordeeld door <span className="font-semibold">{record.reviewer_name ?? "onbekend"}</span>
+            {t("admin.cc.reviewed_by")} <span className="font-semibold">{record.reviewer_name ?? t("admin.cc.unknown")}</span>
             {record.reviewed_at ? (
-              <> op {new Date(record.reviewed_at).toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" })}</>
+              <> {t("admin.cc.reviewed_on")} {new Date(record.reviewed_at).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" })}</>
             ) : null}
           </p>
         </div>
@@ -1704,7 +1706,7 @@ function VerifiedRecordRow({
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-green-200/40 space-y-3 animate-in fade-in duration-150">
           <div className="space-y-1">
-            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</label>
+            <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.rule_cc_label")}</label>
             <textarea
               value={editRuleCc}
               onChange={(e) => setEditRuleCc(e.target.value)}
@@ -1715,7 +1717,7 @@ function VerifiedRecordRow({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Subcategorie</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_subcategory")}</label>
               <select
                 value={editSubcategory}
                 onChange={(e) => setEditSubcategory(e.target.value)}
@@ -1729,19 +1731,19 @@ function VerifiedRecordRow({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Urgentie</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_urgency")}</label>
               <select
                 value={editUrgency}
                 onChange={(e) => setEditUrgency(Number(e.target.value))}
                 className="w-full h-7 px-2 rounded-sm border border-border bg-background text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/40"
               >
-                <option value={1}>1 — Nice-to-know</option>
-                <option value={2}>2 — Belangrijk</option>
-                <option value={3}>3 — Kritisch</option>
+                <option value={1}>1 — {t("admin.cc.urgency_nice")}</option>
+                <option value={2}>2 — {t("admin.cc.urgency_important")}</option>
+                <option value={3}>3 — {t("admin.cc.urgency_critical")}</option>
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Regiocode</label>
+              <label className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.field_region_code")}</label>
               <input
                 type="text"
                 value={editRegionCode}
@@ -1754,8 +1756,8 @@ function VerifiedRecordRow({
 
           <div className="text-[10px] font-mono text-muted-foreground space-x-4">
             <span>ID: {record.id}</span>
-            <span>Bron: {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
-            <span>Toegevoegd: {new Date(record.created_at).toLocaleDateString()}</span>
+            <span>{t("admin.cc.source_label")} {record.source_reference ?? `${record.source_book}:${record.source_page}`}</span>
+            <span>{t("admin.cc.added_label")} {new Date(record.created_at).toLocaleDateString()}</span>
           </div>
 
           <div className="flex flex-wrap gap-2 items-center pt-1 border-t border-green-200/30">
@@ -1768,11 +1770,11 @@ function VerifiedRecordRow({
               data-testid={`button-verified-save-${record.id}`}
             >
               {saveState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              Correctie opslaan
+              {t("admin.cc.save_correction")}
             </Button>
             {saveState === "done" && (
               <span className="text-xs text-green-600 font-mono flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Opgeslagen — vertalingen worden vernieuwd op de achtergrond.
+                <CheckCircle2 className="w-3 h-3" /> {t("admin.cc.saved_translations_updating")}
               </span>
             )}
             {saveState === "error" && saveError && (
@@ -1785,12 +1787,12 @@ function VerifiedRecordRow({
                 variant="outline"
                 className="font-mono text-xs gap-1.5 border-amber-400/60 text-amber-700 hover:bg-amber-50"
                 disabled={isDirty || saveState === "loading" || unverifyState === "loading" || deleteState === "loading"}
-                title={isDirty ? "Sla eerst je wijzigingen op of annuleer ze" : "Stuur dit record terug naar de wachtrij voor opnieuw te beoordelen"}
+                title={isDirty ? t("admin.cc.save_first_title") : t("admin.cc.back_to_queue")}
                 onClick={() => setShowUnverifyConfirm(true)}
                 data-testid={`button-verified-unverify-${record.id}`}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Terug naar wachtrij
+                {t("admin.cc.back_to_queue")}
               </Button>
             ) : (
               <div className="flex gap-2 items-center">
@@ -1802,7 +1804,7 @@ function VerifiedRecordRow({
                   onClick={async () => { setShowUnverifyConfirm(false); await handleUnverify(); }}
                 >
                   {unverifyState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  Bevestig terugzetten
+                  {t("admin.cc.confirm_back")}
                 </Button>
                 <Button
                   size="sm"
@@ -1810,7 +1812,7 @@ function VerifiedRecordRow({
                   className="font-mono text-xs"
                   onClick={() => setShowUnverifyConfirm(false)}
                 >
-                  Annuleren
+                  {t("admin.cc.cancel")}
                 </Button>
               </div>
             )}
@@ -1825,7 +1827,7 @@ function VerifiedRecordRow({
                 data-testid={`button-verified-delete-${record.id}`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Verwijderen
+                {t("admin.cc.delete")}
               </Button>
             ) : (
               <div className="flex gap-2 items-center">
@@ -1837,7 +1839,7 @@ function VerifiedRecordRow({
                   onClick={handleDelete}
                 >
                   {deleteState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                  Bevestig verwijdering
+                  {t("admin.cc.confirm_delete")}
                 </Button>
                 <Button
                   size="sm"
@@ -1845,13 +1847,13 @@ function VerifiedRecordRow({
                   className="font-mono text-xs"
                   onClick={() => setShowDeleteConfirm(false)}
                 >
-                  Annuleren
+                  {t("admin.cc.cancel")}
                 </Button>
               </div>
             )}
 
-            {unverifyState === "error" && <span className="text-xs text-red-600 font-mono">Terugzetten mislukt.</span>}
-            {deleteState === "error" && <span className="text-xs text-red-600 font-mono">Verwijderen mislukt.</span>}
+            {unverifyState === "error" && <span className="text-xs text-red-600 font-mono">{t("admin.cc.reset_error")}</span>}
+            {deleteState === "error" && <span className="text-xs text-red-600 font-mono">{t("admin.cc.delete_error")}</span>}
           </div>
         </div>
       )}
@@ -1860,6 +1862,7 @@ function VerifiedRecordRow({
 }
 
 function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const { t } = useLanguage();
   const [records, setRecords] = useState<VerifiedCCRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -1904,7 +1907,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
             <BadgeCheck className="w-4 h-4 text-green-600" />
-            Geverifieerde records
+            {t("admin.cc.verified_title")}
             <span className="text-[10px] text-muted-foreground/60 font-mono normal-case tracking-normal">
               · {loading && total === 0 ? "…" : `${total} record${total === 1 ? "" : "s"}`}
             </span>
@@ -1916,19 +1919,16 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
             onClick={() => fetchVerified(page)}
             disabled={loading}
             data-testid="button-verified-refresh"
-            aria-label="Vernieuwen"
+            aria-label={t("admin.cc.refresh")}
           >
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Vernieuwen
+            {t("admin.cc.refresh")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground font-light">
-          Goedgekeurde CC-records. Je kunt fouten <span className="font-medium text-foreground/80">corrigeren</span>,
-          een record <span className="font-medium text-foreground/80">terug naar de wachtrij</span> sturen voor herziening,
-          of het volledig <span className="font-medium text-foreground/80">verwijderen</span>.
-          Bij elke tekstcorrectie worden de vertalingen in alle talen automatisch ververst.
+          {t("admin.cc.verified_desc")}
         </p>
 
         {loading && records.length === 0 ? (
@@ -1938,7 +1938,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
         ) : records.length === 0 ? (
           <div className="py-8 text-center">
             <BadgeCheck className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground font-light">Nog geen geverifieerde records.</p>
+            <p className="text-sm text-muted-foreground font-light">{t("admin.cc.no_verified")}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -1963,7 +1963,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
               disabled={page <= 1 || loading}
               onClick={() => fetchVerified(page - 1)}
             >
-              ← Vorige
+              {t("admin.cc.prev_page")}
             </Button>
             <span className="text-xs font-mono text-muted-foreground px-2">
               {page} / {totalPages}
@@ -1975,7 +1975,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
               disabled={page >= totalPages || loading}
               onClick={() => fetchVerified(page + 1)}
             >
-              Volgende →
+              {t("admin.cc.next_page")}
             </Button>
           </div>
         )}
@@ -1985,6 +1985,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
 }
 
 function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const { t } = useLanguage();
   const [fragment, setFragment] = useState("");
   const [sourceBook, setSourceBook] = useState("DH");
   const [sourcePage, setSourcePage] = useState("");
@@ -2014,7 +2015,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
       });
       const data = await res.json() as { ok?: boolean; record?: CCRecord; warnings?: string[]; error?: string; message?: string };
       if (!res.ok || !data.ok) {
-        setScreenError(data.message ?? data.error ?? "Verwerking mislukt.");
+        setScreenError(data.message ?? data.error ?? t("admin.cc.processing"));
         setScreenState("error");
       } else {
         setRecord(data.record!);
@@ -2023,7 +2024,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
         setScreenState("done");
       }
     } catch {
-      setScreenError("Verbinding met de server mislukt.");
+      setScreenError(t("admin.cc.connection_error"));
       setScreenState("error");
     }
   }
@@ -2085,19 +2086,17 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
         <CardHeader>
           <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
             <Cpu className="w-4 h-4" />
-            CC Screening Worker — Kennisextractie
+            {t("admin.cc.screening_title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground font-light">
-            Plak een tekstfragment uit een etiquetteboek. De worker extraheert de etiquetteregel,
-            classificeert deze onder het 5-Zuilen-schema en genereert een auteursrechtveilig JSON-record
-            voor de <span className="font-mono text-xs">culture_protocols</span> tabel.
+            {t("admin.cc.screening_desc")}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Bronboek</label>
+              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.source_book_label")}</label>
               <select
                 value={sourceBook}
                 onChange={(e) => setSourceBook(e.target.value)}
@@ -2109,9 +2108,9 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Paginanummer</label>
+              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.page_number_label")}</label>
               <Input
-                placeholder="bijv. 142"
+                placeholder={t("admin.cc.page_number_placeholder")}
                 value={sourcePage}
                 onChange={(e) => setSourcePage(e.target.value)}
                 className="font-mono rounded-sm"
@@ -2120,16 +2119,16 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">Tekstfragment</label>
+            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.text_fragment_label")}</label>
             <textarea
               value={fragment}
               onChange={(e) => setFragment(e.target.value)}
-              placeholder="Plak hier het tekstfragment uit het bronboek (parafraseer zelf eerst indien nodig)..."
+              placeholder={t("admin.cc.text_fragment_placeholder")}
               rows={6}
               className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm font-light leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
             <p className="text-[11px] text-muted-foreground font-mono">
-              {fragment.length} tekens · Plak geen letterlijke boektekst — parafraseer het fragment eerst zelf.
+              {t("admin.cc.char_count", { n: fragment.length })}
             </p>
           </div>
 
@@ -2140,13 +2139,13 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
               className="font-serif rounded-sm"
             >
               {screenState === "loading"
-                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Verwerken…</>
-                : <><Cpu className="w-4 h-4 mr-2" />Verwerk fragment</>
+                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{t("admin.cc.processing")}</>
+                : <><Cpu className="w-4 h-4 mr-2" />{t("admin.cc.process_fragment")}</>
               }
             </Button>
             {(record || screenError) && (
               <Button variant="outline" onClick={reset} className="font-mono text-xs rounded-sm">
-                Nieuw fragment
+                {t("admin.cc.new_fragment")}
               </Button>
             )}
           </div>
@@ -2179,7 +2178,7 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
           <CardHeader>
             <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Geëxtraheerd record — {PILLAR_LABELS[record.pillar] ?? record.pillar}
+              {t("admin.cc.extracted_record")} — {PILLAR_LABELS[record.pillar] ?? record.pillar}
               <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700">
                 verified: false
               </span>
@@ -2189,50 +2188,50 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
             {/* Summary view */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
               <div className="space-y-1">
-                <span className="text-muted-foreground">Bron:</span>
+                <span className="text-muted-foreground">{t("admin.cc.source_label")}</span>
                 <span className="ml-2 text-foreground">{record.source_book} · p. {record.source_page}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-muted-foreground">Regio:</span>
+                <span className="text-muted-foreground">{t("admin.cc.region_label")}</span>
                 <span className="ml-2 text-foreground">{record.region}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-muted-foreground">Zuil:</span>
+                <span className="text-muted-foreground">{t("admin.cc.pillar_label")}</span>
                 <span className="ml-2 text-foreground">{record.pillar} · {record.subcategory}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-muted-foreground">Urgentie:</span>
+                <span className="text-muted-foreground">{t("admin.cc.urgency_label")}</span>
                 <span className={`ml-2 font-bold ${record.urgency === 3 ? "text-red-600" : record.urgency === 2 ? "text-amber-600" : "text-green-600"}`}>
-                  {record.urgency} {record.urgency === 3 ? "— Kritisch" : record.urgency === 2 ? "— Belangrijk" : "— Nice-to-know"}
+                  {record.urgency} {record.urgency === 3 ? `— ${t("admin.cc.urgency_critical")}` : record.urgency === 2 ? `— ${t("admin.cc.urgency_important")}` : `— ${t("admin.cc.urgency_nice")}`}
                 </span>
               </div>
               <div className="space-y-1">
-                <span className="text-muted-foreground">Persona's:</span>
+                <span className="text-muted-foreground">{t("admin.cc.personas_label")}</span>
                 <span className="ml-2 text-foreground">{record.personas.join(", ")}</span>
               </div>
               <div className="space-y-1">
-                <span className="text-muted-foreground">Modules:</span>
+                <span className="text-muted-foreground">{t("admin.cc.modules_label")}</span>
                 <span className="ml-2 text-foreground">{record.modules.join(", ")}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">rule_raw (intern)</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.rule_raw_label")}</p>
               <p className="text-sm font-light text-muted-foreground italic bg-muted/30 rounded-sm px-3 py-2">{record.rule_raw}</p>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">rule_cc (app-tekst)</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.rule_cc_label")}</p>
               <p className="text-sm font-light leading-relaxed bg-muted/30 rounded-sm px-3 py-2">{record.rule_cc}</p>
             </div>
 
             {record._note && (
-              <p className="text-xs text-muted-foreground font-mono italic">Noot: {record._note}</p>
+              <p className="text-xs text-muted-foreground font-mono italic">{t("admin.cc.note_label")}: {record._note}</p>
             )}
 
             {/* Editable JSON */}
             <div className="space-y-1.5">
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">JSON — bewerk voor opslaan indien nodig</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{t("admin.cc.json_edit_label")}</p>
               <textarea
                 value={editedRecord}
                 onChange={(e) => setEditedRecord(e.target.value)}
@@ -2251,24 +2250,24 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
                   className="font-serif rounded-sm border-green-400/60 text-green-700 hover:bg-green-50"
                 >
                   {saveState === "loading"
-                    ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Opslaan…</>
-                    : <><Save className="w-4 h-4 mr-2" />Opslaan naar database</>
+                    ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{t("admin.cc.save_loading")}</>
+                    : <><Save className="w-4 h-4 mr-2" />{t("admin.cc.save_to_db")}</>
                   }
                 </Button>
                 {saveState === "error" && (
-                  <span className="text-xs text-red-600 font-mono">Opslaan mislukt — controleer de JSON.</span>
+                  <span className="text-xs text-red-600 font-mono">{t("admin.cc.save_failed_json")}</span>
                 )}
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm p-3 rounded-sm border bg-green-50 border-green-200 text-green-800">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Record opgeslagen · ID: <span className="font-mono">{savedId}</span> · verified: false — klaar voor redactionele review.</span>
+                  <span>{t("admin.cc.record_saved", { id: savedId ?? 0 })}</span>
                 </div>
                 {Object.keys(savedTranslations).length > 0 && (
                   <div className="border border-border rounded-sm p-3 space-y-2">
                     <p className="text-xs font-mono uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
-                      <span>🌐</span> Automatische vertalingen (rule_cc_i18n)
+                      <span>🌐</span> {t("admin.cc.auto_translations")}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       {Object.entries(savedTranslations).map(([lang, text]) => (
@@ -2294,21 +2293,21 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
         <CardHeader>
           <CardTitle className="text-xs font-mono uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
             <Shield className="w-3.5 h-3.5" />
-            Kwaliteitschecklist (automatisch gevalideerd)
+            {t("admin.cc.quality_checklist_title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="text-xs text-muted-foreground font-light space-y-1.5">
-            {[
-              "Geen letterlijk geciteerde zin uit het bronwerk",
-              "C&C-stem consistent (mentor, niet rechter)",
-              "Zuil + subcategorie correct en specifiek",
-              "Regio correct (UK / CN / CA / AU / UNIVERSAL)",
-              "Urgentie realistisch (max 20% van regels = urgency 3)",
-              "Personas logisch (niet alle drie tenzij echt universeel)",
-              "JSON valide (geen trailing comma's, geen ontbrekende quotes)",
-              "verified altijd false bij extractie",
-            ].map((item, i) => (
+            {([
+              t("admin.cc.quality_check_1"),
+              t("admin.cc.quality_check_2"),
+              t("admin.cc.quality_check_3"),
+              t("admin.cc.quality_check_4"),
+              t("admin.cc.quality_check_5"),
+              t("admin.cc.quality_check_6"),
+              t("admin.cc.quality_check_7"),
+              t("admin.cc.quality_check_8"),
+            ]).map((item, i) => (
               <li key={i} className="flex items-start gap-2">
                 <CheckCircle2 className="w-3 h-3 mt-0.5 text-green-500 shrink-0" />
                 {item}
@@ -3134,6 +3133,7 @@ function CoverageCard({
   onTranslateAll, onTranslateLang, onForceTranslateLang, launching, lastRun, hideAllButton,
   activeSweepers,
 }: CoverageCardProps) {
+  const { t } = useLanguage();
   // Derive active state from DB-sourced worker_runs (finished_at === null)
   // sweeper = "ltq-translation" → checks "ltq-translation" (orchestrator) or "ltq-translation-nl" etc.
   const isModuleActive = activeSweepers
@@ -3167,14 +3167,14 @@ function CoverageCard({
               </p>
             </div>
 
-            {/* bron + kosten totaal */}
+            {/* source + cost totals */}
             <p className="text-[11px] font-mono text-muted-foreground/70 pt-0.5">
-              Bron: {total.toLocaleString()} EN-rijen
+              {t("admin.trans.source_rows", { n: total.toLocaleString() })}
               {!allDone && totalRemaining > 0 && (
-                <> · nog {totalRemaining.toLocaleString()} te vertalen · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
+                <> · {t("admin.trans.remaining", { n: totalRemaining.toLocaleString() })} · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
               )}
               {lastRun && (
-                <> · laatste run {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /></>
+                <> · {t("admin.trans.last_run")} {formatRelative(lastRun.started_at)} · <StatusPill status={lastRun.status} /></>
               )}
             </p>
           </div>
@@ -3186,11 +3186,11 @@ function CoverageCard({
               disabled={launching !== null || isModuleActive}
               onClick={onTranslateAll}
               title={isModuleActive
-                ? "Een vertaalworker is momenteel actief voor deze module — wacht tot die klaar is."
-                : `Start vertaalworker voor alle 9 talen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
+                ? t("admin.trans.worker_active")
+                : t("admin.trans.start_all_hint", { cost: fmtUsd(totalEstCost), dur: fmtMin(totalEstMin) })}
             >
               {(launching === "all" || isModuleActive) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              Alle talen vertalen
+              {t("admin.trans.translate_all_langs")}
             </Button>
           )}
         </div>
@@ -3283,7 +3283,7 @@ function CoverageCard({
                       return (
                         <div key={reg} className="space-y-0.5">
                           <p className="text-[9px] font-mono text-muted-foreground/60 uppercase tracking-wide">
-                            {reg === "middle_class" ? "Middenklasse" : "Elite"}
+                            {reg === "middle_class" ? t("admin.trans.register_middle") : t("admin.trans.register_elite")}
                           </p>
                           <div className="h-1 bg-muted rounded-full overflow-hidden">
                             <div
@@ -3309,12 +3309,12 @@ function CoverageCard({
 // ── Atelier-distillaten domain coverage card ──────────────────────────────────
 
 const COUNSEL_DOMAIN_LABELS: Record<string, string> = {
-  gastronomy:          "Gastronomie",
-  business:            "Zakelijk",
-  eloquence:           "Welsprekendheid",
-  formal_events:       "Formele gelegenheden",
-  dress_code:          "Kledingcode",
-  cultural_knowledge:  "Culturele kennis",
+  gastronomy:          "Gastronomy",
+  business:            "Business",
+  eloquence:           "Eloquence",
+  formal_events:       "Formal events",
+  dress_code:          "Dress code",
+  cultural_knowledge:  "Cultural knowledge",
 };
 
 const SEED_COST_PER_REGION = 0.008;
@@ -3328,6 +3328,7 @@ interface DomainCoverageCardProps {
 }
 
 function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }: DomainCoverageCardProps) {
+  const { t } = useLanguage();
   const totalMissing    = data.domains.reduce((s, d) => s + d.missing, 0);
   const totalEstCost    = totalMissing * SEED_COST_PER_REGION;
   const totalEstMin     = totalMissing / SEED_REGIONS_PER_MIN;
@@ -3338,25 +3339,25 @@ function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="space-y-1 flex-1 min-w-0">
-            <CardTitle className="text-sm font-semibold text-foreground">Atelier-distillaten (Regio-dekking)</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">{t("admin.trans.atelier_title")}</CardTitle>
             <p className="text-xs text-muted-foreground leading-snug">
-              Per regio × domein kennisdistillaat dat de Counsel-AI voedt. Actieve seeds worden automatisch als context meegestuurd bij elke Counsel-sessie. Bron: {data.total_regions} gepubliceerde landen × 6 domeinen = {(data.total_regions * 6).toLocaleString()} mogelijke seeds.
+              {t("admin.trans.atelier_desc", { n: data.total_regions, total: (data.total_regions * 6).toLocaleString() })}
             </p>
 
             <div className="flex items-start gap-1.5 mt-1.5 px-2 py-1.5 rounded bg-muted/50 border border-border/40">
               <Play className="w-3 h-3 mt-0.5 shrink-0 text-primary/60" />
               <p className="text-[11px] text-muted-foreground leading-snug">
-                <span className="font-medium text-foreground/80">De ▶-knop per domein</span> start de counsel-seed-worker voor alle ontbrekende regio's in dat domein. De worker distilleert de Engelstalige oefenvragen voor die regio naar een gestructureerd kennisoverzicht. Nieuwe seeds verschijnen in 'draft' — promoveer ze via de Atelier-distillaten tab.
+                {t("admin.trans.atelier_hint")}
               </p>
             </div>
 
             <p className="text-[11px] font-mono text-muted-foreground/70 pt-0.5">
               {totalMissing > 0
-                ? <>nog {totalMissing.toLocaleString()} regio×domein te genereren · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
-                : <>Alle domeinen volledig gedistilleerd</>
+                ? <>{t("admin.trans.domain_remaining", { n: totalMissing.toLocaleString() })} · {fmtUsd(totalEstCost)} · {fmtMin(totalEstMin)}</>
+                : <>{t("admin.trans.all_domains_done")}</>
               }
               {data.last_run && (
-                <> · laatste run {formatRelative(data.last_run.started_at)} · <StatusPill status={data.last_run.status} /></>
+                <> · {t("admin.trans.last_run")} {formatRelative(data.last_run.started_at)} · <StatusPill status={data.last_run.status} /></>
               )}
             </p>
           </div>
@@ -3367,10 +3368,10 @@ function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }
             className="font-mono text-xs gap-1.5 shrink-0"
             disabled={launching !== null || totalMissing === 0}
             onClick={onGenerateAll}
-            title={`Start batch-worker voor alle domeinen. Geschatte kosten: ${fmtUsd(totalEstCost)}, duur: ${fmtMin(totalEstMin)}.`}
+            title={t("admin.trans.start_domains_hint", { cost: fmtUsd(totalEstCost), dur: fmtMin(totalEstMin) })}
           >
             {launching === "all" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Alle domeinen aanvullen
+            {t("admin.trans.fill_all_domains")}
           </Button>
         </div>
       </CardHeader>
@@ -3392,7 +3393,7 @@ function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }
                     <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${Math.min(100, d.pct)}%` }} />
                   </div>
                   <p className="text-[10px] font-mono text-muted-foreground tabular-nums">
-                    {d.active} actief · {d.draft} draft · {d.missing} ontbreekt
+                    {d.active} active · {d.draft} draft · {d.missing} missing
                     {d.missing > 0 && <> · {fmtUsd(estCost)} · {fmtMin(estMin)}</>}
                   </p>
                 </div>
@@ -3401,7 +3402,7 @@ function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }
                     className="text-[10px] font-mono text-primary/70 hover:text-primary disabled:opacity-40 transition-colors"
                     disabled={launching !== null || isDone}
                     onClick={() => onGenerateDomain(d.domain)}
-                    title={isDone ? `${COUNSEL_DOMAIN_LABELS[d.domain]} is volledig.` : `Genereer seeds voor alle ontbrekende regio's in ${COUNSEL_DOMAIN_LABELS[d.domain]}. ${d.missing} regio's · ${fmtUsd(estCost)} · ${fmtMin(estMin)}.`}
+                    title={isDone ? `${COUNSEL_DOMAIN_LABELS[d.domain]} is complete.` : `Generate seeds for all missing regions in ${COUNSEL_DOMAIN_LABELS[d.domain]}. ${d.missing} regions · ${fmtUsd(estCost)} · ${fmtMin(estMin)}.`}
                   >
                     {launching === d.domain ? <Loader2 className="w-3 h-3 animate-spin inline" /> : "▶"}
                   </button>
@@ -3419,17 +3420,17 @@ function DomainCoverageCard({ data, launching, onGenerateAll, onGenerateDomain }
 function sweeperLabel(sweeper: string): string {
   if (sweeper.startsWith("ltq-translation-")) {
     const lang = sweeper.replace("ltq-translation-", "").toUpperCase();
-    return `Oefenvragen ${lang}`;
+    return `Practice questions ${lang}`;
   }
-  if (sweeper === "scenario-translation") return "Scenario's (alle talen)";
-  if (sweeper === "compass-content-translation") return "Landenprotocollen";
+  if (sweeper === "scenario-translation") return "Scenarios (all languages)";
+  if (sweeper === "compass-content-translation") return "Country protocols";
   if (sweeper.startsWith("compass-content-translation-")) {
     const lang = sweeper.replace("compass-content-translation-", "").toUpperCase();
-    return `Landenprotocollen ${lang}`;
+    return `Country protocols ${lang}`;
   }
-  if (sweeper === "compass-translation")  return "Landenprotocollen";
-  if (sweeper === "counsel-seed")             return "Atelier-distillaten";
-  if (sweeper === "counsel-seed-translation") return "Atelier-distillaten (Vertaling)";
+  if (sweeper === "compass-translation")  return "Country protocols";
+  if (sweeper === "counsel-seed")             return "Atelier distillates";
+  if (sweeper === "counsel-seed-translation") return "Atelier distillates (Translation)";
   return sweeper;
 }
 
@@ -3446,6 +3447,7 @@ function LangRunHistoryModal({
 }: {
   sweeper: string; langParam?: string; label: string; children?: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [runs, setRuns] = useState<WorkerRun[]>([]);
   const [loading, setLoading] = useState(false);
@@ -3495,23 +3497,23 @@ function LangRunHistoryModal({
       <DialogContent className="max-w-3xl w-full max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-mono text-sm uppercase tracking-widest">
-            Rungeschiedenis — {label}
+            {t("admin.trans.run_history")} — {label}
           </DialogTitle>
           <DialogDescription className="text-xs font-mono text-muted-foreground">
-            sweeper: {sweeper} · laatste 50 runs
+            sweeper: {sweeper} · {t("admin.trans.last_50_runs")}
           </DialogDescription>
         </DialogHeader>
 
         {loading && (
           <div className="flex items-center gap-2 py-4 text-xs text-muted-foreground font-mono">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Laden…
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("admin.cc.loading")}
           </div>
         )}
         {err && (
           <p className="text-xs font-mono text-rose-600 py-2">{err}</p>
         )}
         {!loading && !err && runs.length === 0 && (
-          <p className="text-xs font-mono text-muted-foreground py-4">Geen runs gevonden voor deze sweeper.</p>
+          <p className="text-xs font-mono text-muted-foreground py-4">{t("admin.trans.no_runs")}</p>
         )}
         {!loading && runs.length > 0 && (
           <div className="overflow-x-auto">
@@ -3857,6 +3859,7 @@ function LtqRegisterGrid({
 
 // ── Main Translation Control Panel component ──────────────────────────────────
 function TranslationHealthTab() {
+  const { t } = useLanguage();
   const [ltq, setLtq]             = useState<LtqStatus | null>(null);
   const [scen, setScen]           = useState<ScenarioStatus | null>(null);
   const [compass, setCompass]     = useState<CompassStatus | null>(null);
@@ -4147,9 +4150,9 @@ function TranslationHealthTab() {
       {/* Header + cost summary */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-serif text-foreground">Vertalingen</h2>
+          <h2 className="text-xl font-serif text-foreground">{t("admin.trans.page_title")}</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Beheer de AI-vertalingen van oefenvragen, etiquettescenario's en landenprotocollen naar 9 talen.
+            {t("admin.trans.page_desc")}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -4199,7 +4202,7 @@ function TranslationHealthTab() {
       {(ltq || scen || compass) && (
         <div className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs font-mono border ${allGreen ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700" : "border-amber-500/40 bg-amber-500/5 text-amber-700"}`}>
           {allGreen ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
-          {allGreen ? "Alle inhoud is volledig vertaald in alle 9 talen." : "Sommige talen zijn nog niet vertaald — gebruik de knoppen hieronder om een vertaalrun te starten."}
+          {allGreen ? t("admin.trans.all_done") : t("admin.trans.some_missing")}
         </div>
       )}
 
@@ -4213,9 +4216,9 @@ function TranslationHealthTab() {
       {ltq && (
         <>
           <CoverageCard
-            title="Oefenvragen (DB-vertaling)"
-            description="De Engelstalige oefenvragen in de database worden door AI vertaald naar de gekozen taal. Middenklasse- en elite-vragen zitten als aparte rijen in de DB en worden beide in één run vertaald. Dit is géén Atelier-omschrijving — die pipeline zit in de Atelier-distillaten tab."
-            actionLabel="start de DB-vertaling voor die taal: alle onvertaalde Engelstalige oefenvragen (middenklasse + elite) worden naar die taal vertaald. De kwaliteit wordt automatisch gecheckt en bij een score onder 8/10 herschreven."
+            title={t("admin.trans.ltq_title")}
+            description={t("admin.trans.ltq_desc")}
+            actionLabel={t("admin.trans.ltq_action")}
             total={ltq.en_total}
             langs={ltq.langs as LangCoverage[]}
             sweeper="ltq-translation"
@@ -4232,11 +4235,10 @@ function TranslationHealthTab() {
             <Card className="bg-card border-border">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                  <Grid2x2 className="w-4 h-4" /> Regio × Register dekking
+                  <Grid2x2 className="w-4 h-4" /> {t("admin.trans.region_register_title")}
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Vertaaldekking per regio-register combinatie. Klik ▶ per taal om een run te starten.
-                  Kwaliteitsscore (⭐) toont het gemiddelde van de laatste run per register per taal.
+                  {t("admin.trans.region_register_desc")}
                 </p>
               </CardHeader>
               <CardContent>
@@ -4259,9 +4261,9 @@ function TranslationHealthTab() {
       {/* Scenarios */}
       {scen && (
         <CoverageCard
-          title="Etiquettescenario's (DB-vertaling)"
-          description="De Engelstalige etiquette-situaties (titel + situatiebeschrijving) worden door AI naar de gekozen taal vertaald. Zichtbaar voor gebruikers in de leermodule."
-          actionLabel="vertaalt alle onvertaalde Engelstalige scenario's (titel + situatiebeschrijving) naar die taal."
+          title={t("admin.trans.scen_title")}
+          description={t("admin.trans.scen_desc")}
+          actionLabel={t("admin.trans.scen_action")}
           total={scen.total}
           langs={scen.langs as LangCoverage[]}
           sweeper="scenario-translation"
@@ -4278,9 +4280,9 @@ function TranslationHealthTab() {
       {/* Compass */}
       {compass && (
         <CoverageCard
-          title="Landenprotocollen (DB-vertaling)"
-          description="De 5 etiquette-pijlers per land (compass_regions.locale_data) worden naar de gekozen taal vertaald. Zichtbaar op de Cultural Compass-pagina's voor alle 206 gepubliceerde landen."
-          actionLabel="vertaalt alle landenprotocollen naar die taal (alle pijlers van alle gepubliceerde landen die nog niet vertaald zijn)."
+          title={t("admin.trans.compass_title")}
+          description={t("admin.trans.compass_desc")}
+          actionLabel={t("admin.trans.compass_action")}
           total={compass.total}
           langs={compass.langs as LangCoverage[]}
           sweeper="compass-content-translation"
@@ -4307,9 +4309,9 @@ function TranslationHealthTab() {
       {/* Atelier-distillaten — vertaling per taal */}
       {counselSeedTrans && (
         <CoverageCard
-          title="Atelier-distillaten (Vertaling)"
-          description="De Engelstalige kennisdistillaten per regio × domein worden per taal vertaald. Enkel actieve seeds worden vertaald. Elke taal moet afzonderlijk worden gestart — er is geen 'Alle talen'-knop om de kosten beheersbaar te houden."
-          actionLabel="start de vertaling van alle actieve Atelier-distillaten naar die taal (max. 50 seeds per run)."
+          title={t("admin.trans.seed_trans_title")}
+          description={t("admin.trans.seed_trans_desc")}
+          actionLabel={t("admin.trans.seed_trans_action")}
           total={counselSeedTrans.total}
           langs={counselSeedTrans.langs as LangCoverage[]}
           sweeper="counsel-seed-translation"
@@ -4898,6 +4900,7 @@ type VoteTally = { region_code: string; region_name: string; flag_emoji: string 
 type PeriodSummary = { period_ym: string; total_votes: number; unique_voters: number };
 
 function CountryVotesTab({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const { t } = useLanguage();
   const [period, setPeriod] = useState<string>("");
   const [currentPeriod, setCurrentPeriod] = useState<string>("");
   const [tally, setTally] = useState<VoteTally[]>([]);
@@ -4923,7 +4926,7 @@ function CountryVotesTab({ authHeaders }: { authHeaders: Record<string, string> 
       setPeriods(data.periods || []);
       setTotalVotes(data.total_votes || 0);
     } catch {
-      setErr("Kon overzicht niet laden.");
+      setErr(t("admin.settings.load_error"));
     } finally {
       setLoading(false);
     }
@@ -5207,6 +5210,7 @@ function formatPrice(cents: number | null, currency: string): string {
 }
 
 function IntegrationsPanel() {
+  const { t } = useLanguage();
   const [googleStatus, setGoogleStatus] = useState<"checking" | "configured" | "not_configured">("checking");
   const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
   const [stripeLoading, setStripeLoading] = useState(true);
@@ -5259,7 +5263,7 @@ function IntegrationsPanel() {
       setSeedingStudent("done");
       await refreshStripe();
     } catch (err) {
-      setSeedError(err instanceof Error ? err.message : "Onbekende fout.");
+      setSeedError(err instanceof Error ? err.message : t("admin.settings.unknown_error"));
       setSeedingStudent("error");
     }
   };
@@ -5289,7 +5293,7 @@ function IntegrationsPanel() {
                 ? "border border-border bg-muted/30 text-muted-foreground"
                 : "border border-amber-300 bg-amber-50 text-amber-700"
             }`}>
-              {googleStatus === "configured" ? "Geconfigureerd" : googleStatus === "checking" ? "Controleren…" : "Niet geconfigureerd"}
+              {googleStatus === "configured" ? t("admin.settings.status_configured") : googleStatus === "checking" ? t("admin.settings.status_checking") : t("admin.settings.status_not_configured")}
             </span>
           </CardTitle>
         </CardHeader>
@@ -5298,9 +5302,9 @@ function IntegrationsPanel() {
             <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
               <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-800">Google OAuth is actief</p>
+                <p className="text-sm font-medium text-green-800">{t("admin.settings.google_active")}</p>
                 <p className="text-xs text-green-700/80 mt-1 font-light">
-                  GOOGLE_CLIENT_ID en GOOGLE_CLIENT_SECRET zijn ingesteld. Gebruikers kunnen inloggen met hun Google-account.
+                  {t("admin.settings.google_active_desc")}
                 </p>
               </div>
             </div>
@@ -5308,35 +5312,35 @@ function IntegrationsPanel() {
             <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-800">Configuratie vereist</p>
+                <p className="text-sm font-medium text-amber-800">{t("admin.settings.config_required")}</p>
                 <p className="text-xs text-amber-700/80 mt-1 font-light">
-                  Stel GOOGLE_CLIENT_ID en GOOGLE_CLIENT_SECRET in als omgevingsvariabelen om Google-login te activeren.
+                  {t("admin.settings.google_config_desc")}
                 </p>
               </div>
             </div>
           )}
 
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">{t("admin.settings.setup_instructions")}</h3>
             <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
                 <span>
-                  Ga naar{" "}
+                  {t("admin.settings.google_step1_pre")}{" "}
                   <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
                     Google Cloud Console → Credentials
                   </a>{" "}
-                  en maak een nieuw OAuth 2.0 Client ID aan.
+                  {t("admin.settings.google_step1_post")}
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
-                <span>Kies als applicatietype <strong className="text-foreground">Web application</strong>.</span>
+                <span>{t("admin.settings.google_step2")} <strong className="text-foreground">Web application</strong>.</span>
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
                 <div className="space-y-2 flex-1">
-                  <span>Voeg deze <strong className="text-foreground">Authorized Redirect URIs</strong> toe:</span>
+                  <span>{t("admin.settings.google_step3")} <strong className="text-foreground">Authorized Redirect URIs</strong>:</span>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-2">
                       <code className="text-xs font-mono text-foreground/80 break-all flex-1">{redirectUri}</code>
@@ -5355,28 +5359,28 @@ function IntegrationsPanel() {
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
                 <div className="space-y-1 flex-1">
-                  <span>Kopieer de Client ID en Client Secret en stel deze in als omgevingsvariabelen:</span>
+                  <span>{t("admin.settings.google_step4")}</span>
                   <div className="mt-2 space-y-1.5">
                     <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
                       <code className="text-xs font-mono text-foreground/80 flex-1">GOOGLE_CLIENT_ID</code>
-                      <span className="text-[10px] text-muted-foreground/60">= jouw Client ID</span>
+                      <span className="text-[10px] text-muted-foreground/60">= your Client ID</span>
                     </div>
                     <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
                       <code className="text-xs font-mono text-foreground/80 flex-1">GOOGLE_CLIENT_SECRET</code>
-                      <span className="text-[10px] text-muted-foreground/60">= jouw Client Secret</span>
+                      <span className="text-[10px] text-muted-foreground/60">= your Client Secret</span>
                     </div>
                   </div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">5</span>
-                <span>Herstart de API-server nadat de omgevingsvariabelen zijn ingesteld.</span>
+                <span>{t("admin.settings.google_step5")}</span>
               </li>
             </ol>
           </div>
 
           <div className="border-t border-border/40 pt-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">{t("admin.settings.technical_details")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
               <div>
                 <span className="font-medium text-foreground/70 block mb-0.5">Issuer</span>
@@ -5388,7 +5392,7 @@ function IntegrationsPanel() {
               </div>
               <div>
                 <span className="font-medium text-foreground/70 block mb-0.5">PKCE</span>
-                <code className="font-mono text-[11px]">S256 (verplicht)</code>
+                <code className="font-mono text-[11px]">S256 (required)</code>
               </div>
               <div>
                 <span className="font-medium text-foreground/70 block mb-0.5">Callback endpoint</span>
@@ -5418,12 +5422,12 @@ function IntegrationsPanel() {
                 : "border border-amber-300 bg-amber-50 text-amber-700"
             }`}>
               {stripeLoading
-                ? "Controleren…"
+                ? t("admin.settings.status_checking")
                 : studentReady
-                ? "Student actief"
+                ? t("admin.settings.stripe_student_active")
                 : stripeStatus?.configured
-                ? "Sleutel ok – product ontbreekt"
-                : "Niet geconfigureerd"}
+                ? t("admin.settings.stripe_key_ok")
+                : t("admin.settings.status_not_configured")}
             </span>
           </CardTitle>
         </CardHeader>
@@ -5432,10 +5436,9 @@ function IntegrationsPanel() {
             <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-amber-800">Stripe-account nog niet actief</p>
+                <p className="text-sm font-medium text-amber-800">{t("admin.settings.stripe_inactive")}</p>
                 <p className="text-xs text-amber-700/80 mt-1 font-light">
-                  Zodra het Stripe-account beschikbaar is, stel <code className="font-mono">STRIPE_SECRET_KEY</code> in als omgevingsvariabele.
-                  De Membership-pagina toont tot dan statische tier-kaarten zonder werkende checkout.
+                  {t("admin.settings.stripe_inactive_desc", { key: "STRIPE_SECRET_KEY" })}
                 </p>
               </div>
             </div>
@@ -5444,9 +5447,9 @@ function IntegrationsPanel() {
             <div className="flex items-start gap-3 p-4 border border-red-200 bg-red-50/60 rounded-sm">
               <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-800">Stripe is onbereikbaar</p>
+                <p className="text-sm font-medium text-red-800">{t("admin.settings.stripe_unreachable")}</p>
                 <p className="text-xs text-red-700/80 mt-1 font-light">
-                  {stripeStatus.error ?? "Controleer de sleutel en netwerktoegang."}
+                  {stripeStatus.error ?? t("admin.settings.stripe_unreachable_desc")}
                 </p>
               </div>
             </div>
@@ -5456,22 +5459,22 @@ function IntegrationsPanel() {
               <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
                 <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">Stripe-sleutel actief</p>
+                  <p className="text-sm font-medium text-green-800">{t("admin.settings.stripe_key_active")}</p>
                   <p className="text-xs text-green-700/80 mt-1 font-light">
                     {studentReady
-                      ? "Het Student-product is klaar voor checkout."
-                      : "Maak hieronder het Student-product aan om de €4.99/mnd en €39/jaar abonnementen te activeren."}
+                      ? t("admin.settings.stripe_student_ready")
+                      : t("admin.settings.stripe_create_product")}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">
-                  Tier-producten in Stripe
+                  {t("admin.settings.stripe_tier_products")}
                 </h3>
                 {stripeStatus.products.length === 0 && (
                   <p className="text-xs text-muted-foreground font-light">
-                    Nog geen tier-producten met <code className="font-mono">metadata.tier</code> in Stripe.
+                    {t("admin.settings.stripe_no_products")}
                   </p>
                 )}
                 {stripeStatus.products.map((p) => (
@@ -5487,7 +5490,7 @@ function IntegrationsPanel() {
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-muted-foreground/70 block">Maandelijks</span>
+                        <span className="text-muted-foreground/70 block">{t("admin.settings.monthly")}</span>
                         <span className="font-mono text-foreground/80">
                           {formatPrice(p.monthlyAmount, p.currency)}
                         </span>
@@ -5498,7 +5501,7 @@ function IntegrationsPanel() {
                         )}
                       </div>
                       <div>
-                        <span className="text-muted-foreground/70 block">Jaarlijks</span>
+                        <span className="text-muted-foreground/70 block">{t("admin.settings.yearly")}</span>
                         <span className="font-mono text-foreground/80">
                           {formatPrice(p.yearlyAmount, p.currency)}
                         </span>
@@ -5521,16 +5524,16 @@ function IntegrationsPanel() {
                   onClick={seedStudent}
                 >
                   {seedingStudent === "loading" ? (
-                    <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Bezig…</>
+                    <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> {t("admin.settings.working")}</>
                   ) : studentReady ? (
-                    <><RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Student-prijzen verifiëren</>
+                    <><RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t("admin.settings.stripe_verify_prices")}</>
                   ) : (
-                    <><Plus className="w-3.5 h-3.5 mr-1.5" /> Maak Student-product aan</>
+                    <><Plus className="w-3.5 h-3.5 mr-1.5" /> {t("admin.settings.stripe_create_student")}</>
                   )}
                 </Button>
                 {seedingStudent === "done" && (
                   <span className="text-xs text-green-700 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Bijgewerkt
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {t("admin.settings.updated")}
                   </span>
                 )}
                 {seedingStudent === "error" && seedError && (
@@ -5541,18 +5544,18 @@ function IntegrationsPanel() {
           )}
 
           <div className="space-y-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">{t("admin.settings.setup_instructions")}</h3>
             <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
                 <span>
-                  Open je <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">Stripe Dashboard → Developers → API keys</a> en kopieer de Secret key (sk_test_… of sk_live_…).
+                  {t("admin.settings.stripe_step1_pre")} <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">Stripe Dashboard → Developers → API keys</a> {t("admin.settings.stripe_step1_post")}
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
                 <div className="space-y-1 flex-1">
-                  <span>Stel deze in als Replit-omgevingsvariabele:</span>
+                  <span>{t("admin.settings.stripe_step2")}</span>
                   <div className="mt-2 flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
                     <code className="text-xs font-mono text-foreground/80 flex-1">STRIPE_SECRET_KEY</code>
                     <span className="text-[10px] text-muted-foreground/60">= sk_…</span>
@@ -5561,11 +5564,11 @@ function IntegrationsPanel() {
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
-                <span>Herstart de API-server en klik hierboven op <strong className="text-foreground">Maak Student-product aan</strong>. Deze actie is idempotent en maakt de €4.99/mnd en €39/jaar prijzen aan.</span>
+                <span>{t("admin.settings.stripe_step3")}</span>
               </li>
               <li className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
-                <span>Optioneel — voor volledige reproduceerbaarheid kun je het seed-script draaien:
+                <span>{t("admin.settings.stripe_step4")}
                   <code className="block mt-1 font-mono text-[11px] bg-muted/40 border border-border/50 rounded-sm px-2 py-1">pnpm --filter @workspace/api-server tsx src/scripts/seed-stripe-student.ts</code>
                 </span>
               </li>
@@ -5573,10 +5576,10 @@ function IntegrationsPanel() {
           </div>
 
           <div className="border-t border-border/40 pt-4">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">{t("admin.settings.technical_details")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
               <div>
-                <span className="font-medium text-foreground/70 block mb-0.5">Product-metadata</span>
+                <span className="font-medium text-foreground/70 block mb-0.5">Product metadata</span>
                 <code className="font-mono text-[11px]">tier = student | traveller | ambassador</code>
               </div>
               <div>
@@ -5584,11 +5587,11 @@ function IntegrationsPanel() {
                 <code className="font-mono text-[11px]">/api/stripe/webhook</code>
               </div>
               <div>
-                <span className="font-medium text-foreground/70 block mb-0.5">Student – maandelijks</span>
+                <span className="font-medium text-foreground/70 block mb-0.5">{t("admin.settings.stripe_monthly_label")}</span>
                 <code className="font-mono text-[11px]">€4.99 EUR · interval=month</code>
               </div>
               <div>
-                <span className="font-medium text-foreground/70 block mb-0.5">Student – jaarlijks</span>
+                <span className="font-medium text-foreground/70 block mb-0.5">{t("admin.settings.stripe_yearly_label")}</span>
                 <code className="font-mono text-[11px]">€39.00 EUR · interval=year</code>
               </div>
             </div>
@@ -5603,6 +5606,7 @@ function IntegrationsPanel() {
 }
 
 function GtmIntegrationCard() {
+  const { t } = useLanguage();
   const gtmId = (import.meta.env.VITE_GTM_ID as string | undefined)?.trim();
   const isPlaceholder = !gtmId || gtmId === "%VITE_GTM_ID%" || gtmId.toLowerCase() === "undefined";
   const looksValid = !!gtmId && /^GTM-[A-Z0-9]+$/i.test(gtmId);
@@ -5625,7 +5629,7 @@ function GtmIntegrationCard() {
                 ? "border border-red-300 bg-red-50 text-red-700"
                 : "border border-amber-300 bg-amber-50 text-amber-700"
           }`}>
-            {status === "configured" ? "Geconfigureerd" : status === "invalid" ? "Ongeldig ID" : "Niet geconfigureerd"}
+            {status === "configured" ? t("admin.settings.status_configured") : status === "invalid" ? t("admin.settings.gtm_invalid_id") : t("admin.settings.status_not_configured")}
           </span>
         </CardTitle>
       </CardHeader>
@@ -5634,9 +5638,9 @@ function GtmIntegrationCard() {
           <div className="flex items-start gap-3 p-4 border border-green-200 bg-green-50/60 rounded-sm">
             <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-green-800">Tag Manager is actief</p>
+              <p className="text-sm font-medium text-green-800">{t("admin.settings.gtm_active")}</p>
               <p className="text-xs text-green-700/80 mt-1 font-light">
-                Container ID <code className="font-mono">{gtmId}</code> is ingesteld. Pageviews worden naar GTM gestuurd.
+                {t("admin.settings.gtm_active_desc", { id: gtmId ?? "" })}
               </p>
             </div>
           </div>
@@ -5644,9 +5648,9 @@ function GtmIntegrationCard() {
           <div className="flex items-start gap-3 p-4 border border-red-200 bg-red-50/60 rounded-sm">
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-800">Container ID lijkt ongeldig</p>
+              <p className="text-sm font-medium text-red-800">{t("admin.settings.gtm_invalid")}</p>
               <p className="text-xs text-red-700/80 mt-1 font-light">
-                Verwacht formaat <code className="font-mono">GTM-XXXXXXX</code>, gevonden <code className="font-mono">{gtmId}</code>.
+                {t("admin.settings.gtm_invalid_desc", { id: gtmId ?? "" })}
               </p>
             </div>
           </div>
@@ -5654,88 +5658,84 @@ function GtmIntegrationCard() {
           <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50/60 rounded-sm">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-800">Configuratie vereist</p>
+              <p className="text-sm font-medium text-amber-800">{t("admin.settings.config_required")}</p>
               <p className="text-xs text-amber-700/80 mt-1 font-light">
-                Stel <code className="font-mono">VITE_GTM_ID</code> in als Replit Secret om analytics te activeren.
+                {t("admin.settings.gtm_config_desc")}
               </p>
             </div>
           </div>
         )}
 
         <div className="space-y-4">
-          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">Setup instructies</h3>
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70">{t("admin.settings.setup_instructions")}</h3>
           <ol className="space-y-3 text-sm text-muted-foreground font-light list-none">
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">1</span>
               <span>
-                Ga naar{" "}
+                {t("admin.settings.gtm_step1_pre")}{" "}
                 <a href="https://tagmanager.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">
                   tagmanager.google.com
                 </a>{" "}
-                en log in met je Google-account.
+                {t("admin.settings.gtm_step1_post")}
               </span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">2</span>
-              <span>
-                Klik op <strong className="text-foreground">Account aanmaken</strong>. Vul de accountnaam in (bv. <em>SOWISO</em>) en kies een land.
-              </span>
+              <span>{t("admin.settings.gtm_step2")}</span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">3</span>
               <div className="space-y-1 flex-1">
-                <span>Maak een container aan met:</span>
+                <span>{t("admin.settings.gtm_step3_pre")}</span>
                 <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground/90 list-disc list-inside">
-                  <li>Containernaam: <code className="font-mono">sowiso-01.replit.app</code> (of je eigen domein)</li>
-                  <li>Doelplatform: <strong className="text-foreground">Web</strong></li>
+                  <li>{t("admin.settings.gtm_step3_name")}: <code className="font-mono">sowiso-01.replit.app</code></li>
+                  <li>{t("admin.settings.gtm_step3_platform")}: <strong className="text-foreground">Web</strong></li>
                 </ul>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">4</span>
               <span>
-                Accepteer de servicevoorwaarden. Je krijgt nu een <strong className="text-foreground">Container ID</strong> te zien in het formaat <code className="font-mono">GTM-XXXXXXX</code>. Kopieer deze.
+                {t("admin.settings.gtm_step4")} <strong className="text-foreground">Container ID</strong> <code className="font-mono">GTM-XXXXXXX</code>.
               </span>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">5</span>
               <div className="space-y-1 flex-1">
-                <span>Voeg de container ID toe als Replit Secret:</span>
+                <span>{t("admin.settings.gtm_step5")}</span>
                 <div className="mt-2 flex items-center gap-2 bg-muted/40 border border-border/50 rounded-sm px-3 py-1.5">
                   <code className="text-xs font-mono text-foreground/80 flex-1">VITE_GTM_ID</code>
                   <span className="text-[10px] text-muted-foreground/60">= GTM-XXXXXXX</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground/70 mt-1">
-                  Open in Replit het tabblad <strong className="text-foreground">Secrets</strong> en voeg een nieuwe sleutel toe met deze naam en jouw container ID als waarde.
+                  {t("admin.settings.gtm_step5_desc")}
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-mono flex items-center justify-center">6</span>
-              <span>
-                Herstart de <code className="font-mono">web</code> workflow zodat Vite de nieuwe variabele oppikt. Controleer daarna in GTM via <strong className="text-foreground">Preview</strong> of pageviews binnenkomen.
-              </span>
+              <span>{t("admin.settings.gtm_step6")}</span>
             </li>
           </ol>
         </div>
 
         <div className="border-t border-border/40 pt-4">
-          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">Technische details</h3>
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 mb-3">{t("admin.settings.technical_details")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground font-light">
             <div>
-              <span className="font-medium text-foreground/70 block mb-0.5">Snippet locatie</span>
+              <span className="font-medium text-foreground/70 block mb-0.5">Snippet location</span>
               <code className="font-mono text-[11px]">artifacts/sowiso/index.html</code>
             </div>
             <div>
-              <span className="font-medium text-foreground/70 block mb-0.5">Env variabele</span>
+              <span className="font-medium text-foreground/70 block mb-0.5">Env variable</span>
               <code className="font-mono text-[11px]">VITE_GTM_ID</code>
             </div>
             <div>
-              <span className="font-medium text-foreground/70 block mb-0.5">Huidige waarde</span>
-              <code className="font-mono text-[11px]">{isPlaceholder ? "— niet ingesteld —" : gtmId}</code>
+              <span className="font-medium text-foreground/70 block mb-0.5">{t("admin.settings.gtm_current_value")}</span>
+              <code className="font-mono text-[11px]">{isPlaceholder ? t("admin.settings.gtm_not_set") : gtmId}</code>
             </div>
             <div>
-              <span className="font-medium text-foreground/70 block mb-0.5">Verwacht formaat</span>
+              <span className="font-medium text-foreground/70 block mb-0.5">{t("admin.settings.gtm_expected_format")}</span>
               <code className="font-mono text-[11px]">GTM-XXXXXXX</code>
             </div>
           </div>

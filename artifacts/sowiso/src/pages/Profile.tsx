@@ -2363,7 +2363,7 @@ export default function Profile() {
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" aria-hidden="true" />
                     <span>{biasLabel(sig.signal)}</span>
                     <span className="text-muted-foreground/50 font-mono ml-auto">
-                      {new Date(sig.recorded_at).toLocaleDateString("nl-BE")}
+                      {new Date(sig.recorded_at).toLocaleDateString(locale)}
                     </span>
                   </li>
                 ))}

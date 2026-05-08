@@ -88,7 +88,7 @@ const CULTURAL_INTEREST_FALLBACK = [
 // ─── Step 8: Sports / gastronomy / dresscode ──────────────────────────────────
 const SPORTS_FALLBACK = [
   { id: "polo",          label_key: "onboarding.sport_polo",         registers: ["elite"] },
-  { id: "horse riding",  label_key: "onboarding.sport_horse_riding", registers: ["elite"] },
+  { id: "horse_riding",  label_key: "onboarding.sport_horse_riding", registers: ["elite"] },
   { id: "sailing",       label_key: "onboarding.sport_sailing",      registers: ["elite"] },
   { id: "hunting",       label_key: "onboarding.sport_hunting",      registers: ["elite"] },
   { id: "fencing",       label_key: "onboarding.sport_fencing",      registers: ["elite", "middle_class"] },
@@ -368,21 +368,6 @@ export default function Onboarding() {
       });
     } catch {
       /* non-fatal — the user can proceed */
-    }
-  }
-
-  // ── Save steps 1-3 to the existing profile endpoint ──────────────────────
-  async function saveProfileFields(body: Record<string, unknown>): Promise<void> {
-    if (!isAuthenticated) return;
-    try {
-      await fetch(`${API_BASE}/api/users/profile`, {
-        method:      "PUT",
-        credentials: "include",
-        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
-        body:        JSON.stringify(body),
-      });
-    } catch {
-      /* non-fatal */
     }
   }
 

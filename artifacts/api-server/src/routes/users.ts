@@ -604,7 +604,7 @@ const OnboardingBodySchema = z.object({
   secondary_archetype:  z.string().max(50).optional().nullable(),
   social_circles:       z.array(z.string().max(100)).min(1).max(4).optional(),
   cultural_interests:   z.array(z.string().max(100)).min(1).max(4).optional(),
-  selected_interests:   z.array(z.string().max(200)).optional(),
+  selected_interests:   z.array(z.string().max(200)).min(1).max(20).optional(),
   interests_sports:     z.array(z.string()).optional(),
   interests_cuisine:    z.array(z.string()).optional(),
   interests_dress_code: z.array(z.string()).optional(),
@@ -762,6 +762,15 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       if (!resolvedCountry) {
         return res.status(400).json({ error: "Country of origin is required to complete onboarding." });
       }
+      const resolvedWorldChoice = data.world_choice !== undefined ? data.world_choice : (existing.register_bias_signals as unknown[] | null)?.length
+        ? existing.world_choice : null;
+      const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
+      if (!resolvedWorldChoice) {
+        return res.status(400).json({ error: "World choice (step 4) is required to complete onboarding." });
+      }
+      if (!resolvedArchetype) {
+        return res.status(400).json({ error: "Archetype (step 5) is required to complete onboarding." });
+      }
       updates.onboarding_completed = true;
     }
 
@@ -772,12 +781,16 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
     // ── Step 9: Learning intent → upsert learning_track_progress ─────────────
     if (data.learning_intent && Object.keys(data.learning_intent).length > 0) {
       const regionCode = existing.active_region;
+      const resolvedRegister =
+        (updates.register_bias as string | undefined)
+        ?? (existing.register_bias as string | null)
+        ?? "middle_class";
       for (const [pillar, intent] of Object.entries(data.learning_intent)) {
         await db.execute(sql`
           INSERT INTO learning_track_progress
             (user_id, register, region_code, research_pillar, phase, learning_intent)
           VALUES
-            (${userId}, 'middle_class', ${regionCode}, ${pillar}, 1, ${intent})
+            (${userId}, ${resolvedRegister}, ${regionCode}, ${pillar}, 1, ${intent})
           ON CONFLICT (user_id, register, region_code, research_pillar, phase)
             WHERE research_pillar IS NOT NULL
           DO UPDATE SET learning_intent = EXCLUDED.learning_intent

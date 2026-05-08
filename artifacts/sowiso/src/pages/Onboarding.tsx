@@ -356,18 +356,19 @@ export default function Onboarding() {
     }
   }, [step, catalogSports, catalogCuisine, catalogDress]);
 
-  // ── Best-effort save to the new onboarding endpoint ──────────────────────
+  // ── Save to the canonical onboarding endpoint ────────────────────────────
+  // Throws with a user-facing message string on HTTP or network error.
   async function saveOnboarding(body: Record<string, unknown>): Promise<void> {
     if (!isAuthenticated) return;
-    try {
-      await fetch(`${API_BASE}/api/users/me/onboarding`, {
-        method:      "PUT",
-        credentials: "include",
-        headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
-        body:        JSON.stringify(body),
-      });
-    } catch {
-      /* non-fatal — the user can proceed */
+    const res = await fetch(`${API_BASE}/api/users/me/onboarding`, {
+      method:      "PUT",
+      credentials: "include",
+      headers:     { "Content-Type": "application/json", ...getAuthHeaders() },
+      body:        JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string };
+      throw new Error(json.error ?? "An error occurred while saving your progress.");
     }
   }
 
@@ -399,16 +400,21 @@ export default function Onboarding() {
   }
 
   // ── Advance from step 9 → 10 (save learning intent + mark completed) ──────
+  const [completionError, setCompletionError] = useState<string | null>(null);
+
   async function handleAdvanceFromStep9() {
     setSaving(true);
+    setCompletionError(null);
     try {
       await saveOnboarding({
         learning_intent:      learningIntent,
         onboarding_completed: true,
       });
+      setStep(10);
+    } catch (err) {
+      setCompletionError(err instanceof Error ? err.message : "Unable to complete onboarding. Please go back and check your answers.");
     } finally {
       setSaving(false);
-      setStep(10);
     }
   }
 
@@ -1180,6 +1186,12 @@ export default function Onboarding() {
               );
             })}
           </div>
+
+          {completionError && (
+            <p className="text-sm text-destructive text-center bg-destructive/10 rounded-lg px-4 py-2">
+              {completionError}
+            </p>
+          )}
 
           <div className="flex justify-between gap-3">
             <NavBack to={8} />

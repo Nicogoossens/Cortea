@@ -762,12 +762,23 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       if (!resolvedCountry) {
         return res.status(400).json({ error: "Country of origin is required to complete onboarding." });
       }
-      const resolvedWorldChoice = data.world_choice !== undefined ? data.world_choice : (existing.register_bias_signals as unknown[] | null)?.length
-        ? existing.world_choice : null;
-      const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
-      if (!resolvedWorldChoice) {
+      const resolvedObjectives = data.objectives !== undefined ? data.objectives : existing.objectives;
+      const resolvedSituational = data.situational_interests !== undefined ? data.situational_interests : existing.situational_interests;
+      if (!resolvedObjectives || resolvedObjectives.length === 0) {
+        return res.status(400).json({ error: "Objectives (step 2) are required to complete onboarding." });
+      }
+      if (!resolvedSituational || resolvedSituational.length === 0) {
+        return res.status(400).json({ error: "Situational interests (step 3) are required to complete onboarding." });
+      }
+      const existingSignals: RegisterBiasSignal[] = Array.isArray(existing.register_bias_signals)
+        ? (existing.register_bias_signals as RegisterBiasSignal[]) : [];
+      const incomingSignals: RegisterBiasSignal[] = Array.isArray(updates.register_bias_signals)
+        ? (updates.register_bias_signals as RegisterBiasSignal[]) : existingSignals;
+      const hasWorldSignal = incomingSignals.some((s) => s.signal.startsWith("onboarding_world_choice_"));
+      if (!hasWorldSignal) {
         return res.status(400).json({ error: "World choice (step 4) is required to complete onboarding." });
       }
+      const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
       if (!resolvedArchetype) {
         return res.status(400).json({ error: "Archetype (step 5) is required to complete onboarding." });
       }

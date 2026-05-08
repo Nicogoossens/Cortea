@@ -189,6 +189,54 @@ export async function awardSessionMasterBadge(userId: string): Promise<AwardedBa
 }
 
 /**
+ * Awards the placement-acceleration badge after calibration.
+ * Tries the region-specific slug first; falls back to the generic slug.
+ * Respects elite_privacy_mode by setting visible=false.
+ * Returns the badge if newly awarded, null if already held or absent from catalogue.
+ */
+export async function awardPlacementBadge(
+  userId: string,
+  register: string,
+  regionCode: string,
+  privacyMode: boolean,
+): Promise<AwardedBadge | null> {
+  const specific = `placement-acceleration-${register}-${regionCode.toLowerCase()}`;
+  const generic  = "placement-acceleration";
+
+  for (const slug of [specific, generic]) {
+    const [badge] = await db.select().from(badgesTable).where(eq(badgesTable.slug, slug)).limit(1);
+    if (!badge) continue;
+
+    try {
+      await db.insert(userBadgesTable).values({
+        user_id:  userId,
+        badge_id: badge.id,
+        visible:  !privacyMode,
+      });
+      return {
+        id:               badge.id,
+        slug:             badge.slug,
+        title:            badge.title,
+        description:      badge.description,
+        badge_type:       badge.badge_type,
+        register:         badge.register,
+        research_pillar:  badge.research_pillar,
+        phase:            badge.phase,
+        region_code:      badge.region_code,
+        icon_url:         badge.icon_url,
+        awarded_at:       new Date(),
+      };
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code === PG_UNIQUE_VIOLATION) return null;
+      throw err;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Awards the Compass badge for a country when the user visits its Compass
  * region page. Register-agnostic. Idempotent — returns null if already held.
  */

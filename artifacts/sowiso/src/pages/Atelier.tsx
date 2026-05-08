@@ -66,6 +66,9 @@ export default function Atelier() {
   const showSummary = new URLSearchParams(search).get("session_summary") === "1";
   const showUpgradeBanner = new URLSearchParams(search).get("upgrade") === "success";
   const showPlacement = new URLSearchParams(search).get("placement") === "true";
+  const placementRegister = (new URLSearchParams(search).get("register") ?? "middle_class") as "middle_class" | "elite";
+  const placementPillar = new URLSearchParams(search).get("pillar") ?? "P1";
+  const placementPhase = parseInt(new URLSearchParams(search).get("phase") ?? "1", 10) || 1;
   const [placementActive, setPlacementActive] = useState(showPlacement);
   const [upgradeBannerVisible, setUpgradeBannerVisible] = useState(showUpgradeBanner);
   const [summarySession, setSummarySession] = useState<AtelierSession | null>(null);
@@ -218,10 +221,10 @@ export default function Atelier() {
       {placementActive && isAuthenticated && (
         <div className="max-w-xl mx-auto py-4">
           <PlacementTest
-            register="middle_class"
+            register={placementRegister}
             activeRegion={activeRegion}
-            phase={1}
-            pillar="P1"
+            phase={placementPhase}
+            pillar={placementPillar}
             lang={locale}
             onSkip={() => {
               setPlacementActive(false);

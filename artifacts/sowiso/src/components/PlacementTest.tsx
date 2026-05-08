@@ -192,7 +192,7 @@ export function PlacementTest({
     }
   }, [selectedOptionIdx, sessionId, questions, currentQuestionIdx, handleError, t]);
 
-  const completeSession = useCallback(async (placementLevel: number) => {
+  const completeSession = useCallback(async (_placementLevel: number) => {
     if (sessionId === null) return;
     setUiPhase("completing");
     try {
@@ -200,14 +200,7 @@ export function PlacementTest({
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          placement_level: placementLevel,
-          register,
-          region_code: activeRegion,
-          pillar: pillar ?? null,
-          phase,
-        }),
+        body: JSON.stringify({ session_id: sessionId }),
       });
 
       if (!resp.ok) {
@@ -394,8 +387,7 @@ export function PlacementTest({
   }
 
   if ((uiPhase === "question" || uiPhase === "answered") && currentQuestion) {
-    const answeredCount = totalAnswered - (isAnswered ? 0 : 0);
-    const displayAnswered = isAnswered ? answeredCount : answeredCount;
+    const displayAnswered = totalAnswered;
 
     return (
       <div className="space-y-6 animate-in fade-in duration-200">

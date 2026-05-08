@@ -7,7 +7,7 @@ import {
   learningTrackSessionsTable,
   usersTable,
 } from "@workspace/db";
-import { badgesTable, userBadgesTable } from "@workspace/db";
+import { awardPlacementBadge } from "../lib/badge-service";
 import { eq, and, sql, isNull, or, desc } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
@@ -48,11 +48,6 @@ const AnswerBodySchema = z.object({
 
 const CompleteBodySchema = z.object({
   session_id: z.number().int().positive(),
-  placement_level: z.number().int().min(1).max(5),
-  register: z.enum(["middle_class", "elite"]),
-  region_code: z.string().min(1).max(10),
-  pillar: z.string().optional().nullable(),
-  phase: z.number().int().min(1).max(5).default(1),
 });
 
 function tierAllows(register: Register, tier: string): boolean {
@@ -545,12 +540,18 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid request.", errors: parsed.error.issues });
     }
-    const { session_id, placement_level, register, pillar, phase } = parsed.data;
-    const regionCode = parsed.data.region_code.toUpperCase();
-    const pillarVal = pillar ?? null;
+    const { session_id } = parsed.data;
 
     const [session] = await db
-      .select({ id: learningTrackSessionsTable.id, is_placement: learningTrackSessionsTable.is_placement })
+      .select({
+        id:                    learningTrackSessionsTable.id,
+        is_placement:          learningTrackSessionsTable.is_placement,
+        register:              learningTrackSessionsTable.register,
+        region_code:           learningTrackSessionsTable.region_code,
+        research_pillar:       learningTrackSessionsTable.research_pillar,
+        phase:                 learningTrackSessionsTable.phase,
+        remediates_session_id: learningTrackSessionsTable.remediates_session_id,
+      })
       .from(learningTrackSessionsTable)
       .where(
         and(
@@ -564,8 +565,28 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
       return res.status(404).json({ error: "Placement session not found." });
     }
 
+    const rootId = session.remediates_session_id ?? session.id;
+    const runSessions = await fetchRunSessions(userId, rootId);
+    const incompleteSessions = runSessions.filter((s) => s.completed_at === null);
+    if (incompleteSessions.length > 0) {
+      return res.status(409).json({
+        error: "The placement run is not yet finished — all batches must be answered before completing.",
+        code: "RUN_INCOMPLETE",
+      });
+    }
+
+    const completedSessions = runSessions.filter((s) => s.completed_at !== null);
+    const totalAnswered = completedSessions.reduce((sum, s) => sum + s.total_questions, 0);
+    const bsState = computeBinarySearchState(completedSessions, totalAnswered);
+    const placementLevel = bsState.placementLevel;
+
+    const register = session.register as Register;
+    const regionCode = session.region_code.toUpperCase();
+    const pillarVal = session.research_pillar ?? null;
+    const phase = session.phase;
+
     const cfg = getRegisterConfig(register);
-    const clampedLevel = Math.max(1, Math.min(cfg.maxLevel, placement_level));
+    const clampedLevel = Math.max(1, Math.min(cfg.maxLevel, placementLevel));
 
     const progressWhere = and(
       eq(learningTrackProgressTable.user_id, userId),
@@ -604,9 +625,9 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
 
     const [userRow] = await db
       .select({
-        noble_score: usersTable.noble_score,
-        elite_privacy_mode: usersTable.elite_privacy_mode,
-        needs_recalibration: usersTable.needs_recalibration,
+        noble_score:          usersTable.noble_score,
+        elite_privacy_mode:   usersTable.elite_privacy_mode,
+        needs_recalibration:  usersTable.needs_recalibration,
       })
       .from(usersTable)
       .where(eq(usersTable.id, userId))
@@ -622,66 +643,9 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
         .where(eq(usersTable.id, userId));
     }
 
-    let badge: {
-      id: number;
-      slug: string;
-      title: string;
-      description: string;
-    } | null = null;
+    const awardedBadge = await awardPlacementBadge(userId, register, regionCode, privacyMode);
 
-    const accelerationSlug = `placement-acceleration-${register}-${regionCode.toLowerCase()}`;
-    const [badgeRow] = await db
-      .select()
-      .from(badgesTable)
-      .where(eq(badgesTable.slug, accelerationSlug))
-      .limit(1);
-
-    if (!badgeRow) {
-      const genericSlug = "placement-acceleration";
-      const [genericBadge] = await db
-        .select()
-        .from(badgesTable)
-        .where(eq(badgesTable.slug, genericSlug))
-        .limit(1);
-
-      if (genericBadge) {
-        try {
-          await db.insert(userBadgesTable).values({
-            user_id: userId,
-            badge_id: genericBadge.id,
-            visible: !privacyMode,
-          });
-          badge = {
-            id: genericBadge.id,
-            slug: genericBadge.slug,
-            title: genericBadge.title,
-            description: genericBadge.description,
-          };
-        } catch (e: unknown) {
-          const code = (e as { code?: string })?.code;
-          if (code !== PG_UNIQUE_VIOLATION) throw e;
-        }
-      }
-    } else {
-      try {
-        await db.insert(userBadgesTable).values({
-          user_id: userId,
-          badge_id: badgeRow.id,
-          visible: !privacyMode,
-        });
-        badge = {
-          id: badgeRow.id,
-          slug: badgeRow.slug,
-          title: badgeRow.title,
-          description: badgeRow.description,
-        };
-      } catch (e: unknown) {
-        const code = (e as { code?: string })?.code;
-        if (code !== PG_UNIQUE_VIOLATION) throw e;
-      }
-    }
-
-    if (!privacyMode && !(userRow?.needs_recalibration)) {
+    if (userRow?.needs_recalibration) {
       await db
         .update(usersTable)
         .set({ needs_recalibration: false })
@@ -691,7 +655,9 @@ router.post("/sessions/placement/complete", requireAuthUser, async (req, res) =>
     return res.json({
       placement_level: clampedLevel,
       noble_score_added: nobleScoreAdded,
-      badge,
+      badge: awardedBadge
+        ? { id: awardedBadge.id, slug: awardedBadge.slug, title: awardedBadge.title, description: awardedBadge.description }
+        : null,
       skipped_content_note: clampedLevel > 1
         ? "Content from earlier levels is available in the Library."
         : null,

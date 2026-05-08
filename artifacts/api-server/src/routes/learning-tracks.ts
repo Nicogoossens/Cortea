@@ -309,6 +309,27 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           else exhaustedIds.push(qid);
         }
 
+        // Anti-cheat: exclude questions already answered during placement for
+        // this track so calibration questions never resurface in normal sessions.
+        const placementAnswered = await tx
+          .select({ question_id: learningTrackAttemptsTable.question_id })
+          .from(learningTrackAttemptsTable)
+          .where(
+            and(
+              eq(learningTrackAttemptsTable.user_id, userId),
+              eq(learningTrackAttemptsTable.register, register),
+              eq(learningTrackAttemptsTable.region_code, regionCode),
+              eq(learningTrackAttemptsTable.phase, phase),
+              eq(learningTrackAttemptsTable.is_placement_question, true),
+              pillar
+                ? eq(learningTrackAttemptsTable.research_pillar, pillar)
+                : isNull(learningTrackAttemptsTable.research_pillar),
+            ),
+          );
+        for (const row of placementAnswered) {
+          if (!exhaustedIds.includes(row.question_id)) exhaustedIds.push(row.question_id);
+        }
+
         // Derive Compass scores from behavior_profile for dimension-weakness boost.
         const DEFAULT_PROFILE_FOR_COMPASS: PureBehaviorProfile = {
           listening_score: 50, assertiveness_style: "assertive",
@@ -839,8 +860,9 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
         }
 
         // ── §9.5 Soft-recalibration trigger ─────────────────────────────────
-        // If the user has < 50% score in their first 3 completed sessions,
-        // set needs_recalibration = true (cleared by the onboarding flow).
+        // If the user has < 50% score in their first 3 completed *normal*
+        // sessions, set needs_recalibration = true. Placement sessions are
+        // excluded so calibration batches don't contaminate this condition.
         if (!userProfile?.needs_recalibration) {
           const [earlySessionCount] = await db
             .select({ n: sql<number>`count(*)::int` })
@@ -848,6 +870,7 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
             .where(
               and(
                 eq(learningTrackSessionsTable.user_id, userId),
+                eq(learningTrackSessionsTable.is_placement, false),
                 sql`${learningTrackSessionsTable.completed_at} IS NOT NULL`,
               ),
             );

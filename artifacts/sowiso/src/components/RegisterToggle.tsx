@@ -16,13 +16,10 @@ const OPTIONS: { value: RegisterChoice; labelNL: string }[] = [
   { value: "both",         labelNL: "Beide" },
 ];
 
-function emitBiasSignal(choice: RegisterChoice) {
-  fetch(`${API_BASE}/api/users/register-signal`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ signal: choice }),
-  }).catch(() => {});
+// POST /api/users/register-signal is pending Task B/C backend merge.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function emitBiasSignal(_choice: RegisterChoice) {
+  // no-op until Task B/C lands
 }
 
 export function RegisterToggle({

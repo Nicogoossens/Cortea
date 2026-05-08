@@ -215,7 +215,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       } else {
         // Tier 403: spec §10.1 "geen upgrade-prompt bij wisselen" — silently
         // revert the register to middle_class instead of showing an upgrade card.
+        // Also exit "both" mode so effectiveRegister actually becomes middle_class.
         if (effectiveRegister !== "middle_class") {
+          setRegisterBothMode(false);
           handleRegisterChange("middle_class");
         }
       }
@@ -284,7 +286,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       setAccessDenial({ kind: "region", regionCode: activeRegion });
     } else {
       // Tier 403 from /next: silently revert to middle_class (spec §10.1 "geen upgrade-prompt")
+      // Also exit "both" mode so effectiveRegister actually becomes middle_class.
       if (effectiveRegister !== "middle_class") {
+        setRegisterBothMode(false);
         handleRegisterChange("middle_class");
       }
     }

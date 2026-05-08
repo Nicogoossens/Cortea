@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, learningTrackProgressTable, interestCatalogTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings, type RegisterBiasSignal } from "@workspace/db";
-import { eq, and, or, ne, desc, isNull, sql } from "drizzle-orm";
+import { usersTable, compassHistoryTable, nobleScoreLogTable, zuil_voortgangTable, userCountryInterestsTable, companionLinksTable, invitationsTable, roleplayCompletionsTable, roleplayReflectionsTable, learningTrackProgressTable, interestCatalogTable, DEFAULT_BEHAVIOR_PROFILE, type BehaviorProfile, type PrivacySettings, type RegisterBiasSignal } from "@workspace/db";
+import { eq, and, or, ne, desc, gte, isNull, sql } from "drizzle-orm";
 import { inferRegisterBias, type PureRegisterBiasSignal } from "../lib/learning-engine-pure";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
@@ -844,6 +844,105 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
   } catch (err) {
     req.log.error({ err }, "Failed to save onboarding step");
     return res.status(500).json({ error: "A difficulty arose while saving your onboarding progress." });
+  }
+});
+
+// ─── GET /users/compass-history ──────────────────────────────────────────────
+// Returns the last 30 days of Compass snapshots for the authenticated user
+// (Master Framework v1.1 §9.4 / §10.3 — 30-day evolution overlay).
+router.get("/users/compass-history", requireAuthUser, async (req, res) => {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Niet ingelogd." });
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const history = await db
+      .select()
+      .from(compassHistoryTable)
+      .where(and(
+        eq(compassHistoryTable.user_id, userId),
+        gte(compassHistoryTable.recorded_at, thirtyDaysAgo),
+      ))
+      .orderBy(compassHistoryTable.recorded_at);
+
+    return res.json(history);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch compass history");
+    return res.status(500).json({ error: "Compass history momentarily unavailable." });
+  }
+});
+
+// ─── POST /users/register-signal ─────────────────────────────────────────────
+// Records a register toggle signal for bias evolution (Master Framework §10.1).
+router.post("/users/register-signal", requireAuthUser, async (req, res) => {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Niet ingelogd." });
+
+    const { signal } = z.object({
+      signal: z.enum(["middle_class", "elite", "both"]),
+    }).parse(req.body);
+
+    const [user] = await db
+      .select({ register_bias_signals: usersTable.register_bias_signals, register_bias_locked: usersTable.register_bias_locked })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+
+    if (!user) return res.status(404).json({ error: "User not found." });
+    // Respect locked bias — record the signal but skip re-inference.
+    const SIGNAL_WEIGHTS: Record<string, number> = {
+      middle_class: -10,
+      elite:        +10,
+      both:           0,
+    };
+    const newSignal: RegisterBiasSignal = {
+      signal:      `toggle_${signal}` as RegisterBiasSignal["signal"],
+      weight:      SIGNAL_WEIGHTS[signal] ?? 0,
+      recorded_at: new Date().toISOString(),
+    };
+    const existing: RegisterBiasSignal[] = Array.isArray(user.register_bias_signals)
+      ? (user.register_bias_signals as RegisterBiasSignal[])
+      : [];
+    // Keep last 50 toggle signals; don't discard onboarding signals.
+    const toggleHistory = existing.filter((s) => s.signal.startsWith("toggle_")).slice(-49);
+    const nonToggle     = existing.filter((s) => !s.signal.startsWith("toggle_"));
+    const merged        = [...nonToggle, ...toggleHistory, newSignal];
+    const newBias       = user.register_bias_locked
+      ? undefined
+      : inferRegisterBias(merged as PureRegisterBiasSignal[]);
+
+    await db.update(usersTable)
+      .set({
+        register_bias_signals: merged,
+        ...(newBias !== undefined ? { register_bias: newBias } : {}),
+      })
+      .where(eq(usersTable.id, userId));
+
+    return res.json({ ok: true, register_bias: newBias ?? null });
+  } catch (err) {
+    req.log.error({ err }, "Failed to record register signal");
+    return res.status(500).json({ error: "Signal recording temporarily unavailable." });
+  }
+});
+
+// ─── GET /users/register-bias-signals ────────────────────────────────────────
+// Returns the full audit log of register signals for the authenticated user.
+router.get("/users/register-bias-signals", requireAuthUser, async (req, res) => {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) return res.status(401).json({ error: "Niet ingelogd." });
+
+    const [user] = await db
+      .select({ register_bias_signals: usersTable.register_bias_signals })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+
+    return res.json(user?.register_bias_signals ?? []);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch register bias signals");
+    return res.status(500).json({ error: "Register signals temporarily unavailable." });
   }
 });
 

@@ -486,11 +486,16 @@ export default function Profile() {
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   useEffect(() => {
-    // GET /api/users/compass-history and /api/users/register-bias-signals are
-    // pending Task B/C backend merge — no calls made until endpoints exist.
-    // compassHistory and biasSignals remain as [] (graceful empty state).
-    void userId; // referenced to satisfy linter (deps used via isOwnProfile/viewedUid)
-  }, [userId]);
+    if (!userId || !isOwnProfile) return;
+    fetch(`${API_BASE}/api/users/compass-history`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: CompassHistoryPoint[]) => setCompassHistory(data))
+      .catch(() => {});
+    fetch(`${API_BASE}/api/users/register-bias-signals`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Array<{ signal: string; recorded_at: string }>) => setBiasSignals(data))
+      .catch(() => {});
+  }, [userId, isOwnProfile]);
 
   // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
   // from the Atelier "Wijzig uw actieve regio" link or the read-only region

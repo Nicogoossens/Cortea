@@ -576,10 +576,15 @@ export default function Profile() {
 
   function biasLabel(bias?: string | null): string {
     if (!bias) return "Nog niet bepaald";
-    if (bias === "middle_class") return "Dagelijkse wereld";
-    if (bias === "elite") return "Formele wereld";
-    if (bias === "balanced") return "Gebalanceerd (beide werelden)";
-    return bias;
+    if (bias === "middle_class")         return "Dagelijkse wereld";
+    if (bias === "elite")                return "Formele wereld";
+    if (bias === "balanced")             return "Gebalanceerd (beide werelden)";
+    if (bias === "toggle_middle_class")  return "Keuze: Dagelijkse wereld";
+    if (bias === "toggle_elite")         return "Keuze: Formele wereld";
+    if (bias === "toggle_both")          return "Keuze: Beide werelden";
+    // Onboarding signals — strip prefix + underscores for readability
+    if (bias.startsWith("onboarding_"))  return `Instelling: ${bias.replace("onboarding_", "").replace(/_/g, " ")}`;
+    return bias.replace(/_/g, " ");
   }
 
   async function handleBalancedLock() {
@@ -2207,14 +2212,14 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Signal audit log (last 5, only shown when available) */}
-          {biasSignals.length > 0 && (
+          {/* Signal audit log (last 5 most recent, only shown on own profile) */}
+          {isOwnProfile && biasSignals.length > 0 && (
             <div>
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
                 Recente signalen
               </p>
               <ul className="space-y-1">
-                {biasSignals.slice(0, 5).map((sig, i) => (
+                {biasSignals.slice(-5).reverse().map((sig, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" aria-hidden="true" />
                     <span>{biasLabel(sig.signal)}</span>
@@ -2227,35 +2232,37 @@ export default function Profile() {
             </div>
           )}
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBalancedLock}
-              disabled={biasSaving}
-              className="font-mono text-xs"
-            >
-              Toon beide werelden gelijkmatig
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRecomputeBias}
-              disabled={biasSaving}
-              className="font-mono text-xs"
-            >
-              Aanbevelingen herijken
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/atelier?placement=true")}
-              className="font-mono text-xs"
-            >
-              Doe een nieuwe kalibratie
-            </Button>
-          </div>
+          {/* Action buttons — only shown on own profile to prevent mutation from public-view context */}
+          {isOwnProfile && (
+            <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBalancedLock}
+                disabled={biasSaving}
+                className="font-mono text-xs"
+              >
+                Toon beide werelden gelijkmatig
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRecomputeBias}
+                disabled={biasSaving}
+                className="font-mono text-xs"
+              >
+                Aanbevelingen herijken
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/atelier?placement=true")}
+                className="font-mono text-xs"
+              >
+                Doe een nieuwe kalibratie
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

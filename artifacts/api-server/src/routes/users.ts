@@ -604,7 +604,7 @@ const OnboardingBodySchema = z.object({
   secondary_archetype:  z.string().max(50).optional().nullable(),
   social_circles:       z.array(z.string().max(100)).min(1).max(4).optional(),
   cultural_interests:   z.array(z.string().max(100)).min(1).max(4).optional(),
-  selected_interests:   z.array(z.string().max(200)).min(1).max(20).optional(),
+  selected_interests:   z.array(z.string().max(200)).min(1).max(4).optional(),
   interests_sports:     z.array(z.string()).optional(),
   interests_cuisine:    z.array(z.string()).optional(),
   interests_dress_code: z.array(z.string()).optional(),
@@ -648,8 +648,26 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
     const data = parsed.data;
     const updates: Record<string, unknown> = {};
 
-    // ── Steps 1–3: Basic profile fields routed through canonical endpoint ────
-    if (data.country_of_origin !== undefined)    updates.country_of_origin    = data.country_of_origin;
+    // ── Step 1: country_of_origin — honour the same permanent-lock semantics ──
+    // as /api/users/profile so the onboarding route cannot bypass immutability.
+    if (data.country_of_origin !== undefined) {
+      const incoming = (data.country_of_origin ?? "").trim() || null;
+      if (existing.country_of_origin_locked_at) {
+        if (incoming && incoming !== existing.country_of_origin) {
+          return res.status(403).json({
+            code: "ORIGIN_LOCKED",
+            error: "Your country of origin is permanent. Please contact support if a correction is required.",
+          });
+        }
+        // No-op: field already locked — skip writing
+      } else if (incoming) {
+        updates.country_of_origin = incoming;
+        updates.country_of_origin_locked_at = new Date();
+      } else {
+        updates.country_of_origin = null;
+      }
+    }
+    // ── Steps 2–3 ─────────────────────────────────────────────────────────────
     if (data.objectives !== undefined)           updates.objectives           = data.objectives;
     if (data.situational_interests !== undefined) updates.situational_interests = data.situational_interests;
 
@@ -781,6 +799,19 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
       if (!resolvedArchetype) {
         return res.status(400).json({ error: "Archetype (step 5) is required to complete onboarding." });
+      }
+      // ── Steps 6–8: min 1 / max 4 at completion time ─────────────────────────
+      const resolvedCircles = (data.social_circles !== undefined ? data.social_circles : existing.social_circles) ?? [];
+      const resolvedCulture = (data.cultural_interests !== undefined ? data.cultural_interests : existing.cultural_interests) ?? [];
+      const resolvedSelected = (data.selected_interests !== undefined ? data.selected_interests : existing.selected_interests) ?? [];
+      if (resolvedCircles.length < 1 || resolvedCircles.length > 4) {
+        return res.status(400).json({ error: "Please select 1–4 social circles (step 6) before completing." });
+      }
+      if (resolvedCulture.length < 1 || resolvedCulture.length > 4) {
+        return res.status(400).json({ error: "Please select 1–4 cultural interests (step 7) before completing." });
+      }
+      if (resolvedSelected.length < 1 || resolvedSelected.length > 4) {
+        return res.status(400).json({ error: "Please select 1–4 lifestyle interests (step 8) before completing." });
       }
       updates.onboarding_completed = true;
     }

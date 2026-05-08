@@ -916,18 +916,14 @@ export default function Onboarding() {
 
             <div className="flex justify-between gap-3">
               <NavBack to={5} />
-              <div className="flex gap-2">
-                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(7)}>
-                  {t("onboarding.skip")}
-                </Button>
-                <NavNext
-                  to={7}
-                  onAdvance={() => {
-                    if (socialCircles.length > 0) void saveOnboarding({ social_circles: socialCircles });
-                    setStep(7);
-                  }}
-                />
-              </div>
+              <NavNext
+                to={7}
+                disabled={socialCircles.length === 0}
+                onAdvance={() => {
+                  void saveOnboarding({ social_circles: socialCircles }).catch(() => {});
+                  setStep(7);
+                }}
+              />
             </div>
           </div>
         );
@@ -1004,18 +1000,14 @@ export default function Onboarding() {
 
             <div className="flex justify-between gap-3">
               <NavBack to={6} />
-              <div className="flex gap-2">
-                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(8)}>
-                  {t("onboarding.skip")}
-                </Button>
-                <NavNext
-                  to={8}
-                  onAdvance={() => {
-                    if (culturalInterests.length > 0) void saveOnboarding({ cultural_interests: culturalInterests });
-                    setStep(8);
-                  }}
-                />
-              </div>
+              <NavNext
+                to={8}
+                disabled={culturalInterests.length === 0}
+                onAdvance={() => {
+                  void saveOnboarding({ cultural_interests: culturalInterests }).catch(() => {});
+                  setStep(8);
+                }}
+              />
             </div>
           </div>
         );
@@ -1027,6 +1019,10 @@ export default function Onboarding() {
         const allCuisine = catalogCuisine && catalogCuisine.length > 0 ? catalogCuisine : CUISINE_FALLBACK;
         const allDress   = catalogDress   && catalogDress.length   > 0 ? catalogDress   : DRESS_FALLBACK;
         const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
+        const combinedCount = sports.length + cuisine.length + dressCode.length;
+        const toggleSport  = (id: string) => { if (!sports.includes(id)  && combinedCount >= 4) return; toggleArr(sports,    id, setSports);   };
+        const toggleCuisine = (id: string) => { if (!cuisine.includes(id)  && combinedCount >= 4) return; toggleArr(cuisine,   id, setCuisine);  };
+        const toggleDress  = (id: string) => { if (!dressCode.includes(id) && combinedCount >= 4) return; toggleArr(dressCode, id, setDressCode); };
         const filterPrimary = <T extends { registers: string[] }>(opts: T[]) =>
           primaryRegister ? opts.filter((o) => o.registers.includes(primaryRegister)) : opts;
         const filterOther = <T extends { registers: string[] }>(opts: T[]) =>
@@ -1053,7 +1049,7 @@ export default function Onboarding() {
                 <div className="flex flex-wrap gap-2">
                   {primarySports.map((opt) => (
                     <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                      selected={sports.includes(opt.id)} onClick={() => toggleArr(sports, opt.id, setSports)} />
+                      selected={sports.includes(opt.id)} onClick={() => toggleSport(opt.id)} />
                   ))}
                 </div>
               </div>
@@ -1065,7 +1061,7 @@ export default function Onboarding() {
                 <div className="flex flex-wrap gap-2">
                   {primaryCuisine.map((opt) => (
                     <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                      selected={cuisine.includes(opt.id)} onClick={() => toggleArr(cuisine, opt.id, setCuisine)} />
+                      selected={cuisine.includes(opt.id)} onClick={() => toggleCuisine(opt.id)} />
                   ))}
                 </div>
               </div>
@@ -1077,10 +1073,16 @@ export default function Onboarding() {
                 <div className="flex flex-wrap gap-2">
                   {primaryDress.map((opt) => (
                     <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                      selected={dressCode.includes(opt.id)} onClick={() => toggleArr(dressCode, opt.id, setDressCode)} />
+                      selected={dressCode.includes(opt.id)} onClick={() => toggleDress(opt.id)} />
                   ))}
                 </div>
               </div>
+
+              {combinedCount > 0 && (
+                <p className="text-xs text-muted-foreground font-light text-center">
+                  {combinedCount} / 4 {t("onboarding.max_selected")}
+                </p>
+              )}
 
               {hasOther && (
                 <div className="space-y-3">
@@ -1097,7 +1099,7 @@ export default function Onboarding() {
                         <div className="flex flex-wrap gap-2">
                           {otherSports.map((opt) => (
                             <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                              selected={sports.includes(opt.id)} onClick={() => toggleArr(sports, opt.id, setSports)} />
+                              selected={sports.includes(opt.id)} onClick={() => toggleSport(opt.id)} />
                           ))}
                         </div>
                       )}
@@ -1105,7 +1107,7 @@ export default function Onboarding() {
                         <div className="flex flex-wrap gap-2">
                           {otherCuisine.map((opt) => (
                             <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                              selected={cuisine.includes(opt.id)} onClick={() => toggleArr(cuisine, opt.id, setCuisine)} />
+                              selected={cuisine.includes(opt.id)} onClick={() => toggleCuisine(opt.id)} />
                           ))}
                         </div>
                       )}
@@ -1113,7 +1115,7 @@ export default function Onboarding() {
                         <div className="flex flex-wrap gap-2">
                           {otherDress.map((opt) => (
                             <PillButton key={opt.id} id={opt.id} label={t(opt.label_key)}
-                              selected={dressCode.includes(opt.id)} onClick={() => toggleArr(dressCode, opt.id, setDressCode)} />
+                              selected={dressCode.includes(opt.id)} onClick={() => toggleDress(opt.id)} />
                           ))}
                         </div>
                       )}
@@ -1125,24 +1127,20 @@ export default function Onboarding() {
 
             <div className="flex justify-between gap-3">
               <NavBack to={7} />
-              <div className="flex gap-2">
-                <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(9)}>
-                  {t("onboarding.skip")}
-                </Button>
-                <NavNext
-                  to={9}
-                  onAdvance={() => {
-                    const combined = [...sports, ...cuisine, ...dressCode];
-                    void saveOnboarding({
-                      selected_interests:   combined,
-                      interests_sports:     sports,
-                      interests_cuisine:    cuisine,
-                      interests_dress_code: dressCode,
-                    });
-                    setStep(9);
-                  }}
-                />
-              </div>
+              <NavNext
+                to={9}
+                disabled={[...sports, ...cuisine, ...dressCode].length === 0}
+                onAdvance={() => {
+                  const combined = [...sports, ...cuisine, ...dressCode];
+                  void saveOnboarding({
+                    selected_interests:   combined,
+                    interests_sports:     sports,
+                    interests_cuisine:    cuisine,
+                    interests_dress_code: dressCode,
+                  }).catch(() => {});
+                  setStep(9);
+                }}
+              />
             </div>
           </div>
         );

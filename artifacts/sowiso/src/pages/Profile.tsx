@@ -35,7 +35,7 @@ import { ReferralCard } from "@/components/ReferralCard";
 import { CountryProgressOverview } from "@/components/CountryProgressOverview";
 import { RefineCompass, type CompassHistoryPoint } from "@/components/RefineCompass";
 import { useSavedVenues } from "@/lib/saved-venues";
-import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -366,6 +366,15 @@ export default function Profile() {
   const dateFnsLocale = DATE_FNS_LOCALE[locale] ?? enGB;
   const { activeRegion, setActiveRegion, getRegionName } = useActiveRegion();
   const { userId, isAuthenticated, logout } = useAuth();
+
+  // Public-view mode: ?uid=<otherUserId> in URL means viewing another user's
+  // profile. Used to pass isPublicView={true} to RefineCompass so the privacy
+  // placeholder renders correctly when elite_privacy_mode is enabled.
+  const viewedUid = useMemo(
+    () => (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("uid") : null),
+    [],
+  );
+  const isOwnProfile = !viewedUid || viewedUid === userId;
   const [, navigate] = useLocation();
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
@@ -433,11 +442,12 @@ export default function Profile() {
   const [spheresSave, setSpheresSave] = useState<SaveState>("idle");
 
   const fetchProfile = useCallback(() => {
-    if (!userId) { setProfileLoading(false); return; }
-    // Pass `user_id` as a query param so the server loads the authenticated
-    // user's record. Auth still flows via the HttpOnly `cortea_session`
-    // cookie (sent automatically with `credentials: "include"`).
-    const profileUrl = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(userId)}`;
+    const targetUserId = viewedUid || userId;
+    if (!targetUserId) { setProfileLoading(false); return; }
+    // Pass `user_id` as a query param so the server loads the appropriate
+    // user's record. When viewedUid is set we're in public-view mode.
+    // Auth still flows via the HttpOnly `cortea_session` cookie.
+    const profileUrl = `${API_BASE}/api/users/profile?user_id=${encodeURIComponent(targetUserId)}`;
     Promise.all([
       fetch(profileUrl, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
       fetch(`${API_BASE}/api/users/behavior-profile`, { credentials: "include" }).then((r) => r.ok ? r.json() : null),
@@ -451,9 +461,10 @@ export default function Profile() {
         setCountryInputCourse(data?.country_of_origin ?? "");
         if (bp && typeof bp.listening_score === "number") setBehaviorProfile(bp as BehaviorProfile);
         if (subStatus && typeof subStatus.tier === "string") setSubscriptionStatus(subStatus);
-        // Sync privacy mode from persisted backend value (field added in Task B/C)
+        // Sync privacy mode from persisted backend value (field added in Task B/C).
+        // Only apply to own profile — public views should never mutate local state.
         const persistedPrivacy = (data as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode;
-        if (typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
+        if (isOwnProfile && typeof persistedPrivacy === "boolean") setCompassPrivacyMode(persistedPrivacy);
       })
       .catch(() => setProfileData(null))
       .finally(() => setProfileLoading(false));
@@ -2146,8 +2157,12 @@ export default function Profile() {
           <RefineCompass
             behaviorProfile={behaviorProfile}
             compassHistory={compassHistory}
-            elitePrivacyMode={compassPrivacyMode}
-            isPublicView={false}
+            elitePrivacyMode={
+              isOwnProfile
+                ? compassPrivacyMode
+                : ((profileData as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode ?? false)
+            }
+            isPublicView={!isOwnProfile}
           />
         </CardContent>
       </Card>

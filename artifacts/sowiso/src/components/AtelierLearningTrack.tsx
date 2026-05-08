@@ -213,13 +213,17 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
       if (payload?.code === "REGION_NOT_IN_INTERESTS") {
         setAccessDenial({ kind: "region", regionCode: activeRegion });
       } else {
-        setAccessDenial({ kind: "tier", register });
+        // Tier 403: spec §10.1 "geen upgrade-prompt bij wisselen" — silently
+        // revert the register to middle_class instead of showing an upgrade card.
+        if (effectiveRegister !== "middle_class") {
+          handleRegisterChange("middle_class");
+        }
       }
       return;
     }
     setLimitInfo(null);
     setAccessDenial(null);
-  }, [sessionError, activeRegion, register]);
+  }, [sessionError, activeRegion, effectiveRegister]);
 
   const { data: progressData } = useGetLearningTrackProgress();
 
@@ -279,9 +283,12 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     if (payload?.code === "REGION_NOT_IN_INTERESTS") {
       setAccessDenial({ kind: "region", regionCode: activeRegion });
     } else {
-      setAccessDenial({ kind: "tier", register });
+      // Tier 403 from /next: silently revert to middle_class (spec §10.1 "geen upgrade-prompt")
+      if (effectiveRegister !== "middle_class") {
+        handleRegisterChange("middle_class");
+      }
     }
-  }, [nextSlotError, sessionError, activeRegion, register]);
+  }, [nextSlotError, sessionError, activeRegion, effectiveRegister]);
 
   useEffect(() => {
     if (!nextSlot || hasManuallyChanged.current) return;

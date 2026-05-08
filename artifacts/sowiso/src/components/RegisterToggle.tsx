@@ -1,4 +1,3 @@
-import { Lock } from "lucide-react";
 
 export type RegisterChoice = "middle_class" | "elite" | "both";
 
@@ -45,26 +44,11 @@ export function RegisterToggle({
       aria-label="Register"
     >
       {OPTIONS.map(({ value: opt, labelNL }) => {
-        const isEliteLocked = opt === "elite" && !eliteEnabled;
-        const isActive = value === opt;
+        // Non-ambassador users simply don't see Elite or Both options — no
+        // lock icon, no disabled state, no upgrade prompt (spec §10.1).
+        if (opt !== "middle_class" && !eliteEnabled) return null;
 
-        if (isEliteLocked) {
-          return (
-            <button
-              key={opt}
-              type="button"
-              disabled
-              role="tab"
-              aria-selected={false}
-              aria-disabled={true}
-              title="Beschikbaar voor Ambassador-leden"
-              className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] text-muted-foreground/35 cursor-not-allowed"
-            >
-              <Lock className="w-2.5 h-2.5" aria-hidden="true" />
-              {labelNL}
-            </button>
-          );
-        }
+        const isActive = value === opt;
 
         return (
           <button

@@ -372,6 +372,7 @@ export default function Profile() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [behaviorProfile, setBehaviorProfile] = useState<BehaviorProfile | null>(null);
   const [compassHistory, setCompassHistory] = useState<CompassHistoryPoint[]>([]);
+  const [compassPrivacyMode, setCompassPrivacyMode] = useState(false);
   const [biasSignals, setBiasSignals] = useState<Array<{ signal: string; recorded_at: string }>>([]);
   const [biasSaving, setBiasSaving] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
@@ -2107,15 +2108,28 @@ export default function Profile() {
 
       {/* ── Refinement Compass (§9.5 / §10.3) ── */}
       <Card className="bg-card border-border shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
-          <CardDescription>{t("profile.compass.subtitle")}</CardDescription>
+        <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
+          <div>
+            <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
+            <CardDescription>{t("profile.compass.subtitle")}</CardDescription>
+          </div>
+          {profileData?.subscription_tier === "ambassador" && (
+            <button
+              type="button"
+              onClick={() => setCompassPrivacyMode((p) => !p)}
+              className="shrink-0 mt-0.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+              title={compassPrivacyMode ? "Toon uw compass-data" : "Verberg compass voor anderen"}
+            >
+              <Lock className="w-3 h-3" aria-hidden="true" />
+              {compassPrivacyMode ? "Toon" : "Verberg"}
+            </button>
+          )}
         </CardHeader>
         <CardContent>
           <RefineCompass
             behaviorProfile={behaviorProfile}
             compassHistory={compassHistory}
-            elitePrivacyMode={false}
+            elitePrivacyMode={compassPrivacyMode}
             isPublicView={false}
           />
         </CardContent>

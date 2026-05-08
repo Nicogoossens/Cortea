@@ -341,6 +341,7 @@ export default function Atelier() {
           ambitionLevel={profile?.ambition_level as "casual" | "professional" | "diplomatic" | undefined}
           gender={profile?.gender}
           ageGroup={profile?.age_group}
+          registerBias={(profile as { register_bias?: string | null } | null | undefined)?.register_bias}
         />
       )}
 

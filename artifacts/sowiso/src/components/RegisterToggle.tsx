@@ -1,4 +1,3 @@
-import { Link } from "wouter";
 import { Lock } from "lucide-react";
 
 export type RegisterChoice = "middle_class" | "elite" | "both";
@@ -51,18 +50,19 @@ export function RegisterToggle({
 
         if (isEliteLocked) {
           return (
-            <Link
+            <button
               key={opt}
-              href="/membership"
+              type="button"
+              disabled
               role="tab"
               aria-selected={false}
               aria-disabled={true}
               title="Beschikbaar voor Ambassador-leden"
-              className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] border border-amber-500/40 bg-amber-500/[0.04] text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-mono uppercase tracking-widest rounded-[2px] text-muted-foreground/35 cursor-not-allowed"
             >
               <Lock className="w-2.5 h-2.5" aria-hidden="true" />
               {labelNL}
-            </Link>
+            </button>
           );
         }
 

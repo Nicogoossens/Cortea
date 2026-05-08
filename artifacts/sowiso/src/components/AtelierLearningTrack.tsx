@@ -33,6 +33,7 @@ interface Props {
   ambitionLevel?: "casual" | "professional" | "diplomatic";
   gender?: string | null;
   ageGroup?: string | null;
+  registerBias?: string | null;
 }
 
 
@@ -58,7 +59,7 @@ function progressPercent(level: number, streak: number): number {
   return Math.min(100, Math.round(base + streakBonus));
 }
 
-export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel = "casual", gender, ageGroup }: Props) {
+export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel = "casual", gender, ageGroup, registerBias }: Props) {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const { setActiveRegion, getRegionName } = useActiveRegion();
@@ -67,6 +68,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const [register, setRegister] = useState<Register>(() => {
     const urlRegister = new URLSearchParams(urlSearch).get("register");
     if (urlRegister === "elite" || urlRegister === "middle_class") return urlRegister;
+    // Honour the user's persisted register_bias (passed from profile) when it maps to a single register
+    if (registerBias === "elite" && tier === "ambassador") return "elite";
+    if (registerBias === "middle_class") return "middle_class";
     if (ambitionLevel === "diplomatic" && tier === "ambassador") return "elite";
     return "middle_class";
   });
@@ -90,7 +94,8 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // already been answered → 409 ANSWER_ALREADY_RECORDED on the next submit.
   const syncedSessionId = useRef<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [registerBothMode, setRegisterBothMode] = useState(false);
+  // "balanced" bias → start in both-mode so the toggle defaults to "Beide"
+  const [registerBothMode, setRegisterBothMode] = useState(() => registerBias === "balanced");
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
     () => !localStorage.getItem(startCardKey(ambitionLevel))
@@ -148,12 +153,18 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // Resets every time a new question is shown.
   const [studyAcknowledged, setStudyAcknowledged] = useState(false);
 
+  // In "both" mode: derive the effective register from which pool the selected
+  // phase/pillar belongs to, so the session API receives the correct register.
+  const effectiveRegister: Register = registerBothMode
+    ? (ELITE_PILLARS.some((p) => p.pillar === phase) ? "elite" : "middle_class")
+    : register;
+
   const sessionParams = {
-    register,
+    register: effectiveRegister,
     phase,
     region_code: activeRegion,
     lang: lang.split("-")[0],
-    ...(register === "middle_class" ? { research_pillar: researchPillar } : {}),
+    ...(effectiveRegister === "middle_class" ? { research_pillar: researchPillar } : {}),
   };
 
   const { data: session, isLoading: sessionLoading, error: sessionError } = useGetLearningTrackSession(sessionParams, {
@@ -1117,7 +1128,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
                   <div className="h-1.5 bg-border/30 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${currentProgress.mastered ? "bg-amber-500" : "bg-primary/70"}`}
-                      style={{ width: `${currentProgress.mastered ? 100 : progressPercent(currentProgress.current_level, currentProgress.correct_streak)}%` }}
+                      style={{ width: `${currentProgress.mastered ? 100 : ((currentProgress as { progress_percent?: number }).progress_percent ?? progressPercent(currentProgress.current_level, currentProgress.correct_streak))}%` }}
                     />
                   </div>
                 </div>

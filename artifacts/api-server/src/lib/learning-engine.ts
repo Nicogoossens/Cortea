@@ -185,6 +185,19 @@ export interface SelectionContext {
   size: number;                   // total questions to serve in this session
   excludeIds?: number[];          // already-served question ids in this session
   forcedIds?: number[];           // remediation: serve these first if still relevant
+  // ─── Master Framework v1.1 personalisation fields ─────────────────────────
+  /** "elite" | "middle_class" | "balanced" — boosts register-relevant questions */
+  register_bias?: string | null;
+  /** Primary archetype — boosts questions tagged for this archetype */
+  archetype?: string | null;
+  /** Secondary archetype — secondary boost */
+  secondary_archetype?: string | null;
+  /** User's active social circles — boosts questions tagged with matching circles */
+  userCircles?: string[];
+  /** User's cultural interest tags — boosts questions tagged with matching interests */
+  userCultural?: string[];
+  /** Current Compass scores — used to boost questions whose primary_dimension matches the user's weakest dimension */
+  compass_scores?: { attentiveness: number; composure: number; discernment: number; diplomacy: number; presence: number } | null;
 }
 
 export interface SelectedQuestion {
@@ -207,6 +220,11 @@ interface RawQuestion {
   options: unknown;
   demographic: string;
   interest_tags: unknown;
+  social_circle_tags?: unknown;
+  cultural_interest_tags?: unknown;
+  applicable_archetypes?: unknown;
+  register_relevance?: unknown;
+  primary_dimension?: string | null;
 }
 
 function sanitize(q: RawQuestion, source: SelectedQuestion["source"], isRepetition: boolean): SelectedQuestion {
@@ -223,20 +241,43 @@ function sanitize(q: RawQuestion, source: SelectedQuestion["source"], isRepetiti
 }
 
 /**
+ * Determine the weakest Compass dimension name from the user's current scores.
+ * Returns e.g. "attentiveness", "composure", etc. or null if no scores.
+ */
+function weakestCompassDimension(
+  scores: NonNullable<SelectionContext["compass_scores"]>,
+): string | null {
+  const entries = Object.entries(scores) as [string, number][];
+  if (entries.length === 0) return null;
+  return entries.reduce((a, b) => (b[1] < a[1] ? b : a))[0];
+}
+
+/**
  * Inner re-rank: given an unordered pool from a single tier of the cascade,
- * sort it so questions whose `interest_tags` overlap the user's
- * `situational_interests` (or whose body mentions the user's origin country
- * for contrast) come first. Ties broken by id for determinism.
+ * sort it so questions whose tags overlap the user's profile come first.
+ * Scoring components (additive, NEVER used as WHERE filter):
+ *   1. interest_tags × situational_interests         → +10 per overlap
+ *   2. contrast / cross_cultural + origin text       → +7 / +5
+ *   3. register_relevance matches user's register_bias → +8
+ *   4. applicable_archetypes matches user's archetype → +12 (primary) / +6 (secondary)
+ *   5. social_circle_tags × userCircles              → +6 per overlap
+ *   6. cultural_interest_tags × userCultural         → +6 per overlap
+ *   7. primary_dimension matches weakest Compass dim  → +10
+ * Ties broken by id for determinism.
  */
 function reRankByInterestAndContrast(
   pool: RawQuestion[],
   ctx: SelectionContext,
 ): { question: RawQuestion; source: SelectedQuestion["source"] }[] {
-  const interests = new Set(ctx.situationalInterests.map((s) => s.toLowerCase()));
-  const origin = ctx.countryOfOrigin?.trim().toLowerCase() ?? "";
-  // Contrast scoring is meaningful only when the user is studying a country
-  // OTHER than their own. We compare via canonical ISO mapping (name->ISO)
-  // rather than substrings to avoid false positives like "Benin".includes("in").
+  const interests    = new Set(ctx.situationalInterests.map((s) => s.toLowerCase()));
+  const circles      = new Set((ctx.userCircles ?? []).map((s) => s.toLowerCase()));
+  const cultural     = new Set((ctx.userCultural ?? []).map((s) => s.toLowerCase()));
+  const origin       = ctx.countryOfOrigin?.trim().toLowerCase() ?? "";
+  const biasRegister = ctx.register_bias?.toLowerCase() ?? null;
+  const archetype    = ctx.archetype?.toLowerCase() ?? null;
+  const secondArch   = ctx.secondary_archetype?.toLowerCase() ?? null;
+  const weakDim      = ctx.compass_scores ? weakestCompassDimension(ctx.compass_scores) : null;
+
   const originMatchesInterest = originMatchesRegion(
     ctx.countryOfOrigin ?? null,
     ctx.regionCode ?? "",
@@ -247,12 +288,18 @@ function reRankByInterestAndContrast(
   function score(q: RawQuestion): { score: number; source: SelectedQuestion["source"] } {
     let s = 0;
     let source: SelectedQuestion["source"] = "match";
-    const tags = Array.isArray(q.interest_tags) ? (q.interest_tags as string[]).map((t) => String(t).toLowerCase()) : [];
-    const overlap = tags.filter((t) => interests.has(t)).length;
-    if (overlap > 0) {
-      s += overlap * 10;
+
+    // 1. Situational interest overlap
+    const tags = Array.isArray(q.interest_tags)
+      ? (q.interest_tags as string[]).map((t) => String(t).toLowerCase())
+      : [];
+    const interestOverlap = tags.filter((t) => interests.has(t)).length;
+    if (interestOverlap > 0) {
+      s += interestOverlap * 10;
       source = "interest_boost";
     }
+
+    // 2. Origin-contrast boost
     if (contrastEnabled) {
       const haystack = `${q.question_text} ${q.historical_context ?? ""}`.toLowerCase();
       if (haystack.includes(origin)) {
@@ -265,6 +312,64 @@ function reRankByInterestAndContrast(
         if (source === "match") source = "contrast_boost";
       }
     }
+
+    // 3. Register-bias boost — questions whose register_relevance list
+    //    includes the user's inferred bias register score higher.
+    if (biasRegister && biasRegister !== "balanced") {
+      const relTags = Array.isArray(q.register_relevance)
+        ? (q.register_relevance as string[]).map((t) => String(t).toLowerCase())
+        : [];
+      if (relTags.includes(biasRegister)) {
+        s += 8;
+        if (source === "match") source = "interest_boost";
+      }
+    }
+
+    // 4. Archetype boost
+    if (archetype || secondArch) {
+      const archTags = Array.isArray(q.applicable_archetypes)
+        ? (q.applicable_archetypes as string[]).map((t) => String(t).toLowerCase())
+        : [];
+      if (archetype && archTags.includes(archetype)) {
+        s += 12;
+        if (source === "match") source = "interest_boost";
+      } else if (secondArch && archTags.includes(secondArch)) {
+        s += 6;
+        if (source === "match") source = "interest_boost";
+      }
+    }
+
+    // 5. Social-circle tags overlap
+    if (circles.size > 0) {
+      const circleTags = Array.isArray(q.social_circle_tags)
+        ? (q.social_circle_tags as string[]).map((t) => String(t).toLowerCase())
+        : [];
+      const circleOverlap = circleTags.filter((t) => circles.has(t)).length;
+      if (circleOverlap > 0) {
+        s += circleOverlap * 6;
+        if (source === "match") source = "interest_boost";
+      }
+    }
+
+    // 6. Cultural-interest tags overlap
+    if (cultural.size > 0) {
+      const culturalTags = Array.isArray(q.cultural_interest_tags)
+        ? (q.cultural_interest_tags as string[]).map((t) => String(t).toLowerCase())
+        : [];
+      const culturalOverlap = culturalTags.filter((t) => cultural.has(t)).length;
+      if (culturalOverlap > 0) {
+        s += culturalOverlap * 6;
+        if (source === "match") source = "interest_boost";
+      }
+    }
+
+    // 7. Compass weakness dimension — questions that exercise the user's
+    //    weakest dimension are prioritised to drive targeted improvement.
+    if (weakDim && q.primary_dimension?.toLowerCase() === weakDim) {
+      s += 10;
+      if (source === "match") source = "interest_boost";
+    }
+
     return { score: s, source };
   }
 
@@ -347,6 +452,11 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
       options: learningTrackQuestionsTable.options,
       demographic: learningTrackQuestionsTable.demographic,
       interest_tags: learningTrackQuestionsTable.interest_tags,
+      social_circle_tags: learningTrackQuestionsTable.social_circle_tags,
+      cultural_interest_tags: learningTrackQuestionsTable.cultural_interest_tags,
+      applicable_archetypes: learningTrackQuestionsTable.applicable_archetypes,
+      register_relevance: learningTrackQuestionsTable.register_relevance,
+      primary_dimension: learningTrackQuestionsTable.primary_dimension,
     };
     const primary = await executor.select(cols)
       .from(learningTrackQuestionsTable)

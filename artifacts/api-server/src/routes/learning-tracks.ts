@@ -26,6 +26,13 @@ import {
   selectQuestions,
   type Register,
 } from "../lib/learning-engine";
+import {
+  projectBehaviorToCompass,
+  blendCompassScores,
+  updateBehaviorProfileFromSession,
+  type PureBehaviorProfile,
+} from "../lib/learning-engine-pure";
+import { compassHistoryTable } from "@workspace/db";
 
 const router = Router();
 
@@ -743,6 +750,86 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
         newBadges = await checkAndAwardBadges(userId, register, pillar, phase, question.region_code);
       } catch (badgeErr) {
         req.log.warn({ badgeErr }, "Badge award check failed (non-fatal)");
+      }
+    }
+
+    // ── §9.3 Compass update on session completion ──────────────────────────
+    // Update behavior_profile and write a compass_history snapshot only when
+    // the session is fully complete. Non-fatal: a failure here must never
+    // surface to the learner.
+    if (sessionComplete && scorePct !== null) {
+      try {
+        const [userProfile] = await db
+          .select({
+            behavior_profile: usersTable.behavior_profile,
+            profiling_consent: usersTable.profiling_consent,
+            needs_recalibration: usersTable.needs_recalibration,
+          })
+          .from(usersTable)
+          .where(eq(usersTable.id, userId))
+          .limit(1);
+
+        if (userProfile?.profiling_consent !== false) {
+          const DEFAULT_PROFILE: PureBehaviorProfile = {
+            listening_score: 50,
+            assertiveness_style: "assertive",
+            conflict_mode: "collaborate",
+            eq_dimensions: { self_awareness: 50, self_regulation: 50, empathy: 50, social_skill: 50 },
+            nonverbal_awareness: 50,
+          };
+          const currentProfile = (userProfile?.behavior_profile ?? DEFAULT_PROFILE) as PureBehaviorProfile;
+
+          // Nudge behavior_profile based on session score
+          const updatedProfile = updateBehaviorProfileFromSession(currentProfile, scorePct);
+
+          // Project both old and updated profiles to Compass space, then blend
+          const existingCompass = projectBehaviorToCompass(currentProfile);
+          const newCompass      = projectBehaviorToCompass(updatedProfile);
+          const blended         = blendCompassScores(existingCompass, newCompass);
+
+          // Persist updated behavior_profile
+          await db
+            .update(usersTable)
+            .set({ behavior_profile: updatedProfile })
+            .where(eq(usersTable.id, userId));
+
+          // Write compass_history snapshot (idempotent via separate row per session)
+          await db.insert(compassHistoryTable).values({
+            user_id:       userId,
+            attentiveness: blended.attentiveness,
+            composure:     blended.composure,
+            discernment:   blended.discernment,
+            diplomacy:     blended.diplomacy,
+            presence:      blended.presence,
+            recorded_at:   new Date(),
+          });
+        }
+
+        // ── §9.5 Soft-recalibration trigger ─────────────────────────────────
+        // If the user has < 50% score in their first 3 completed sessions,
+        // set needs_recalibration = true (cleared by the onboarding flow).
+        if (!userProfile?.needs_recalibration) {
+          const [earlySessionCount] = await db
+            .select({ n: sql<number>`count(*)::int` })
+            .from(learningTrackSessionsTable)
+            .where(
+              and(
+                eq(learningTrackSessionsTable.user_id, userId),
+                sql`${learningTrackSessionsTable.completed_at} IS NOT NULL`,
+              ),
+            );
+
+          const totalCompleted = earlySessionCount?.n ?? 0;
+          if (totalCompleted <= 3 && (scorePct ?? 100) < 50) {
+            await db
+              .update(usersTable)
+              .set({ needs_recalibration: true })
+              .where(eq(usersTable.id, userId));
+            req.log.info({ userId, scorePct, totalCompleted }, "Soft-recalibration triggered");
+          }
+        }
+      } catch (compassErr) {
+        req.log.warn({ compassErr }, "Compass/recalibration update failed (non-fatal)");
       }
     }
 

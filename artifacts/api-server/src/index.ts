@@ -5,6 +5,8 @@ import { startScenarioTranslationSweeper } from "./lib/register-scenario-transla
 import { startUiTranslationSweeper } from "./lib/ui-translation-sweeper";
 import { startRegisterUiAuditSweeper } from "./lib/register-ui-audit-sweeper";
 import { startTrialReminderSweeper } from "./lib/trial-reminder-sweeper";
+import { startBiasEvolutionSweeper } from "./lib/bias-evolution-sweeper";
+import { startCompassHistoryCron } from "./lib/compass-history-cron";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,6 +61,14 @@ app.listen(port, (err) => {
   // Dispatches a single email + SMS reminder ~3 days before any
   // 14-day trial ends, so users are never surprised by a charge.
   startTrialReminderSweeper();
+
+  // §4.2 Master Framework: re-infer register_bias from accumulated signals
+  // every 5th completed session per user.
+  startBiasEvolutionSweeper();
+
+  // §9.4 Master Framework: write daily Compass-score snapshots into
+  // compass_history for the 30-day radar evolution overlay.
+  startCompassHistoryCron();
 
   // Step-5 dev smoketest: after startup, run the i18n-audit script once and
   // log its summary so missing-key drift is visible in the dev console.

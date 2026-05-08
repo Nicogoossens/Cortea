@@ -1926,11 +1926,8 @@ export default function Profile() {
         </CollapsibleSection>
       )}
 
-      {/* ── My Learning Tracks ──
-          Per-region learning progress the platform tracks silently. */}
-      <CountryProgressOverview />
-
-      {/* Countries of Interest — multi-track progress (independent per country). */}
+      {/* ── My Learning Tracks — Countries of Interest ──
+          Multi-track progress (independent per country). */}
       <CollapsibleSection
         title={t("profile.countries_interest_title", "Countries you're learning")}
         icon={<Globe className="w-4 h-4 text-primary/60" aria-hidden="true" />}
@@ -2091,6 +2088,10 @@ export default function Profile() {
           )}
         </CardContent>
       </CollapsibleSection>
+
+      {/* ── Countries you are learning ──
+          Per-region learning progress overview. */}
+      <CountryProgressOverview />
 
       {/* ── Referrals ──
           Personal referral link, share buttons, and reward summary. */}

@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "Opción: Mundo formal",
   "profile.bias.toggle_both": "Opción: Ambos mundos",
   "profile.bias.onboarding_prefix": "Configuración:",
-  "profile.elite_level": "Nivel de refinamiento"
+  "profile.elite_level": "Nivel de refinamiento",
+  "profile.compass.privacy_tooltip_on": "Mostrar sus datos de The Compass",
+  "profile.compass.privacy_tooltip_off": "Ocultar The Compass a los demás"
 }

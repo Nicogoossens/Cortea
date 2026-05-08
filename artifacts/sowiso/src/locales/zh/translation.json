@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "选择：正式世界",
   "profile.bias.toggle_both": "选择：两个世界",
   "profile.bias.onboarding_prefix": "设置：",
-  "profile.elite_level": "精英级别"
+  "profile.elite_level": "精英级别",
+  "profile.compass.privacy_tooltip_on": "展示阁下之罗盘数据",
+  "profile.compass.privacy_tooltip_off": "向他人隐蔽罗盘信息"
 }

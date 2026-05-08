@@ -1608,6 +1608,8 @@
   "profile.compass.score_stable": "{{dimension}} remained stable over the last 30 days.",
   "profile.compass.show_privacy": "Show",
   "profile.compass.hide_privacy": "Hide",
+  "profile.compass.privacy_tooltip_on": "Show your compass data",
+  "profile.compass.privacy_tooltip_off": "Hide compass from others",
   "profile.compass.radar_aria": "Refinement Compass radar chart",
   "profile.compass.dot_aria": "{{dimension}}: {{score}} out of 100",
   "profile.compass.was_label": "was",

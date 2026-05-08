@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "الاختيار: العالم الرسمي",
   "profile.bias.toggle_both": "الاختيار: كلا العالمين",
   "profile.bias.onboarding_prefix": "الإعداد:",
-  "profile.elite_level": "مستوى الرقي"
+  "profile.elite_level": "مستوى الرقي",
+  "profile.compass.privacy_tooltip_on": "إظهار بيانات The Compass الخاصة بحضرتك",
+  "profile.compass.privacy_tooltip_off": "إخفاء The Compass عن الآخرين"
 }

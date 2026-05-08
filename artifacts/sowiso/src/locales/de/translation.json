@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "Wahl: Formale Welt",
   "profile.bias.toggle_both": "Wahl: Beide Welten",
   "profile.bias.onboarding_prefix": "Einstellung:",
-  "profile.elite_level": "Formale Stufe"
+  "profile.elite_level": "Formale Stufe",
+  "profile.compass.privacy_tooltip_on": "Ihre Kompass-Daten anzeigen",
+  "profile.compass.privacy_tooltip_off": "Kompass vor anderen verbergen"
 }

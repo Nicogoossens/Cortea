@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "選択: 正式な世界",
   "profile.bias.toggle_both": "選択: 両世界",
   "profile.bias.onboarding_prefix": "設定:",
-  "profile.elite_level": "エリートレベル"
+  "profile.elite_level": "エリートレベル",
+  "profile.compass.privacy_tooltip_on": "ご自身のコンパス・データを表示いたします",
+  "profile.compass.privacy_tooltip_off": "コンパスを他者より隠匿いたします"
 }

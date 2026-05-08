@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "Choix : Univers formel",
   "profile.bias.toggle_both": "Choix : Les deux univers",
   "profile.bias.onboarding_prefix": "Paramètre :",
-  "profile.elite_level": "Niveau de raffinement"
+  "profile.elite_level": "Niveau de raffinement",
+  "profile.compass.privacy_tooltip_on": "Afficher vos données de The Compass",
+  "profile.compass.privacy_tooltip_off": "Masquer The Compass aux autres"
 }

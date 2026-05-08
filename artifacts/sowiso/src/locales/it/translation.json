@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "Scelta: Mondo formale",
   "profile.bias.toggle_both": "Scelta: Entrambi i mondi",
   "profile.bias.onboarding_prefix": "Impostazione:",
-  "profile.elite_level": "Livello formale"
+  "profile.elite_level": "Livello formale",
+  "profile.compass.privacy_tooltip_on": "Renda visibili i dati della bussola",
+  "profile.compass.privacy_tooltip_off": "Celi la bussola agli altri"
 }

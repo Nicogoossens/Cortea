@@ -1619,5 +1619,7 @@
   "profile.bias.toggle_elite": "Keuze: Formele wereld",
   "profile.bias.toggle_both": "Keuze: Beide werelden",
   "profile.bias.onboarding_prefix": "Instelling:",
-  "profile.elite_level": "Elitaire niveau"
+  "profile.elite_level": "Elitaire niveau",
+  "profile.compass.privacy_tooltip_on": "Uw Compass-gegevens zichtbaar maken",
+  "profile.compass.privacy_tooltip_off": "Uw Compass voor anderen verbergen"
 }

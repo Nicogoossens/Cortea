@@ -1204,36 +1204,11 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── Subscription Status ──
-          The standalone "Lidmaatschap actief" row was removed because the
-          tier badge in the user header above (TRAVELLER / AMBASSADOR / …)
-          already communicates membership status. We keep a slim row here
-          ONLY when payment has failed, since that warrants a prominent
-          banner the user must see and act on. */}
-      {subscriptionStatus && subscriptionStatus.tier !== "guest" && subscriptionStatus.paymentFailed && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm border-amber-500/30 bg-amber-500/5">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
-            <p className="text-amber-500 font-light">
-              {t("subscription.profile_payment_failed")}
-            </p>
-          </div>
-          <Link
-            href="/membership"
-            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          >
-            {t("subscription.profile_manage")}
-            <ExternalLink className="w-3 h-3" aria-hidden="true" />
-          </Link>
-        </div>
-      )}
-
       {/* ── Badges ──
-          Hier verplaatst (was eerder verder onderaan de pagina) zodat de
-          gebruiker meteen na het identiteitsblok zijn behaalde
-          onderscheidingen ziet, vóór de persoonlijke gegevens.
+          Only rendered when the user has at least one earned badge, so new
+          users do not see an empty placeholder.
           Hidden from public visitors when elite_privacy_mode is enabled. */}
-      {(!elitePrivacyMode || isOwnProfile) && <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+      {(!elitePrivacyMode || isOwnProfile) && earnedBadges && earnedBadges.length > 0 && <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
             <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
@@ -1244,16 +1219,7 @@ export default function Profile() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!earnedBadges || earnedBadges.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground/60">
-              <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" aria-hidden="true" />
-              <p className="font-serif text-sm">{t("profile.badges_empty")}</p>
-              <Link href="/atelier">
-                <p className="text-xs mt-1 underline underline-offset-2 hover:text-foreground transition-colors cursor-pointer">{t("profile.badges_empty_hint")}</p>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-5">
+          <div className="space-y-5">
               {/* Group badges by type */}
               {(["pillar", "phase", "country", "ambassador", "compass"] as const)
                 .filter((type) => earnedBadges.some((b) => b.badge_type === type))
@@ -1311,7 +1277,6 @@ export default function Profile() {
                   );
                 })}
             </div>
-          )}
         </CardContent>
       </Card>}
 
@@ -2092,6 +2057,31 @@ export default function Profile() {
       {/* ── Countries you are learning ──
           Per-region learning progress overview. */}
       <CountryProgressOverview />
+
+      {/* ── Subscription Status ──
+          The standalone "Lidmaatschap actief" row was removed because the
+          tier badge in the user header above (TRAVELLER / AMBASSADOR / …)
+          already communicates membership status. We keep a slim row here
+          ONLY when payment has failed, since that warrants a prominent
+          banner the user must see and act on. Moved below the top-7
+          priority sections so it does not break the prescribed order. */}
+      {subscriptionStatus && subscriptionStatus.tier !== "guest" && subscriptionStatus.paymentFailed && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-sm border text-sm border-amber-500/30 bg-amber-500/5">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+            <p className="text-amber-500 font-light">
+              {t("subscription.profile_payment_failed")}
+            </p>
+          </div>
+          <Link
+            href="/membership"
+            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            {t("subscription.profile_manage")}
+            <ExternalLink className="w-3 h-3" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
 
       {/* ── Referrals ──
           Personal referral link, share buttons, and reward summary. */}

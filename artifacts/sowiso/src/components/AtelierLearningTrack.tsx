@@ -23,6 +23,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, Sparkles, ArrowRight,
   X, Compass, Lock,
 } from "lucide-react";
+import { RegisterToggle, type RegisterChoice } from "@/components/RegisterToggle";
 import type { RegionCode } from "@/lib/active-region";
 
 interface Props {
@@ -89,6 +90,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   // already been answered → 409 ANSWER_ALREADY_RECORDED on the next submit.
   const syncedSessionId = useRef<number | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [registerBothMode, setRegisterBothMode] = useState(false);
 
   const [showStartCard, setShowStartCard] = useState<boolean>(
     () => !localStorage.getItem(startCardKey(ambitionLevel))
@@ -504,47 +506,19 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
         </div>
       )}
 
-      {/* ── Register selector ──
-          Always visible so non-ambassador users (Traveller) still SEE the
-          Elite track exists; the Elite tab is locked with an upgrade CTA. */}
-      <div className="flex gap-2" role="tablist" aria-label="Learning track register">
-        {(["middle_class", "elite"] as Register[]).map((r) => {
-          const isEliteLocked = r === "elite" && tier !== "ambassador";
-          const isSelected = register === r;
-          if (isEliteLocked) {
-            return (
-              <Link
-                key={r}
-                href="/membership"
-                role="tab"
-                aria-selected={false}
-                aria-disabled={true}
-                title={t("atelier.track.tier_locked_title_ambassador")}
-                data-testid="tab-elite-locked"
-                className="px-5 py-2 text-xs font-mono uppercase tracking-widest rounded-sm border border-amber-500/40 bg-amber-500/[0.06] text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/60 transition-colors flex items-center gap-2 cursor-pointer"
-              >
-                <Lock className="w-3 h-3" aria-hidden="true" />
-                {t("atelier.track.register_elite")}
-              </Link>
-            );
+      {/* ── Register selector (§10.1 RegisterToggle) ── */}
+      <RegisterToggle
+        value={registerBothMode ? "both" : register}
+        onChange={(r: RegisterChoice) => {
+          if (r === "both") {
+            setRegisterBothMode(true);
+          } else {
+            setRegisterBothMode(false);
+            handleRegisterChange(r as Register);
           }
-          return (
-            <button
-              key={r}
-              role="tab"
-              aria-selected={isSelected}
-              onClick={() => handleRegisterChange(r)}
-              className={`px-5 py-2 text-xs font-mono uppercase tracking-widest rounded-sm border transition-colors ${
-                isSelected
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-              }`}
-            >
-              {r === "middle_class" ? t("atelier.track.register_middle_class") : t("atelier.track.register_elite")}
-            </button>
-          );
-        })}
-      </div>
+        }}
+        eliteEnabled={tier === "ambassador"}
+      />
 
       {/* ── Auto-walk header: "Next up" + progress + reset-to-auto link ──
           When the user is on the auto-recommended path the header reflects

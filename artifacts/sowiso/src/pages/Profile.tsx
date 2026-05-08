@@ -33,6 +33,7 @@ import { useAuth } from "@/lib/auth";
 import { VenueCard } from "@/components/VenueCard";
 import { ReferralCard } from "@/components/ReferralCard";
 import { CountryProgressOverview } from "@/components/CountryProgressOverview";
+import { RefineCompass, type CompassHistoryPoint } from "@/components/RefineCompass";
 import { useSavedVenues } from "@/lib/saved-venues";
 import React, { useState, useEffect, useCallback, useRef, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
@@ -116,6 +117,8 @@ interface UserProfileData {
   onboarding_completed?: boolean | null;
   situational_interests?: string[] | null;
   profiling_consent?: boolean | null;
+  register_bias?: string | null;
+  register_bias_locked?: boolean | null;
 }
 
 interface EnrichedLogEntry {
@@ -368,6 +371,9 @@ export default function Profile() {
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [behaviorProfile, setBehaviorProfile] = useState<BehaviorProfile | null>(null);
+  const [compassHistory, setCompassHistory] = useState<CompassHistoryPoint[]>([]);
+  const [biasSignals, setBiasSignals] = useState<Array<{ signal: string; recorded_at: string }>>([]);
+  const [biasSaving, setBiasSaving] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
     tier: string;
     status: string;
@@ -451,6 +457,18 @@ export default function Profile() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`${API_BASE}/api/users/compass-history`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => { if (Array.isArray(data)) setCompassHistory(data); })
+      .catch(() => {});
+    fetch(`${API_BASE}/api/users/register-bias-signals`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => { if (Array.isArray(data)) setBiasSignals(data); })
+      .catch(() => {});
+  }, [userId]);
+
   // Deep-link focus: when the profile is opened with `?focus=region` (e.g.
   // from the Atelier "Wijzig uw actieve regio" link or the read-only region
   // chip), force-open the Cursusinstellingen card, scroll it into view, and
@@ -527,6 +545,46 @@ export default function Profile() {
     },
   });
   const logs = rawLogs as EnrichedLogEntry[] | undefined;
+
+  function biasLabel(bias?: string | null): string {
+    if (!bias) return "Nog niet bepaald";
+    if (bias === "middle_class") return "Dagelijkse wereld";
+    if (bias === "elite") return "Formele wereld";
+    if (bias === "balanced") return "Gebalanceerd (beide werelden)";
+    return bias;
+  }
+
+  async function handleBalancedLock() {
+    if (biasSaving) return;
+    setBiasSaving(true);
+    fetch(`${API_BASE}/api/users/register-bias`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bias: "balanced", locked: true }),
+    })
+      .then((r) => {
+        if (r.ok) r.json().then((d) => setProfileData((p) => p ? { ...p, register_bias: d?.register_bias ?? "balanced", register_bias_locked: true } : p));
+      })
+      .catch(() => {})
+      .finally(() => setBiasSaving(false));
+  }
+
+  async function handleRecomputeBias() {
+    if (biasSaving) return;
+    setBiasSaving(true);
+    fetch(`${API_BASE}/api/users/register-bias/recompute`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((r) => {
+        if (r.ok) r.json().then((d) => {
+          if (d?.register_bias) setProfileData((p) => p ? { ...p, register_bias: d.register_bias } : p);
+        });
+      })
+      .catch(() => {})
+      .finally(() => setBiasSaving(false));
+  }
 
   async function patchProfile(
     body: Record<string, unknown>,
@@ -2047,43 +2105,100 @@ export default function Profile() {
         );
       })()}
 
-      {/* ── Refinement Compass ── */}
-      {behaviorProfile && (() => {
-        const radarValues = behaviorToRadar(behaviorProfile);
-        const RADAR_LABELS: [string, string, string, string, string] = [
-          t("profile.compass.attentiveness"),
-          t("profile.compass.composure"),
-          t("profile.compass.discernment"),
-          t("profile.compass.diplomacy"),
-          t("profile.compass.presence"),
-        ];
-        return (
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
-              <CardDescription>{t("profile.compass.subtitle")}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-shrink-0">
-                <PentagonChart values={radarValues} labels={RADAR_LABELS} />
-              </div>
-              <div className="flex flex-col gap-3 flex-1 min-w-0">
-                {(["attentiveness", "composure", "discernment", "diplomacy", "presence"] as const).map((key, i) => (
-                  <div key={key} className="space-y-1">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{t(`profile.compass.${key}`)}</span>
-                      <span className="text-xs text-muted-foreground font-mono">{radarValues[i]}</span>
-                    </div>
-                    <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary/70 transition-all duration-700" style={{ width: `${radarValues[i]}%` }} />
-                    </div>
-                  </div>
+      {/* ── Refinement Compass (§9.5 / §10.3) ── */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
+          <CardDescription>{t("profile.compass.subtitle")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RefineCompass
+            behaviorProfile={behaviorProfile}
+            compassHistory={compassHistory}
+            elitePrivacyMode={false}
+            isPublicView={false}
+          />
+        </CardContent>
+      </Card>
+
+      {/* ── Hoe Cortéa u leest (§10.2) ── */}
+      <Card className="bg-card border-border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-serif text-xl flex items-center gap-2">
+            <Compass className="w-5 h-5 text-primary/70" aria-hidden="true" />
+            Hoe Cortéa u leest
+          </CardTitle>
+          <CardDescription className="font-light">
+            Cortéa stelt aanbevelingen bij op basis van uw keuzes en gedrag. U kunt dit hier inzien en bijsturen.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Current bias orientation */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                Huidige oriëntatie
+              </p>
+              <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                {biasLabel(profileData?.register_bias)}
+                {profileData?.register_bias_locked && (
+                  <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label="Vergrendeld" />
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Signal audit log (last 5, only shown when available) */}
+          {biasSignals.length > 0 && (
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+                Recente signalen
+              </p>
+              <ul className="space-y-1">
+                {biasSignals.slice(0, 5).map((sig, i) => (
+                  <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" aria-hidden="true" />
+                    <span>{biasLabel(sig.signal)}</span>
+                    <span className="text-muted-foreground/50 font-mono ml-auto">
+                      {new Date(sig.recorded_at).toLocaleDateString("nl-BE")}
+                    </span>
+                  </li>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
+              </ul>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBalancedLock}
+              disabled={biasSaving}
+              className="font-mono text-xs"
+            >
+              Toon beide werelden gelijkmatig
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRecomputeBias}
+              disabled={biasSaving}
+              className="font-mono text-xs"
+            >
+              Aanbevelingen herijken
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/atelier?placement=true")}
+              className="font-mono text-xs"
+            >
+              Nieuwe kalibratie
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* ── Recent Log ── */}
       <Card className="bg-card border-border shadow-sm">

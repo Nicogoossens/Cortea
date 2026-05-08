@@ -820,6 +820,9 @@ components:
           nullable: true
           maxLength: 100
           description: Optional personalised tagline shown on the Ambassador's Digital Calling Card
+        elite_privacy_mode:
+          type: boolean
+          description: When true, noble_score and badges are hidden from public profile views
         is_founding_member:
           type: boolean
           description: True when the user's email matches an unredeemed Founding 100 waitlist signup
@@ -830,7 +833,6 @@ components:
       required:
         - id
         - email_verified
-        - noble_score
         - ambition_level
         - subscription_tier
         - subscription_status

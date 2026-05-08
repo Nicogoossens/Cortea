@@ -46,7 +46,8 @@ export interface UserProfile {
   gender?: string | null;
   /** Computed from birth_year (e.g. "18-25", "26-35") */
   age_group?: string | null;
-  noble_score: number;
+  /** Omitted when the user has elite_privacy_mode enabled and the request is a public view */
+  noble_score?: number;
   ambition_level: UserProfileAmbitionLevel;
   subscription_tier: UserProfileSubscriptionTier;
   subscription_status: string;
@@ -71,6 +72,8 @@ export interface UserProfile {
    * @maxLength 100
    */
   calling_card_tagline?: string | null;
+  /** When true, noble_score and badges are hidden from public profile views */
+  elite_privacy_mode?: boolean;
   /** True when the user's email matches an unredeemed Founding 100 waitlist signup */
   is_founding_member?: boolean;
   /** The user's unredeemed Founding 100 code, if any */

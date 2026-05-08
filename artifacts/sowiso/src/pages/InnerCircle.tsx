@@ -424,7 +424,7 @@ export default function InnerCircle() {
         }}
       >
         <div ref={downloadCardRef}>
-          <DownloadCard name={name} memberSince={memberSince} nobleScore={profile?.noble_score} tagline={profile?.calling_card_tagline} />
+          <DownloadCard name={name} memberSince={memberSince} nobleScore={profile?.elite_privacy_mode ? undefined : profile?.noble_score} tagline={profile?.calling_card_tagline} />
         </div>
       </div>
 
@@ -494,7 +494,7 @@ export default function InnerCircle() {
                   <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-0.5">{t("inner_circle.member_since")}</p>
                   <p className="font-light text-foreground">{memberSince}</p>
                 </div>
-                {profile?.noble_score !== undefined && (
+                {profile?.noble_score !== undefined && !profile?.elite_privacy_mode && (
                   <div>
                     <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-0.5">Noble Score</p>
                     <p className="font-medium text-foreground">{profile.noble_score}</p>

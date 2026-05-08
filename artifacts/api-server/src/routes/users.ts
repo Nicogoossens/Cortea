@@ -57,13 +57,16 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
     // Public view — return only the fields needed for the profile page
     // privacy placeholder (elite_privacy_mode, noble_score, display_name).
     // Sensitive fields (email, behavior_profile, signals) are never exposed.
+    // When elite_privacy_mode=true, noble_score and badges are omitted from
+    // public responses so they are never visible to other users.
     if (isPublicView) {
+      const privacyOn = user.elite_privacy_mode ?? false;
       return res.json({
         id: user.id,
         display_name: user.display_name,
-        elite_privacy_mode: user.elite_privacy_mode ?? false,
-        noble_score: user.noble_score,
-        age_group: computeAgeGroup(user.birth_year, user.noble_score),
+        elite_privacy_mode: privacyOn,
+        ...(privacyOn ? {} : { noble_score: user.noble_score }),
+        age_group: computeAgeGroup(user.birth_year, privacyOn ? undefined : user.noble_score),
         privacy_settings: user.privacy_settings ?? null,
       });
     }

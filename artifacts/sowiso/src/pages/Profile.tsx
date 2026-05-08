@@ -981,6 +981,10 @@ export default function Profile() {
     );
   }
 
+  const elitePrivacyMode = isOwnProfile
+    ? compassPrivacyMode
+    : ((profileData as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode ?? false);
+
   const initials = getInitials(profileData?.full_name ?? null);
   const avatarUrl = profileData?.avatar_url;
 
@@ -1174,8 +1178,9 @@ export default function Profile() {
       {/* ── Badges ──
           Hier verplaatst (was eerder verder onderaan de pagina) zodat de
           gebruiker meteen na het identiteitsblok zijn behaalde
-          onderscheidingen ziet, vóór de persoonlijke gegevens. */}
-      <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+          onderscheidingen ziet, vóór de persoonlijke gegevens.
+          Hidden from public visitors when elite_privacy_mode is enabled. */}
+      {(!elitePrivacyMode || isOwnProfile) && <Card id="badges" className="border-border/40 bg-card shadow-sm scroll-mt-20">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
             <Trophy className="w-4 h-4 text-amber-500/80" aria-hidden="true" />
@@ -1255,7 +1260,7 @@ export default function Profile() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ── Per-region learning progress ──
           Surfaces the per-country progress the platform already tracks
@@ -1962,7 +1967,7 @@ export default function Profile() {
 
       {/* ── Noble Standing + Domain Mastery ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="bg-card border-border shadow-sm overflow-hidden relative">
+        {(!elitePrivacyMode || isOwnProfile) && <Card className="bg-card border-border shadow-sm overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
           <CardHeader className="pb-2">
             <CardTitle className="font-serif text-xl flex items-center gap-2">
@@ -2003,7 +2008,7 @@ export default function Profile() {
               )}
             </div>
           </CardContent>
-        </Card>
+        </Card>}
 
         <Card className="lg:col-span-2 bg-card border-border shadow-sm">
           <CardHeader>

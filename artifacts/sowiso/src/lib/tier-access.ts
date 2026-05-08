@@ -6,11 +6,16 @@
  * side effects and are easy to unit-test.
  */
 
-export type SubscriptionTier = "guest" | "basic" | "traveller" | "ambassador";
+export type SubscriptionTier = "guest" | "basic" | "student" | "traveller" | "ambassador" | "founding";
 
 /** True for tiers that unlock every Counsel domain and every Compass region. */
 export function hasFullAccess(tier: SubscriptionTier): boolean {
-  return tier === "traveller" || tier === "ambassador";
+  return tier === "traveller" || tier === "ambassador" || tier === "founding";
+}
+
+/** True for tiers that have ambassador-level (top) access. */
+export function hasAmbassadorAccess(tier: SubscriptionTier): boolean {
+  return tier === "ambassador" || tier === "founding";
 }
 
 /** True for the registered-but-not-upgraded tier. */

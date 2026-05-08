@@ -135,7 +135,7 @@ export default function Home() {
       if (stored) {
         const trips = JSON.parse(stored) as NavigatorTrip[];
         setAllTrips(trips);
-        if (profile?.subscription_tier === "ambassador") {
+        if (profile?.subscription_tier === "ambassador" || profile?.subscription_tier === "founding") {
           const active = trips.filter((trip) => {
             const days = daysUntil(trip.departureDate);
             return days <= 7 && days > -14;
@@ -263,7 +263,7 @@ export default function Home() {
       }, {})
   ).sort((a, b) => b[1].questions - a[1].questions);
 
-  const isAmbassador = profile?.subscription_tier === "ambassador";
+  const isAmbassador = profile?.subscription_tier === "ambassador" || profile?.subscription_tier === "founding";
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
   const levelLabel = t(levelKey(nobleScore?.level_name));
 

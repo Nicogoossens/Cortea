@@ -27,7 +27,7 @@ export default function Navigator() {
   const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasAccess = isAuthenticated && tier === "ambassador";
+  const hasAccess = isAuthenticated && (tier === "ambassador" || tier === "founding");
 
   const [trips, setTrips] = useState<NavigatorTrip[]>(loadTrips);
   const [destination, setDestination] = useState<string>(COMPASS_REGIONS[0].code);

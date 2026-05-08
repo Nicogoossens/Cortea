@@ -27,7 +27,7 @@ import { RegisterToggle, type RegisterChoice } from "@/components/RegisterToggle
 import type { RegionCode } from "@/lib/active-region";
 
 interface Props {
-  tier: "traveller" | "ambassador";
+  tier: "traveller" | "ambassador" | "founding";
   activeRegion: RegionCode;
   lang: string;
   ambitionLevel?: "casual" | "professional" | "diplomatic";
@@ -69,9 +69,9 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     const urlRegister = new URLSearchParams(urlSearch).get("register");
     if (urlRegister === "elite" || urlRegister === "middle_class") return urlRegister;
     // Honour the user's persisted register_bias (passed from profile) when it maps to a single register
-    if (registerBias === "elite" && tier === "ambassador") return "elite";
+    if (registerBias === "elite" && (tier === "ambassador" || tier === "founding")) return "elite";
     if (registerBias === "middle_class") return "middle_class";
-    if (ambitionLevel === "diplomatic" && tier === "ambassador") return "elite";
+    if (ambitionLevel === "diplomatic" && (tier === "ambassador" || tier === "founding")) return "elite";
     return "middle_class";
   });
 
@@ -99,7 +99,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     if (hasManuallyChanged.current) return;
     if (registerBias === "balanced") {
       setRegisterBothMode(true);
-    } else if (registerBias === "elite" && tier === "ambassador") {
+    } else if (registerBias === "elite" && (tier === "ambassador" || tier === "founding")) {
       setRegisterBothMode(false);
       setRegister("elite");
     } else if (registerBias === "middle_class") {
@@ -568,7 +568,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
             handleRegisterChange(r as Register);
           }
         }}
-        eliteEnabled={tier === "ambassador"}
+        eliteEnabled={tier === "ambassador" || tier === "founding"}
       />
 
       {/* ── Auto-walk header: "Next up" + progress + reset-to-auto link ──

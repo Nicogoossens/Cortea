@@ -27,7 +27,7 @@ export default function CompassCluster() {
   const { data: profile } = useGetProfile();
   const tier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
   const isVisitor = !isAuthenticated;
-  const isAmbassador = tier === "ambassador";
+  const isAmbassador = tier === "ambassador" || tier === "founding";
 
   const { data: regions, isLoading } = useGetCultureCompass(
     { locale },

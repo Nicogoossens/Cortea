@@ -61,7 +61,7 @@ export default function Sensory() {
   const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasAccess = isAuthenticated && tier === "ambassador";
+  const hasAccess = isAuthenticated && (tier === "ambassador" || tier === "founding");
 
   const [venue, setVenue] = useState<VenueContext>("restaurant");
   const [isListening, setIsListening] = useState(false);

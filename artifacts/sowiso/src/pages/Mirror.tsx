@@ -160,7 +160,7 @@ export default function Mirror() {
   const { t, locale } = useLanguage();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasAccess = isAuthenticated && tier === "ambassador";
+  const hasAccess = isAuthenticated && (tier === "ambassador" || tier === "founding");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

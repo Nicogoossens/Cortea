@@ -19,7 +19,7 @@ export default function Situations() {
 
   const tier = profile?.subscription_tier ?? "guest";
   const isGuest = !isAuthenticated;
-  const isAmbassador = tier === "ambassador";
+  const isAmbassador = tier === "ambassador" || tier === "founding";
 
   const selectedSituation = SITUATIONS.find((s) => s.id === selected);
 

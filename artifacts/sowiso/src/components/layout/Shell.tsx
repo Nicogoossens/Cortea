@@ -113,7 +113,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const { data: profile } = useGetProfile();
   const currentTier = (profile?.subscription_tier ?? "guest") as string;
-  const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador";
+  const isPremium = currentTier === "student" || currentTier === "traveller" || currentTier === "ambassador" || currentTier === "founding";
   const showUpgradePill = (href: string) => href === "/membership" && !isPremium;
 
   // Optimised for the dark sidebar/header background — bright text on

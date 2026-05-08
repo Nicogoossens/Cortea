@@ -137,7 +137,7 @@ export default function Atelier() {
 
   const tier = profile?.subscription_tier ?? "guest";
   const isVisitor = !isAuthenticated;
-  const hasFullAccess = tier === "traveller" || tier === "ambassador";
+  const hasFullAccess = tier === "traveller" || tier === "ambassador" || tier === "founding";
   const scoreDifficultyMax = scoreToDifficultyMax(nobleScore?.total_score ?? 0);
   const difficultyMax = isVisitor
     ? Math.min(scoreDifficultyMax, GUEST_DIFFICULTY_MAX)
@@ -335,7 +335,7 @@ export default function Atelier() {
       {/* Learning Tracks panel */}
       {hasFullAccess && view === "tracks" && (
         <AtelierLearningTrack
-          tier={tier as "traveller" | "ambassador"}
+          tier={tier as "traveller" | "ambassador" | "founding"}
           activeRegion={activeRegion}
           lang={locale}
           ambitionLevel={profile?.ambition_level as "casual" | "professional" | "diplomatic" | undefined}

@@ -629,7 +629,7 @@ export default function Counsel() {
                   const Icon = sit.icon;
                   const sitLabel = t(sit.nameKey as Parameters<typeof t>[0]);
                   const isActive = situationContext === sitLabel;
-                  const isLocked = sit.ambassadorOnly && tier !== "ambassador";
+                  const isLocked = sit.ambassadorOnly && tier !== "ambassador" && tier !== "founding";
                   if (isLocked) return null;
                   return (
                     <button

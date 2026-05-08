@@ -27,8 +27,11 @@ export type UserProfileSubscriptionTier =
 
 export const UserProfileSubscriptionTier = {
   guest: "guest",
+  basic: "basic",
+  student: "student",
   traveller: "traveller",
   ambassador: "ambassador",
+  founding: "founding",
 } as const;
 
 export interface UserProfile {
@@ -110,8 +113,11 @@ export type UpdateProfileBodySubscriptionTier =
 
 export const UpdateProfileBodySubscriptionTier = {
   guest: "guest",
+  basic: "basic",
+  student: "student",
   traveller: "traveller",
   ambassador: "ambassador",
+  founding: "founding",
 } as const;
 
 export interface UpdateProfileBody {

@@ -5183,7 +5183,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 interface StripeTierProduct {
-  tier: "guest" | "student" | "traveller" | "ambassador";
+  tier: "guest" | "student" | "traveller" | "ambassador" | "founding";
   productId: string;
   displayName: string;
   monthlyPriceId: string | null;

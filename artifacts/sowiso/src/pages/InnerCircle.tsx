@@ -294,7 +294,7 @@ export default function InnerCircle() {
   const [savingTagline, setSavingTagline] = useState(false);
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasAccess = isAuthenticated && tier === "ambassador";
+  const hasAccess = isAuthenticated && (tier === "ambassador" || tier === "founding");
 
   const handleEditTagline = useCallback(() => {
     setTaglineDraft(profile?.calling_card_tagline ?? "");

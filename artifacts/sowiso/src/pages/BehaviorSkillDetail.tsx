@@ -498,7 +498,7 @@ export default function BehaviorSkillDetail() {
   const { data: profile } = useGetProfile();
 
   const tier = profile?.subscription_tier ?? "guest";
-  const hasFullAccess = tier === "traveller" || tier === "ambassador";
+  const hasFullAccess = tier === "traveller" || tier === "ambassador" || tier === "founding";
 
   usePageTitle(skill ? `${skill.name} — Behavior Skills` : "Behavior Skills");
 

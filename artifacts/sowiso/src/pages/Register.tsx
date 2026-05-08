@@ -36,6 +36,22 @@ export default function Register() {
   const accessGranted = !closedBeta || !!inviteCode;
 
   const [homeCountry, setHomeCountry] = useState("");
+  const [emailFromInvite, setEmailFromInvite] = useState(false);
+
+  useEffect(() => {
+    if (!inviteCode) return;
+    fetch(`${API_BASE}/api/auth/invite-info?code=${encodeURIComponent(inviteCode)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { email?: string } | null) => {
+        if (data?.email) {
+          setForm((f) => ({ ...f, email: data.email! }));
+          setEmailFromInvite(true);
+        }
+      })
+      .catch(() => {});
+  // Only run once when inviteCode is known
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteCode]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -340,17 +356,23 @@ export default function Register() {
               <label htmlFor="email" className="text-sm font-medium text-foreground tracking-wide block">
                 {t("register.email_label")} <span className="text-destructive" aria-hidden="true">*</span>
               </label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder={t("register.email_placeholder")}
-                value={form.email}
-                onChange={(e) => update("email", e.target.value)}
-                className="bg-background border-border/60 focus:border-primary/50 rounded-sm"
-                disabled={loading}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder={t("register.email_placeholder")}
+                  value={form.email}
+                  onChange={(e) => { if (!emailFromInvite) update("email", e.target.value); }}
+                  className={`bg-background border-border/60 focus:border-primary/50 rounded-sm ${emailFromInvite ? "pr-10 text-muted-foreground cursor-default select-none" : ""}`}
+                  readOnly={emailFromInvite}
+                  disabled={loading}
+                  required
+                />
+                {emailFromInvite && (
+                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" aria-hidden="true" />
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

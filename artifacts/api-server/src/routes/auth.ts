@@ -801,4 +801,30 @@ router.post("/auth/claim-first-admin", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/auth/invite-info?code=FNDR-…
+ * Public endpoint: returns the email address associated with a valid founder invite code.
+ * Used by the registration page to pre-fill and lock the email field.
+ */
+router.get("/auth/invite-info", async (req, res) => {
+  const code = typeof req.query.code === "string" ? req.query.code.trim() : "";
+  if (!code) {
+    return res.status(400).json({ error: "No invite code provided." });
+  }
+  try {
+    const [row] = await db
+      .select({ email: waitlistSignupsTable.email })
+      .from(waitlistSignupsTable)
+      .where(eq(waitlistSignupsTable.founder_code, code))
+      .limit(1);
+    if (!row) {
+      return res.status(404).json({ error: "Invite code not found." });
+    }
+    return res.json({ email: row.email });
+  } catch (err) {
+    req.log.error({ err }, "invite-info lookup failed");
+    return res.status(500).json({ error: "Could not retrieve invite information." });
+  }
+});
+
 export default router;

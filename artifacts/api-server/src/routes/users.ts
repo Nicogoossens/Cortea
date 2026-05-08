@@ -823,11 +823,12 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       if (!hasWorldSignal) {
         return res.status(400).json({ error: "World choice (step 4) is required to complete onboarding." });
       }
+      const resolvedWorldChoice = data.world_choice !== undefined ? data.world_choice : existing.world_choice;
       const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
-      if (!resolvedArchetype) {
+      if (!resolvedArchetype && resolvedWorldChoice !== "A") {
         return res.status(400).json({ error: "Archetype (step 5) is required to complete onboarding." });
       }
-      // ── Steps 6–8: min 1 / max 4 at completion time ─────────────────────────
+      // ── Steps 6–8: min 1 / max matches UI caps ───────────────────────────────
       const resolvedCircles = (data.social_circles !== undefined ? data.social_circles : existing.social_circles) ?? [];
       const resolvedCulture = (data.cultural_interests !== undefined ? data.cultural_interests : existing.cultural_interests) ?? [];
       const resolvedSelected = (data.selected_interests !== undefined ? data.selected_interests : existing.selected_interests) ?? [];
@@ -837,8 +838,8 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       if (resolvedCulture.length < 1 || resolvedCulture.length > 4) {
         return res.status(400).json({ error: "Please select 1–4 cultural interests (step 7) before completing." });
       }
-      if (resolvedSelected.length < 1 || resolvedSelected.length > 4) {
-        return res.status(400).json({ error: "Please select 1–4 lifestyle interests (step 8) before completing." });
+      if (resolvedSelected.length < 1 || resolvedSelected.length > 9) {
+        return res.status(400).json({ error: "Please select at least 1 lifestyle interest (step 8) before completing." });
       }
       updates.onboarding_completed = true;
     }
@@ -849,28 +850,32 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
 
     // ── Step 9: Learning intent → upsert learning_track_progress ─────────────
     if (data.learning_intent && Object.keys(data.learning_intent).length > 0) {
-      const regionCode = existing.active_region;
-      const resolvedRegister =
-        (updates.register_bias as string | undefined)
-        ?? (existing.register_bias as string | null)
-        ?? "middle_class";
-      for (const [pillar, intent] of Object.entries(data.learning_intent)) {
-        await db.execute(sql`
-          INSERT INTO learning_track_progress
-            (user_id, register, region_code, research_pillar, phase, learning_intent)
-          VALUES
-            (${userId}, ${resolvedRegister}, ${regionCode}, ${pillar}, 1, ${intent})
-          ON CONFLICT (user_id, register, region_code, research_pillar, phase)
-            WHERE research_pillar IS NOT NULL
-          DO UPDATE SET learning_intent = EXCLUDED.learning_intent
-        `);
+      try {
+        const regionCode = existing.active_region;
+        const resolvedRegister =
+          (updates.register_bias as string | undefined)
+          ?? (existing.register_bias as string | null)
+          ?? "middle_class";
+        for (const [pillar, intent] of Object.entries(data.learning_intent)) {
+          await db.execute(sql`
+            INSERT INTO learning_track_progress
+              (user_id, register, region_code, research_pillar, phase, learning_intent)
+            VALUES
+              (${userId}, ${resolvedRegister}, ${regionCode}, ${pillar}, 1, ${intent})
+            ON CONFLICT (user_id, register, region_code, research_pillar, phase)
+              WHERE research_pillar IS NOT NULL
+            DO UPDATE SET learning_intent = EXCLUDED.learning_intent
+          `);
+        }
+      } catch (intentErr) {
+        req.log.warn({ intentErr }, "learning_intent upsert failed — onboarding still saved");
       }
     }
 
     return res.json({ ok: true });
   } catch (err) {
     req.log.error({ err }, "Failed to save onboarding step");
-    return res.status(500).json({ error: "A difficulty arose while saving your onboarding progress." });
+    return res.status(500).json({ error: "Er trad een probleem op bij het opslaan van uw onboarding." });
   }
 });
 

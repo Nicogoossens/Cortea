@@ -368,7 +368,7 @@ export default function Onboarding() {
     });
     if (!res.ok) {
       const json = await res.json().catch(() => ({})) as { error?: string };
-      throw new Error(json.error ?? "An error occurred while saving your progress.");
+      throw new Error(json.error ?? t("onboarding.error_save"));
     }
   }
 
@@ -744,14 +744,14 @@ export default function Onboarding() {
           <div className="flex justify-between gap-3">
             <NavBack to={3} />
             <div className="flex gap-2">
-              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(5)}>
+              <Button variant="ghost" className="font-serif text-muted-foreground" onClick={() => setStep(worldChoice === "A" ? 6 : 5)}>
                 {t("onboarding.skip")}
               </Button>
               <NavNext
-                to={5}
+                to={worldChoice === "A" ? 6 : 5}
                 onAdvance={() => {
                   if (worldChoice) void saveOnboarding({ world_choice: worldChoice });
-                  setStep(5);
+                  setStep(worldChoice === "A" ? 6 : 5);
                 }}
               />
             </div>
@@ -915,7 +915,7 @@ export default function Onboarding() {
             )}
 
             <div className="flex justify-between gap-3">
-              <NavBack to={5} />
+              <NavBack to={worldChoice === "A" ? 4 : 5} />
               <NavNext
                 to={7}
                 disabled={socialCircles.length === 0}
@@ -1020,9 +1020,9 @@ export default function Onboarding() {
         const allDress   = catalogDress   && catalogDress.length   > 0 ? catalogDress   : DRESS_FALLBACK;
         const primaryRegister = worldChoice === "B" ? "elite" : worldChoice === "A" ? "middle_class" : null;
         const combinedCount = sports.length + cuisine.length + dressCode.length;
-        const toggleSport  = (id: string) => { if (!sports.includes(id)  && combinedCount >= 4) return; toggleArr(sports,    id, setSports);   };
-        const toggleCuisine = (id: string) => { if (!cuisine.includes(id)  && combinedCount >= 4) return; toggleArr(cuisine,   id, setCuisine);  };
-        const toggleDress  = (id: string) => { if (!dressCode.includes(id) && combinedCount >= 4) return; toggleArr(dressCode, id, setDressCode); };
+        const toggleSport   = (id: string) => { if (!sports.includes(id)    && sports.length >= 3)    return; toggleArr(sports,    id, setSports);    };
+        const toggleCuisine = (id: string) => { if (!cuisine.includes(id)   && cuisine.length >= 3)   return; toggleArr(cuisine,   id, setCuisine);   };
+        const toggleDress   = (id: string) => { if (!dressCode.includes(id) && dressCode.length >= 3) return; toggleArr(dressCode, id, setDressCode); };
         const filterPrimary = <T extends { registers: string[] }>(opts: T[]) =>
           primaryRegister ? opts.filter((o) => o.registers.includes(primaryRegister)) : opts;
         const filterOther = <T extends { registers: string[] }>(opts: T[]) =>
@@ -1080,7 +1080,7 @@ export default function Onboarding() {
 
               {combinedCount > 0 && (
                 <p className="text-xs text-muted-foreground font-light text-center">
-                  {combinedCount} / 4 {t("onboarding.max_selected")}
+                  {combinedCount} {t("onboarding.max_selected")}
                 </p>
               )}
 

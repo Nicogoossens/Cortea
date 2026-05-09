@@ -1822,5 +1822,10 @@
   "admin.settings.gtm_not_set": "— non défini —",
   "admin.settings.gtm_expected_format": "Format attendu",
   "storage_warning.title": "La préférence de langue ne peut pas être enregistrée",
-  "storage_warning.description": "Votre navigateur bloque le stockage (ex. mode navigation privée). Votre choix de langue sera réinitialisé lors du rechargement de la page."
+  "storage_warning.description": "Votre navigateur bloque le stockage (ex. mode navigation privée). Votre choix de langue sera réinitialisé lors du rechargement de la page.",
+  "nav.profile_nav_title": "Souhaitez-vous vous rendre à votre profil ?",
+  "nav.profile_nav_desc": "Vous quitterez la page actuelle pour accéder à vos paramètres de profil.",
+  "nav.profile_nav_confirm": "Poursuivre",
+  "nav.profile_nav_cancel": "Rester sur la page",
+  "nav.profile_nav_aria": "Ouvrir les paramètres de profil"
 }

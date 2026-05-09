@@ -1822,5 +1822,10 @@
   "admin.settings.gtm_not_set": "— 未设置 —",
   "admin.settings.gtm_expected_format": "预期格式",
   "storage_warning.title": "无法保存语言偏好",
-  "storage_warning.description": "您的浏览器正在阻止存储（例如：隐私浏览模式）。重新加载页面时，您的语言选择将被重置。"
+  "storage_warning.description": "您的浏览器正在阻止存储（例如：隐私浏览模式）。重新加载页面时，您的语言选择将被重置。",
+  "nav.profile_nav_title": "前往阁下之个人档案？",
+  "nav.profile_nav_desc": "阁下将离开当前页面，前往个人档案设置。",
+  "nav.profile_nav_confirm": "继续",
+  "nav.profile_nav_cancel": "留在本页",
+  "nav.profile_nav_aria": "开启个人档案设置"
 }

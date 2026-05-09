@@ -4599,6 +4599,7 @@ export default function Admin() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const authHeaders: Record<string, string> = {};
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -4623,6 +4624,7 @@ export default function Admin() {
 
   const fetchUsers = useCallback(async (q: string, page = 1) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const url = `${API_BASE}/api/admin/users?q=${encodeURIComponent(q)}&page=${page}&limit=50`;
       const res = await fetch(url, { credentials: "include" });
@@ -4632,8 +4634,13 @@ export default function Admin() {
         setTotalPages(data.pages ?? 1);
         setTotalUsers(data.total ?? 0);
         setCurrentPage(data.page ?? 1);
+      } else if (res.status === 403) {
+        setFetchError("Uw sessie is verlopen of uw account heeft geen beheerdersrechten meer. Meld u opnieuw aan als beheerder.");
+      } else {
+        setFetchError("Er is een fout opgetreden bij het laden van gebruikers. Probeer opnieuw.");
       }
     } catch {
+      setFetchError("Verbindingsfout — controleer uw internetverbinding en probeer opnieuw.");
     } finally {
       setLoading(false);
       setSearched(true);
@@ -4785,7 +4792,19 @@ export default function Admin() {
             </div>
           )}
 
-          {!loading && searched && (
+          {!loading && fetchError && (
+            <Card className="bg-card border-destructive/40">
+              <CardContent className="py-8 text-center space-y-3">
+                <AlertTriangle className="w-6 h-6 text-destructive mx-auto" aria-hidden="true" />
+                <p className="text-sm text-destructive font-mono">{fetchError}</p>
+                <Button size="sm" variant="outline" className="font-mono text-xs" onClick={() => fetchUsers(query, currentPage)}>
+                  Opnieuw proberen
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {!loading && searched && !fetchError && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">

@@ -1822,5 +1822,10 @@
   "admin.settings.gtm_not_set": "— 未設定 —",
   "admin.settings.gtm_expected_format": "期待される形式",
   "storage_warning.title": "言語設定を保存できません",
-  "storage_warning.description": "ブラウザがストレージをブロックしています（例：プライベートブラウジングモード）。ページをリロードすると言語の選択がリセットされます。"
+  "storage_warning.description": "ブラウザがストレージをブロックしています（例：プライベートブラウジングモード）。ページをリロードすると言語の選択がリセットされます。",
+  "nav.profile_nav_title": "ご自身のプロフィールへ移動されますか？",
+  "nav.profile_nav_desc": "現在のページを離れ、プロフィール設定へ移動いたします。",
+  "nav.profile_nav_confirm": "続行する",
+  "nav.profile_nav_cancel": "このページに留まる",
+  "nav.profile_nav_aria": "プロフィール設定を開く"
 }

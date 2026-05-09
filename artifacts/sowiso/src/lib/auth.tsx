@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { queryClient } from "@/lib/query-client";
 
 const USER_ID_KEY = "sowiso_user_id";
 const USER_NAME_KEY = "sowiso_user_name";
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState<boolean>(() => localStorage.getItem(IS_ADMIN_KEY) === "true");
 
   const login = useCallback((uid: string, opts?: { name?: string; isAdmin?: boolean }) => {
+    queryClient.clear();
     localStorage.setItem(USER_ID_KEY, uid);
     setUserId(uid);
     if (opts?.name) {
@@ -102,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserId(null);
     setUserName(null);
     setIsAdmin(false);
+    queryClient.clear();
   }, []);
 
   /**

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Eye, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -5,11 +6,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLocale } from "@/lib/i18n";
 import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { useActiveRegion, FlagEmoji } from "@/lib/active-region";
 import { useAccessibility, type FontSize } from "@/lib/accessibility";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 function PillTrigger({
   icon,
@@ -62,6 +73,8 @@ export function ContextBar() {
   const { locale, t } = useLocale();
   const { activeRegion, getRegionName } = useActiveRegion();
   const { highContrast, setHighContrast, fontSize, setFontSize } = useAccessibility();
+  const [, navigate] = useLocation();
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   const currentLocale = LOCALE_GROUPS.flatMap((g) => g.locales).find((l) => l.locale === locale);
 
@@ -72,88 +85,108 @@ export function ContextBar() {
   ];
 
   return (
-    <div
-      className="flex items-center justify-between gap-1 px-4 py-1.5 border-b border-border/40 bg-background/60 backdrop-blur-sm overflow-x-hidden"
-      role="toolbar"
-      aria-label={t("accessibility.title")}
-    >
-      {/* Active context — links to profile so user can change lang/region there */}
-      <Link
-        href="/profile"
-        className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 hover:text-foreground transition-colors min-w-0 group"
-        aria-label="Open profile settings"
+    <>
+      <div
+        className="flex items-center justify-between gap-1 px-4 py-1.5 border-b border-border/40 bg-background/60 backdrop-blur-sm overflow-x-hidden"
+        role="toolbar"
+        aria-label={t("accessibility.title")}
       >
-        <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" className="flex-shrink-0" />
-        <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block group-hover:text-foreground transition-colors">
-          {currentLocale?.languageLabel ?? "English"}
-        </span>
-        <span className="text-muted-foreground/40 hidden sm:inline">·</span>
-        <FlagEmoji code={activeRegion} size="sm" className="flex-shrink-0 hidden sm:inline-block" />
-        <span className="font-medium text-foreground/70 truncate hidden sm:block group-hover:text-foreground transition-colors">
-          {getRegionName(activeRegion)}
-        </span>
-      </Link>
-
-      <div className="flex items-center gap-1">
-
-      {/* Accessibility picker */}
-      <DropdownMenu>
-        <PillTrigger
-          icon={
-            <Eye
-              className={`w-3 h-3 ${highContrast ? "text-primary" : ""}`}
-              aria-hidden="true"
-            />
-          }
-          ariaLabel={t("accessibility.title")}
+        {/* Active context — opens confirmation before navigating to profile */}
+        <button
+          type="button"
+          onClick={() => setShowProfileDialog(true)}
+          className="flex items-center gap-2 text-xs font-mono text-muted-foreground/80 hover:text-foreground transition-colors min-w-0 group cursor-pointer bg-transparent border-0 p-0"
+          aria-label={t("nav.profile_nav_aria", "Open profielinstellingen")}
         >
-          <span className={`hidden sm:inline ${highContrast ? "text-primary font-medium" : ""}`}>
-            {t("accessibility.title")}
+          <FlagEmoji code={currentLocale?.flag ?? "US"} size="sm" className="flex-shrink-0" />
+          <span className="font-medium text-foreground/70 truncate hidden xs:block sm:block group-hover:text-foreground transition-colors">
+            {currentLocale?.languageLabel ?? "English"}
           </span>
-        </PillTrigger>
+          <span className="text-muted-foreground/40 hidden sm:inline">·</span>
+          <FlagEmoji code={activeRegion} size="sm" className="flex-shrink-0 hidden sm:inline-block" />
+          <span className="font-medium text-foreground/70 truncate hidden sm:block group-hover:text-foreground transition-colors">
+            {getRegionName(activeRegion)}
+          </span>
+        </button>
 
-        <DropdownMenuContent
-          align="end"
-          sideOffset={6}
-          className="z-50 min-w-[200px] bg-background border border-border rounded-sm shadow-lg p-0"
-          aria-label={t("accessibility.title")}
-        >
-          {/* High contrast toggle */}
-          <div className="px-3 py-2 border-b border-border/30">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
-              {t("accessibility.high_contrast")}
-            </span>
-          </div>
-          <div className="py-1">
-            <Item selected={!highContrast} onClick={() => setHighContrast(false)}>
-              <span className="flex-1">{t("accessibility.font_normal")}</span>
-            </Item>
-            <Item selected={highContrast} onClick={() => setHighContrast(true)}>
-              <span className="flex-1">{t("accessibility.high_contrast")}</span>
-            </Item>
-          </div>
+        <div className="flex items-center gap-1">
 
-          {/* Font size */}
-          <div className="px-3 py-2 border-t border-b border-border/30">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
-              {t("accessibility.font_size")}
+        {/* Accessibility picker */}
+        <DropdownMenu>
+          <PillTrigger
+            icon={
+              <Eye
+                className={`w-3 h-3 ${highContrast ? "text-primary" : ""}`}
+                aria-hidden="true"
+              />
+            }
+            ariaLabel={t("accessibility.title")}
+          >
+            <span className={`hidden sm:inline ${highContrast ? "text-primary font-medium" : ""}`}>
+              {t("accessibility.title")}
             </span>
-          </div>
-          <div className="py-1">
-            {fontSizeOptions.map((opt) => (
-              <Item
-                key={opt.value}
-                selected={fontSize === opt.value}
-                onClick={() => setFontSize(opt.value)}
-              >
-                <span className="flex-1">{t(opt.labelKey)}</span>
+          </PillTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            sideOffset={6}
+            className="z-50 min-w-[200px] bg-background border border-border rounded-sm shadow-lg p-0"
+            aria-label={t("accessibility.title")}
+          >
+            {/* High contrast toggle */}
+            <div className="px-3 py-2 border-b border-border/30">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+                {t("accessibility.high_contrast")}
+              </span>
+            </div>
+            <div className="py-1">
+              <Item selected={!highContrast} onClick={() => setHighContrast(false)}>
+                <span className="flex-1">{t("accessibility.font_normal")}</span>
               </Item>
-            ))}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <Item selected={highContrast} onClick={() => setHighContrast(true)}>
+                <span className="flex-1">{t("accessibility.high_contrast")}</span>
+              </Item>
+            </div>
 
+            {/* Font size */}
+            <div className="px-3 py-2 border-t border-b border-border/30">
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+                {t("accessibility.font_size")}
+              </span>
+            </div>
+            <div className="py-1">
+              {fontSizeOptions.map((opt) => (
+                <Item
+                  key={opt.value}
+                  selected={fontSize === opt.value}
+                  onClick={() => setFontSize(opt.value)}
+                >
+                  <span className="flex-1">{t(opt.labelKey)}</span>
+                </Item>
+              ))}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("nav.profile_nav_title", "Naar uw profiel?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("nav.profile_nav_desc", "U verlaat de huidige pagina en gaat naar uw profielinstellingen.")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("nav.profile_nav_cancel", "Blijf op pagina")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate("/profile")}>
+              {t("nav.profile_nav_confirm", "Ga door")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

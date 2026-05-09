@@ -1822,5 +1822,10 @@
   "admin.settings.gtm_not_set": "— nicht gesetzt —",
   "admin.settings.gtm_expected_format": "Erwartetes Format",
   "storage_warning.title": "Sprachpräferenz kann nicht gespeichert werden",
-  "storage_warning.description": "Ihr Browser blockiert den Speicher (z. B. privater Browsing-Modus). Ihre Sprachauswahl wird zurückgesetzt, wenn Sie die Seite neu laden."
+  "storage_warning.description": "Ihr Browser blockiert den Speicher (z. B. privater Browsing-Modus). Ihre Sprachauswahl wird zurückgesetzt, wenn Sie die Seite neu laden.",
+  "nav.profile_nav_title": "Zu Ihrem Profil wechseln?",
+  "nav.profile_nav_desc": "Sie verlassen die aktuelle Seite und begeben sich zu Ihren Profileinstellungen.",
+  "nav.profile_nav_confirm": "Fortfahren",
+  "nav.profile_nav_cancel": "Auf der Seite verbleiben",
+  "nav.profile_nav_aria": "Profileinstellungen öffnen"
 }

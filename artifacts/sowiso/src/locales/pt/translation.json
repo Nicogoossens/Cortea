@@ -1822,5 +1822,10 @@
   "admin.settings.gtm_not_set": "— não definido —",
   "admin.settings.gtm_expected_format": "Formato esperado",
   "storage_warning.title": "A preferência de idioma não pode ser salva",
-  "storage_warning.description": "Seu navegador está bloqueando o armazenamento (ex. modo de navegação privada). Sua escolha de idioma será redefinida ao recarregar a página."
+  "storage_warning.description": "Seu navegador está bloqueando o armazenamento (ex. modo de navegação privada). Sua escolha de idioma será redefinida ao recarregar a página.",
+  "nav.profile_nav_title": "Dirigir-se ao seu perfil?",
+  "nav.profile_nav_desc": "O senhor abandonará a página atual e será conduzido aos parâmetros do seu perfil.",
+  "nav.profile_nav_confirm": "Prosseguir",
+  "nav.profile_nav_cancel": "Permanecer na página",
+  "nav.profile_nav_aria": "Abrir parâmetros do perfil"
 }

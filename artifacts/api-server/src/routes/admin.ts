@@ -6,6 +6,10 @@ import { readFileSync, readdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
 import { parseCompassMd, scoreContent, type CompassCountryData } from "../lib/compass-md-parser.js";
+// Google Drive integration — uses Replit Connectors SDK proxy.
+// Connector: google-drive (conn_google-drive_01KR21CRN2GTMBSM0N88G0TVFA)
+// The SDK injects the OAuth token automatically via REPLIT_CONNECTORS_HOSTNAME + REPL_IDENTITY.
+import { ReplitConnectors } from "@replit/connectors-sdk";
 import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, useCasesTable, onboardingEventsTable, workerRunsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
@@ -736,15 +740,38 @@ const CompassDriveImportSchema = z.object({
 
 /**
  * Fetch a single Google Drive file's content as plain text.
- * Requires GOOGLE_ACCESS_TOKEN env var (or GOOGLE_DRIVE_TOKEN).
+ *
+ * Uses the Replit Connectors SDK proxy (google-drive connector) which
+ * handles OAuth token injection and refresh automatically via REPLIT_CONNECTORS_HOSTNAME
+ * and REPL_IDENTITY env vars (injected by Replit — no manual config required).
+ *
+ * Falls back to a manual Bearer token from GOOGLE_ACCESS_TOKEN if the
+ * Replit connector runtime env vars are not present (e.g. local dev without Replit).
  */
 async function fetchDriveFile(fileId: string): Promise<string> {
+  const path = `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
+
+  // Primary: Replit Connectors SDK proxy (auto OAuth, no manual token needed)
+  if (process.env.REPLIT_CONNECTORS_HOSTNAME && process.env.REPL_IDENTITY) {
+    const connectors = new ReplitConnectors();
+    const resp = await connectors.proxy("google-drive", path, { method: "GET" });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(`Drive proxy ${resp.status} for file ${fileId}: ${body}`);
+    }
+    return resp.text();
+  }
+
+  // Fallback: manual Bearer token (for local dev / non-Replit environments)
   const token = process.env.GOOGLE_ACCESS_TOKEN ?? process.env.GOOGLE_DRIVE_TOKEN;
-  if (!token) throw new Error("No GOOGLE_ACCESS_TOKEN set. Export a Drive token or use local files.");
+  if (!token) {
+    throw new Error(
+      "Google Drive not available: REPLIT_CONNECTORS_HOSTNAME not set and no GOOGLE_ACCESS_TOKEN env var. " +
+      "In Replit, ensure the google-drive connector is active. Outside Replit, set GOOGLE_ACCESS_TOKEN."
+    );
+  }
   const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
-  const resp = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   if (!resp.ok) {
     throw new Error(`Drive API ${resp.status} for file ${fileId}: ${await resp.text().catch(() => "")}`);
   }

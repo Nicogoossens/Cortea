@@ -108,6 +108,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.78.0
         version: 0.78.0(zod@3.25.76)
+      '@replit/connectors-sdk':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod

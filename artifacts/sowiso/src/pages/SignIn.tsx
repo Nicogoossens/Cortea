@@ -4,7 +4,8 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage, type SupportedLocale } from "@/lib/i18n";
+import { ALL_LOCALES } from "@/lib/i18n-locales";
 import { useAuth } from "@/lib/auth";
 import { useRegistrationStatus } from "@/hooks/useRegistrationStatus";
 import { LogIn, Send, Loader2, CheckCircle2, ArrowLeft, FlaskConical, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
@@ -13,7 +14,7 @@ const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function SignIn() {
   usePageTitle("Sign In");
-  const { t } = useLanguage();
+  const { t, setLocale } = useLanguage();
   const { login } = useAuth();
   const { registration_open: registrationOpen } = useRegistrationStatus();
   const [, navigate] = useLocation();
@@ -75,6 +76,9 @@ export default function SignIn() {
         user_id?: string;
         full_name?: string | null;
         is_admin?: boolean;
+        language_code?: string;
+        explicit_language_choice?: boolean;
+        active_region?: string;
       };
 
       if (!res.ok) {
@@ -85,6 +89,14 @@ export default function SignIn() {
         }
         setError(body.error ?? t("common.error"));
         return;
+      }
+
+      if (body.explicit_language_choice && body.language_code) {
+        const lang = body.language_code;
+        const region = body.active_region;
+        const exact = region ? ALL_LOCALES.find((l) => l === `${lang}-${region}`) : undefined;
+        const resolved: SupportedLocale | undefined = exact ?? ALL_LOCALES.find((l) => l.startsWith(lang + "-"));
+        if (resolved) setLocale(resolved);
       }
 
       login(body.user_id!, {

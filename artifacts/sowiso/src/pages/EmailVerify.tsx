@@ -93,6 +93,7 @@ export default function EmailVerify() {
           full_name?: string;
           is_admin?: boolean;
           language_code?: string;
+          explicit_language_choice?: boolean;
           active_region?: string;
         };
         if (res.ok) {
@@ -101,8 +102,10 @@ export default function EmailVerify() {
             login(body.user_id, { name: body.full_name, isAdmin: body.is_admin ?? false });
           }
           if (body.language_code) {
-            const resolved = resolveLocale(body.language_code, body.active_region);
-            if (resolved) setLocale(resolved);
+            if (body.explicit_language_choice) {
+              const resolved = resolveLocale(body.language_code, body.active_region);
+              if (resolved) setLocale(resolved);
+            }
             setProfileLang(body.language_code);
           }
           if (body.active_region) {

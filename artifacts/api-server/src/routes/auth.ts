@@ -324,7 +324,7 @@ router.get("/auth/verify", async (req, res) => {
         .set({ session_token: refreshedToken, verification_token: null, token_expires_at: null, ...utmPatch })
         .where(eq(usersTable.id, user.id));
       setSessionCookie(res, refreshedToken);
-      return res.json({ message: "Your address has already been verified.", already_verified: true, user_id: user.id, full_name: user.full_name, is_admin: user.is_admin, language_code: user.language_code, active_region: user.active_region });
+      return res.json({ message: "Your address has already been verified.", already_verified: true, user_id: user.id, full_name: user.full_name, is_admin: user.is_admin, language_code: user.language_code, explicit_language_choice: user.explicit_language_choice ?? false, active_region: user.active_region });
     }
 
     if (user.token_expires_at && new Date() > new Date(user.token_expires_at)) {
@@ -354,6 +354,7 @@ router.get("/auth/verify", async (req, res) => {
       full_name: user.full_name,
       is_admin: user.is_admin,
       language_code: user.language_code,
+      explicit_language_choice: user.explicit_language_choice ?? false,
       active_region: user.active_region,
     });
   } catch (err) {
@@ -535,6 +536,7 @@ router.post("/auth/signin-password", async (req, res) => {
       full_name: user.full_name,
       is_admin: user.is_admin,
       language_code: user.language_code,
+      explicit_language_choice: user.explicit_language_choice ?? false,
       active_region: user.active_region,
     });
   } catch (err) {

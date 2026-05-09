@@ -22,6 +22,23 @@ psql "$DATABASE_URL" -c "ALTER TABLE users ADD COLUMN IF NOT EXISTS profiling_co
 psql "$DATABASE_URL" -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'users'::regclass AND conname = 'users_ambition_level_check') THEN ALTER TABLE users ADD CONSTRAINT users_ambition_level_check CHECK (ambition_level IN ('casual', 'professional', 'diplomatic')); END IF; END \$\$;"
 psql "$DATABASE_URL" -f lib/db/migrations/0016_companion_messages.sql 2>/dev/null || true
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PROD schema sync — lib/db connects to PROD_DATABASE_URL when set (which is
+# the live database used by the API server). Any Drizzle migration files in
+# lib/db/drizzle/ are applied idempotently here so the server never starts
+# against a stale schema.
+# ─────────────────────────────────────────────────────────────────────────────
+if [ -n "$PROD_DATABASE_URL" ]; then
+  echo "--- Syncing Drizzle migrations to PROD database ---"
+  for sql_file in lib/db/drizzle/*.sql; do
+    [ -f "$sql_file" ] || continue
+    echo "  Applying: $sql_file"
+    psql "$PROD_DATABASE_URL" -v ON_ERROR_STOP=0 -q -f "$sql_file" 2>&1 \
+      | grep -vE "already exists|^NOTICE|^psql:|^$" || true
+  done
+  echo "  PROD schema sync complete."
+fi
+
 echo "--- Seeding Atelier scenarios (idempotent upsert) ---"
 pnpm --filter @workspace/db exec tsx src/seed.ts
 

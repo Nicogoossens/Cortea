@@ -447,9 +447,24 @@ function ProfileJumpNav({
   return (
     <nav
       aria-label={t("profile.nav.aria_label", "Profile sections")}
-      className="sticky top-0 z-20 py-2 bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm"
+      className="sticky top-0 z-20 px-1 py-2 bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm"
     >
-      <div className="relative">
+      {/* ── Mobile: native select picker ── */}
+      <div className="md:hidden">
+        <select
+          value={active}
+          onChange={(e) => scrollTo(e.target.value)}
+          className="w-full rounded-sm border border-border/50 bg-background px-3 py-2 text-xs font-mono uppercase tracking-wider text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 appearance-none cursor-pointer"
+          aria-label={t("profile.nav.aria_label", "Profile sections")}
+        >
+          {navItems.map(({ id, label }) => (
+            <option key={id} value={id}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* ── Desktop: pill tabs ── */}
+      <div className="relative hidden md:block">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 px-1">
           {navItems.map(({ id, label }) => (
             <button

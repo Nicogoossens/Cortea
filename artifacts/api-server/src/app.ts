@@ -308,6 +308,37 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ── CSRF origin guard ──────────────────────────────────────────────────────────
+// SameSite=None is required for the Replit iframe context (replit.com embeds
+// the app as a cross-site iframe). Because SameSite=None means session cookies
+// are sent with ALL cross-site requests, we must actively verify the Origin on
+// every state-changing request to prevent cross-site attacks.
+//
+// Strategy: double-submit origin check — every POST/PUT/PATCH/DELETE must
+// carry an Origin header that matches the CORS allowlist. Requests without an
+// Origin header (server-to-server, curl, internal scripts) are allowed through;
+// they do not carry browser cookies and are therefore not CSRF-eligible.
+const CSRF_SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+app.use((req, res, next) => {
+  if (CSRF_SAFE_METHODS.has(req.method)) return next();
+
+  // Stripe webhook is verified by signature — skip CSRF check.
+  if (req.path.startsWith("/api/stripe/webhook")) return next();
+
+  const origin = req.headers["origin"];
+  if (!origin) {
+    // No Origin header — not a browser-initiated cross-site request.
+    // Safe to allow (curl, server scripts, Postman, etc.).
+    return next();
+  }
+  if (!isAllowedOrigin(origin)) {
+    return res.status(403).json({
+      error: "Forbidden: request origin is not in the allowed list.",
+    });
+  }
+  return next();
+});
+
 app.use("/api/auth", authLimiter);
 app.use("/api", generalLimiter);
 

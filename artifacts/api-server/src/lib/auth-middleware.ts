@@ -30,7 +30,12 @@ export function extractToken(req: Request): string | null {
  * SameSite=None is required because the app is embedded as an iframe in the
  * Replit workspace canvas (replit.com), which is a different eTLD+1 from the
  * app host (worf.replit.dev). SameSite=Strict or Lax would block cookies in
- * that cross-site iframe context. CORS + allowlist-origin already prevent CSRF.
+ * that cross-site iframe context.
+ *
+ * CSRF is mitigated by the origin-check middleware in app.ts (double-submit
+ * origin guard): every state-changing request (POST/PUT/PATCH/DELETE) that
+ * carries an Origin header must match the CORS allowlist. Unauthenticated
+ * server-to-server calls without an Origin header bypass the guard safely.
  */
 export function setSessionCookie(res: Response, token: string): void {
   res.cookie("cortea_session", token, {

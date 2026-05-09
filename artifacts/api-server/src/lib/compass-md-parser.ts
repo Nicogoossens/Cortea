@@ -418,9 +418,13 @@ export function parseCompassMd(mdTexts: string[]): {
           },
         };
 
-        // Last-seen-wins: unconditionally overwrite earlier entries.
-        // The caller's file list is assumed to be ordered old → new.
-        byCode.set(code, candidate);
+        // Quality-aware deduplication: keep whichever entry has the richer content.
+        // This ensures that even if a later file has a thinner entry for a country
+        // (e.g. a stub or incomplete revision), the richer earlier entry is preserved.
+        const existing = byCode.get(code);
+        if (!existing || scoreContent(candidate.content_en_gb) >= scoreContent(existing.content_en_gb)) {
+          byCode.set(code, candidate);
+        }
       } catch (err: unknown) {
         errors.push(`${section.name} (${code}): ${err instanceof Error ? err.message : String(err)}`);
       }

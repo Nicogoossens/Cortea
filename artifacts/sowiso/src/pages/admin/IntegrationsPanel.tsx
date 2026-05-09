@@ -133,12 +133,12 @@ export function IntegrationsPanel() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/auth/google/status`)
+    adminFetch(`${API_BASE}/api/auth/google/status`)
       .then((r) => r.json())
       .then((d: { configured: boolean }) => setGoogleStatus(d.configured ? "configured" : "not_configured"))
       .catch(() => setGoogleStatus("not_configured"));
     void refreshStripe();
-  }, [refreshStripe]);
+  }, [refreshStripe, adminFetch]);
 
   const studentProduct = stripeStatus?.products.find((p) => p.tier === "student");
   const studentReady = !!studentProduct && !!studentProduct.monthlyPriceId && !!studentProduct.yearlyPriceId;

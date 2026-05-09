@@ -20,6 +20,7 @@ import {
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Compass, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
+  Search,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja, zhCN } from "date-fns/locale";
@@ -443,6 +444,7 @@ export default function Profile() {
   const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
   const [spheresSave, setSpheresSave] = useState<SaveState>("idle");
   const [catalogSave, setCatalogSave] = useState<SaveState>("idle");
+  const [catalogSearch, setCatalogSearch] = useState("");
 
   interface CatalogItem {
     slug: string;
@@ -1830,62 +1832,111 @@ export default function Profile() {
                 <p className="text-xs font-light">{t("profile.none_added")}</p>
               </div>
             ) : (
-              TAXONOMY_ORDER.map((taxonomy) => {
-                const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
-                const visibleItems = items.filter(canSeeInterestItem);
-                const hiddenCount = items.length - visibleItems.length;
-                if (visibleItems.length === 0 && hiddenCount === 0) return null;
-                const selections = getCatalogSelections(taxonomy);
-                const TaxonomyIcon =
-                  taxonomy === "social_circles"    ? Users2Icon
-                  : taxonomy === "cultural_interests" ? Bookmark
-                  : taxonomy === "sports"           ? Target
-                  : taxonomy === "gastronomy"       ? UtensilsCrossed
-                  : Layers;
-                return (
-                  <CollapsibleSubsection
-                    key={taxonomy}
-                    icon={<TaxonomyIcon className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-                    title={t(`profile.taxonomy.${taxonomy}`)}
-                    storageKey={`catalog_${taxonomy}`}
-                  >
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {visibleItems.map((item) => {
-                        const isSelected = selections.includes(item.slug);
-                        const isEliteOnly = !(item.registers as string[]).includes("middle_class");
-                        return (
-                          <button
-                            key={item.slug}
-                            onClick={() => handleCatalogInterestToggle(taxonomy, item.slug)}
-                            disabled={catalogSave === "saving"}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-sm transition-all ${
-                              isSelected
-                                ? "bg-primary/10 border-primary/40 text-primary font-medium"
-                                : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                            }`}
-                          >
-                            {t(item.label_i18n_key)}
-                            {isEliteOnly && (
-                              <span className="text-[9px] font-mono uppercase tracking-wider text-primary/50 border border-primary/20 rounded-full px-1 py-px leading-none">
-                                {t("profile.interests_elite_only")}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                      {hiddenCount > 0 && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground/50 font-light italic">
-                          <Lock className="w-3 h-3" aria-hidden="true" />
-                          +{hiddenCount} {t("profile.interests_elite_only")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 h-4 flex items-center">
-                      <SaveIndicator state={catalogSave} t={t} />
-                    </div>
-                  </CollapsibleSubsection>
-                );
-              })
+              <>
+                {/* Search bar */}
+                <div className="relative mb-1 pt-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    placeholder={t("profile.interests_search_placeholder")}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-muted/30 border border-border/40 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground/40"
+                  />
+                  {catalogSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCatalogSearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                      aria-label={t("profile.interests_search_clear")}
+                    >
+                      <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Taxonomy subsections */}
+                {(() => {
+                  const query = catalogSearch.trim().toLowerCase();
+                  const anyResult = TAXONOMY_ORDER.some((taxonomy) => {
+                    const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
+                    const visibleItems = items.filter(canSeeInterestItem);
+                    return visibleItems.some((item) => !query || t(item.label_i18n_key).toLowerCase().includes(query));
+                  });
+                  if (query && !anyResult) {
+                    return (
+                      <div className="py-6 text-center text-muted-foreground/40">
+                        <Search className="w-5 h-5 mx-auto mb-2 opacity-30" aria-hidden="true" />
+                        <p className="text-xs font-light">{t("profile.interests_search_empty")}</p>
+                      </div>
+                    );
+                  }
+                  return TAXONOMY_ORDER.map((taxonomy) => {
+                    const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
+                    const visibleItems = items.filter(canSeeInterestItem);
+                    const hiddenCount = items.length - visibleItems.length;
+                    const filteredItems = query
+                      ? visibleItems.filter((item) => t(item.label_i18n_key).toLowerCase().includes(query))
+                      : visibleItems;
+                    if (filteredItems.length === 0 && (hiddenCount === 0 || query)) return null;
+                    const selections = getCatalogSelections(taxonomy);
+                    const selectedCount = visibleItems.filter((item) => selections.includes(item.slug)).length;
+                    const TaxonomyIcon =
+                      taxonomy === "social_circles"    ? Users2Icon
+                      : taxonomy === "cultural_interests" ? Bookmark
+                      : taxonomy === "sports"           ? Target
+                      : taxonomy === "gastronomy"       ? UtensilsCrossed
+                      : Layers;
+                    const subsectionTitle = selectedCount > 0
+                      ? `${t(`profile.taxonomy.${taxonomy}`)} · ${selectedCount}`
+                      : t(`profile.taxonomy.${taxonomy}`);
+                    return (
+                      <CollapsibleSubsection
+                        key={taxonomy}
+                        icon={<TaxonomyIcon className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+                        title={subsectionTitle}
+                        storageKey={`catalog_${taxonomy}`}
+                        forceOpen={!!query}
+                      >
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {filteredItems.map((item) => {
+                            const isSelected = selections.includes(item.slug);
+                            const isEliteOnly = !(item.registers as string[]).includes("middle_class");
+                            return (
+                              <button
+                                key={item.slug}
+                                onClick={() => handleCatalogInterestToggle(taxonomy, item.slug)}
+                                disabled={catalogSave === "saving"}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-sm transition-all ${
+                                  isSelected
+                                    ? "bg-primary/10 border-primary/40 text-primary font-medium"
+                                    : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
+                                }`}
+                              >
+                                {t(item.label_i18n_key)}
+                                {isEliteOnly && (
+                                  <span className="text-[9px] font-mono uppercase tracking-wider text-primary/50 border border-primary/20 rounded-full px-1 py-px leading-none">
+                                    {t("profile.interests_elite_only")}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                          {!query && hiddenCount > 0 && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground/50 font-light italic">
+                              <Lock className="w-3 h-3" aria-hidden="true" />
+                              +{hiddenCount} {t("profile.interests_elite_only")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2 h-4 flex items-center">
+                          <SaveIndicator state={catalogSave} t={t} />
+                        </div>
+                      </CollapsibleSubsection>
+                    );
+                  });
+                })()}
+              </>
             )}
           </CardContent>
         </CollapsibleSection>
@@ -2984,13 +3035,14 @@ function CollapsibleSection({
  * `profile_subsection_<storageKey>` so each user keeps their preference.
  */
 function CollapsibleSubsection({
-  icon, title, description, storageKey, defaultOpen = false, children,
+  icon, title, description, storageKey, defaultOpen = false, forceOpen, children,
 }: {
   icon?: React.ReactNode;
   title: string;
   description?: string;
   storageKey: string;
   defaultOpen?: boolean;
+  forceOpen?: boolean;
   children: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(() => {
@@ -3002,6 +3054,9 @@ function CollapsibleSubsection({
       return defaultOpen;
     }
   });
+  useEffect(() => {
+    if (forceOpen) setIsOpen(true);
+  }, [forceOpen]);
   function toggle() {
     setIsOpen((v) => {
       const next = !v;

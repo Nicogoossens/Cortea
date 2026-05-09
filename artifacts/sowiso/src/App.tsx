@@ -21,6 +21,7 @@ import RegionDetectionBanner from "@/components/RegionDetectionBanner";
 import PaymentFailedBanner from "@/components/PaymentFailedBanner";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import TestModeToggle from "@/components/TestModeToggle";
+import { SessionExpiryWatcher } from "@/components/SessionExpiryWatcher";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Welcome from "@/pages/Welcome";
@@ -265,6 +266,7 @@ function App() {
                   <PaymentFailedBanner />
                   <CookieConsentBanner />
                   <TestModeToggle />
+                  <SessionExpiryWatcher />
                   <Toaster />
                 </TooltipProvider>
               </AppWithRegion>

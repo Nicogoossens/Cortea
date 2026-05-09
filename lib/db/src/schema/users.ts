@@ -90,6 +90,7 @@ export const usersTable = pgTable("users", {
   is_admin: boolean("is_admin").notNull().default(false),
   suspended_at: timestamp("suspended_at"),
   session_token: text("session_token"),
+  session_token_created_at: timestamp("session_token_created_at"),
   // Onboarding & profile enrichment
   country_of_origin: text("country_of_origin"),
   // Once set the first time, country_of_origin becomes server-side immutable

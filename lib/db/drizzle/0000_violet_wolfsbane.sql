@@ -21,6 +21,7 @@ CREATE TABLE "users" (
 	"is_admin" boolean DEFAULT false NOT NULL,
 	"suspended_at" timestamp,
 	"session_token" text,
+	"session_token_created_at" timestamp,
 	"country_of_origin" text,
 	"country_of_origin_locked_at" timestamp,
 	"objectives" json DEFAULT '[]'::json NOT NULL,

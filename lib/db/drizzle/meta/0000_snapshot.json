@@ -1,5 +1,5 @@
 {
-  "id": "2d8337f6-7edd-452d-9036-e91f15a5be76",
+  "id": "a62d7f96-1840-4d6a-8363-a07e460d6b53",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -146,6 +146,12 @@
         "session_token": {
           "name": "session_token",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_token_created_at": {
+          "name": "session_token_created_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },

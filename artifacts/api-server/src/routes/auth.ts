@@ -145,6 +145,7 @@ router.post("/auth/register", async (req, res) => {
             password_hash: passwordHash,
             email_verified: true,
             session_token: sessionToken,
+            session_token_created_at: new Date(),
             verification_token: null,
             token_expires_at: null,
             ...(explicit_language_choice ? { language_code, explicit_language_choice: true } : {}),
@@ -174,6 +175,7 @@ router.post("/auth/register", async (req, res) => {
           email_verified: true,
           password_hash: passwordHash,
           session_token: sessionToken,
+          session_token_created_at: new Date(),
           verification_token: null,
           token_expires_at: null,
           birth_year,
@@ -321,7 +323,7 @@ router.get("/auth/verify", async (req, res) => {
       }
       const refreshedToken = randomBytes(32).toString("hex");
       await db.update(usersTable)
-        .set({ session_token: refreshedToken, verification_token: null, token_expires_at: null, ...utmPatch })
+        .set({ session_token: refreshedToken, session_token_created_at: new Date(), verification_token: null, token_expires_at: null, ...utmPatch })
         .where(eq(usersTable.id, user.id));
       setSessionCookie(res, refreshedToken);
       return res.json({ message: "Your address has already been verified.", already_verified: true, user_id: user.id, full_name: user.full_name, is_admin: user.is_admin, language_code: user.language_code, explicit_language_choice: user.explicit_language_choice ?? false, active_region: user.active_region });
@@ -340,6 +342,7 @@ router.get("/auth/verify", async (req, res) => {
         verification_token: null,
         token_expires_at: null,
         session_token: sessionToken,
+        session_token_created_at: new Date(),
         ...utmPatch,
       })
       .where(eq(usersTable.id, user.id));
@@ -525,6 +528,7 @@ router.post("/auth/signin-password", async (req, res) => {
       .update(usersTable)
       .set({
         session_token: sessionToken,
+        session_token_created_at: new Date(),
         email_verified: true,
       })
       .where(eq(usersTable.id, user.id));
@@ -732,6 +736,7 @@ router.post("/auth/reset-password", async (req, res) => {
         verification_token: null,
         token_expires_at: null,
         session_token: sessionToken,
+        session_token_created_at: new Date(),
         email_verified: true,
       })
       .where(eq(usersTable.id, user.id));
@@ -799,6 +804,62 @@ router.post("/auth/claim-first-admin", async (req, res) => {
       return res.status(403).json({ error: "An administrator already exists. This endpoint is disabled." });
     }
     req.log.error({ err }, "claim-first-admin failed");
+    return res.status(500).json({ error: "A difficulty arose. Please try again." });
+  }
+});
+
+/**
+ * GET /api/auth/session
+ * Returns the remaining TTL (in seconds) of the current session cookie.
+ * Used by the admin UI to warn admins before their session expires.
+ * The session cookie has a 30-day max-age; TTL is computed from
+ * session_token_created_at stored in the DB.
+ */
+const SESSION_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+router.get("/auth/session", async (req, res) => {
+  try {
+    const token = extractToken(req);
+    if (!token) {
+      return res.status(401).json({ error: "Authentication is required." });
+    }
+
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        is_admin: usersTable.is_admin,
+        suspended_at: usersTable.suspended_at,
+        session_token_created_at: usersTable.session_token_created_at,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.session_token, token))
+      .limit(1);
+
+    if (!user || user.suspended_at) {
+      return res.status(401).json({ error: "Invalid or expired session." });
+    }
+
+    let ttl_seconds: number;
+    if (user.session_token_created_at) {
+      const elapsed = Math.floor((Date.now() - new Date(user.session_token_created_at).getTime()) / 1000);
+      ttl_seconds = Math.max(0, SESSION_COOKIE_MAX_AGE_SECONDS - elapsed);
+    } else {
+      // No creation timestamp — session was created before this feature;
+      // report a generous TTL so we don't spam warnings for existing sessions.
+      ttl_seconds = SESSION_COOKIE_MAX_AGE_SECONDS;
+    }
+
+    const expires_at = user.session_token_created_at
+      ? new Date(new Date(user.session_token_created_at).getTime() + SESSION_COOKIE_MAX_AGE_SECONDS * 1000).toISOString()
+      : null;
+
+    return res.json({
+      ttl_seconds,
+      expires_at,
+      is_admin: user.is_admin,
+    });
+  } catch (err) {
+    req.log.error({ err }, "Session TTL check failed");
     return res.status(500).json({ error: "A difficulty arose. Please try again." });
   }
 });

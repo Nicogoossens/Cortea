@@ -97,6 +97,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
     await db.update(usersTable)
       .set({
         session_token: sessionToken,
+        session_token_created_at: new Date(),
         full_name: fullName ?? byOAuth[0].full_name,
         avatar_url: avatarUrl ?? byOAuth[0].avatar_url,
       })
@@ -120,6 +121,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
       await db.update(usersTable)
         .set({
           session_token: sessionToken,
+          session_token_created_at: new Date(),
           email_verified: true,
           oauth_provider: "google",
           oauth_provider_id: sub,
@@ -145,6 +147,7 @@ async function upsertGoogleUser(claims: Record<string, unknown>): Promise<{
       oauth_provider: "google",
       oauth_provider_id: sub,
       session_token: sessionToken,
+      session_token_created_at: new Date(),
       noble_score: 0,
       subscription_tier: "guest",
       region_history: [],

@@ -614,6 +614,116 @@ router.post("/admin/content/seed", requireAdmin, async (req, res) => {
   }
 });
 
+// ── Granular Seed Endpoints ───────────────────────────────────────────────────
+
+/** POST /admin/content/seed/atelier — seed only Atelier (counsel_region_seeds) */
+router.post("/admin/content/seed/atelier", requireAdmin, async (req, res) => {
+  try {
+    await runAtelierSeed();
+    return res.json({ ok: true, results: ["[Atelier] OK"] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ ok: false, results: [`[Atelier] ERROR: ${msg}`] });
+  }
+});
+
+/** POST /admin/content/seed/compass — seed only Compass (compass_regions) */
+router.post("/admin/content/seed/compass", requireAdmin, async (req, res) => {
+  try {
+    await runCompassSeed();
+    return res.json({ ok: true, results: ["[Compass] OK"] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ ok: false, results: [`[Compass] ERROR: ${msg}`] });
+  }
+});
+
+/** POST /admin/content/seed/translations — seed only UI translations */
+router.post("/admin/content/seed/translations", requireAdmin, async (req, res) => {
+  const results: string[] = [];
+  let anyFailed = false;
+  try {
+    const { stdout, stderr } = await execAsync("node scripts/seed-translations.mjs", {
+      cwd: WORKSPACE_ROOT,
+      env: { ...process.env },
+      timeout: 120_000,
+    });
+    results.push(`[Translations] OK\n${stdout.trim()}`);
+    if (stderr.trim()) results.push(`[Translations] stderr: ${stderr.trim()}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    results.push(`[Translations] ERROR: ${msg}`);
+    anyFailed = true;
+  }
+  return res.status(anyFailed ? 500 : 200).json({ ok: !anyFailed, results });
+});
+
+/** POST /admin/content/seed/admin — ensure admin account exists */
+router.post("/admin/content/seed/admin-account", requireAdmin, async (req, res) => {
+  const results: string[] = [];
+  let anyFailed = false;
+  try {
+    const { stdout, stderr } = await execAsync("node scripts/ensure-admin.mjs", {
+      cwd: WORKSPACE_ROOT,
+      env: { ...process.env },
+      timeout: 30_000,
+    });
+    results.push(`[Admin] OK\n${stdout.trim()}`);
+    if (stderr.trim()) results.push(`[Admin] stderr: ${stderr.trim()}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    results.push(`[Admin] ERROR: ${msg}`);
+    anyFailed = true;
+  }
+  return res.status(anyFailed ? 500 : 200).json({ ok: !anyFailed, results });
+});
+
+// ── Dev-only: Clear tables for fresh import ───────────────────────────────────
+
+const CLEARABLE_TABLES = ["compass_regions", "scenarios", "culture_protocols", "learning_track_questions"] as const;
+type ClearableTable = typeof CLEARABLE_TABLES[number];
+
+const ClearTableSchema = z.object({
+  table: z.enum(CLEARABLE_TABLES),
+  confirm: z.literal("CLEAR"),
+});
+
+/**
+ * DELETE /admin/content/clear — wipe a single content table.
+ * DEV ONLY — blocked in production.
+ * Body: { table: "compass_regions" | "scenarios" | "culture_protocols" | "learning_track_questions", confirm: "CLEAR" }
+ */
+router.delete("/admin/content/clear", requireAdmin, async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "This endpoint is not available in production." });
+  }
+  const parsed = ClearTableSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Invalid body. Provide { table: \"compass_regions\" | \"scenarios\" | \"culture_protocols\" | \"learning_track_questions\", confirm: \"CLEAR\" }.",
+      details: parsed.error.flatten(),
+    });
+  }
+  const { table } = parsed.data;
+  // Map to safe SQL table name (already validated by enum)
+  const tableMap: Record<ClearableTable, string> = {
+    compass_regions: "compass_regions",
+    scenarios: "scenarios",
+    culture_protocols: "culture_protocols",
+    learning_track_questions: "learning_track_questions",
+  };
+  const tableName = tableMap[table];
+  try {
+    const result = await db.execute(sql.raw(`DELETE FROM ${tableName}`));
+    const deleted = (result as { rowCount?: number }).rowCount ?? 0;
+    req.log?.info({ table: tableName, deleted }, "Admin: table cleared (dev only)");
+    return res.json({ ok: true, table: tableName, deleted });
+  } catch (err) {
+    req.log?.error({ err, table: tableName }, "Admin: failed to clear table");
+    return res.status(500).json({ error: `Failed to clear ${tableName}.` });
+  }
+});
+
 // ── JSON Bulk Import ──────────────────────────────────────────────────────────
 
 const ScenarioImportSchema = z.object({

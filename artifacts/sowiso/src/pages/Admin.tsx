@@ -445,11 +445,22 @@ const LANG_LABELS: Record<string, string> = {
   pt: "Português", it: "Italiano", ar: "العربية", ja: "日本語", zh: "中文",
 };
 
+type ClearableTable = "compass_regions" | "scenarios" | "culture_protocols" | "learning_track_questions";
+
 function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const [status, setStatus] = useState<ContentStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [seedState, setSeedState] = useState<ActionState>("idle");
   const [seedOutput, setSeedOutput] = useState<string[]>([]);
+
+  const [granularSeedState, setGranularSeedState] = useState<Record<string, ActionState>>({});
+  const [granularSeedOutput, setGranularSeedOutput] = useState<string[]>([]);
+
+  const [clearTable, setClearTable] = useState<ClearableTable | null>(null);
+  const [clearConfirmText, setClearConfirmText] = useState("");
+  const [clearState, setClearState] = useState<ActionState>("idle");
+  const [clearResult, setClearResult] = useState<string | null>(null);
+
   const [importState, setImportState] = useState<ActionState>("idle");
   const [importResult, setImportResult] = useState<{ inserted: number; errors_count: number; errors: string[]; translation_queued?: boolean; translation_scenario_ids?: number[]; translation_note?: string } | null>(null);
   const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
@@ -488,6 +499,54 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
       setSeedState("error");
     }
     setTimeout(() => setSeedState("idle"), 5000);
+  }
+
+  async function handleGranularSeed(section: string) {
+    setGranularSeedState(s => ({ ...s, [section]: "loading" }));
+    setGranularSeedOutput([]);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/content/seed/${section}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json() as { ok: boolean; results: string[] };
+      setGranularSeedOutput(data.results ?? []);
+      setGranularSeedState(s => ({ ...s, [section]: data.ok ? "done" : "error" }));
+      if (data.ok) fetchStatus();
+    } catch (err) {
+      setGranularSeedOutput([String(err)]);
+      setGranularSeedState(s => ({ ...s, [section]: "error" }));
+    }
+    setTimeout(() => setGranularSeedState(s => ({ ...s, [section]: "idle" })), 5000);
+  }
+
+  async function handleClearTable() {
+    if (!clearTable || clearConfirmText !== "CLEAR") return;
+    setClearState("loading");
+    setClearResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/content/clear`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ table: clearTable, confirm: "CLEAR" }),
+      });
+      const data = await res.json() as { ok: boolean; table: string; deleted: number; error?: string };
+      if (res.ok && data.ok) {
+        setClearResult(`✓ ${data.deleted} rijen gewist uit ${data.table}`);
+        setClearState("done");
+        fetchStatus();
+      } else {
+        setClearResult(`✗ ${data.error ?? "Onbekende fout"}`);
+        setClearState("error");
+      }
+    } catch (err) {
+      setClearResult(`✗ ${String(err)}`);
+      setClearState("error");
+    }
+    setClearTable(null);
+    setClearConfirmText("");
+    setTimeout(() => { setClearState("idle"); setClearResult(null); }, 6000);
   }
 
   async function handleImport(type: "scenarios" | "compass_regions" | "learning_tracks") {
@@ -691,31 +750,147 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
             Seed Base Content
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           <p className="text-sm text-muted-foreground font-light">
-            Runs all seed scripts (Atelier, Compass, Translations, Admin account).
-            Existing data is preserved — seeds are skipped if the tables are already populated.
+            Runs seed scripts. Existing data is preserved — seeds are idempotent.
+            Use <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">Seed All</span> for a full run,
+            or seed individual sections below.
           </p>
-          <Button
-            className="font-serif gap-2"
-            disabled={seedState === "loading"}
-            onClick={handleSeed}
-          >
-            {seedState === "loading" ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Seeding…</>
-            ) : seedState === "done" ? (
-              <><CheckCircle2 className="w-4 h-4" /> Seed Complete</>
-            ) : seedState === "error" ? (
-              <><XCircle className="w-4 h-4" /> Seed Failed</>
-            ) : (
-              <>Seed Base Content</>
+
+          {/* Full seed */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              className="font-serif gap-2"
+              disabled={seedState === "loading"}
+              onClick={handleSeed}
+            >
+              {seedState === "loading" ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Seeding all…</>
+              ) : seedState === "done" ? (
+                <><CheckCircle2 className="w-4 h-4" /> Seed Complete</>
+              ) : seedState === "error" ? (
+                <><XCircle className="w-4 h-4" /> Seed Failed</>
+              ) : (
+                <>Seed All</>
+              )}
+            </Button>
+            <span className="text-xs text-muted-foreground font-mono">Atelier + Compass + Vertalingen + Admin</span>
+          </div>
+
+          {/* Granular seed buttons */}
+          <div className="border border-border/50 rounded-sm p-4 space-y-3">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60">Per sectie seeden</p>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: "atelier",       label: "Atelier (counsel seeds)" },
+                { key: "compass",       label: "Compass (regios)"         },
+                { key: "translations",  label: "UI-vertalingen"           },
+                { key: "admin-account", label: "Admin-account"            },
+              ] as const).map(({ key, label }) => {
+                const s = granularSeedState[key] ?? "idle";
+                return (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant="outline"
+                    className="font-mono text-xs gap-1.5"
+                    disabled={s === "loading"}
+                    onClick={() => handleGranularSeed(key)}
+                  >
+                    {s === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : s === "done"  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                      : s === "error" ? <XCircle className="w-3.5 h-3.5 text-red-500" />
+                      : <Database className="w-3.5 h-3.5" />}
+                    {label}
+                  </Button>
+                );
+              })}
+            </div>
+            {granularSeedOutput.length > 0 && (
+              <pre className="text-xs font-mono bg-muted/40 border border-border/50 rounded-sm p-3 overflow-auto max-h-32 whitespace-pre-wrap">
+                {granularSeedOutput.join("\n\n")}
+              </pre>
             )}
-          </Button>
+          </div>
 
           {seedOutput.length > 0 && (
             <pre className="text-xs font-mono bg-muted/40 border border-border/50 rounded-sm p-3 overflow-auto max-h-48 whitespace-pre-wrap">
               {seedOutput.join("\n\n")}
             </pre>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dev-only: Clear tables */}
+      <Card className="bg-card border-red-200">
+        <CardHeader>
+          <CardTitle className="text-sm font-mono uppercase tracking-widest text-red-600/80 flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Tabel wissen (dev only)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground font-light">
+            Wis een volledige content-tabel in dev — zodat je daarna verse data kunt importeren.
+            <span className="text-red-600 font-medium"> Niet beschikbaar in productie.</span>
+          </p>
+
+          {clearResult && (
+            <div className={`text-xs font-mono p-3 rounded-sm border ${clearState === "done" ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+              {clearResult}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {(["compass_regions", "scenarios", "culture_protocols", "learning_track_questions"] as ClearableTable[]).map((tbl) => (
+              <Button
+                key={tbl}
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs border-red-300 text-red-700 hover:bg-red-50 gap-1.5"
+                disabled={clearState === "loading"}
+                onClick={() => { setClearTable(tbl); setClearConfirmText(""); }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {tbl}
+              </Button>
+            ))}
+          </div>
+
+          {clearTable && (
+            <div className="border border-red-300 bg-red-50 rounded-sm p-4 space-y-3">
+              <p className="text-sm font-mono text-red-800">
+                Je staat op het punt <strong>{clearTable}</strong> volledig te wissen. Type{" "}
+                <span className="bg-red-200 px-1 rounded font-bold">CLEAR</span> ter bevestiging.
+              </p>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={clearConfirmText}
+                  onChange={(e) => setClearConfirmText(e.target.value)}
+                  placeholder="Type CLEAR"
+                  className="px-3 py-1.5 rounded-sm border border-red-300 bg-white text-sm font-mono w-36 focus:outline-none focus:ring-1 focus:ring-red-400"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-500 bg-red-600 text-white hover:bg-red-700 font-mono text-xs gap-1.5"
+                  disabled={clearConfirmText !== "CLEAR" || clearState === "loading"}
+                  onClick={handleClearTable}
+                >
+                  {clearState === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Wis {clearTable}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="font-mono text-xs"
+                  onClick={() => { setClearTable(null); setClearConfirmText(""); }}
+                >
+                  Annuleer
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

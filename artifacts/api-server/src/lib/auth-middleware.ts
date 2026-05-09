@@ -27,12 +27,16 @@ export function extractToken(req: Request): string | null {
 /**
  * Sets the session cookie on the response.
  * HttpOnly prevents JavaScript access; Secure ensures HTTPS-only in production.
+ * SameSite=None is required because the app is embedded as an iframe in the
+ * Replit workspace canvas (replit.com), which is a different eTLD+1 from the
+ * app host (worf.replit.dev). SameSite=Strict or Lax would block cookies in
+ * that cross-site iframe context. CORS + allowlist-origin already prevent CSRF.
  */
 export function setSessionCookie(res: Response, token: string): void {
   res.cookie("cortea_session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict",
+    secure: true,      // Always true — Replit always serves over HTTPS
+    sameSite: "none",  // Required for cross-site iframe (Replit canvas)
     path: "/",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });

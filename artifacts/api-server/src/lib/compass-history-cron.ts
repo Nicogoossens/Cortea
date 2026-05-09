@@ -43,18 +43,15 @@ const DEFAULT_BEHAVIOR: PureBehaviorProfile = {
 let timer: NodeJS.Timeout | null = null;
 let busy = false;
 
-async function tick(): Promise<void> {
-  if (busy) return;
+export async function runCompassHistoryTick(): Promise<{ snapshotCount: number; busy: boolean }> {
+  if (busy) return { snapshotCount: 0, busy: true };
   busy = true;
+  let totalSnapshots = 0;
   try {
     const utcDayStart = new Date();
     utcDayStart.setUTCHours(0, 0, 0, 0);
     const now = new Date();
-    let totalSnapshots = 0;
 
-    // Paginate until all users have been processed for today.
-    // Uses cursor-style pagination (lastSeenId) so we never re-scan already-processed
-    // users and the loop terminates even when new users are created mid-run.
     let lastSeenId: string | null = null;
     while (true) {
       const candidates = await db.execute<{
@@ -97,17 +94,24 @@ async function tick(): Promise<void> {
     if (totalSnapshots > 0) {
       logger.info({ snapshotCount: totalSnapshots }, "Compass-history snapshots written");
     }
-  } catch (err) {
-    logger.error({ err }, "Compass-history cron tick failed");
   } finally {
     busy = false;
+  }
+  return { snapshotCount: totalSnapshots, busy: false };
+}
+
+async function tick(): Promise<void> {
+  try {
+    await runCompassHistoryTick();
+  } catch (err) {
+    logger.error({ err }, "Compass-history cron tick failed");
   }
 }
 
 export function startCompassHistoryCron(intervalMs: number = SWEEP_INTERVAL_MS): void {
   if (timer) return;
-  // First run ~2 minutes after boot (well after other sweepers).
-  setTimeout(() => void tick(), 2 * 60 * 1000).unref();
+  // First tick runs immediately at startup so the overlay is populated on day 0.
+  void tick();
   timer = setInterval(() => void tick(), intervalMs);
   timer.unref();
   logger.info({ intervalMs }, "Compass-history cron started");

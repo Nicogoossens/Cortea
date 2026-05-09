@@ -32,6 +32,7 @@ import waitlistRouter from "./waitlist";
 import systemConfigRouter from "./system-config";
 import debugRouter from "./debug";
 import compassBadgeRouter from "./compass-badge";
+import compassHistoryAdminRouter from "./compass-history-admin";
 import regionsRouter from "./regions";
 import placementRouter from "./placement";
 
@@ -70,6 +71,7 @@ router.use(waitlistRouter);
 router.use(systemConfigRouter);
 router.use(debugRouter);
 router.use(compassBadgeRouter);
+router.use(compassHistoryAdminRouter);
 router.use(regionsRouter);
 router.use(placementRouter);
 

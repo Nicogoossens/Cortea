@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "重启网络工作流程，以便 Vite 获取新变量。随后通过 GTM 中的预览来验证页面浏览次数是否已到达。",
   "admin.settings.gtm_current_value": "当前值",
   "admin.settings.gtm_not_set": "— 未设置 —",
-  "admin.settings.gtm_expected_format": "预期格式"
+  "admin.settings.gtm_expected_format": "预期格式",
+  "storage_warning.title": "无法保存语言偏好",
+  "storage_warning.description": "您的浏览器正在阻止存储（例如：隐私浏览模式）。重新加载页面时，您的语言选择将被重置。"
 }

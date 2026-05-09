@@ -1631,7 +1631,7 @@
   "profile.bias.toggle_elite": "Choice: Formal world",
   "profile.bias.toggle_both": "Choice: Both worlds",
   "profile.bias.onboarding_prefix": "Setting:",
-"profile.elite_level": "Elite level",
+  "profile.elite_level": "Elite level",
   "profile.my_interests_title": "My Interests",
   "profile.my_interests_desc": "Browse and select your interests from our curated catalog. Your selections personalise your recommendations across the platform.",
   "profile.taxonomy.social_circles": "Social Circles",
@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Restart the web workflow so Vite picks up the new variable. Then verify in GTM via Preview that pageviews arrive.",
   "admin.settings.gtm_current_value": "Current value",
   "admin.settings.gtm_not_set": "— not set —",
-  "admin.settings.gtm_expected_format": "Expected format"
+  "admin.settings.gtm_expected_format": "Expected format",
+  "storage_warning.title": "Language preference can't be saved",
+  "storage_warning.description": "Your browser is blocking storage (e.g. private browsing mode). Your language choice will reset when you reload the page."
 }

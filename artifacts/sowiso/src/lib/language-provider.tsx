@@ -38,12 +38,13 @@ function markStorageWarningShown(): void {
   }
 }
 
-const STORAGE_TOAST_PAYLOAD = {
-  title: "Language preference can't be saved",
-  description:
-    "Your browser is blocking storage (e.g. private browsing mode). Your language choice will reset when you reload the page.",
-  variant: "destructive" as const,
-};
+function getStorageToastPayload(lng: string) {
+  return {
+    title: i18n.t("storage_warning.title", { lng }),
+    description: i18n.t("storage_warning.description", { lng }),
+    variant: "destructive" as const,
+  };
+}
 
 export function hasStoredLocalePreference(): boolean {
   try {
@@ -126,7 +127,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!hasShownStorageWarning() && !isStorageAvailable()) {
       markStorageWarningShown();
-      toast(STORAGE_TOAST_PAYLOAD);
+      toast(getStorageToastPayload(localeToBaseLang(detectLocale())));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -160,7 +161,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     } catch {
       if (!hasShownStorageWarning()) {
         markStorageWarningShown();
-        toast(STORAGE_TOAST_PAYLOAD);
+        toast(getStorageToastPayload(localeToBaseLang(newLocale)));
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

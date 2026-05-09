@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Web ワークフローを再起動して、Vite が新しい変数を認識するようにしてください。その後、GTM でプレビューを通じてページビューが到達していることを確認してください。",
   "admin.settings.gtm_current_value": "現在の値",
   "admin.settings.gtm_not_set": "— 未設定 —",
-  "admin.settings.gtm_expected_format": "期待される形式"
+  "admin.settings.gtm_expected_format": "期待される形式",
+  "storage_warning.title": "言語設定を保存できません",
+  "storage_warning.description": "ブラウザがストレージをブロックしています（例：プライベートブラウジングモード）。ページをリロードすると言語の選択がリセットされます。"
 }

@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Reinicie el flujo de trabajo web para que Vite recoja la nueva variable. Luego verifique en GTM mediante Preview que las vistas de página lleguen correctamente.",
   "admin.settings.gtm_current_value": "Valor actual",
   "admin.settings.gtm_not_set": "— no establecido —",
-  "admin.settings.gtm_expected_format": "Formato esperado"
+  "admin.settings.gtm_expected_format": "Formato esperado",
+  "storage_warning.title": "La preferencia de idioma no se puede guardar",
+  "storage_warning.description": "Su navegador está bloqueando el almacenamiento (p. ej. modo de navegación privada). Su elección de idioma se restablecerá al recargar la página."
 }

@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Riavviare il flusso di lavoro web affinché Vite rilevi la nuova variabile. Quindi verificare in GTM tramite Anteprima che le visualizzazioni di pagina arrivino.",
   "admin.settings.gtm_current_value": "Valore attuale",
   "admin.settings.gtm_not_set": "— non impostato —",
-  "admin.settings.gtm_expected_format": "Formato previsto"
+  "admin.settings.gtm_expected_format": "Formato previsto",
+  "storage_warning.title": "Impossibile salvare la preferenza della lingua",
+  "storage_warning.description": "Il browser sta bloccando la memoria (es. modalità di navigazione privata). La scelta della lingua verrà reimpostata al ricaricamento della pagina."
 }

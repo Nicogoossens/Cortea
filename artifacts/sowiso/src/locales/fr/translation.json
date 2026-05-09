@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Redémarrez le flux de travail web afin que Vite récupère la nouvelle variable. Ensuite, vérifiez dans GTM via l'aperçu que les pages vues arrivent.",
   "admin.settings.gtm_current_value": "Valeur actuelle",
   "admin.settings.gtm_not_set": "— non défini —",
-  "admin.settings.gtm_expected_format": "Format attendu"
+  "admin.settings.gtm_expected_format": "Format attendu",
+  "storage_warning.title": "La préférence de langue ne peut pas être enregistrée",
+  "storage_warning.description": "Votre navigateur bloque le stockage (ex. mode navigation privée). Votre choix de langue sera réinitialisé lors du rechargement de la page."
 }

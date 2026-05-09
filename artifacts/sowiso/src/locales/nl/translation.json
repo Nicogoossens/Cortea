@@ -1632,7 +1632,7 @@
   "profile.elite_level": "Elitaire niveau",
   "profile.compass.privacy_tooltip_on": "Uw Compass-gegevens zichtbaar maken",
   "profile.compass.privacy_tooltip_off": "Uw Compass voor anderen verbergen",
-"profile.my_interests_title": "Mijn interesses",
+  "profile.my_interests_title": "Mijn interesses",
   "profile.my_interests_desc": "Blader door onze samengestelde catalogus en sla uw interesses op. Uw keuzes personaliseren uw aanbevelingen.",
   "profile.taxonomy.social_circles": "Sociale kringen",
   "profile.taxonomy.cultural_interests": "Culturele interesses",
@@ -1643,7 +1643,7 @@
   "profile.interests_search_placeholder": "Interesses zoeken…",
   "profile.interests_search_clear": "Zoekopdracht wissen",
   "profile.interests_search_empty": "Geen interesses gevonden.",
-"admin.cc.urgency_critical": "Kritisch",
+  "admin.cc.urgency_critical": "Kritisch",
   "admin.cc.urgency_important": "Belangrijk",
   "admin.cc.urgency_nice": "Nice-to-know",
   "admin.cc.pending_queue": "Wachtrij voor review",
@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Herstart de web workflow zodat Vite de nieuwe variabele oppikt. Controleer daarna in GTM via Preview of pageviews binnenkomen.",
   "admin.settings.gtm_current_value": "Huidige waarde",
   "admin.settings.gtm_not_set": "— niet ingesteld —",
-  "admin.settings.gtm_expected_format": "Verwacht formaat"
+  "admin.settings.gtm_expected_format": "Verwacht formaat",
+  "storage_warning.title": "Taalvoorkeur kan niet worden opgeslagen",
+  "storage_warning.description": "Uw browser blokkeert opslag (bijv. privénavigatiemodus). Uw taalkeuze wordt gereset wanneer u de pagina herlaadt."
 }

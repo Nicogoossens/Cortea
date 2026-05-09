@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "Starten Sie den Web-Workflow neu, damit Vite die neue Variable übernimmt. Überprüfen Sie dann in GTM über Preview, dass Seitenaufrufe ankommen.",
   "admin.settings.gtm_current_value": "Aktueller Wert",
   "admin.settings.gtm_not_set": "— nicht gesetzt —",
-  "admin.settings.gtm_expected_format": "Erwartetes Format"
+  "admin.settings.gtm_expected_format": "Erwartetes Format",
+  "storage_warning.title": "Sprachpräferenz kann nicht gespeichert werden",
+  "storage_warning.description": "Ihr Browser blockiert den Speicher (z. B. privater Browsing-Modus). Ihre Sprachauswahl wird zurückgesetzt, wenn Sie die Seite neu laden."
 }

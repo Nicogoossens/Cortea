@@ -1820,5 +1820,7 @@
   "admin.settings.gtm_step6": "أعد تشغيل سير العمل على الويب حتى تلتقط Vite المتغير الجديد. ثم تحقق في GTM عبر المعاينة من وصول صفحات العرض.",
   "admin.settings.gtm_current_value": "القيمة الحالية",
   "admin.settings.gtm_not_set": "— غير معيّن —",
-  "admin.settings.gtm_expected_format": "الصيغة المتوقعة"
+  "admin.settings.gtm_expected_format": "الصيغة المتوقعة",
+  "storage_warning.title": "لا يمكن حفظ تفضيل اللغة",
+  "storage_warning.description": "متصفحك يحجب التخزين (مثل وضع التصفح الخاص). سيتم إعادة تعيين اختيار لغتك عند إعادة تحميل الصفحة."
 }

@@ -29,6 +29,8 @@ import { LOCALE_GROUPS } from "@/lib/i18n-locales";
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { useActiveRegion, COMPASS_REGIONS, FlagEmoji, isRegionActive, type RegionCode } from "@/lib/active-region";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { levelKey, pillarDomainKey, pillarTitleKey } from "@/lib/content-labels";
 import { useAuth } from "@/lib/auth";
 import { VenueCard } from "@/components/VenueCard";
@@ -398,6 +400,9 @@ function ProfileJumpNav({
       { id: "refinement-compass", label: t("profile.nav.compass", "Compass") },
       { id: "recent-log",         label: t("profile.nav.recent_log", "Activity log") },
       { id: "my-guides",          label: t("profile.nav.guides", "My guides") },
+      ...(isOwnProfile
+        ? [{ id: "change-password", label: t("profile.nav.security", "Security") }]
+        : []),
     ];
     return all;
   }, [t, isOwnProfile, earnedBadges]);
@@ -975,14 +980,7 @@ export default function Profile() {
   // progress + badge trail, displayed as an independent panel below.
   const [interestsList, setInterestsList] = useState<{ region_code: string }[]>([]);
   const [interestsBusy, setInterestsBusy] = useState(false);
-  type CountrySortMode = "available_first" | "most_used" | "az" | "za";
-  const [countrySort, setCountrySort] = useState<CountrySortMode>(() => {
-    if (typeof window === "undefined") return "available_first";
-    return (localStorage.getItem("profile_country_sort") as CountrySortMode) || "available_first";
-  });
-  useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("profile_country_sort", countrySort);
-  }, [countrySort]);
+  const [countriesPickerOpen, setCountriesPickerOpen] = useState(false);
   type TrackProgressRow = {
     register: string;
     region_code: string;
@@ -2061,93 +2059,112 @@ export default function Profile() {
         description={t("profile.countries_interest_subtitle", "Track several cultures in parallel — each one keeps its own progress.")}
         storageKey="countries"
       >
-        <CardContent>
-          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              {t("profile.countries_sort_label", "Sorteren")}
-            </div>
-            <Select value={countrySort} onValueChange={(v) => setCountrySort(v as CountrySortMode)}>
-              <SelectTrigger className="w-[260px] h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available_first">{t("profile.countries_sort_available", "Beschikbare landen eerst")}</SelectItem>
-                <SelectItem value="most_used">{t("profile.countries_sort_most_used", "Meest geoefend")}</SelectItem>
-                <SelectItem value="az">{t("profile.countries_sort_az", "Naam A → Z")}</SelectItem>
-                <SelectItem value="za">{t("profile.countries_sort_za", "Naam Z → A")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {(() => {
-              const usageFor = (code: string) =>
-                trackProgress
-                  .filter((p) => p.region_code === code)
-                  .reduce((s, p) => s + (p.current_level || 0), 0);
-              const sorted = [...COMPASS_REGIONS].sort((a, b) => {
-                const aAvail = isRegionActive(a.code) ? 1 : 0;
-                const bAvail = isRegionActive(b.code) ? 1 : 0;
-                if (countrySort === "available_first" && aAvail !== bAvail) return bAvail - aAvail;
-                if (countrySort === "most_used") {
-                  const diff = usageFor(b.code) - usageFor(a.code);
-                  if (diff !== 0) return diff;
-                }
-                const an = getRegionName(a.code);
-                const bn = getRegionName(b.code);
-                return countrySort === "za" ? bn.localeCompare(an) : an.localeCompare(bn);
-              });
-              return sorted.map((region) => {
-                const isPicked = interestsList.some((r) => r.region_code === region.code);
-                const available = isRegionActive(region.code);
-                return (
-                  <button
-                    key={region.code}
-                    onClick={() => available && toggleInterestRegion(region.code)}
-                    disabled={interestsBusy || !available}
-                    title={available
-                      ? (isPicked ? t("profile.countries_remove_hint", "Klik om te verwijderen") : t("profile.countries_add_hint", "Klik om toe te voegen"))
-                      : t("profile.countries_unavailable_hint", "Dit land is binnenkort beschikbaar")}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-sm border text-sm transition-all ${
-                      !available
-                        ? "border-border/30 bg-muted/30 text-muted-foreground/50 cursor-not-allowed line-through decoration-muted-foreground/30"
-                        : isPicked
-                          ? "bg-primary/10 text-primary border-primary/35 font-medium"
-                          : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                    }`}
-                  >
-                    <FlagEmoji code={region.flag} size="sm" />
-                    {getRegionName(region.code)}
-                    {available && isPicked ? <Check className="w-3.5 h-3.5 ml-1" aria-hidden="true" /> : null}
-                    {!available ? (
-                      <span className="ml-1 text-[9px] font-mono uppercase tracking-wider px-1 py-0.5 rounded-sm border border-muted-foreground/20 text-muted-foreground/60">
-                        {t("profile.countries_soon", "binnenkort")}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              });
-            })()}
-          </div>
-          <div className="flex items-center gap-3 mt-3 text-[11px] font-mono uppercase tracking-wider text-muted-foreground/70">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block w-2 h-2 rounded-full bg-primary/70" aria-hidden="true" />
-              {t("profile.countries_legend_available", "Beschikbaar")}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground/30" aria-hidden="true" />
-              {t("profile.countries_legend_unavailable", "Nog niet beschikbaar")}
-            </span>
-          </div>
-          {interestsList.length === 0 && (
-            <p className="text-xs text-muted-foreground/60 italic font-light mt-3">
-              {t("profile.countries_interest_empty", "Pick at least one country above to start tracking it.")}
-            </p>
-          )}
+        <CardContent className="space-y-5">
+          {/* ── Dropdown multi-select ── */}
+          <div className="flex flex-col gap-3">
+            <Popover open={countriesPickerOpen} onOpenChange={setCountriesPickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-sm border border-border/50 bg-background hover:border-primary/40 hover:bg-muted/20 transition-colors text-sm text-muted-foreground w-full sm:w-72 text-left"
+                >
+                  <Globe className="w-4 h-4 shrink-0 text-primary/50" aria-hidden="true" />
+                  <span className="flex-1">
+                    {interestsList.length === 0
+                      ? t("profile.countries_add_cta", "Kies landen om bij te houden...")
+                      : t("profile.countries_add_more", "Land toevoegen")}
+                  </span>
+                  <ChevronDown className="w-4 h-4 opacity-40 shrink-0" aria-hidden="true" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-0" align="start" sideOffset={6}>
+                <Command>
+                  <CommandInput placeholder={t("profile.countries_search_placeholder", "Land zoeken...")} />
+                  <CommandList className="max-h-72">
+                    <CommandEmpty>{t("profile.countries_no_results", "Geen landen gevonden.")}</CommandEmpty>
+                    <CommandGroup heading={t("profile.countries_legend_available", "Beschikbaar")}>
+                      {COMPASS_REGIONS.filter(r => isRegionActive(r.code as RegionCode)).map((region) => {
+                        const isPicked = interestsList.some((r) => r.region_code === region.code);
+                        return (
+                          <CommandItem
+                            key={region.code}
+                            value={getRegionName(region.code)}
+                            onSelect={() => { toggleInterestRegion(region.code); }}
+                            className="flex items-center gap-2.5 cursor-pointer"
+                          >
+                            <div className={`w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${isPicked ? "bg-primary/15 border-primary/50" : "border-border/60"}`}>
+                              {isPicked && <Check className="w-3 h-3 text-primary" aria-hidden="true" />}
+                            </div>
+                            <FlagEmoji code={region.flag} size="sm" />
+                            <span className="text-sm">{getRegionName(region.code)}</span>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                    <CommandGroup heading={t("profile.countries_legend_unavailable", "Binnenkort beschikbaar")}>
+                      {COMPASS_REGIONS.filter(r => !isRegionActive(r.code as RegionCode)).map((region) => (
+                        <CommandItem
+                          key={region.code}
+                          value={getRegionName(region.code)}
+                          disabled
+                          className="flex items-center gap-2.5 opacity-40 cursor-not-allowed"
+                        >
+                          <div className="w-4 h-4 rounded-sm border border-border/30 shrink-0" />
+                          <FlagEmoji code={region.flag} size="sm" />
+                          <span className="text-sm">{getRegionName(region.code)}</span>
+                          <span className="ml-auto text-[9px] font-mono uppercase tracking-wider shrink-0">
+                            {t("profile.countries_soon", "binnenkort")}
+                          </span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
+            {/* ── Selected country chips ── */}
+            {interestsList.length === 0 ? (
+              <p className="text-xs text-muted-foreground/60 italic font-light">
+                {t("profile.countries_interest_empty", "Voeg minimaal één land toe om voortgang bij te houden.")}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {interestsList.map((interest) => {
+                  const region = COMPASS_REGIONS.find((r) => r.code === interest.region_code);
+                  return (
+                    <div
+                      key={interest.region_code}
+                      className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-sm border border-primary/30 bg-primary/5 text-sm font-medium text-primary"
+                    >
+                      {region && <FlagEmoji code={region.flag} size="sm" />}
+                      <span>{getRegionName(interest.region_code as RegionCode)}</span>
+                      {interest.region_code === activeRegion && (
+                        <span className="text-[9px] font-mono uppercase tracking-wider text-primary/60 border border-primary/20 px-1 rounded-sm ml-0.5">
+                          {t("profile.active_label", "Actief")}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => toggleInterestRegion(interest.region_code)}
+                        disabled={interestsBusy}
+                        aria-label={`${getRegionName(interest.region_code as RegionCode)} ${t("profile.countries_remove_hint", "verwijderen")}`}
+                        className="ml-0.5 p-0.5 rounded-sm hover:bg-primary/20 transition-colors text-primary/50 hover:text-primary disabled:opacity-40"
+                      >
+                        <X className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* ── Per-country progress cards ── */}
           {interestsList.length > 0 && (
-            <div className="mt-6 space-y-3">
+            <div className="space-y-3 pt-2 border-t border-border/30">
               <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                {t("profile.per_country_progress", "Independent progress per country")}
+                {t("profile.per_country_progress", "Voortgang per land")}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {interestsList.map((interest) => {
@@ -2168,21 +2185,17 @@ export default function Profile() {
                       <div className="flex items-center gap-2 mb-2">
                         {region ? <FlagEmoji code={region.flag} size="sm" /> : null}
                         <span className="text-sm font-medium">
-                          {getRegionName(interest.region_code)}
+                          {getRegionName(interest.region_code as RegionCode)}
                         </span>
                         {interest.region_code === activeRegion ? (
                           <span className="text-[10px] font-mono uppercase tracking-wider text-primary/70 ml-auto">
-                            {t("profile.active_label", "Active")}
+                            {t("profile.active_label", "Actief")}
                           </span>
                         ) : null}
                       </div>
                       <div className="text-xs text-muted-foreground space-y-0.5">
-                        <div>
-                          {t("profile.elite_level", "Elite level")}: {eliteRow?.current_level ?? 1}
-                        </div>
-                        <div>
-                          {t("profile.mc_level_avg", "Middle-class avg level")}: {mcAvg || 1}
-                        </div>
+                        <div>{t("profile.elite_level", "Elite level")}: {eliteRow?.current_level ?? 1}</div>
+                        <div>{t("profile.mc_level_avg", "Middle-class avg level")}: {mcAvg || 1}</div>
                       </div>
                       {badges.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -2196,9 +2209,7 @@ export default function Profile() {
                             </span>
                           ))}
                           {badges.length > 6 && (
-                            <span className="text-[10px] text-muted-foreground">
-                              +{badges.length - 6}
-                            </span>
+                            <span className="text-[10px] text-muted-foreground">+{badges.length - 6}</span>
                           )}
                         </div>
                       )}
@@ -3821,6 +3832,7 @@ function PasswordSection() {
 
   return (
     <CollapsibleSection
+      id="change-password"
       title={t("profile.password_title")}
       icon={<KeyRound className="w-5 h-5 text-muted-foreground" aria-hidden="true" />}
       description={t("profile.password_desc")}

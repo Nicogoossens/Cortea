@@ -372,7 +372,7 @@ async function main() {
     });
     await closeWorkerCostPool();
     await pool.end();
-    return;
+    process.exit(2);
   }
 
   const conditions = ["1=1"];

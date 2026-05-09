@@ -33,6 +33,15 @@ const DEFAULT_BATCH = 25;
 const DEFAULT_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 const CHILD_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes — covers worst-case batch
 
+/** Returns the Unix timestamp (ms) for the start of the next UTC day. */
+function nextUtcMidnightMs(): number {
+  const now = new Date();
+  const midnight = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
+  );
+  return midnight.getTime();
+}
+
 let timer: NodeJS.Timeout | null = null;
 let child: ChildProcess | null = null;
 let childStartedAt: number = 0;
@@ -41,6 +50,7 @@ let lastRunAt: number | null = null;
 let lastSpawnAt: number | null = null;
 let lastWorkerExitAt: number | null = null;
 let lastPending: number = 0;
+let budgetCooldownUntil: number | null = null;
 
 export interface ScenarioSweeperStatus {
   enabled: boolean;
@@ -154,7 +164,23 @@ function spawnWorker(from: number, to: number): void {
     "Scenario translation sweeper: worker spawned",
   );
 
-  proc.stdout?.on("data", () => {});
+  proc.stdout?.on("data", (buf: Buffer) => {
+    const lines = buf.toString().split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith("__AI_COST__ ")) {
+        try {
+          const payload = JSON.parse(trimmed.slice("__AI_COST__ ".length));
+          logger.info({ ...payload }, "Scenario translation worker: ai-cost summary");
+        } catch {
+          logger.info({ raw: trimmed }, "Scenario translation worker stdout");
+        }
+      } else {
+        logger.debug({ msg: trimmed }, "Scenario translation worker stdout");
+      }
+    }
+  });
   proc.stderr?.on("data", (buf: Buffer) => {
     const msg = buf.toString().trim();
     if (msg) logger.warn({ msg }, "Scenario translation worker stderr");
@@ -163,10 +189,18 @@ function spawnWorker(from: number, to: number): void {
   proc.on("exit", (code, signal) => {
     const elapsedMs = Date.now() - childStartedAt;
     lastWorkerExitAt = Date.now();
-    logger.info(
-      { code, signal, pid: proc.pid, elapsedMs },
-      "Scenario translation sweeper: worker exited",
-    );
+    if (code === 2) {
+      budgetCooldownUntil = nextUtcMidnightMs();
+      logger.info(
+        { pid: proc.pid, elapsedMs, cooldownUntil: new Date(budgetCooldownUntil).toISOString() },
+        "Scenario translation sweeper: daily budget reached, pausing until tomorrow",
+      );
+    } else {
+      logger.info(
+        { code, signal, pid: proc.pid, elapsedMs },
+        "Scenario translation sweeper: worker exited",
+      );
+    }
     clearChild();
   });
 
@@ -226,6 +260,7 @@ export function startScenarioTranslationSweeper(
 
   const tick = async () => {
     if (child) return;
+    if (budgetCooldownUntil && Date.now() < budgetCooldownUntil) return;
     try {
       const pending = await countPending();
       lastPending = pending;
@@ -238,19 +273,16 @@ export function startScenarioTranslationSweeper(
       // scenario-translation spend has already reached the budget.
       const budget = await checkDailyBudget(SWEEPER_NAME);
       if (budget.over) {
-        logger.warn(
-          { spent: budget.spent, budget: budget.budget, sweeper: SWEEPER_NAME },
-          "Scenario translation sweeper: daily budget reached, skipping worker spawn",
+        budgetCooldownUntil = nextUtcMidnightMs();
+        logger.info(
+          {
+            spent: budget.spent,
+            budget: budget.budget,
+            sweeper: SWEEPER_NAME,
+            cooldownUntil: new Date(budgetCooldownUntil).toISOString(),
+          },
+          "Scenario translation sweeper: daily budget reached, pausing until tomorrow",
         );
-        await recordWorkerRun({
-          sweeper: SWEEPER_NAME,
-          startedAt: new Date(),
-          itemsProcessed: 0,
-          inputTokens: 0,
-          outputTokens: 0,
-          status: "budget_capped",
-          metadata: { spent: budget.spent, budget: budget.budget, pending, batch: range },
-        });
         return;
       }
 

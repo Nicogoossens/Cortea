@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1778360235948,
-      "tag": "0000_futuristic_blue_blade",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1778361900000,
-      "tag": "0001_session_token_created_at",
+      "when": 1778361185766,
+      "tag": "0000_melodic_thunderbolt",
       "breakpoints": true
     }
   ]

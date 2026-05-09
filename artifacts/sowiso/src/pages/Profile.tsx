@@ -1042,6 +1042,8 @@ export default function Profile() {
     );
   }
 
+  const isGuest = profileData?.subscription_tier === "guest";
+
   const elitePrivacyMode = isOwnProfile
     ? compassPrivacyMode
     : ((profileData as { elite_privacy_mode?: boolean } | null)?.elite_privacy_mode ?? false);
@@ -2136,9 +2138,10 @@ export default function Profile() {
 
       {/* ── Referrals ──
           Personal referral link, share buttons, and reward summary. */}
-      <ReferralCard />
+      {!isGuest && <ReferralCard />}
 
       {/* ── Noble Standing + Domain Mastery ── */}
+      {!isGuest && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {(!elitePrivacyMode || isOwnProfile) && <Card className="bg-card border-border shadow-sm overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: nobleScore?.level_color || "var(--primary)" }} aria-hidden="true" />
@@ -2219,9 +2222,10 @@ export default function Profile() {
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* ── Use Case Readiness ── */}
-      {useCasesData && useCasesData.length > 0 && (() => {
+      {!isGuest && useCasesData && useCasesData.length > 0 && (() => {
         const sorted = [...useCasesData]
           .filter(uc => uc.readiness_score !== null)
           .sort((a, b) => (b.readiness_score ?? 0) - (a.readiness_score ?? 0));
@@ -2316,7 +2320,7 @@ export default function Profile() {
       })()}
 
       {/* ── Refinement Compass (§9.5 / §10.3) ── */}
-      <Card className="bg-card border-border shadow-sm">
+      {!isGuest && <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
@@ -2360,7 +2364,7 @@ export default function Profile() {
             isPublicView={!isOwnProfile}
           />
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ── How Cortéa reads you (§10.2) ── */}
       <Card className="bg-card border-border shadow-sm">
@@ -2519,7 +2523,7 @@ export default function Profile() {
       </Card>
 
       {/* ── My Guides ── */}
-      <Card id="my-guides" className="border-border/40 bg-card shadow-sm scroll-mt-20">
+      {!isGuest && <Card id="my-guides" className="border-border/40 bg-card shadow-sm scroll-mt-20">
         <CardHeader className="pb-3">
           <CardTitle className="font-serif text-lg flex items-center gap-2 text-foreground">
             <BookOpen className="w-4 h-4 text-primary/60" aria-hidden="true" />
@@ -2583,11 +2587,11 @@ export default function Profile() {
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* ── Companion & Invitation ── */}
-      <IncomingInvitationSection />
-      <CompanionInviteSection />
+      {!isGuest && <IncomingInvitationSection />}
+      {!isGuest && <CompanionInviteSection />}
 
       {/* ── Password ── */}
       <PasswordSection />
@@ -2698,7 +2702,7 @@ export default function Profile() {
       </Card>
 
       {/* ── My Venues (saved from The Local) ── */}
-      <MyVenuesSection isAuthenticated={isAuthenticated} t={t} />
+      {!isGuest && <MyVenuesSection isAuthenticated={isAuthenticated} t={t} />}
       {/* ── Complete profile dialog ──────────────────────────────────────────
           Lets users with missing identity fields (full name, birth year, or
           gender) fill them in. Only renders inputs for fields that are not

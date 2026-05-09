@@ -1427,7 +1427,7 @@ export default function Profile() {
 
             {/* Email is masked (e.g. j••••@domain) so the local-part is never
                 shown on a screen that may be visible to onlookers. */}
-            <DetailRow label={t("profile.email_label")} value={maskEmail(profileData?.email)} />
+            <DetailRow label="E-mail" value={maskEmail(profileData?.email)} />
 
             {/* Born YYYY — read-only; em-dash if not on file */}
             <div className="border-b border-border/40 pb-2">
@@ -1435,7 +1435,7 @@ export default function Profile() {
                 <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70 shrink-0">{t("profile.birth_year_label")}</span>
                 {profileData?.birth_year ? (
                   <span className="flex items-center gap-1.5 text-sm text-foreground font-light">
-                    {t("profile.born", { year: profileData.birth_year })}
+                    {profileData.birth_year}
                     <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" aria-label={t("profile.locked_field_hint")} />
                   </span>
                 ) : (

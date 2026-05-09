@@ -448,7 +448,7 @@ export default function Counsel() {
 
       {/* ── Active Context Strip ── */}
       {!isGuest && (
-        <div className="flex flex-wrap items-stretch gap-0 rounded-sm border border-border/50 bg-muted/20 overflow-hidden text-xs font-mono divide-x divide-border/40">
+        <div className="flex flex-col sm:flex-row items-stretch gap-0 rounded-sm border border-border/50 bg-muted/20 overflow-hidden text-xs font-mono divide-y sm:divide-y-0 sm:divide-x divide-border/40">
           {/* Region */}
           <button
             type="button"

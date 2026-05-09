@@ -145,42 +145,44 @@ export function CountryProgressOverview() {
                       : "border-border/40 bg-muted/10 hover:bg-muted/20"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <FlagEmoji code={row.region_code} size="sm" />
-                      <div className="min-w-0">
-                        <h4 className="font-serif text-sm text-foreground truncate">
-                          {getRegionName(row.region_code as RegionCode)}
-                        </h4>
-                        {lastDate && (
-                          <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mt-0.5">
-                            {t("country_progress.last_practiced")} {lastDate}
-                          </p>
-                        )}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FlagEmoji code={row.region_code} size="sm" />
+                        <div className="min-w-0">
+                          <h4 className="font-serif text-sm text-foreground">
+                            {getRegionName(row.region_code as RegionCode)}
+                          </h4>
+                          {lastDate && (
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/60 mt-0.5">
+                              {t("country_progress.last_practiced")} {lastDate}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      {row.is_active ? (
+                        <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
+                          {t("country_progress.active_badge")}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSwitch(row.region_code)}
+                          disabled={isSwitching}
+                          className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-sm border border-border/60 text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all shrink-0 inline-flex items-center gap-1.5 disabled:opacity-50"
+                          aria-label={`${t("country_progress.switch_action")}: ${getRegionName(row.region_code as RegionCode)}`}
+                        >
+                          {isSwitching ? (
+                            <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <>
+                              {t("country_progress.switch_action")}
+                              <ArrowRight className="w-3 h-3" aria-hidden="true" />
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
-                    {row.is_active ? (
-                      <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
-                        {t("country_progress.active_badge")}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleSwitch(row.region_code)}
-                        disabled={isSwitching}
-                        className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-full border border-border/60 text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all shrink-0 inline-flex items-center gap-1.5 disabled:opacity-50"
-                        aria-label={`${t("country_progress.switch_action")}: ${getRegionName(row.region_code as RegionCode)}`}
-                      >
-                        {isSwitching ? (
-                          <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <>
-                            {t("country_progress.switch_action")}
-                            <ArrowRight className="w-3 h-3" aria-hidden="true" />
-                          </>
-                        )}
-                      </button>
-                    )}
                   </div>
 
                   {/* Stat row */}

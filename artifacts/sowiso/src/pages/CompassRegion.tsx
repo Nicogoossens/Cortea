@@ -140,7 +140,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
 
       {/* Category tabs */}
       <div
-        className="flex overflow-x-auto gap-0 rounded-sm border border-border/50 divide-x divide-border/50 bg-muted/10"
+        className="flex overflow-x-auto scrollbar-hide gap-0 rounded-sm border border-border/50 divide-x divide-border/50 bg-muted/10"
         role="tablist"
         aria-label={t("compass.local.categories_aria")}
       >
@@ -159,7 +159,7 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
                 setActiveTab(id);
                 setOccasionFilter(null);
               }}
-              className={`flex-1 min-w-[90px] flex flex-col items-center gap-1 px-3 py-3 text-xs font-mono uppercase tracking-widest transition-all whitespace-nowrap ${
+              className={`flex-1 min-w-[72px] sm:min-w-[90px] flex flex-col items-center gap-1 px-2 sm:px-3 py-3 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-all whitespace-nowrap ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/30"

@@ -2,9 +2,10 @@ import express, { Router, type Request, type Response, type NextFunction } from 
 import { exec, spawn } from "child_process";
 import { promisify } from "util";
 import path from "path";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
+import { parseCompassMd, type CompassCountryData } from "../lib/compass-md-parser.js";
 import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, useCasesTable, onboardingEventsTable, workerRunsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
@@ -722,6 +723,200 @@ router.delete("/admin/content/clear", requireAdmin, async (req, res) => {
     req.log?.error({ err, table: tableName }, "Admin: failed to clear table");
     return res.status(500).json({ error: `Failed to clear ${tableName}.` });
   }
+});
+
+// ── Compass Import from Google Drive / Local MD files ─────────────────────────
+
+const CompassDriveImportSchema = z.object({
+  /** Google Drive file IDs to fetch. If omitted, all local attached_assets/Compas_database*.md files are used. */
+  file_ids: z.array(z.string().min(1)).optional(),
+  /** Overwrite existing en-GB content even when the row already has multiple locales. Default false (merge-safe). */
+  force_overwrite: z.boolean().optional().default(false),
+});
+
+/**
+ * Fetch a single Google Drive file's content as plain text.
+ * Requires GOOGLE_ACCESS_TOKEN env var (or GOOGLE_DRIVE_TOKEN).
+ */
+async function fetchDriveFile(fileId: string): Promise<string> {
+  const token = process.env.GOOGLE_ACCESS_TOKEN ?? process.env.GOOGLE_DRIVE_TOKEN;
+  if (!token) throw new Error("No GOOGLE_ACCESS_TOKEN set. Export a Drive token or use local files.");
+  const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
+  const resp = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!resp.ok) {
+    throw new Error(`Drive API ${resp.status} for file ${fileId}: ${await resp.text().catch(() => "")}`);
+  }
+  return resp.text();
+}
+
+/**
+ * POST /admin/content/import-compass-from-drive
+ *
+ * Imports Compass country data from Google Drive markdown files (or local fallback).
+ *
+ * Merge-safe: if the existing row already has translations beyond en-GB,
+ * only the en-GB locale key is updated — other locales are preserved.
+ *
+ * Body:
+ *   { file_ids?: string[], force_overwrite?: boolean }
+ *
+ * - file_ids: Google Drive file IDs. Requires GOOGLE_ACCESS_TOKEN env var.
+ *   If omitted, all attached_assets/Compas_database*.md local files are used.
+ * - force_overwrite: if true, replaces the full content column (loses translations).
+ */
+router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req, res) => {
+  const parsed = CompassDriveImportSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid parameters.", details: parsed.error.flatten() });
+  }
+  const { file_ids, force_overwrite } = parsed.data;
+
+  // ── Collect MD content ────────────────────────────────────────────────────
+  const mdTexts: string[] = [];
+  const sources: string[] = [];
+  const fetchErrors: string[] = [];
+
+  if (file_ids && file_ids.length > 0) {
+    // Fetch from Google Drive
+    for (const id of file_ids) {
+      try {
+        const content = await fetchDriveFile(id);
+        mdTexts.push(content);
+        sources.push(`drive:${id}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        fetchErrors.push(msg);
+        req.log?.warn({ id, err: msg }, "Admin: failed to fetch Drive file");
+      }
+    }
+    if (mdTexts.length === 0) {
+      return res.status(502).json({
+        ok: false,
+        error: "Failed to fetch all requested Google Drive files.",
+        fetch_errors: fetchErrors,
+      });
+    }
+  } else {
+    // Fall back to local attached_assets/Compas_database*.md files
+    const assetsDir = path.join(WORKSPACE_ROOT, "attached_assets");
+    try {
+      const files = readdirSync(assetsDir)
+        .filter((f) => /^Compas_database.*\.md$/i.test(f))
+        .sort();
+      for (const f of files) {
+        const filePath = path.join(assetsDir, f);
+        mdTexts.push(readFileSync(filePath, "utf-8"));
+        sources.push(`local:${f}`);
+      }
+    } catch (err) {
+      return res.status(500).json({ error: "Failed to read local Compass MD files.", detail: String(err) });
+    }
+    if (mdTexts.length === 0) {
+      return res.status(404).json({ error: "No local Compas_database*.md files found in attached_assets/." });
+    }
+  }
+
+  // ── Parse ─────────────────────────────────────────────────────────────────
+  const { countries, skipped, errors: parseErrors } = parseCompassMd(mdTexts);
+  if (countries.length === 0) {
+    return res.status(422).json({
+      ok: false,
+      error: "Parsed 0 countries. Check that the files follow the Compass markdown format.",
+      sources,
+      skipped,
+      parse_errors: parseErrors,
+    });
+  }
+
+  // ── Upsert into compass_regions (merge-safe) ──────────────────────────────
+  let imported = 0;
+  let updated_existing = 0;
+  const upsertErrors: string[] = [];
+
+  for (const country of countries) {
+    try {
+      const enGbContent = country.content_en_gb;
+
+      if (force_overwrite) {
+        // Replace full content column — existing translations are lost.
+        await db
+          .insert(compassRegionsTable)
+          .values({
+            region_code: country.region_code,
+            flag_emoji: country.flag_emoji,
+            content: { "en-GB": enGbContent } as CompassLocaleMap,
+            is_published: true,
+          })
+          .onConflictDoUpdate({
+            target: compassRegionsTable.region_code,
+            set: {
+              content: { "en-GB": enGbContent } as CompassLocaleMap,
+              flag_emoji: country.flag_emoji,
+              is_published: true,
+            },
+          });
+        imported++;
+      } else {
+        // Merge-safe: only update the en-GB locale key, preserve all other locales.
+        // Strategy:
+        //   1. Try INSERT (new country) — if it succeeds, done.
+        //   2. If conflict: PATCH the content JSONB by merging en-GB via jsonb_set.
+        const result = await db
+          .insert(compassRegionsTable)
+          .values({
+            region_code: country.region_code,
+            flag_emoji: country.flag_emoji,
+            content: { "en-GB": enGbContent } as CompassLocaleMap,
+            is_published: true,
+          })
+          .onConflictDoNothing({ target: compassRegionsTable.region_code })
+          .returning({ region_code: compassRegionsTable.region_code });
+
+        if (result.length > 0) {
+          // New row inserted
+          imported++;
+        } else {
+          // Existing row — merge en-GB into existing content via jsonb_set
+          await db.execute(
+            sql`UPDATE compass_regions
+                SET content    = jsonb_set(COALESCE(content, '{}'), '{en-GB}', ${JSON.stringify(enGbContent)}::jsonb),
+                    flag_emoji = ${country.flag_emoji},
+                    is_published = true
+                WHERE region_code = ${country.region_code}`
+          );
+          updated_existing++;
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      upsertErrors.push(`${country.region_code}: ${msg}`);
+    }
+  }
+
+  // ── Post-import verification ───────────────────────────────────────────────
+  const verifyRow = await db.execute(
+    sql`SELECT COUNT(*) AS n FROM compass_regions WHERE is_published = true`
+  );
+  const publishedCount = Number((verifyRow.rows[0] as { n: string }).n ?? 0);
+
+  req.log?.info({ imported, updated_existing, publishedCount, sources }, "Admin: compass import from Drive/local complete");
+
+  return res.json({
+    ok: true,
+    sources,
+    parsed_countries: countries.length,
+    imported_new: imported,
+    updated_existing,
+    skipped_unknown: skipped.length,
+    skipped,
+    parse_errors: parseErrors,
+    upsert_errors: upsertErrors,
+    fetch_errors: fetchErrors,
+    published_count_after: publishedCount,
+    merge_safe: !force_overwrite,
+  });
 });
 
 // ── JSON Bulk Import ──────────────────────────────────────────────────────────

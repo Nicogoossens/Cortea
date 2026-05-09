@@ -437,6 +437,173 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   );
 }
 
+// ── Compass Drive Import Card ─────────────────────────────────────────────────
+
+interface CompassDriveImportResult {
+  ok: boolean;
+  sources: string[];
+  parsed_countries: number;
+  imported_new: number;
+  updated_existing: number;
+  skipped_unknown: number;
+  skipped: string[];
+  parse_errors: string[];
+  upsert_errors: string[];
+  fetch_errors: string[];
+  published_count_after: number;
+  merge_safe: boolean;
+  error?: string;
+}
+
+function CompassDriveImportCard() {
+  const [fileIds, setFileIds] = useState("");
+  const [forceOverwrite, setForceOverwrite] = useState(false);
+  const [state, setState] = useState<ActionState>("idle");
+  const [result, setResult] = useState<CompassDriveImportResult | null>(null);
+
+  async function handleImport() {
+    setState("loading");
+    setResult(null);
+    const ids = fileIds.trim().split(/[\s,]+/).filter(Boolean);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/content/import-compass-from-drive`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(ids.length > 0 ? { file_ids: ids } : {}),
+          force_overwrite: forceOverwrite,
+        }),
+      });
+      const data = await res.json() as CompassDriveImportResult;
+      setResult(data);
+      setState(res.ok && data.ok ? "done" : "error");
+    } catch (err) {
+      setResult({ ok: false, error: String(err), sources: [], parsed_countries: 0, imported_new: 0, updated_existing: 0, skipped_unknown: 0, skipped: [], parse_errors: [], upsert_errors: [], fetch_errors: [], published_count_after: 0, merge_safe: true });
+      setState("error");
+    }
+    setTimeout(() => setState("idle"), 8000);
+  }
+
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+          <Upload className="w-4 h-4" />
+          Compass Import — Google Drive / Lokale bestanden
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground font-light">
+          Parseert de Compass-database MD-bestanden en importeert elk land in{" "}
+          <span className="font-mono text-xs bg-muted px-1 py-0.5 rounded">compass_regions</span>.{" "}
+          <strong>Merge-safe</strong>: bestaande vertalingen (nl, fr, de…) worden bewaard — alleen de{" "}
+          <span className="font-mono text-xs">en-GB</span>-sleutel wordt bijgewerkt.{" "}
+          Zonder Drive-bestands-IDs worden alle lokale{" "}
+          <span className="font-mono text-xs">attached_assets/Compas_database*.md</span>-bestanden gebruikt.
+        </p>
+
+        <div className="space-y-2">
+          <label className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+            Google Drive-bestands-IDs (optioneel, één per regel of kommagescheiden)
+          </label>
+          <textarea
+            value={fileIds}
+            onChange={(e) => setFileIds(e.target.value)}
+            placeholder={"1abc...DriveID\n1def...DriveID"}
+            rows={3}
+            className="w-full px-3 py-2 rounded-sm border border-border bg-muted/30 text-xs font-mono text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+          />
+          <p className="text-xs text-muted-foreground font-light">
+            Voor Drive-import: stel <span className="font-mono">GOOGLE_ACCESS_TOKEN</span> in via Secrets.
+            Laat leeg om lokale bestanden te gebruiken.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="force-overwrite"
+            checked={forceOverwrite}
+            onChange={(e) => setForceOverwrite(e.target.checked)}
+            className="w-3.5 h-3.5"
+          />
+          <label htmlFor="force-overwrite" className="text-xs font-mono text-muted-foreground cursor-pointer">
+            Force overwrite (verwijdert bestaande vertalingen — gebruik alleen na een clear)
+          </label>
+        </div>
+
+        <Button
+          size="sm"
+          className="font-mono text-xs gap-1.5"
+          disabled={state === "loading"}
+          onClick={handleImport}
+        >
+          {state === "loading" ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : state === "done" ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+            : state === "error" ? <XCircle className="w-3.5 h-3.5 text-red-500" />
+            : <Upload className="w-3.5 h-3.5" />}
+          {state === "loading" ? "Importeren…"
+            : fileIds.trim() ? "Importeer van Drive"
+            : "Importeer lokale MD-bestanden"}
+        </Button>
+
+        {result && (
+          <div className={`text-xs font-mono p-4 rounded-sm border space-y-2 ${result.ok ? "bg-green-50 border-green-200 text-green-900" : "bg-red-50 border-red-200 text-red-900"}`}>
+            {result.error && <p className="font-medium">✗ {result.error}</p>}
+            {result.ok && (
+              <>
+                <p className="font-medium">✓ Import voltooid</p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-green-800">
+                  <span>Bronnen: {result.sources.join(", ")}</span>
+                  <span>Geparseerd: {result.parsed_countries} landen</span>
+                  <span>Nieuw ingevoegd: {result.imported_new}</span>
+                  <span>Bestaand bijgewerkt: {result.updated_existing}</span>
+                  <span>Onbekend (overgeslagen): {result.skipped_unknown}</span>
+                  <span className="font-semibold">Gepubliceerd totaal: {result.published_count_after}</span>
+                </div>
+                {result.merge_safe && (
+                  <p className="text-green-700 font-light">✓ Merge-safe: bestaande vertalingen bewaard</p>
+                )}
+              </>
+            )}
+            {result.fetch_errors.length > 0 && (
+              <div className="mt-2">
+                <p className="font-medium text-amber-800">Drive-fouten ({result.fetch_errors.length}):</p>
+                <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+                  {result.fetch_errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+            {result.parse_errors.length > 0 && (
+              <div className="mt-2">
+                <p className="font-medium text-amber-800">Parse-fouten ({result.parse_errors.length}):</p>
+                <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+                  {result.parse_errors.slice(0, 10).map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+            {result.upsert_errors.length > 0 && (
+              <div className="mt-2">
+                <p className="font-medium text-red-700">DB-fouten ({result.upsert_errors.length}):</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {result.upsert_errors.slice(0, 10).map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+            {result.skipped.length > 0 && (
+              <details className="mt-1">
+                <summary className="cursor-pointer text-muted-foreground">Overgeslagen ({result.skipped.length})</summary>
+                <p className="mt-1 text-muted-foreground">{result.skipped.join(", ")}</p>
+              </details>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Content Management Tab ────────────────────────────────────────────────────
 
 const SCENARIO_LANGS = ["nl", "fr", "de", "es", "pt", "it", "ar", "ja", "zh"] as const;
@@ -894,6 +1061,9 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
           )}
         </CardContent>
       </Card>
+
+      {/* Compass Import from Google Drive / Local MD */}
+      <CompassDriveImportCard />
 
       {/* JSON Bulk Import */}
       <Card className="bg-card border-border">

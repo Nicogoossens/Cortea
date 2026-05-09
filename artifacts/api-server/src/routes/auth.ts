@@ -822,7 +822,15 @@ router.get("/auth/invite-info", async (req, res) => {
     if (!row) {
       return res.status(404).json({ error: "Invite code not found." });
     }
-    return res.json({ email: row.email });
+    // Return a masked email to prevent PII enumeration via code guessing.
+    // The registration form receives the masked address for display and the
+    // server validates the actual address on submit — never returned here.
+    const [local, domain] = row.email.split("@");
+    const masked =
+      local.length <= 2
+        ? `${"*".repeat(local.length)}@${domain}`
+        : `${local[0]}${"*".repeat(Math.min(local.length - 2, 6))}${local[local.length - 1]}@${domain}`;
+    return res.json({ masked_email: masked });
   } catch (err) {
     req.log.error({ err }, "invite-info lookup failed");
     return res.status(500).json({ error: "Could not retrieve invite information." });

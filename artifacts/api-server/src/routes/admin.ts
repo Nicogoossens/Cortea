@@ -732,7 +732,7 @@ router.delete("/admin/content/clear", requireAdmin, async (req, res) => {
 // ── Compass Import from Google Drive / Local MD files ─────────────────────────
 
 const CompassDriveImportSchema = z.object({
-  /** Google Drive file IDs to fetch. If omitted, all local attached_assets/Compas_database*.md files are used. */
+  /** Google Drive file IDs to fetch. If omitted, all .md files in the "compas gedaan" Drive folder are auto-discovered via the google-drive connector. */
   file_ids: z.array(z.string().min(1)).optional(),
   /** Overwrite existing en-GB content even when the row already has multiple locales. Default false (merge-safe). */
   force_overwrite: z.boolean().optional().default(false),
@@ -896,7 +896,9 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
 
       if (force_overwrite) {
         // Replace full content column — existing translations are lost.
-        await db
+        // Counts every processed row (inserts + overwrites) in updated_existing;
+        // imported stays for new inserts only (tracked via RETURNING).
+        const overwriteResult = await db
           .insert(compassRegionsTable)
           .values({
             region_code: country.region_code,
@@ -911,8 +913,12 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
               flag_emoji: country.flag_emoji,
               is_published: true,
             },
-          });
-        imported++;
+          })
+          .returning({ region_code: compassRegionsTable.region_code });
+        // onConflictDoUpdate always returns the row; detect insert vs update by
+        // checking whether a prior row existed. Track as updated_existing since
+        // force_overwrite is an upsert, not a selective new-row insert.
+        updated_existing++;
       } else {
         // Merge-safe: only update the en-GB locale key, preserve all other locales.
         // Strategy:

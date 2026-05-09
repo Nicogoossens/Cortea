@@ -855,8 +855,8 @@ export default function Onboarding() {
         return (
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-3">
-              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_circles_title")}</h1>
-              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_circles_subtitle")}</p>
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{worldChoice === "A" ? t("onboarding.step_circles_title_a") : t("onboarding.step_circles_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{worldChoice === "A" ? t("onboarding.step_circles_subtitle_a") : t("onboarding.step_circles_subtitle")}</p>
             </div>
 
             <div className="space-y-4">
@@ -939,8 +939,8 @@ export default function Onboarding() {
         return (
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-3">
-              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step_culture_title")}</h1>
-              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step_culture_subtitle")}</p>
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{worldChoice === "A" ? t("onboarding.step_culture_title_a") : t("onboarding.step_culture_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{worldChoice === "A" ? t("onboarding.step_culture_subtitle_a") : t("onboarding.step_culture_subtitle")}</p>
             </div>
 
             <div className="space-y-4">
@@ -1037,14 +1037,14 @@ export default function Onboarding() {
         return (
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-3">
-              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{t("onboarding.step3_title")}</h1>
-              <p className="text-muted-foreground font-light leading-relaxed">{t("onboarding.step3_subtitle")}</p>
+              <h1 className="text-3xl md:text-4xl font-serif text-foreground">{worldChoice === "A" ? t("onboarding.step3_title_a") : t("onboarding.step3_title")}</h1>
+              <p className="text-muted-foreground font-light leading-relaxed">{worldChoice === "A" ? t("onboarding.step3_subtitle_a") : t("onboarding.step3_subtitle")}</p>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-3">
                 <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                  {t("onboarding.interests_sports")}
+                  {worldChoice === "A" ? t("onboarding.interests_sports_a") : t("onboarding.interests_sports")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {primarySports.map((opt) => (
@@ -1056,7 +1056,7 @@ export default function Onboarding() {
 
               <div className="space-y-3">
                 <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                  {t("onboarding.interests_cuisine")}
+                  {worldChoice === "A" ? t("onboarding.interests_cuisine_a") : t("onboarding.interests_cuisine")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {primaryCuisine.map((opt) => (
@@ -1068,7 +1068,7 @@ export default function Onboarding() {
 
               <div className="space-y-3">
                 <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                  {t("onboarding.interests_dress")}
+                  {worldChoice === "A" ? t("onboarding.interests_dress_a") : t("onboarding.interests_dress")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {primaryDress.map((opt) => (

@@ -363,6 +363,107 @@ function PentagonChart({ values, labels, color = "var(--primary)" }: PentagonCha
   );
 }
 
+/**
+ * Horizontal sticky jump-nav shown at the top of the Profile page.
+ * Each pill scrolls to the corresponding section anchor when clicked.
+ * The currently-visible section is highlighted via an IntersectionObserver.
+ */
+function ProfileJumpNav({
+  isOwnProfile,
+  earnedBadges,
+  elitePrivacyMode,
+}: {
+  isOwnProfile: boolean;
+  earnedBadges: Array<{ badge_type: string }> | undefined;
+  elitePrivacyMode: boolean;
+}) {
+  const { t } = useLanguage();
+  const [active, setActive] = React.useState<string>("");
+
+  const navItems = React.useMemo(() => {
+    const showBadges =
+      earnedBadges && earnedBadges.length > 0 && (!elitePrivacyMode || isOwnProfile);
+    const all: { id: string; label: string }[] = [
+      { id: "profile-header",     label: t("profile.nav.basic_data", "Basic data") },
+      ...(showBadges
+        ? [{ id: "badges", label: t("profile.nav.badges", "Badges") }]
+        : []),
+      { id: "personal-details",   label: t("profile.nav.personal_details", "Personal details") },
+      { id: "course-settings-card", label: t("profile.nav.course_settings", "Course settings") },
+      ...(isOwnProfile
+        ? [{ id: "my-interests", label: t("profile.nav.my_interests", "My interests") }]
+        : []),
+      { id: "learning-tracks",    label: t("profile.nav.learning_tracks", "Learning tracks") },
+      { id: "country-progress",   label: t("profile.nav.countries", "Countries") },
+      { id: "refinement-compass", label: t("profile.nav.compass", "Compass") },
+      { id: "recent-log",         label: t("profile.nav.recent_log", "Activity log") },
+      { id: "my-guides",          label: t("profile.nav.guides", "My guides") },
+    ];
+    return all;
+  }, [t, isOwnProfile, earnedBadges]);
+
+  React.useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    const intersecting = new Map<string, boolean>();
+
+    function pickActive() {
+      for (const item of navItems) {
+        if (intersecting.get(item.id)) {
+          setActive(item.id);
+          return;
+        }
+      }
+    }
+
+    navItems.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          intersecting.set(id, entry.isIntersecting);
+          pickActive();
+        },
+        { threshold: 0.15 },
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [navItems]);
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(id);
+  }
+
+  return (
+    <nav
+      aria-label={t("profile.nav.aria_label", "Profile sections")}
+      className="sticky top-0 z-20 -mx-4 sm:-mx-0 px-4 sm:px-0 py-2 bg-background/90 backdrop-blur-sm border-b border-border/40 shadow-sm"
+    >
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+        {navItems.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => scrollTo(id)}
+            className={`shrink-0 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider border transition-all whitespace-nowrap ${
+              active === id
+                ? "bg-primary/10 border-primary/40 text-primary"
+                : "border-border/40 text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-muted/30"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export default function Profile() {
   usePageTitle("My Profile");
   const { t, locale, setLocale } = useLanguage();
@@ -1054,8 +1155,11 @@ export default function Profile() {
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
 
+      {/* ── Jump Navigation ── */}
+      <ProfileJumpNav isOwnProfile={isOwnProfile} earnedBadges={earnedBadges} elitePrivacyMode={elitePrivacyMode} />
+
       {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center p-8 bg-card border border-border shadow-sm rounded-sm">
+      <div id="profile-header" className="flex flex-col md:flex-row gap-6 items-start md:items-center p-8 bg-card border border-border shadow-sm rounded-sm scroll-mt-20">
         {/* Avatar */}
         <div className="relative group flex-shrink-0">
           <div
@@ -1288,7 +1392,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 gap-6">
 
         {/* Personal Details */}
-        <Card className="bg-card border-border shadow-sm">
+        <Card id="personal-details" className="bg-card border-border shadow-sm scroll-mt-20">
           <CardHeader className="pb-3">
             <CardTitle className="font-serif text-lg flex items-center gap-2">
               <User className="w-4 h-4 text-primary/60" aria-hidden="true" />
@@ -1493,6 +1597,7 @@ export default function Profile() {
           accordions, while each retains its own collapsible state. */}
       <CollapsibleSection
         id="course-settings-card"
+        className="scroll-mt-20"
         title={t("profile.course_settings_title")}
         icon={<Layers className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.course_settings_desc")}
@@ -1822,6 +1927,8 @@ export default function Profile() {
       {/* ── My Interests — catalog-backed interest selection ── */}
       {isOwnProfile && (
         <CollapsibleSection
+          id="my-interests"
+          className="scroll-mt-20"
           title={t("profile.my_interests_title")}
           icon={<BookOpen className="w-4 h-4 text-primary/60" aria-hidden="true" />}
           description={t("profile.my_interests_desc")}
@@ -1947,6 +2054,8 @@ export default function Profile() {
       {/* ── My Learning Tracks — Countries of Interest ──
           Multi-track progress (independent per country). */}
       <CollapsibleSection
+        id="learning-tracks"
+        className="scroll-mt-20"
         title={t("profile.countries_interest_title", "Countries you're learning")}
         icon={<Globe className="w-4 h-4 text-primary/60" aria-hidden="true" />}
         description={t("profile.countries_interest_subtitle", "Track several cultures in parallel — each one keeps its own progress.")}
@@ -2320,7 +2429,7 @@ export default function Profile() {
       })()}
 
       {/* ── Refinement Compass (§9.5 / §10.3) ── */}
-      {!isGuest && <Card className="bg-card border-border shadow-sm">
+      {!isGuest && <Card id="refinement-compass" className="bg-card border-border shadow-sm scroll-mt-20">
         <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
           <div>
             <CardTitle className="font-serif text-xl">{t("profile.compass.title")}</CardTitle>
@@ -2448,7 +2557,7 @@ export default function Profile() {
       </Card>
 
       {/* ── Recent Log ── */}
-      <Card className="bg-card border-border shadow-sm">
+      <Card id="recent-log" className="bg-card border-border shadow-sm scroll-mt-20">
         <CardHeader>
           <CardTitle className="font-serif text-xl flex items-center gap-2">
             <Clock className="w-5 h-5 text-muted-foreground" aria-hidden="true" />

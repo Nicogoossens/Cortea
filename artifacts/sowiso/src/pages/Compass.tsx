@@ -132,13 +132,13 @@ export default function Compass() {
       <ActiveContextChips />
 
       {/* View Toggle */}
-      <div className="flex gap-2 border-b border-border pb-0">
+      <div className="inline-flex rounded-sm border border-border bg-muted/40 p-1 gap-1" role="group" aria-label="View mode">
         <button
           onClick={() => setView("clusters")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[3px] transition-all ${
             view === "clusters"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "bg-background text-foreground shadow-sm border border-border/60"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/60"
           }`}
           aria-pressed={view === "clusters"}
         >
@@ -147,12 +147,13 @@ export default function Compass() {
         </button>
         <button
           onClick={() => setView("regions")}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[3px] transition-all ${
             view === "regions"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "bg-background text-foreground shadow-sm border border-border/60"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/60"
           }`}
-          aria-pressed={view === "regions"}>
+          aria-pressed={view === "regions"}
+        >
           <List className="w-4 h-4" aria-hidden="true" />
           {t("compass.view_regions")}
         </button>

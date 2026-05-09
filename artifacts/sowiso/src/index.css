@@ -295,6 +295,15 @@
   }
 }
 
+/* ── Scrollbar utilities ──────────────────────────────────────────────────── */
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ── RTL (Arabic) layout support ─────────────────────────────────────────── */
 
 /* Ensure Arabic text renders with a suitable system font stack */

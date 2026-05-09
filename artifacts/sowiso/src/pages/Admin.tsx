@@ -44,13 +44,6 @@ interface AdminUser {
   utm_term?: string | null;
 }
 
-function maskEmail(email: string | null): string {
-  if (!email) return "—";
-  const [local, domain] = email.split("@");
-  if (!domain) return email;
-  const visible = local.slice(0, 2);
-  return `${visible}***@${domain}`;
-}
 
 interface ContentStatus {
   scenarios: number;
@@ -208,7 +201,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               </span>
             )}
           </div>
-          <div className="text-xs text-muted-foreground font-light truncate">{maskEmail(user.email)}</div>
+          <div className="text-xs text-muted-foreground font-light truncate">{user.email ?? "—"}</div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           {user.email_verified
@@ -337,7 +330,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 font-mono">
-                  Suspend <strong>{user.full_name ?? maskEmail(user.email)}</strong>? They will not be able to sign in until reinstated.
+                  Suspend <strong>{user.full_name ?? user.email ?? "—"}</strong>? They will not be able to sign in until reinstated.
                 </p>
               </div>
               <div className="flex gap-2">

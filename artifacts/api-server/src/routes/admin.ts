@@ -739,41 +739,63 @@ const CompassDriveImportSchema = z.object({
 });
 
 /**
- * Fetch a single Google Drive file's content as plain text.
- *
- * Uses the Replit Connectors SDK proxy (google-drive connector) which
- * handles OAuth token injection and refresh automatically via REPLIT_CONNECTORS_HOSTNAME
- * and REPL_IDENTITY env vars (injected by Replit — no manual config required).
- *
- * Falls back to a manual Bearer token from GOOGLE_ACCESS_TOKEN if the
- * Replit connector runtime env vars are not present (e.g. local dev without Replit).
+ * Google Drive "compas gedaan" folder ID — the canonical source for all Compass MD files.
+ * Discovered via Drive API: GET /drive/v3/files?q=name='compas gedaan' and mimeType=folder
  */
-async function fetchDriveFile(fileId: string): Promise<string> {
-  const path = `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
+const COMPASS_DRIVE_FOLDER_ID = "11ZBpySd49lF-vrXnLixfHtxLtJCTLQ5W";
 
-  // Primary: Replit Connectors SDK proxy (auto OAuth, no manual token needed)
-  if (process.env.REPLIT_CONNECTORS_HOSTNAME && process.env.REPL_IDENTITY) {
-    const connectors = new ReplitConnectors();
-    const resp = await connectors.proxy("google-drive", path, { method: "GET" });
-    if (!resp.ok) {
-      const body = await resp.text().catch(() => "");
-      throw new Error(`Drive proxy ${resp.status} for file ${fileId}: ${body}`);
-    }
-    return resp.text();
-  }
-
-  // Fallback: manual Bearer token (for local dev / non-Replit environments)
-  const token = process.env.GOOGLE_ACCESS_TOKEN ?? process.env.GOOGLE_DRIVE_TOKEN;
-  if (!token) {
+/**
+ * Returns a ReplitConnectors instance for the configured google-drive connector.
+ * Uses REPLIT_CONNECTORS_HOSTNAME + REPL_IDENTITY (injected by Replit — no manual config).
+ */
+function getDriveConnector(): ReplitConnectors {
+  if (!process.env.REPLIT_CONNECTORS_HOSTNAME || !process.env.REPL_IDENTITY) {
     throw new Error(
-      "Google Drive not available: REPLIT_CONNECTORS_HOSTNAME not set and no GOOGLE_ACCESS_TOKEN env var. " +
-      "In Replit, ensure the google-drive connector is active. Outside Replit, set GOOGLE_ACCESS_TOKEN."
+      "Replit connector env vars not available (REPLIT_CONNECTORS_HOSTNAME / REPL_IDENTITY). " +
+      "Ensure the google-drive connector is active in the Replit environment."
     );
   }
-  const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
-  const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  return new ReplitConnectors();
+}
+
+/**
+ * List all markdown files in the Compass Drive folder ("compas gedaan").
+ * Returns array of { id, name } for each .md file found.
+ */
+async function listCompassDriveFiles(): Promise<Array<{ id: string; name: string }>> {
+  const connectors = getDriveConnector();
+  const q = encodeURIComponent(`'${COMPASS_DRIVE_FOLDER_ID}' in parents`);
+  const fields = encodeURIComponent("files(id,name,mimeType)");
+  const resp = await connectors.proxy(
+    "google-drive",
+    `/drive/v3/files?q=${q}&fields=${fields}&pageSize=50`,
+    { method: "GET" }
+  );
   if (!resp.ok) {
-    throw new Error(`Drive API ${resp.status} for file ${fileId}: ${await resp.text().catch(() => "")}`);
+    const body = await resp.text().catch(() => "");
+    throw new Error(`Drive folder listing failed (${resp.status}): ${body}`);
+  }
+  const data = (await resp.json()) as { files?: Array<{ id: string; name: string; mimeType: string }> };
+  return (data.files ?? [])
+    .filter((f) => f.mimeType === "text/markdown" || f.name.endsWith(".md"))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Fetch a single Google Drive file's content as plain text.
+ * Uses the Replit Connectors SDK proxy (google-drive connector) —
+ * OAuth token is injected automatically; no manual GOOGLE_ACCESS_TOKEN required.
+ */
+async function fetchDriveFile(fileId: string): Promise<string> {
+  const connectors = getDriveConnector();
+  const resp = await connectors.proxy(
+    "google-drive",
+    `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
+    { method: "GET" }
+  );
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => "");
+    throw new Error(`Drive proxy ${resp.status} for file ${fileId}: ${body}`);
   }
   return resp.text();
 }
@@ -781,7 +803,11 @@ async function fetchDriveFile(fileId: string): Promise<string> {
 /**
  * POST /admin/content/import-compass-from-drive
  *
- * Imports Compass country data from Google Drive markdown files (or local fallback).
+ * Imports Compass country data from Google Drive.
+ *
+ * Default behaviour (no file_ids supplied): auto-discovers all .md files in the
+ * configured Drive folder "compas gedaan" (ID: 11ZBpySd49lF-vrXnLixfHtxLtJCTLQ5W)
+ * using the Replit google-drive connector. No manual token or file ID input required.
  *
  * Merge-safe: if the existing row already has translations beyond en-GB,
  * only the en-GB locale key is updated — other locales are preserved.
@@ -789,8 +815,8 @@ async function fetchDriveFile(fileId: string): Promise<string> {
  * Body:
  *   { file_ids?: string[], force_overwrite?: boolean }
  *
- * - file_ids: Google Drive file IDs. Requires GOOGLE_ACCESS_TOKEN env var.
- *   If omitted, all attached_assets/Compas_database*.md local files are used.
+ * - file_ids: optional Drive file IDs to import. If omitted, the full "compas gedaan"
+ *   folder is auto-discovered via the google-drive connector.
  * - force_overwrite: if true, replaces the full content column (loses translations).
  */
 router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req, res) => {
@@ -805,44 +831,45 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
   const sources: string[] = [];
   const fetchErrors: string[] = [];
 
+  // Resolve the file ID list — either caller-supplied or auto-discovered from Drive folder
+  let resolvedFileIds: Array<{ id: string; name: string }>;
   if (file_ids && file_ids.length > 0) {
-    // Fetch from Google Drive
-    for (const id of file_ids) {
-      try {
-        const content = await fetchDriveFile(id);
-        mdTexts.push(content);
-        sources.push(`drive:${id}`);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        fetchErrors.push(msg);
-        req.log?.warn({ id, err: msg }, "Admin: failed to fetch Drive file");
-      }
-    }
-    if (mdTexts.length === 0) {
+    resolvedFileIds = file_ids.map((id) => ({ id, name: id }));
+  } else {
+    // Auto-discover: list all .md files in the "compas gedaan" Drive folder
+    try {
+      resolvedFileIds = await listCompassDriveFiles();
+      req.log?.info({ count: resolvedFileIds.length, folder: COMPASS_DRIVE_FOLDER_ID }, "Admin: auto-discovered Drive files");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       return res.status(502).json({
         ok: false,
-        error: "Failed to fetch all requested Google Drive files.",
-        fetch_errors: fetchErrors,
+        error: `Failed to list Drive folder "${COMPASS_DRIVE_FOLDER_ID}": ${msg}`,
       });
     }
-  } else {
-    // Fall back to local attached_assets/Compas_database*.md files
-    const assetsDir = path.join(WORKSPACE_ROOT, "attached_assets");
+    if (resolvedFileIds.length === 0) {
+      return res.status(404).json({ error: `No markdown files found in Drive folder "${COMPASS_DRIVE_FOLDER_ID}".` });
+    }
+  }
+
+  // ── Fetch each file from Drive ────────────────────────────────────────────
+  for (const { id, name } of resolvedFileIds) {
     try {
-      const files = readdirSync(assetsDir)
-        .filter((f) => /^Compas_database.*\.md$/i.test(f))
-        .sort();
-      for (const f of files) {
-        const filePath = path.join(assetsDir, f);
-        mdTexts.push(readFileSync(filePath, "utf-8"));
-        sources.push(`local:${f}`);
-      }
-    } catch (err) {
-      return res.status(500).json({ error: "Failed to read local Compass MD files.", detail: String(err) });
+      const content = await fetchDriveFile(id);
+      mdTexts.push(content);
+      sources.push(`drive:${name}(${id})`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      fetchErrors.push(msg);
+      req.log?.warn({ id, name, err: msg }, "Admin: failed to fetch Drive file");
     }
-    if (mdTexts.length === 0) {
-      return res.status(404).json({ error: "No local Compas_database*.md files found in attached_assets/." });
-    }
+  }
+  if (mdTexts.length === 0) {
+    return res.status(502).json({
+      ok: false,
+      error: "Failed to fetch any files from Google Drive.",
+      fetch_errors: fetchErrors,
+    });
   }
 
   // ── Parse ─────────────────────────────────────────────────────────────────

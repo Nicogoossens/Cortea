@@ -287,7 +287,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <TierBadge />
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto" aria-label={t("nav.aria_label")}>
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide" aria-label={t("nav.aria_label")}>
           {navigation.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             const isGolden = item.href === "/membership" || ("ambassadorOnly" in item && item.ambassadorOnly);

@@ -447,23 +447,27 @@ function ProfileJumpNav({
   return (
     <nav
       aria-label={t("profile.nav.aria_label", "Profile sections")}
-      className="sticky top-0 z-20 -mx-4 sm:-mx-0 px-4 sm:px-0 py-2 bg-background/90 backdrop-blur-sm border-b border-border/40 shadow-sm"
+      className="sticky top-0 z-20 py-2 bg-background/95 backdrop-blur-sm border-b border-border/40 shadow-sm"
     >
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
-        {navItems.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => scrollTo(id)}
-            className={`shrink-0 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider border transition-all whitespace-nowrap ${
-              active === id
-                ? "bg-primary/10 border-primary/40 text-primary"
-                : "border-border/40 text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-muted/30"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="relative">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5 px-1">
+          {navItems.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => scrollTo(id)}
+              className={`shrink-0 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider border transition-all whitespace-nowrap ${
+                active === id
+                  ? "bg-primary/10 border-primary/40 text-primary"
+                  : "border-border/40 text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-muted/30"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background/95 to-transparent" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background/95 to-transparent" aria-hidden="true" />
       </div>
     </nav>
   );

@@ -138,11 +138,14 @@ export function LandingLayout({
         {t("nav.skip_to_content")}
       </a>
 
-      <header className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-border/30">
+      <header className="flex items-center justify-between px-6 md:px-12 py-4 border-b border-border/30">
         <Link href="/">
-          <span className="font-serif text-2xl md:text-3xl tracking-widest text-foreground uppercase cursor-pointer">
-            {t("app.name")}
-          </span>
+          <div className="flex flex-col items-start gap-1.5 cursor-pointer">
+            <span className="font-serif text-2xl md:text-3xl tracking-widest text-foreground uppercase">
+              {t("app.name")}
+            </span>
+            <LandingTierBadge />
+          </div>
         </Link>
 
         {!isAuthPage && (
@@ -160,17 +163,16 @@ export function LandingLayout({
           </nav>
         )}
 
-        <div className="flex items-center gap-4">
-          <LandingTierBadge />
+        <div className="flex items-center gap-3 shrink-0">
           <LandingLanguageSwitcher />
           {authLink !== null && (
             <>
-              <div className="w-px h-4 bg-border/60" aria-hidden="true" />
+              <div className="w-px h-4 bg-border/60 hidden sm:block" aria-hidden="true" />
               {/* In closed-beta mode we never expose /register here; force the
                   link to /signin so visitors see the open sign-in path and the
                   Founding-100 waitlist as the only public route to an account. */}
               <Link href={authLink === "register" && registrationOpen ? "/register" : "/signin"}>
-                <span className="text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                <span className="text-xs font-mono tracking-wide text-muted-foreground hover:text-foreground transition-colors cursor-pointer whitespace-nowrap">
                   {authLink === "register" && registrationOpen
                     ? t("register.title")
                     : t("landing.signin_link")}

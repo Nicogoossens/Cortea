@@ -823,7 +823,14 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       if (!hasWorldSignal) {
         return res.status(400).json({ error: "World choice (step 4) is required to complete onboarding." });
       }
-      const resolvedWorldChoice = data.world_choice !== undefined ? data.world_choice : existing.world_choice;
+      // world_choice is not a DB column — infer it from the bias signals already resolved above.
+      const worldSignal = incomingSignals.find((s) => s.signal.startsWith("onboarding_world_choice_"));
+      const resolvedWorldChoice: "A" | "B" | "C" | null =
+        data.world_choice !== undefined
+          ? data.world_choice
+          : worldSignal
+            ? (worldSignal.signal.slice(-1) as "A" | "B" | "C")
+            : null;
       const resolvedArchetype = data.archetype !== undefined ? data.archetype : existing.archetype;
       if (!resolvedArchetype && resolvedWorldChoice !== "A") {
         return res.status(400).json({ error: "Archetype (step 5) is required to complete onboarding." });

@@ -55,7 +55,10 @@ export default function AdminWaitlist() {
       : `${API_BASE}/api/admin/waitlist`;
     fetch(url, { headers: getAuthHeaders(), credentials: "include" })
       .then((r) => r.json())
-      .then((d: WaitlistData) => setData(d))
+      .then((d: WaitlistData) => {
+        if (d && Array.isArray(d.signups)) setData(d);
+        else setData(null);
+      })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [isAdmin, filter, getAuthHeaders]);

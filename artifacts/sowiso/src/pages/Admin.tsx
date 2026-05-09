@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useAdminFetch } from "@/lib/useAdminFetch";
 import {
   Search, Lock, CheckCircle2, XCircle, Shield, User, ChevronDown, ChevronUp,
   BadgeCheck, Ban, Loader2, Database, Upload, RefreshCw, Users, Trash2, AlertTriangle,
@@ -123,6 +124,7 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   onDeleted: (id: string) => void;
 }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [expanded, setExpanded] = useState(false);
   const [actionState, setActionState] = useState<ActionState>("idle");
   const [tierValue, setTierValue] = useState(user.subscription_tier);
@@ -136,9 +138,8 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   async function deleteUser() {
     setDeleteState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/users/${user.id}`, {
         method: "DELETE",
-        credentials: "include",
       });
       if (res.ok) {
         onDeleted(user.id);
@@ -155,9 +156,8 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
   async function patchUser(payload: Record<string, unknown>) {
     setActionState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/users/${user.id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -269,9 +269,8 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                 onClick={async () => {
                   setActionState("loading");
                   try {
-                    const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/unsuspend`, {
+                    const res = await adminFetch(`${API_BASE}/api/admin/users/${user.id}/unsuspend`, {
                       method: "PATCH",
-                      credentials: "include",
                     });
                     if (res.ok) {
                       onUpdated(await res.json() as AdminUser);
@@ -343,9 +342,8 @@ function UserRow({ user, authHeaders, onUpdated, onDeleted }: {
                     setActionState("loading");
                     setShowSuspendConfirm(false);
                     try {
-                      const res = await fetch(`${API_BASE}/api/admin/users/${user.id}/suspend`, {
+                      const res = await adminFetch(`${API_BASE}/api/admin/users/${user.id}/suspend`, {
                         method: "PATCH",
-                        credentials: "include",
                       });
                       if (res.ok) {
                         onUpdated(await res.json() as AdminUser);
@@ -456,6 +454,7 @@ interface CompassDriveImportResult {
 }
 
 function CompassDriveImportCard() {
+  const adminFetch = useAdminFetch();
   const [fileIds, setFileIds] = useState("");
   const [forceOverwrite, setForceOverwrite] = useState(false);
   const [state, setState] = useState<ActionState>("idle");
@@ -466,9 +465,8 @@ function CompassDriveImportCard() {
     setResult(null);
     const ids = fileIds.trim().split(/[\s,]+/).filter(Boolean);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/import-compass-from-drive`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/content/import-compass-from-drive`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...(ids.length > 0 ? { file_ids: ids } : {}),
@@ -615,6 +613,7 @@ const LANG_LABELS: Record<string, string> = {
 type ClearableTable = "compass_regions" | "scenarios" | "culture_protocols" | "learning_track_questions";
 
 function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const adminFetch = useAdminFetch();
   const [status, setStatus] = useState<ContentStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [seedState, setSeedState] = useState<ActionState>("idle");
@@ -640,7 +639,7 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const fetchStatus = useCallback(async () => {
     setLoadingStatus(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/status`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/content/status`);
       if (res.ok) setStatus(await res.json() as ContentStatus);
     } catch { /* silent */ } finally {
       setLoadingStatus(false);
@@ -653,9 +652,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     setSeedState("loading");
     setSeedOutput([]);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/seed`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/content/seed`, {
         method: "POST",
-        credentials: "include",
       });
       const data = await res.json() as { ok: boolean; results: string[] };
       setSeedOutput(data.results ?? []);
@@ -672,9 +670,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     setGranularSeedState(s => ({ ...s, [section]: "loading" }));
     setGranularSeedOutput([]);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/seed/${section}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/content/seed/${section}`, {
         method: "POST",
-        credentials: "include",
       });
       const data = await res.json() as { ok: boolean; results: string[] };
       setGranularSeedOutput(data.results ?? []);
@@ -692,9 +689,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     setClearState("loading");
     setClearResult(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/content/clear`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/content/clear`, {
         method: "DELETE",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ table: clearTable, confirm: "CLEAR" }),
       });
@@ -741,9 +737,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
 
       for (let c = 0; c < chunks.length; c++) {
         setImportProgress({ current: c + 1, total: chunks.length });
-        const res = await fetch(`${API_BASE}/api/admin/content/import`, {
+        const res = await adminFetch(`${API_BASE}/api/admin/content/import`, {
           method: "POST",
-          credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type, items: chunks[c] }),
         });
@@ -786,9 +781,8 @@ function ContentTab({ authHeaders }: { authHeaders: Record<string, string> }) {
     setMdImportResult(null);
     try {
       const content = await file.text();
-      const res = await fetch(`${API_BASE}/api/admin/content/import-learning-tracks-md`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/content/import-learning-tracks-md`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "text/plain" },
         body: content,
       });
@@ -1206,6 +1200,7 @@ interface CompassRegionRow {
 }
 
 function CompassRegionsDataScore() {
+  const adminFetch = useAdminFetch();
   const [rows, setRows] = useState<CompassRegionRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingCode, setPendingCode] = useState<string | null>(null);
@@ -1214,7 +1209,7 @@ function CompassRegionsDataScore() {
   const fetchRows = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/compass-regions`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/compass-regions`);
       if (res.ok) setRows(await res.json() as CompassRegionRow[]);
     } catch { /* silent */ } finally {
       setLoading(false);
@@ -1226,9 +1221,8 @@ function CompassRegionsDataScore() {
   async function togglePublished(row: CompassRegionRow) {
     setPendingCode(row.region_code);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/compass-regions/${row.region_code}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/compass-regions/${row.region_code}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_published: !row.is_published }),
       });
@@ -1460,6 +1454,7 @@ function PendingRecordRow({
   onDeleted: (id: number) => void;
 }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [expanded, setExpanded] = useState(false);
   const [approveState, setApproveState] = useState<ActionState>("idle");
   const [deleteState, setDeleteState] = useState<ActionState>("idle");
@@ -1499,9 +1494,8 @@ function PendingRecordRow({
       if (editUrgency !== baseline.urgency) payload.urgency = editUrgency;
       if (editRegionCode !== baseline.region_code) payload.region_code = editRegionCode;
 
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -1525,9 +1519,8 @@ function PendingRecordRow({
   async function handleApprove() {
     setApproveState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ approve: true }),
       });
@@ -1547,9 +1540,8 @@ function PendingRecordRow({
   async function handleDelete() {
     setDeleteState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}`, {
         method: "DELETE",
-        credentials: "include",
       });
       if (res.ok) {
         setDeleteState("done");
@@ -1758,6 +1750,7 @@ function PendingRecordRow({
 
 function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<string, string>; refreshKey: number }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [records, setRecords] = useState<PendingCCRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -1767,7 +1760,7 @@ function PendingReviewPanel({ authHeaders, refreshKey }: { authHeaders: Record<s
   const fetchPending = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols?page=${p}&limit=20`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols?page=${p}&limit=20`);
       if (res.ok) {
         const data = await res.json() as { records: PendingCCRecord[]; total: number; pages: number; page: number };
         setRecords(data.records);
@@ -1903,6 +1896,7 @@ function VerifiedRecordRow({
   onUnverified: (id: number) => void;
 }) {
   const { t, locale } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [expanded, setExpanded] = useState(false);
   const [saveState, setSaveState] = useState<ActionState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -1942,9 +1936,8 @@ function VerifiedRecordRow({
       if (editUrgency !== baseline.urgency) payload.urgency = editUrgency;
       if (editRegionCode !== baseline.region_code) payload.region_code = editRegionCode;
 
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -1970,9 +1963,8 @@ function VerifiedRecordRow({
   async function handleUnverify() {
     setUnverifyState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ unverify: true }),
       });
@@ -1992,9 +1984,8 @@ function VerifiedRecordRow({
   async function handleDelete() {
     setDeleteState("loading");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/${record.id}/verified`, {
         method: "DELETE",
-        credentials: "include",
       });
       if (res.ok) {
         setDeleteState("done");
@@ -2201,6 +2192,7 @@ function VerifiedRecordRow({
 
 function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [records, setRecords] = useState<VerifiedCCRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -2210,7 +2202,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
   const fetchVerified = useCallback(async (p = 1) => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-protocols/verified?page=${p}&limit=20`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-protocols/verified?page=${p}&limit=20`);
       if (res.ok) {
         const data = await res.json() as { records: VerifiedCCRecord[]; total: number; pages: number; page: number };
         setRecords(data.records);
@@ -2324,6 +2316,7 @@ function VerifiedPanel({ authHeaders }: { authHeaders: Record<string, string> })
 
 function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string> }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [fragment, setFragment] = useState("");
   const [sourceBook, setSourceBook] = useState("DH");
   const [sourcePage, setSourcePage] = useState("");
@@ -2345,9 +2338,8 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
     setRecord(null);
     setSavedId(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-screen`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-screen`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fragment: fragment.trim(), source_book: sourceBook, source_page: sourcePage.trim() }),
       });
@@ -2378,9 +2370,8 @@ function CCScreeningPanel({ authHeaders }: { authHeaders: Record<string, string>
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/admin/cc-save`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/cc-save`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed),
       });
@@ -2797,6 +2788,7 @@ function UseCaseForm({
 }
 
 function UseCasesTab() {
+  const adminFetch = useAdminFetch();
   const [useCases, setUseCases] = useState<UseCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -2814,7 +2806,7 @@ function UseCasesTab() {
     setLoading(true);
     setLoadError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/use-cases`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/use-cases`);
       if (res.ok) {
         setUseCases(await res.json() as UseCase[]);
       } else {
@@ -2833,9 +2825,8 @@ function UseCasesTab() {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/use-cases`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/use-cases`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -2858,9 +2849,8 @@ function UseCasesTab() {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/use-cases/${editingUseCase.id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/use-cases/${editingUseCase.id}`, {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -2883,9 +2873,8 @@ function UseCasesTab() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/use-cases/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/use-cases/${id}`, {
         method: "DELETE",
-        credentials: "include",
       });
       if (res.ok) {
         setUseCases((prev) => prev.filter((uc) => uc.id !== id));
@@ -3103,6 +3092,7 @@ interface UtmAttributionData {
 }
 
 function AttributionTab() {
+  const adminFetch = useAdminFetch();
   const [data, setData] = useState<UtmAttributionData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3111,7 +3101,7 @@ function AttributionTab() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/utm-attribution`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/utm-attribution`);
       if (!res.ok) {
         setError(`Failed to load attribution data (HTTP ${res.status}).`);
         return;
@@ -3786,6 +3776,7 @@ function LangRunHistoryModal({
   sweeper: string; langParam?: string; label: string; children?: React.ReactNode;
 }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [open, setOpen] = useState(false);
   const [runs, setRuns] = useState<WorkerRun[]>([]);
   const [loading, setLoading] = useState(false);
@@ -3797,9 +3788,8 @@ function LangRunHistoryModal({
     try {
       const params = new URLSearchParams({ sweeper, limit: "50" });
       if (langParam) params.set("lang", langParam);
-      const res = await fetch(
+      const res = await adminFetch(
         `${API_BASE}/api/admin/worker-runs?${params.toString()}`,
-        { credentials: "include" },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as { runs: WorkerRun[] };
@@ -4198,6 +4188,7 @@ function LtqRegisterGrid({
 // ── Main Translation Control Panel component ──────────────────────────────────
 function TranslationHealthTab() {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [ltq, setLtq]             = useState<LtqStatus | null>(null);
   const [scen, setScen]           = useState<ScenarioStatus | null>(null);
   const [compass, setCompass]     = useState<CompassStatus | null>(null);
@@ -4228,14 +4219,14 @@ function TranslationHealthTab() {
     setErr(null);
     try {
       const [ltqRes, scenRes, compassRes, seedsRes, seedsTransRes, runsRes, activeRunsRes, weekCostRes] = await Promise.all([
-        fetch(`${API_BASE}/api/admin/ltq/translation-status`,              { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/scenarios/translation-status`,        { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/compass/translation-status`,          { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/counsel-seeds/coverage`,              { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`,    { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/worker-runs?limit=50`,                { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/worker-runs?active=1`,                { credentials: "include" }),
-        fetch(`${API_BASE}/api/admin/translation/week-cost`,               { credentials: "include" }),
+        adminFetch(`${API_BASE}/api/admin/ltq/translation-status`),
+        adminFetch(`${API_BASE}/api/admin/scenarios/translation-status`),
+        adminFetch(`${API_BASE}/api/admin/compass/translation-status`),
+        adminFetch(`${API_BASE}/api/admin/counsel-seeds/coverage`),
+        adminFetch(`${API_BASE}/api/admin/counsel-seeds/translation-status`),
+        adminFetch(`${API_BASE}/api/admin/worker-runs?limit=50`),
+        adminFetch(`${API_BASE}/api/admin/worker-runs?active=1`),
+        adminFetch(`${API_BASE}/api/admin/translation/week-cost`),
       ]);
       if (ltqRes.ok)         setLtq(await ltqRes.json() as LtqStatus);
       if (scenRes.ok)        setScen(await scenRes.json() as ScenarioStatus);
@@ -4264,9 +4255,8 @@ function TranslationHealthTab() {
   const launchLtqAll = async () => {
     setLtqLaunching("all");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/ltq/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ parallel: 2, ...targetParam }),
       });
@@ -4278,9 +4268,8 @@ function TranslationHealthTab() {
   const launchLtqLang = async (lang: TransLang) => {
     setLtqLaunching(lang);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/ltq/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, ...targetParam }),
       });
@@ -4296,9 +4285,8 @@ function TranslationHealthTab() {
     const key = `${region}-${register}`;
     setLtqRowLaunching(key);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/ltq/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ region_code: region, register, ...targetParam }),
       });
@@ -4314,9 +4302,8 @@ function TranslationHealthTab() {
     const key = `${region}-${register}-${lang}`;
     setLtqCellLaunching(key);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/ltq/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/ltq/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, region_code: region, register, ...targetParam }),
       });
@@ -4330,9 +4317,8 @@ function TranslationHealthTab() {
   const launchScenAll = async () => {
     setScenLaunching("all");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/scenarios/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/scenarios/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...targetParam }),
       });
@@ -4344,9 +4330,8 @@ function TranslationHealthTab() {
   const launchScenLang = async (lang: TransLang) => {
     setScenLaunching(lang);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/scenarios/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/scenarios/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, ...targetParam }),
       });
@@ -4360,9 +4345,8 @@ function TranslationHealthTab() {
   const launchCompassAll = async () => {
     setCompassLaunching("all");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/compass/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/compass/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...targetParam }),
       });
@@ -4374,9 +4358,8 @@ function TranslationHealthTab() {
   const launchCompassLang = async (lang: TransLang) => {
     setCompassLaunching(lang);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/compass/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/compass/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, ...targetParam }),
       });
@@ -4390,9 +4373,8 @@ function TranslationHealthTab() {
   const launchSeedTransLang = async (lang: TransLang) => {
     setSeedTransLaunching(lang);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang }),
       });
@@ -4406,9 +4388,8 @@ function TranslationHealthTab() {
   const launchSeedTransLangForce = async (lang: TransLang) => {
     setSeedTransLaunching(`force-${lang}`);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds/translate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, force: true }),
       });
@@ -4422,9 +4403,8 @@ function TranslationHealthTab() {
   const launchSeedsAll = async () => {
     setSeedsLaunching("all");
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
@@ -4436,9 +4416,8 @@ function TranslationHealthTab() {
   const launchSeedsDomain = async (domain: string) => {
     setSeedsLaunching(domain);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds/generate`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain }),
       });
@@ -4713,6 +4692,7 @@ interface OnboardingFunnelData {
 }
 
 function OnboardingFunnelTab() {
+  const adminFetch = useAdminFetch();
   const [data, setData] = useState<OnboardingFunnelData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -4724,7 +4704,7 @@ function OnboardingFunnelTab() {
     setError(null);
     try {
       const url = `${API_BASE}/api/admin/onboarding-funnel?bucket=${bucket}&days=${days}`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await adminFetch(url);
       if (!res.ok) {
         setError(`Failed to load onboarding funnel (HTTP ${res.status}).`);
         return;
@@ -4932,6 +4912,7 @@ export default function Admin() {
   usePageTitle("Admin");
   const { t } = useLanguage();
   const { isAuthenticated, isAdmin } = useAuth();
+  const adminFetch = useAdminFetch();
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -4949,7 +4930,7 @@ export default function Admin() {
   useEffect(() => {
     if (!isAdmin) return;
     let cancelled = false;
-    fetch(`${API_BASE}/api/admin/waitlist`, { credentials: "include" })
+    adminFetch(`${API_BASE}/api/admin/waitlist`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { founderClaimed: number; founderTotal: number } | null) => {
         if (!cancelled && d) {
@@ -4958,32 +4939,30 @@ export default function Admin() {
       })
       .catch(() => { /* silent */ });
     return () => { cancelled = true; };
-  }, [isAdmin]);
+  }, [isAdmin, adminFetch]);
 
   const fetchUsers = useCallback(async (q: string, page = 1) => {
     setLoading(true);
     setFetchError(null);
     try {
       const url = `${API_BASE}/api/admin/users?q=${encodeURIComponent(q)}&page=${page}&limit=50`;
-      const res = await fetch(url, { credentials: "include" });
+      const res = await adminFetch(url);
       if (res.ok) {
         const data = await res.json() as { users: AdminUser[]; total: number; pages: number; page: number };
         setUsers(data.users);
         setTotalPages(data.pages ?? 1);
         setTotalUsers(data.total ?? 0);
         setCurrentPage(data.page ?? 1);
-      } else if (res.status === 403) {
-        setFetchError("Uw sessie is verlopen of uw account heeft geen beheerdersrechten meer. Meld u opnieuw aan als beheerder.");
-      } else {
-        setFetchError("Er is een fout opgetreden bij het laden van gebruikers. Probeer opnieuw.");
+      } else if (res.status !== 403) {
+        setFetchError(t("admin.error_load_users"));
       }
     } catch {
-      setFetchError("Verbindingsfout — controleer uw internetverbinding en probeer opnieuw.");
+      setFetchError(t("admin.error_network"));
     } finally {
       setLoading(false);
       setSearched(true);
     }
-  }, []);
+  }, [adminFetch, t]);
 
   useEffect(() => {
     if (isAdmin) fetchUsers("");
@@ -5136,7 +5115,7 @@ export default function Admin() {
                 <AlertTriangle className="w-6 h-6 text-destructive mx-auto" aria-hidden="true" />
                 <p className="text-sm text-destructive font-mono">{fetchError}</p>
                 <Button size="sm" variant="outline" className="font-mono text-xs" onClick={() => fetchUsers(query, currentPage)}>
-                  Opnieuw proberen
+                  {t("admin.retry")}
                 </Button>
               </CardContent>
             </Card>
@@ -5258,6 +5237,7 @@ type PeriodSummary = { period_ym: string; total_votes: number; unique_voters: nu
 
 function CountryVotesTab({ authHeaders }: { authHeaders: Record<string, string> }) {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [period, setPeriod] = useState<string>("");
   const [currentPeriod, setCurrentPeriod] = useState<string>("");
   const [tally, setTally] = useState<VoteTally[]>([]);
@@ -5271,7 +5251,7 @@ function CountryVotesTab({ authHeaders }: { authHeaders: Record<string, string> 
     setErr(null);
     try {
       const url = p ? `${API_BASE}/api/admin/votes/countries?period=${encodeURIComponent(p)}` : `${API_BASE}/api/admin/votes/countries`;
-      const res = await fetch(url, { credentials: "include", headers: authHeaders });
+      const res = await adminFetch(url, { headers: authHeaders });
       if (!res.ok) {
         setErr(`Kon overzicht niet laden (${res.status}).`);
         return;
@@ -5395,6 +5375,7 @@ function CountryVotesTab({ authHeaders }: { authHeaders: Record<string, string> 
 // ── Counsel Seeds tab ─────────────────────────────────────────────────────────
 
 function CounselSeedsTab({ authHeaders }: { authHeaders: Record<string, string> }) {
+  const adminFetch = useAdminFetch();
   const [seeds, setSeeds] = useState<CounselSeedRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -5404,8 +5385,7 @@ function CounselSeedsTab({ authHeaders }: { authHeaders: Record<string, string> 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds`, {
-        credentials: "include",
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds`, {
         headers: authHeaders,
       });
       if (!res.ok) {
@@ -5426,9 +5406,8 @@ function CounselSeedsTab({ authHeaders }: { authHeaders: Record<string, string> 
   const act = async (id: number, action: "promote" | "demote") => {
     setActionId(id);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/counsel-seeds/${id}/${action}`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/counsel-seeds/${id}/${action}`, {
         method: "POST",
-        credentials: "include",
         headers: authHeaders,
       });
       if (!res.ok) {
@@ -5568,6 +5547,7 @@ function formatPrice(cents: number | null, currency: string): string {
 
 function IntegrationsPanel() {
   const { t } = useLanguage();
+  const adminFetch = useAdminFetch();
   const [googleStatus, setGoogleStatus] = useState<"checking" | "configured" | "not_configured">("checking");
   const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
   const [stripeLoading, setStripeLoading] = useState(true);
@@ -5577,7 +5557,7 @@ function IntegrationsPanel() {
   const refreshStripe = useCallback(async () => {
     setStripeLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/stripe/status`, { credentials: "include" });
+      const res = await adminFetch(`${API_BASE}/api/admin/stripe/status`);
       if (res.ok) {
         const data = (await res.json()) as StripeStatus;
         setStripeStatus(data);
@@ -5607,9 +5587,8 @@ function IntegrationsPanel() {
     setSeedingStudent("loading");
     setSeedError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/stripe/seed/student`, {
+      const res = await adminFetch(`${API_BASE}/api/admin/stripe/seed/student`, {
         method: "POST",
-        credentials: "include",
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {

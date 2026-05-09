@@ -51,6 +51,8 @@ export default function SignIn() {
       setError(t("signin.error_auth_failed"));
     } else if (urlError === "account_suspended") {
       setError(t("signin.error_account_suspended"));
+    } else if (urlError === "session_expired") {
+      setError(t("admin.session_expired"));
     }
   }, [t]);
 

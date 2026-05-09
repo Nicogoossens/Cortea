@@ -331,10 +331,39 @@ function findBulletList(blockLines: string[], heading: string): string[] {
   return out;
 }
 
+// ─── Content quality scoring + main export ───────────────────────────────────
+
+/**
+ * Score a parsed en-GB content block by completeness.
+ * Higher = more content. Used to prefer later/richer entries when the same
+ * country appears in multiple source files.
+ */
+export function scoreContent(c: CompassCountryData["content_en_gb"]): number {
+  const textFields = [
+    c.core_value,
+    c.biggest_taboo,
+    c.dining_etiquette,
+    c.language_notes,
+    c.gift_protocol,
+    c.dress_code,
+  ];
+  // 1 point per non-empty field + character count + 50 per do/don't bullet
+  const filledFields = textFields.filter((f) => f && f.trim().length > 0).length;
+  const charCount = textFields.reduce((sum, f) => sum + (f?.length ?? 0), 0);
+  const bullets = (c.dos?.length ?? 0) + (c.donts?.length ?? 0);
+  return filledFields * 200 + charCount + bullets * 50;
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 /**
  * Parse one or more Compass database markdown texts into structured country data.
+ *
+ * Deduplication: **last-seen-wins** across all input files. Files are processed
+ * in the order provided; when the same country code appears in a later file,
+ * the newer entry replaces the earlier one (it is assumed that later files in
+ * the ordered list are revisions or enrichments of earlier data).
+ *
  * Countries whose name is not in COUNTRY_CODES are silently skipped.
  */
 export function parseCompassMd(mdTexts: string[]): {
@@ -342,21 +371,19 @@ export function parseCompassMd(mdTexts: string[]): {
   skipped: string[];
   errors: string[];
 } {
-  const countries: CompassCountryData[] = [];
+  // Use a Map to enable last-seen-wins: later entries overwrite earlier ones.
+  const byCode = new Map<string, CompassCountryData>();
   const skipped: string[] = [];
   const errors: string[] = [];
-  const seen = new Set<string>();
 
   for (const md of mdTexts) {
     const sections = splitCountries(md);
     for (const section of sections) {
       const code = COUNTRY_CODES[section.name];
       if (!code) {
-        skipped.push(section.name);
+        if (!skipped.includes(section.name)) skipped.push(section.name);
         continue;
       }
-      if (seen.has(code)) continue; // deduplicate
-      seen.add(code);
 
       try {
         const lines = section.lines;
@@ -374,7 +401,7 @@ export function parseCompassMd(mdTexts: string[]): {
         const giftProtocol = stripMd(findSubsection(protocolBlock, "Gift Protocol"));
         const dressCode = stripMd(findSubsection(protocolBlock, "Dress Code"));
 
-        countries.push({
+        const candidate: CompassCountryData = {
           region_code: code,
           flag_emoji: section.flag,
           region_name: section.name,
@@ -389,12 +416,16 @@ export function parseCompassMd(mdTexts: string[]): {
             dos,
             donts,
           },
-        });
+        };
+
+        // Last-seen-wins: unconditionally overwrite earlier entries.
+        // The caller's file list is assumed to be ordered old → new.
+        byCode.set(code, candidate);
       } catch (err: unknown) {
         errors.push(`${section.name} (${code}): ${err instanceof Error ? err.message : String(err)}`);
       }
     }
   }
 
-  return { countries, skipped, errors };
+  return { countries: Array.from(byCode.values()), skipped, errors };
 }

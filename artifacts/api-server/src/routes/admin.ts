@@ -5,7 +5,7 @@ import path from "path";
 import { readFileSync, readdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { db } from "@workspace/db";
-import { parseCompassMd, type CompassCountryData } from "../lib/compass-md-parser.js";
+import { parseCompassMd, scoreContent, type CompassCountryData } from "../lib/compass-md-parser.js";
 import { usersTable, scenariosTable, cultureProtocolsTable, compassRegionsTable, translationsTable, nobleScoreLogTable, zuil_voortgangTable, learningTrackQuestionsTable, ccProtocolRemovalsTable, useCasesTable, onboardingEventsTable, workerRunsTable, type CompassLocaleMap, CC_SUBCATEGORIES } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
 import { runAtelierSeed } from "@workspace/db/seed";
@@ -833,6 +833,7 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
   // ── Upsert into compass_regions (merge-safe) ──────────────────────────────
   let imported = 0;
   let updated_existing = 0;
+  let skipped_quality = 0; // existing en-GB was equally rich or richer — not replaced
   const upsertErrors: string[] = [];
 
   for (const country of countries) {
@@ -862,8 +863,11 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
         // Merge-safe: only update the en-GB locale key, preserve all other locales.
         // Strategy:
         //   1. Try INSERT (new country) — if it succeeds, done.
-        //   2. If conflict: PATCH the content JSONB by merging en-GB via jsonb_set.
-        const result = await db
+        //   2. If conflict: READ existing en-GB and score it.
+        //      Only PATCH if incoming scores higher or existing en-GB is absent.
+        //      This prevents a sparse/older markdown entry from downgrading
+        //      richer existing base content.
+        const insertResult = await db
           .insert(compassRegionsTable)
           .values({
             region_code: country.region_code,
@@ -874,19 +878,33 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
           .onConflictDoNothing({ target: compassRegionsTable.region_code })
           .returning({ region_code: compassRegionsTable.region_code });
 
-        if (result.length > 0) {
+        if (insertResult.length > 0) {
           // New row inserted
           imported++;
         } else {
-          // Existing row — merge en-GB into existing content via jsonb_set
-          await db.execute(
-            sql`UPDATE compass_regions
-                SET content    = jsonb_set(COALESCE(content, '{}'), '{en-GB}', ${JSON.stringify(enGbContent)}::jsonb),
-                    flag_emoji = ${country.flag_emoji},
-                    is_published = true
-                WHERE region_code = ${country.region_code}`
+          // Existing row — check quality before updating en-GB
+          const existing = await db.execute(
+            sql`SELECT content->'en-GB' AS en_gb FROM compass_regions WHERE region_code = ${country.region_code} LIMIT 1`
           );
-          updated_existing++;
+          const existingEnGb = (existing.rows[0] as { en_gb: CompassCountryData["content_en_gb"] | null })?.en_gb;
+
+          const incomingScore = scoreContent(enGbContent);
+          const existingScore = existingEnGb ? scoreContent(existingEnGb) : -1;
+
+          if (incomingScore > existingScore) {
+            // Incoming is richer — update only the en-GB key, preserve other locales
+            await db.execute(
+              sql`UPDATE compass_regions
+                  SET content    = jsonb_set(COALESCE(content, '{}'), '{en-GB}', ${JSON.stringify(enGbContent)}::jsonb),
+                      flag_emoji = ${country.flag_emoji},
+                      is_published = true
+                  WHERE region_code = ${country.region_code}`
+            );
+            updated_existing++;
+          } else {
+            // Existing en-GB is equally rich or richer — skip update, count as skipped
+            skipped_quality++;
+          }
         }
       }
     } catch (err: unknown) {
@@ -909,6 +927,7 @@ router.post("/admin/content/import-compass-from-drive", requireAdmin, async (req
     parsed_countries: countries.length,
     imported_new: imported,
     updated_existing,
+    skipped_quality_preserved: skipped_quality,
     skipped_unknown: skipped.length,
     skipped,
     parse_errors: parseErrors,

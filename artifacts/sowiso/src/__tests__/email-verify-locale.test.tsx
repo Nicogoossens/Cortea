@@ -134,6 +134,7 @@ type VerifyResponseOverrides = {
   full_name?: string;
   is_admin?: boolean;
   language_code?: string;
+  explicit_language_choice?: boolean;
   active_region?: string;
 };
 
@@ -195,7 +196,7 @@ afterEach(() => {
 describe("EmailVerify — setLocale is called from the verify response (magic-link sign-in)", () => {
   it("calls setLocale with the resolved locale when returning user (already_verified: true)", async () => {
     mockFetchOk(
-      makeVerifyResponse({ already_verified: true, language_code: "nl", active_region: "NL" })
+      makeVerifyResponse({ already_verified: true, language_code: "nl", active_region: "NL", explicit_language_choice: true })
     );
 
     render(React.createElement(EmailVerify));
@@ -207,7 +208,7 @@ describe("EmailVerify — setLocale is called from the verify response (magic-li
 
   it("calls setLocale with the resolved locale when new user (already_verified absent)", async () => {
     mockFetchOk(
-      makeVerifyResponse({ language_code: "fr", active_region: "FR" })
+      makeVerifyResponse({ language_code: "fr", active_region: "FR", explicit_language_choice: true })
     );
 
     render(React.createElement(EmailVerify));
@@ -219,7 +220,7 @@ describe("EmailVerify — setLocale is called from the verify response (magic-li
 
   it("resolves locale via base-language fallback when active_region is absent", async () => {
     mockFetchOk(
-      makeVerifyResponse({ language_code: "de" })
+      makeVerifyResponse({ language_code: "de", explicit_language_choice: true })
       // no active_region → resolveLocale falls back to first de-* locale
     );
 
@@ -232,7 +233,7 @@ describe("EmailVerify — setLocale is called from the verify response (magic-li
 
   it("resolves locale via exact lang-region match when both are provided", async () => {
     mockFetchOk(
-      makeVerifyResponse({ language_code: "en", active_region: "US" })
+      makeVerifyResponse({ language_code: "en", active_region: "US", explicit_language_choice: true })
     );
 
     render(React.createElement(EmailVerify));
@@ -307,7 +308,7 @@ describe("EmailVerify — locale applied before post-login screen renders", () =
     mockSetLocale.mockImplementation(() => callOrder.push("setLocale"));
 
     mockFetchOk(
-      makeVerifyResponse({ already_verified: true, language_code: "nl", active_region: "NL" })
+      makeVerifyResponse({ already_verified: true, language_code: "nl", active_region: "NL", explicit_language_choice: true })
     );
 
     render(React.createElement(EmailVerify));

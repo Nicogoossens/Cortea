@@ -2,19 +2,26 @@
  * Tests for EmailVerify locale-application behaviour.
  *
  * When a user follows a magic-link (GET /api/auth/verify), the server
- * returns `language_code` in the response body.  The component must call
+ * returns `language_code` in the response body.  The component calls
  * `setLocale()` synchronously inside the same React batch as the status
  * transition so that the post-login screen renders in the correct language
  * — no flash of the wrong locale.
  *
+ * IMPORTANT: setLocale() is guarded by `body.explicit_language_choice === true`
+ * (EmailVerify.tsx line ~105).  This prevents overriding a user's manually
+ * chosen locale on every magic-link click.  Only when the server explicitly
+ * signals that the locale was set by the user (e.g. during onboarding) should
+ * the component apply it.
+ *
  * Covered cases:
- *  - Returning user (already_verified: true)  → setLocale called immediately
- *  - New user (already_verified absent/false)  → setLocale called immediately
- *  - active_region provided                   → resolved to exact locale
- *  - active_region absent                     → resolved via base-lang fallback
- *  - language_code absent from response       → setLocale NOT called
- *  - Unresolvable language_code               → setLocale NOT called
- *  - Error / expired / invalid responses      → setLocale NOT called
+ *  - Returning user (already_verified: true) + explicit_language_choice: true  → setLocale called
+ *  - New user (already_verified absent)      + explicit_language_choice: true  → setLocale called
+ *  - active_region provided                  + explicit_language_choice: true  → exact locale
+ *  - active_region absent                    + explicit_language_choice: true  → base-lang fallback
+ *  - explicit_language_choice absent/false   + valid language_code             → setLocale NOT called
+ *  - language_code absent from response                                        → setLocale NOT called
+ *  - Unresolvable language_code                                                → setLocale NOT called
+ *  - Error / expired / invalid responses                                       → setLocale NOT called
  */
 
 import React from "react";
@@ -263,6 +270,35 @@ describe("EmailVerify — setLocale is NOT called when locale cannot be determin
   it("does not call setLocale when language_code does not match any supported locale", async () => {
     mockFetchOk(
       makeVerifyResponse({ language_code: "xx" }) // unsupported language
+    );
+
+    render(React.createElement(EmailVerify));
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalled();
+    });
+
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+
+  it("does not call setLocale when explicit_language_choice is absent (guard not satisfied)", async () => {
+    mockFetchOk(
+      makeVerifyResponse({ language_code: "nl", active_region: "NL" })
+      // explicit_language_choice omitted → guard body.explicit_language_choice === true is false
+    );
+
+    render(React.createElement(EmailVerify));
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalled();
+    });
+
+    expect(mockSetLocale).not.toHaveBeenCalled();
+  });
+
+  it("does not call setLocale when explicit_language_choice is explicitly false", async () => {
+    mockFetchOk(
+      makeVerifyResponse({ language_code: "fr", active_region: "FR", explicit_language_choice: false })
     );
 
     render(React.createElement(EmailVerify));

@@ -275,6 +275,14 @@ export function ImportTab() {
     }
   }, [triggerImport]);
 
+  const triggerImportAllFolders = useCallback(async () => {
+    for (const folder of folders) {
+      for (const file of folder.files) {
+        await triggerImport(file, folder.folder_id);
+      }
+    }
+  }, [folders, triggerImport]);
+
   // ── Job completion callback ────────────────────────────────────────────────
 
   const handleJobDone = useCallback((fileId: string, run: ImportRun) => {
@@ -304,20 +312,33 @@ export function ImportTab() {
       {/* ── Drive to-do files ─────────────────────────────────────────────── */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
               <FolderOpen className="w-4 h-4" />
               Google Drive — to-do/
             </CardTitle>
-            <Button
-              size="sm" variant="ghost"
-              className="font-mono text-xs text-muted-foreground"
-              onClick={loadFiles}
-              disabled={filesLoading}
-            >
-              <RefreshCw className={`w-3 h-3 mr-1 ${filesLoading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {!filesLoading && !filesError && folders.some((f) => f.files.length > 0) && (
+                <Button
+                  size="sm" variant="outline"
+                  className="font-mono text-xs h-7"
+                  onClick={triggerImportAllFolders}
+                  disabled={activeRunIds.size > 0}
+                >
+                  <Upload className="w-3 h-3 mr-1" />
+                  Import all countries
+                </Button>
+              )}
+              <Button
+                size="sm" variant="ghost"
+                className="font-mono text-xs text-muted-foreground h-7"
+                onClick={loadFiles}
+                disabled={filesLoading}
+              >
+                <RefreshCw className={`w-3 h-3 mr-1 ${filesLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

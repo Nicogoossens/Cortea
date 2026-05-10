@@ -31,17 +31,23 @@ const TODO_ROOT  = process.env.DRIVE_IMPORT_TODO_FOLDER_ID  ?? "1DLe3E3XMxXFHLAg
 const DONE_ROOT  = process.env.DRIVE_IMPORT_DONE_FOLDER_ID  ?? "1yhaSbrCf5nh8fo0ukm1gbHGT2oqQMjRJ";
 
 // ─── GET /api/admin/import/todo-files ─────────────────────────────────────────
+// Returns:
+//   folders    — MD files inside country subfolders (to-do/BE/, to-do/GB/, …)
+//   root_files — MD files placed directly in the to-do/ root (no country folder)
 
 router.get("/admin/import/todo-files", requireAdmin, async (_req, res) => {
   try {
-    const folders = await listFoldersInFolder(TODO_ROOT);
-    const results = await Promise.all(
+    const [folders, rootFiles] = await Promise.all([
+      listFoldersInFolder(TODO_ROOT),
+      listFilesInFolder(TODO_ROOT),
+    ]);
+    const folderResults = await Promise.all(
       folders.map(async (folder) => {
         const files = await listFilesInFolder(folder.id);
         return { folder_id: folder.id, folder_name: folder.name, files };
       }),
     );
-    res.json({ folders: results });
+    res.json({ folders: folderResults, root_files: rootFiles });
   } catch (err) {
     console.error("[admin-import] todo-files error:", err);
     res.status(500).json({ error: "Failed to list Drive files.", detail: String(err) });

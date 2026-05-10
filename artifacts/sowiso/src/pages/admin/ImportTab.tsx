@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminFetch } from "@/lib/useAdminFetch";
 import {
   Loader2, RefreshCw, FolderOpen, FileText, Upload, CheckCircle2,
-  XCircle, Clock, AlertTriangle, ChevronDown, ChevronRight,
+  XCircle, Clock, AlertTriangle, ChevronDown, ChevronRight, FolderInput,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -13,7 +13,10 @@ const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface DriveFile { id: string; name: string; mimeType: string; }
 interface DriveFolder { folder_id: string; folder_name: string; files: DriveFile[]; }
-interface TodoFilesResponse { folders: DriveFolder[]; }
+interface TodoFilesResponse {
+  folders:    DriveFolder[];
+  root_files: DriveFile[];   // files placed directly in import/ root (no country subfolder)
+}
 
 interface ImportRun {
   id: number;
@@ -129,6 +132,87 @@ function ActiveRunPoller({
   return null;
 }
 
+// ─── Root files section (files dropped directly into import/ root) ────────────
+
+const COUNTRY_CODES = [
+  "BE", "NL", "DE", "FR", "GB", "US", "IT", "ES", "PT", "PL",
+  "CZ", "SK", "HU", "RO", "AT", "CH", "LU", "DK", "SE", "FI",
+  "NO", "IE", "GR", "HR", "SI", "LT", "LV", "EE", "BG",
+];
+
+function RootFilesSection({
+  files,
+  folders,
+  onImportFile,
+  activeRunIds,
+}: {
+  files:         DriveFile[];
+  folders:       DriveFolder[];
+  onImportFile:  (file: DriveFile, sourceFolderId: string) => void;
+  activeRunIds:  Set<string>;
+}) {
+  // Per-file: which country folder the user selected
+  const knownFolderNames = folders.map((f) => f.folder_name);
+  const allCountries = Array.from(new Set([...knownFolderNames, ...COUNTRY_CODES])).sort();
+
+  const [selectedCountry, setSelectedCountry] = useState<Record<string, string>>({});
+
+  if (files.length === 0) return null;
+
+  return (
+    <div className="border border-amber-400/40 rounded-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 bg-amber-400/10">
+        <FolderInput className="w-4 h-4 text-amber-600" />
+        <span className="font-mono text-sm font-medium text-amber-700">
+          Losse bestanden in root
+        </span>
+        <span className="text-xs font-mono text-amber-600/70 ml-1">
+          ({files.length} file{files.length !== 1 ? "s" : ""} — geen land-submap)
+        </span>
+      </div>
+      <div className="divide-y divide-border/40">
+        {files.map((file) => {
+          const busy    = activeRunIds.has(file.id);
+          const country = selectedCountry[file.id] ?? "";
+
+          // Resolve folder ID: prefer a known Drive folder, else use root
+          const matchedFolder = folders.find((f) => f.folder_name === country);
+          const resolvedFolderId = matchedFolder?.folder_id ?? null;
+
+          return (
+            <div key={file.id} className="flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-muted/10 transition-colors">
+              <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="flex-1 min-w-0 text-sm font-mono truncate text-foreground">{file.name}</span>
+              <select
+                className="h-7 rounded-sm border border-border bg-background font-mono text-xs px-2 text-foreground focus:outline-none focus:ring-1 focus:ring-primary shrink-0"
+                value={country}
+                onChange={(e) => setSelectedCountry((prev) => ({ ...prev, [file.id]: e.target.value }))}
+                disabled={busy}
+              >
+                <option value="">— kies land —</option>
+                {allCountries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                variant="outline"
+                className="font-mono text-xs h-7 shrink-0"
+                onClick={() => onImportFile(file, resolvedFolderId ?? "")}
+                disabled={busy || !country}
+                title={!country ? "Kies eerst een land" : undefined}
+              >
+                {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3 mr-1" />}
+                {busy ? "Importing…" : "Import"}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Folder section ───────────────────────────────────────────────────────────
 
 function FolderSection({
@@ -206,6 +290,7 @@ export function ImportTab() {
 
   // Drive files
   const [folders,      setFolders]      = useState<DriveFolder[]>([]);
+  const [rootFiles,    setRootFiles]    = useState<DriveFile[]>([]);
   const [filesLoading, setFilesLoading] = useState(true);
   const [filesError,   setFilesError]   = useState<string | null>(null);
 
@@ -226,6 +311,7 @@ export function ImportTab() {
       if (!res.ok) { setFilesError(`Drive API error (HTTP ${res.status}).`); return; }
       const data = await res.json() as TodoFilesResponse;
       setFolders(data.folders ?? []);
+      setRootFiles(data.root_files ?? []);
     } catch (err) {
       setFilesError(`Network error: ${String(err)}`);
     } finally {
@@ -288,11 +374,12 @@ export function ImportTab() {
   const handleJobDone = useCallback((fileId: string, run: ImportRun) => {
     setActiveJobs((prev) => { const m = new Map(prev); m.delete(fileId); return m; });
     setRuns((prev) => prev.map((r) => r.id === run.id ? run : r));
-    // Remove the file from the folder list (it's been moved to done/)
+    // Remove the file from both the folder list and the root files (it's been moved to done/)
     if (run.status === "done") {
       setFolders((prev) =>
         prev.map((f) => ({ ...f, files: f.files.filter((fi) => fi.id !== fileId) }))
       );
+      setRootFiles((prev) => prev.filter((fi) => fi.id !== fileId));
     }
   }, []);
 
@@ -358,6 +445,14 @@ export function ImportTab() {
             <p className="text-sm text-muted-foreground font-mono italic py-4 text-center">
               No country subfolders found in to-do/.
             </p>
+          )}
+          {!filesLoading && !filesError && rootFiles.length > 0 && (
+            <RootFilesSection
+              files={rootFiles}
+              folders={folders}
+              onImportFile={triggerImport}
+              activeRunIds={activeRunIds}
+            />
           )}
           {!filesLoading && !filesError && folders.map((folder) => (
             <FolderSection

@@ -1,106 +1,192 @@
-# LTQ Question Authoring — AI Prompt Reference (v3.0 — definitief)
+# LTQ Question Authoring — AI Prompt Reference
+**Versie 4.0 — Geverifieerd tegen codebase op 10 mei 2026**
+**Bronnen:** schema, engine, parsers, placement route, Master Framework v1.1
 
 ---
 
-## OVER TAAL — LEES DIT EERST
+## DEEL 1 — TAALREGELS
 
-### Engels is de standaard en de mastervraag
+### Engels is de enige taal die je schrijft
 
-**ELKE vraag wordt ALTIJD EERST in het Engels geschreven.**  
-Dit is de enige versie die verplicht is. Engels is de standaardtaal in het systeem (`lang: "en"` is de default).
+Het systeem heeft één standaardtaal: **Engels** (`lang: en`).
 
-**Hoe de engine omgaat met taal:**
-- Als een gebruiker het platform in het **Nederlands** gebruikt en er bestaat een NL-versie van de vraag → NL wordt getoond
-- Als er GEEN NL-versie bestaat → de engine valt **automatisch terug op de Engelse versie**
-- Er is een aparte geautomatiseerde NL-vertaalworkflow in het systeem — je hoeft de NL-versie niet handmatig te schrijven tenzij je verfijnde controle wilt
+Hoe de engine omgaat met taal:
+- Gebruiker stelt platform in op **Nederlands** → engine zoekt eerst NL-vragen
+- Geen NL-vragen aanwezig? → engine **valt automatisch terug op de Engelse versie**
+- Er bestaat een geautomatiseerde NL-vertaalworkflow in het project
+- Schrijf **nooit** `lang: nl` tenzij je handmatig een vertaling aanlevert
 
-**Conclusie voor data-auteurs:**
-> Schrijf uitsluitend Engelse vragen. De NL-vertaalworkflow handelt de rest af.
+**Regel:** Geef altijd `lang: en`. Dat is de enige waarde die je als auteur gebruikt.
 
 ---
 
-## TAAL: VERSCHIL TUSSEN MIDDLE_CLASS EN ELITE
+## DEEL 2 — LEVELS
 
-Er is **geen verschil** in taalbehandeling tussen `middle_class` en `elite`. Beide registers gebruiken hetzelfde `lang`-veld, dezelfde EN-fallback, en dezelfde NL-vertaalworkflow.
+### Het systeem ondersteunt L1 t.e.m. L5 — niet alleen L1-L3
 
-Het verschil zit **elders**:
+Zowel middle_class als elite gaan tot **level 5**. Dit geldt voor:
+- De engine (`maxLevel: 5`)
+- De admin import-route (valideert `min 1, max 5`)
+- De placement binary search (zoekt tussen L1 en L5)
+- De level-titels in het schema (5 per register)
+
+**Level-titels middle_class:** Foundation · Practice · Confidence · Fluency · Mastery  
+**Level-titels elite:** Initiate · Apprentice · Practitioner · Specialist · Master
+
+### Wat elk level betekent voor content-auteurs
+
+| Level | Beschrijving | Type scenario |
+|---|---|---|
+| **1** | Iedereen kent de basisregel of kan ze raden | Obvious situaties, duidelijke correcte keuze |
+| **2** | Enige kennis vereist, maar nog laagdrempelig | Bekende situaties met subtiele nuance |
+| **3** | Kennis + situatie-lezen vereist | Meerdere geldige opties, context bepaalt keuze |
+| **4** | Diepgaande kennis vereist | Complexe multi-factor situaties, hoge inzet |
+| **5** | Expert-niveau | Uitzonderlijke situaties, zeldzame protocollen, geen ruimte voor twijfel |
+
+### Pass-drempels per level (ter info voor moeilijkheidskalibratie)
+
+| Level | middle_class | elite |
+|---|---|---|
+| L1 | 70% correct over 10 vragen | 75% correct over 10 vragen |
+| L2 | 70% correct over 10 vragen | 75% correct over 10 vragen |
+| L3 | 75% correct over 12 vragen | 80% correct over 15 vragen |
+| L4 | 75% correct over 12 vragen | 80% correct over 18 vragen |
+| L5 | 75% correct over 15 vragen | 80% correct over 20 vragen |
+
+---
+
+## DEEL 3 — DEMOGRAFIEËN
+
+### De 7 exacte waarden die het systeem kent
+
+```
+common        → gender-neutraal, leeftijd-neutraal — gebruik dit voor de meeste vragen
+men_19_30     → mannen 19-30 jaar
+women_19_30   → vrouwen 19-30 jaar
+men_30_50     → mannen 31-50 jaar
+women_30_50   → vrouwen 31-50 jaar
+men_50plus    → mannen 51+
+women_50plus  → vrouwen 51+
+```
+
+**Waarschuwing:** Waarden als `male`, `female`, `young_adult`, `senior` bestaan NIET in het systeem. De parser laat ze door maar de engine matcht nooit een vraag met deze waarden.
+
+### Wanneer welke demografie gebruiken
+
+- **`common`** → voor ~80% van alle vragen. Geldt voor iedereen. De engine gebruikt common-vragen ook als aanvulling wanneer de demografisch-specifieke pool te klein is.
+- **Gender+leeftijd** → alleen wanneer het scenario inhoudelijk verschilt per groep. Voorbeeld: een scenario over "uw eerste sollicitatiegesprek" kan `women_19_30` of `men_19_30` zijn als de dynamiek merkbaar verschilt. Bij twijfel: schrijf `common`.
+- **Cross-demographic mix-in** is automatisch ingebouwd in de engine (verplicht vanaf L3 voor middle_class, L2 voor elite). Je hoeft dit niet zelf te regelen — schrijf gewoon vragen in de juiste demografieën.
+
+---
+
+## DEEL 4 — MIDDLE_CLASS VS ELITE
+
+### Structureel verschil
 
 | Aspect | middle_class | elite |
 |---|---|---|
-| `research_pillar` | **Verplicht** — P1, P2, P3, P4 of P5 | **Niet opgeven** — wordt automatisch null |
-| `phase` | 1–5 (expliciet opgeven) | 1–5, of afgeleid van pillar als weggelaten |
-| Sessiegrootte | 8 vragen per sessie | 5 vragen per sessie |
-| Cross-demographic mix vanaf | Level 3 | Level 2 |
-| Toegang | Alle gebruikers | Vereist Ambassador of Founding abonnement |
+| `research_pillar` | **Verplicht**: P1, P2, P3 of P4 | **Weglaten** — wordt NULL in DB |
+| `phase` | 1–5, altijd expliciet opgeven | 1–5, altijd expliciet opgeven |
+| Sessiegrootte | 8 vragen | 5 vragen |
+| Cross-demographic mix-in | Vanaf L3 | Vanaf L2 |
+| Toegang | Alle gebruikers met actief abonnement | Vereist Ambassador of Founding |
+
+### Research pillars middle_class (P1-P4)
+
+| Pillar | Interne naam | Domein |
+|---|---|---|
+| P1 | Adaptive Linguistics | Taal als sociaal instrument |
+| P2 | Professional Branding | Professionele uitstraling en identiteit |
+| P3 | Social Navigation | Navigatie in semi-publieke sociale ruimte |
+| P4 | Merit-based Etiquette | Etiquette gebaseerd op verdienste en respect |
+
+### Elite pillar/fase systeem
+
+Elite heeft geen research_pillar. De 5 fasen zijn:
+
+| Fase | Interne naam | Domein |
+|---|---|---|
+| 1 | Cultural Knowledge | The World Within |
+| 2 | Appearance | The Presence |
+| 3 | Eloquence | The Voice |
+| 4 | Table Manners | The Table |
+| 5 | Drinks Knowledge | The Cellar |
 
 ---
 
-## SYSTEEM-PROMPT VOOR EXTERNE AI (kopieer volledig)
+## DEEL 5 — SYSTEEM-PROMPT VOOR EXTERNE AI (kopieer volledig)
 
 ```
-Je bent een expert-auteur van etiquettevragen voor Cortéa, een Belgisch platform voor culturele etiquette. Je schrijft vragen in YAML-formaat die voldoen aan een strikt schema.
+Je bent een expert-auteur van etiquettevragen voor Cortéa, een Belgisch platform voor culturele etiquette. Je schrijft vragen in YAML-formaat die voldoen aan een strikt schema. Elke vraag is een zelfstandig YAML-blok.
 
-== TAALREGEL (KRITIEK) ==
+== KRITIEKE TAALREGEL ==
 
-- Schrijf UITSLUITEND in het ENGELS (lang: en). Engels is de standaard en de mastervraag.
-- Er bestaat een automatische NL-vertaalworkflow. Schrijf NOOIT handmatig een NL-versie tenzij expliciet gevraagd.
-- Geef ALTIJD lang: en in elk YAML-blok.
-
-== VERSCHIL MIDDLE_CLASS EN ELITE ==
-
-middle_class:
-  - Verplicht veld: research_pillar (P1, P2, P3, P4 of P5)
-  - research_pillar bepaalt het curriculum-pad (pillar = inhoudsdomeein)
-  - phase: 1–5 (altijd expliciet opgeven)
-  - Sessiegrootte: 8 vragen
-
-elite:
-  - research_pillar: NIET opgeven (weglaten — systeem slaat null op)
-  - phase: 1–5 (wordt bij voorkeur expliciet opgegeven)
-  - Sessiegrootte: 5 vragen
-  - Meer diepgang en verfijning vereist in scenario's
+Lang is ALTIJD "en". Schrijf uitsluitend in het Engels.
+De Nederlandse vertaling wordt apart verwerkt door een geautomatiseerde workflow.
+Schrijf NOOIT lang: nl.
 
 == VERPLICHTE VELDEN PER VRAAG ==
 
-question_text      : Scenario-tekst (1–3 zinnen, tweede persoon, concrete situatie, in het ENGELS)
-register           : "elite" of "middle_class"
-region_code        : 2-letterige ISO-code (BE, AE, GB, US, FR, DE, NL, IT, CH...)
-phase              : 1, 2, 3, 4 of 5
-level              : 1, 2 of 3
-lang               : ALTIJD "en"
-demographic        : "common", "male", "female", "young_adult" of "senior"
-primary_dimension  : VERPLICHT — één van: attentiveness | composure | discernment | diplomacy | presence
-options            : lijst van exact 3 antwoordopties (zie formaat)
+question_text   : Scenario in het Engels (1–3 zinnen, tweede persoon "You...", concrete situatie)
+register        : "elite" of "middle_class"
+region_code     : ISO-2 code (BE, AE, GB, US, FR, DE, NL, IT, CH, AU, CA, IN, ES, PT, SG...)
+phase           : 1, 2, 3, 4 of 5
+level           : 1, 2, 3, 4 of 5 (zie gradaties hieronder)
+lang            : ALTIJD "en"
+demographic     : Zie exacte waarden hieronder — gebruik "common" tenzij scenario demografisch specifiek is
+primary_dimension : VERPLICHT — één van: attentiveness | composure | discernment | diplomacy | presence
+options         : Exact 3 antwoordopties (zie formaat)
 
 Voor middle_class ook verplicht:
-research_pillar    : "P1", "P2", "P3", "P4" of "P5"
+research_pillar : "P1", "P2", "P3" of "P4" (NIET voor elite — weglaten)
+
+== DEMOGRAFISCHE WAARDEN (exacte lijst — geen andere waarden zijn geldig) ==
+
+common        → gebruik dit voor de meeste vragen (gender-neutraal, leeftijd-neutraal)
+men_19_30     → mannen 19-30 jaar
+women_19_30   → vrouwen 19-30 jaar
+men_30_50     → mannen 31-50 jaar
+women_30_50   → vrouwen 31-50 jaar
+men_50plus    → mannen 51+
+women_50plus  → vrouwen 51+
+
+Gebruik gender+leeftijd alleen als het scenario inhoudelijk verschilt per groep.
+Bij twijfel: gebruik "common".
+
+== LEVEL-GRADATIES ==
+
+L1 → Basisregel, voor iedereen begrijpelijk, duidelijke correcte keuze
+L2 → Enige kennis vereist, bekende situatie met subtiele nuance
+L3 → Kennis + situatie-lezen, meerdere plausibele opties, context telt
+L4 → Diepgaande kennis, complexe multi-factor situaties, hoge inzet
+L5 → Expert-niveau, uitzonderlijk protocol, geen ruimte voor twijfel
+
+== COMPASS-DIMENSIES ==
+
+attentiveness → luistervaardigheid, de ruimte en ander correct lezen, aanwezigheid
+composure     → zelfbeheersing, kalmte onder druk, niet-reactief
+discernment   → situatie juist inschatten, gepaste keuze maken, context begrijpen
+diplomacy     → tact, empathie, conflictvermijding, de ander ontzien
+presence      → uitstraling, non-verbale communicatie, hoe je staat en beweegt
+
+== ARCHETYPES ==
+
+diplomate    → protocol-bewust, internationaal, formeel, hoge inzet
+urbanist     → stedelijk, sociaal actief, trendbewust, netwerker
+aesthete     → kunst, esthetiek, verfijning, schoonheid als waarde
+scholar      → intellectueel, analytisch, kennisgedreven, reflectief
+cosmopolite  → wereldburger, cultureel veelzijdig, comfortabel in elke context
 
 == PERSONALISATIEVELDEN (altijd invullen — ook lege lijst []) ==
 
 secondary_dimension    : optioneel — zelfde waarden als primary_dimension
-interest_tags          : YAML-array van situationele interesses (zie catalogus)
-applicable_archetypes  : YAML-array van gebruikersarchetypes (zie catalogus)
-social_circle_tags     : YAML-array van sociale contexten (zie catalogus)
-cultural_interest_tags : YAML-array van culturele interesses (zie catalogus)
-register_relevance     : YAML-array — ["elite"], ["middle_class"] of ["elite", "middle_class"]
+applicable_archetypes  : array van archetypes (max 3, alleen als vraag echt relevant is)
+register_relevance     : array — ["elite"], ["middle_class"], of ["elite", "middle_class"]
+interest_tags          : array van ga_*, dc_*, sp_* slugs (situationele interesses)
+social_circle_tags     : array van sc_* slugs (sociale contexten)
+cultural_interest_tags : array van ci_* slugs (culturele interesses)
 
-== COMPASS-DIMENSIES ==
-
-attentiveness  → luistervaardigheid, aandacht voor de ander, aanwezigheid
-composure      → zelfbeheersing, kalmte, niet-reactief zijn onder druk
-discernment    → situatie lezen, juist inschatten, gepaste keuzes maken
-diplomacy      → tact, empathie, conflictvermijding, ander ontzien
-presence       → uitstraling, non-verbale communicatie, ruimte innemen
-
-== ARCHETYPES ==
-
-diplomate    → protocol-bewust, internationaal, formeel
-urbanist     → stedelijk, sociaal actief, trendbewust
-aesthete     → kunst, esthetiek, verfijning, schoonheid centraal
-scholar      → intellectueel, analytisch, kennisgedreven
-cosmopolite  → wereldburger, cultureel veelzijdig, open
-
-== INTEREST TAGS ==
+== INTEREST TAGS (ga_* = gastronomie, dc_* = dresscode, sp_* = sport) ==
 
 Gastronomie:
 ga_fine_dining | ga_wine_appreciation | ga_craft_beer | ga_beer_culture |
@@ -133,120 +219,161 @@ ci_literature | ci_heritage_museums | ci_architecture_design | ci_jazz_music |
 ci_street_art | ci_ballet | ci_photography | ci_comics_bd |
 ci_folklore_traditions | ci_fine_art_collecting | ci_gastronomy_culture
 
-== ANTWOORDOPTIES FORMAT ==
-
-Elke vraag heeft exact 3 opties:
-- answer_tier: 1  → correct antwoord — precies 1 per vraag
-- answer_tier: 2  → aanvaardbaar maar niet ideaal
-- answer_tier: 3  → fout of onbeleefd
-
-Elke optie heeft:
-  text        : de actie/keuze (1–2 zinnen, in het Engels)
-  answer_tier : 1, 2 of 3
-  motivation  : uitleg waarom (1 zin, in het Engels)
-
-== REGISTER_RELEVANCE UITLEG ==
+== REGISTER_RELEVANCE: UITLEG ==
 
 register_relevance is NIET hetzelfde als register.
-- register = hard filter: alleen elite-vragen worden aan elite-gebruikers getoond
-- register_relevance = zachte boost: +8 score als de vraag aansluit bij het profiel van de gebruiker
+- register = hard filter: bepaalt in welke leerwereld de vraag thuishoort
+- register_relevance = zachte score-boost (+8): welke gebruikersstijl past het best bij deze vraag
 
-Gebruik: [elite] voor typisch elite-thema's, [middle_class] voor brede publiek,
-[elite, middle_class] als de vraag voor beide relevant is (bijv. algemeen tafeletiquette).
+Gebruik:
+- [elite]                  → typisch elite-context (diplomatiek diner, privé club)
+- [middle_class]           → typisch dagelijkse context (werk, buren, café)
+- [elite, middle_class]    → universeel (tafeletiquette, begroeting, introductie)
+
+== ANTWOORDOPTIES FORMAT ==
+
+Exact 3 opties per vraag:
+- answer_tier: 1 → correct antwoord — PRECIES 1 per vraag
+- answer_tier: 2 → aanvaardbaar maar niet ideaal
+- answer_tier: 3 → fout of onbeleefd
+
+Elke optie heeft:
+  text        : actie of keuze in het Engels (1–2 zinnen, tweede persoon)
+  answer_tier : 1, 2 of 3
+  motivation  : uitleg waarom correct/suboptimaal/fout (1 zin, in het Engels)
+
+Opties moeten duidelijk van elkaar verschillen — geen subtiele nuances die verwarren.
 
 == REGELS ==
 
-1. Lang is ALTIJD "en". Nooit "nl" — dat doet de automatische vertaalworkflow.
-2. Gebruik de tweede persoon enkelvoud ("You are at a dinner..." / "You notice...").
-3. Elk scenario is een concrete, realistische situatie — geen abstracte of hypothetische vragen.
-4. De drie opties zijn duidelijk verschillend van elkaar — geen subtiele nuances die verwarren.
-5. historical_context: optioneel maar gewenst voor elite (1–2 zinnen max, feitelijk, culturele achtergrond).
-6. primary_dimension is verplicht. Kies de dimensie die de vraag het meest traint.
-7. applicable_archetypes: kies max 3, alleen degenen waarvoor de vraag écht relevant is.
-8. Geef ALTIJD alle personalisatievelden mee — ook als het maar 1 tag is. Geef [] als geen tag past.
+1. lang: ALTIJD "en"
+2. Tweede persoon: "You are...", "You notice...", "You receive..."
+3. Concrete situatie — nooit abstracte of hypothetische vragen
+4. demographic: gebruik "common" tenzij inhoud echt per groep verschilt
+5. level: schrijf vragen op ALLE niveaus 1-5 — de placement-test heeft alle levels nodig
+6. primary_dimension: verplicht, niet leeg laten
+7. applicable_archetypes: max 3, alleen als de vraag écht voor die archetype relevant is
+8. register_relevance: altijd invullen
+9. interest/social/cultural tags: invullen als 1+ tag past, anders []
+10. historical_context: optioneel, max 2 zinnen, feitelijk en cultureel onderbouwd
+11. research_pillar: alleen voor middle_class (P1-P4); volledig weglaten voor elite
+```
 
-== YAML FORMAAT MIDDLE_CLASS ==
+---
+
+## DEEL 6 — YAML VOORBEELDEN
+
+### Voorbeeld middle_class (L3, common)
 
 ```yaml
-question_text: "You are at a business lunch and your colleague reaches across you to grab the bread basket. What do you do?"
+question_text: "You are in a meeting and your manager cuts you off mid-sentence to redirect the discussion. How do you respond?"
 register: middle_class
 research_pillar: P2
 region_code: BE
-phase: 2
-level: 2
+phase: 1
+level: 3
 lang: en
 demographic: common
-primary_dimension: diplomacy
-secondary_dimension: composure
+primary_dimension: composure
+secondary_dimension: diplomacy
 applicable_archetypes: [urbanist, scholar]
 register_relevance: [middle_class]
-interest_tags: [ga_restaurant_culture, ga_fine_dining]
+interest_tags: []
 social_circle_tags: [sc_corporate_networking, sc_professional_assoc]
 cultural_interest_tags: []
 options:
-  - text: "You smile and gently pass the basket to them, making it easy for everyone at the table."
+  - text: "You pause, nod to acknowledge the redirection, and find a moment later to complete your point concisely."
     answer_tier: 1
-    motivation: "Graceful facilitation avoids embarrassment for your colleague."
-  - text: "You say nothing and wait for them to retract their arm."
+    motivation: "Composure under interruption signals confidence without confrontation."
+  - text: "You stop immediately and say nothing, waiting for the meeting to move on."
     answer_tier: 2
-    motivation: "Passive but avoids confrontation — missed opportunity to show warmth."
-  - text: "You pull the basket away and remind them to ask next time."
+    motivation: "Avoids conflict but leaves your point incomplete and your presence diminished."
+  - text: "You raise your voice slightly to finish your sentence before yielding the floor."
     answer_tier: 3
-    motivation: "Publicly correcting a colleague is socially aggressive."
-historical_context: "In professional dining contexts, the host or most senior person typically manages the flow of shared dishes."
+    motivation: "Competing with a manager publicly creates unnecessary tension."
+historical_context: "In Belgian professional culture, deference to seniority in formal meetings remains the norm even in modern workplaces."
 ```
 
-== YAML FORMAAT ELITE ==
+### Voorbeeld elite (L4, diplomatic context)
 
 ```yaml
-question_text: "You are seated at a formal diplomatic dinner. The host pours wine without asking. You do not drink alcohol. What do you do?"
+question_text: "You are at a state reception and are introduced to a foreign dignitary whose title you are uncertain about. What do you do?"
 register: elite
 region_code: BE
-phase: 3
-level: 2
+phase: 1
+level: 4
 lang: en
 demographic: common
 primary_dimension: discernment
 secondary_dimension: diplomacy
 applicable_archetypes: [diplomate, cosmopolite]
 register_relevance: [elite]
-interest_tags: [ga_wine_appreciation, ga_fine_dining]
+interest_tags: []
 social_circle_tags: [sc_diplomatic_reception, sc_private_members_club]
-cultural_interest_tags: [ci_gastronomy_culture]
+cultural_interest_tags: []
 options:
-  - text: "You allow the glass to be filled, then gently touch the rim with your fingertips and smile — a universal sign of non-participation."
+  - text: "You use 'Your Excellency' as a neutral honorific until you have the opportunity to discreetly verify the correct form of address."
     answer_tier: 1
-    motivation: "Avoids interrupting the host while communicating your preference non-verbally."
-  - text: "You quietly say 'Thank you, none for me' before the pour begins."
+    motivation: "'Your Excellency' is broadly accepted for senior officials and avoids the risk of a protocol error."
+  - text: "You use the person's name only, without a title, and explain that you want to address them correctly."
     answer_tier: 2
-    motivation: "Clear and polite, but speaking up in formal settings can disrupt the flow."
-  - text: "You place your hand over the glass to block the pour."
+    motivation: "Honest but risks drawing attention to a gap in preparation."
+  - text: "You confidently use 'Ambassador' as you believe it sounds appropriate."
     answer_tier: 3
-    motivation: "Physically blocking the host's gesture is considered impolite in formal protocol."
-historical_context: "At formal European diplomatic events, it is customary to allow the host to pour — declining is done through body language rather than verbal refusal."
+    motivation: "Assuming a title that does not apply is a protocol violation that can cause offence."
+historical_context: "Diplomatic protocol at state-level events is governed by the Vienna Convention. Misuse of titles is noted and can affect professional relationships."
 ```
+
+### Voorbeeld middle_class (L1, demografisch specifiek)
+
+```yaml
+question_text: "You are a young woman starting your first week at a new company. A senior male colleague invites the team for drinks after work. What do you do?"
+register: middle_class
+research_pillar: P3
+region_code: BE
+phase: 2
+level: 1
+lang: en
+demographic: women_19_30
+primary_dimension: diplomacy
+secondary_dimension: presence
+applicable_archetypes: [urbanist]
+register_relevance: [middle_class]
+interest_tags: [ga_craft_beer, ga_restaurant_culture]
+social_circle_tags: [sc_corporate_networking]
+cultural_interest_tags: []
+options:
+  - text: "You join for one drink, engage warmly with colleagues, and leave at a natural pause with a friendly goodbye."
+    answer_tier: 1
+    motivation: "Participating briefly signals team willingness without over-committing on your first week."
+  - text: "You decline politely and mention you have prior plans."
+    answer_tier: 2
+    motivation: "Acceptable, but early social capital with a new team is hard to rebuild later."
+  - text: "You join but stay at the periphery of the group, checking your phone frequently."
+    answer_tier: 3
+    motivation: "Physical presence without engagement signals disinterest and can read as dismissive."
 ```
 
 ---
 
-## Volledig veldenoverzicht — validatietabel
+## DEEL 7 — VOLLEDIG VELDENOVERZICHT
 
 | Veld | middle_class | elite | Toegestane waarden |
 |---|:---:|:---:|---|
 | `register` | verplicht | verplicht | middle_class, elite |
-| `research_pillar` | **verplicht** | **weglaten** | P1, P2, P3, P4, P5 |
+| `research_pillar` | **verplicht** | **weglaten** | P1, P2, P3, P4 |
 | `region_code` | verplicht | verplicht | BE, AE, GB, US, FR, DE, NL, IT, CH, AU, CA, IN, ES, PT, SG, BR, ZA, MX, CO |
-| `phase` | verplicht | verplicht | 1–5 |
-| `level` | verplicht | verplicht | 1–3 |
+| `phase` | verplicht | verplicht | 1, 2, 3, 4, 5 |
+| `level` | verplicht | verplicht | **1, 2, 3, 4, 5** |
 | `lang` | verplicht | verplicht | **altijd "en"** |
-| `demographic` | verplicht | verplicht | common, male, female, young_adult, senior |
-| `primary_dimension` | verplicht | verplicht | attentiveness, composure, discernment, diplomacy, presence |
+| `demographic` | verplicht | verplicht | common \| men_19_30 \| women_19_30 \| men_30_50 \| women_30_50 \| men_50plus \| women_50plus |
+| `primary_dimension` | verplicht | verplicht | attentiveness \| composure \| discernment \| diplomacy \| presence |
 | `secondary_dimension` | gewenst | gewenst | zelfde als primary_dimension |
-| `register_relevance` | gewenst | gewenst | ["middle_class"], ["elite"], of ["elite", "middle_class"] |
-| `interest_tags` | gewenst | gewenst | zie interest catalogus |
-| `applicable_archetypes` | gewenst | gewenst | diplomate, urbanist, aesthete, scholar, cosmopolite |
-| `social_circle_tags` | gewenst | gewenst | zie social circle catalogus |
-| `cultural_interest_tags` | gewenst | gewenst | zie cultural interest catalogus |
+| `applicable_archetypes` | gewenst | gewenst | diplomate \| urbanist \| aesthete \| scholar \| cosmopolite |
+| `register_relevance` | verplicht | verplicht | array: "elite", "middle_class", of beide |
+| `interest_tags` | gewenst | gewenst | ga_*, dc_*, sp_* slugs — zie catalogus |
+| `social_circle_tags` | gewenst | gewenst | sc_* slugs — zie catalogus |
+| `cultural_interest_tags` | gewenst | gewenst | ci_* slugs — zie catalogus |
 | `historical_context` | optioneel | aanbevolen | vrije tekst, max 2 zinnen |
 | `answer_tier: 1` | verplicht | verplicht | precies 1 per vraag |
 | `answer_tier: 2` | verplicht | verplicht | 1 per vraag |
@@ -254,15 +381,19 @@ historical_context: "At formal European diplomatic events, it is customary to al
 
 ---
 
-## N8N-validatiechecklist (na generatie)
+## DEEL 8 — N8N VALIDATIECHECKLIST
 
-- [ ] `lang` is altijd `en`
-- [ ] `research_pillar` aanwezig voor middle_class, afwezig voor elite
-- [ ] Precies 3 opties per vraag, precies 1 met answer_tier=1
-- [ ] `primary_dimension` is ingevuld (niet leeg)
-- [ ] `register_relevance` is ingevuld (ook al is het maar 1 waarde)
-- [ ] Minstens 1 personalisatietag in `interest_tags`, `social_circle_tags`, of `cultural_interest_tags`
+Na generatie door externe AI, controleer per blok:
+
+- [ ] `lang` is `en`
+- [ ] `level` is een integer 1-5
+- [ ] `demographic` is één van de 7 exacte waarden (geen "male", "female", "senior"...)
+- [ ] `research_pillar` aanwezig voor middle_class (P1/P2/P3/P4), afwezig voor elite
+- [ ] `primary_dimension` is ingevuld
+- [ ] `register_relevance` is ingevuld (array, niet leeg)
+- [ ] Exact 3 opties, precies 1 met `answer_tier: 1`
+- [ ] Geen lege `text` of `motivation` in opties
 
 ---
 
-*Cortéa LTQ-importpipeline — Parser v2.1 — Alle personalisatievelden inclusief register_relevance*
+*Cortéa LTQ-importpipeline — Parser v2.1 — Geverifieerd 10 mei 2026*

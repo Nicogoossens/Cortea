@@ -4,6 +4,7 @@ import { countryVotesTable, compassRegionsTable, usersTable } from "@workspace/d
 import { and, eq, sql, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuthUser, getResolvedUserId } from "../lib/auth-middleware";
+import { requireAdmin } from "./admin/require-admin.js";
 
 const router = Router();
 
@@ -250,19 +251,9 @@ router.delete("/votes/:regionCode", requireAuthUser, async (req, res) => {
   }
 });
 
-// Admin overview — requires admin (mounted under same /api router; reuse admin middleware pattern locally)
-router.get("/admin/votes/countries", requireAuthUser, async (req, res) => {
+// Admin overview — requires admin
+router.get("/admin/votes/countries", requireAdmin, async (req, res) => {
   try {
-    const userId = getResolvedUserId(req);
-    const u = await db
-      .select({ is_admin: usersTable.is_admin, suspended_at: usersTable.suspended_at })
-      .from(usersTable)
-      .where(eq(usersTable.id, userId))
-      .limit(1);
-    if (!u.length || !u[0].is_admin || u[0].suspended_at) {
-      return res.status(403).json({ error: "Admin only." });
-    }
-
     const period = String(req.query.period || currentPeriodYm());
 
     const tally = await db.execute(sql`

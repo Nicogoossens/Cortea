@@ -240,6 +240,9 @@ export function parseLearningTrackMd(content: string): ParseResult {
   // ── State machine ─────────────────────────────────────────────────────────
   const EMOJI_TIER: Record<string, 1 | 2 | 3> = { "✅": 1, "🟡": 2, "❌": 3 };
 
+  const parseTagList = (v: string): string[] =>
+    v.split(",").map((s) => s.trim()).filter(Boolean);
+
   let currentLevel = 1;
   let inQuestion = false;
   let qLineNum = 0;
@@ -249,6 +252,13 @@ export function parseLearningTrackMd(content: string): ParseResult {
   let optTier: 1 | 2 | 3 | null = null;
   let optText = "";
   let optMotivation = "";
+  // Per-question personalization fields
+  let qPrimaryDimension: string | null = null;
+  let qSecondaryDimension: string | null = null;
+  let qInterestTags: string[] = [];
+  let qApplicableArchetypes: string[] = [];
+  let qSocialCircleTags: string[] = [];
+  let qCulturalInterestTags: string[] = [];
 
   function commitOption() {
     if (optTier !== null) {
@@ -286,6 +296,12 @@ export function parseLearningTrackMd(content: string): ParseResult {
       historical_context: qHistCtx || null,
       options: qOptions,
       lang,
+      primary_dimension:      qPrimaryDimension,
+      secondary_dimension:    qSecondaryDimension,
+      interest_tags:          qInterestTags,
+      applicable_archetypes:  qApplicableArchetypes,
+      social_circle_tags:     qSocialCircleTags,
+      cultural_interest_tags: qCulturalInterestTags,
     });
   }
 
@@ -297,6 +313,12 @@ export function parseLearningTrackMd(content: string): ParseResult {
     optTier = null;
     optText = "";
     optMotivation = "";
+    qPrimaryDimension = null;
+    qSecondaryDimension = null;
+    qInterestTags = [];
+    qApplicableArchetypes = [];
+    qSocialCircleTags = [];
+    qCulturalInterestTags = [];
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -362,6 +384,25 @@ export function parseLearningTrackMd(content: string): ParseResult {
       qHistCtx = histM[1].trim();
       continue;
     }
+
+    // Per-question personalization fields
+    const pdM = line.match(/^\*\*Primary Dimension:\*\*\s*(.*)/i);
+    if (pdM) { qPrimaryDimension = pdM[1].trim() || null; continue; }
+
+    const sdM = line.match(/^\*\*Secondary Dimension:\*\*\s*(.*)/i);
+    if (sdM) { qSecondaryDimension = sdM[1].trim() || null; continue; }
+
+    const itM = line.match(/^\*\*Interest Tags?:\*\*\s*(.*)/i);
+    if (itM) { qInterestTags = parseTagList(itM[1]); continue; }
+
+    const aaM = line.match(/^\*\*(?:Applicable )?Archetypes?:\*\*\s*(.*)/i);
+    if (aaM) { qApplicableArchetypes = parseTagList(aaM[1]); continue; }
+
+    const scM = line.match(/^\*\*Social Circles?:\*\*\s*(.*)/i);
+    if (scM) { qSocialCircleTags = parseTagList(scM[1]); continue; }
+
+    const ciM = line.match(/^\*\*Cultural Interests?:\*\*\s*(.*)/i);
+    if (ciM) { qCulturalInterestTags = parseTagList(ciM[1]); continue; }
   }
 
   commitQuestion();

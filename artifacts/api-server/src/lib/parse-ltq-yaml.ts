@@ -43,6 +43,11 @@ interface RawQuestion {
   lang?: unknown;
   primary_dimension?: unknown;
   secondary_dimension?: unknown;
+  // Personalization fields — used by the re-rank engine
+  interest_tags?: unknown;
+  applicable_archetypes?: unknown;
+  social_circle_tags?: unknown;
+  cultural_interest_tags?: unknown;
 }
 
 const DEMOGRAPHIC_ALIASES: Record<string, string> = {
@@ -163,6 +168,14 @@ export function parseLtqYaml(content: string): ParseResult {
     const research_pillar =
       register === "elite" ? null : (rawPillar || null);
 
+    // Parse array personalization fields — accept both YAML arrays and comma-separated strings
+    const parseTagArray = (v: unknown): string[] => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+      if (typeof v === "string") return v.split(",").map((x) => x.trim()).filter(Boolean);
+      return [];
+    };
+
     questions.push({
       register,
       research_pillar,
@@ -176,6 +189,10 @@ export function parseLtqYaml(content: string): ParseResult {
       lang: str(parsed.lang, "en"),
       primary_dimension: str(parsed.primary_dimension) || null,
       secondary_dimension: str(parsed.secondary_dimension) || null,
+      interest_tags:           parseTagArray(parsed.interest_tags),
+      applicable_archetypes:   parseTagArray(parsed.applicable_archetypes),
+      social_circle_tags:      parseTagArray(parsed.social_circle_tags),
+      cultural_interest_tags:  parseTagArray(parsed.cultural_interest_tags),
     });
   }
 

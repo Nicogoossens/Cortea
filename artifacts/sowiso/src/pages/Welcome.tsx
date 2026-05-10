@@ -469,6 +469,9 @@ export default function Welcome() {
             {t("welcome.begin")}
             <ChevronRight className="w-5 h-5" aria-hidden="true" />
           </Button>
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground/70 text-center max-w-xs">
+            {t("welcome.begin_disclaimer", "Sample questions — drawn from multiple countries as examples")}
+          </p>
           <p className="text-base text-foreground/80 font-light">
             {t("landing.signin_prompt")}{" "}
             <a

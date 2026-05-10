@@ -72,6 +72,10 @@ function TheLocalSection({ regionCode }: { regionCode: string }) {
   const { savedIds, pendingId, toggleSave } = useSavedVenues(isAuthenticated);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [regionCode]);
+
+  useEffect(() => {
     setLoading(true);
     setSearchQuery("");
     fetch(`${API_BASE}/api/venues?region=${encodeURIComponent(regionCode)}`)

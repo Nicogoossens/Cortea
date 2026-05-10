@@ -32,7 +32,9 @@ export default function Compass() {
   const { isAuthenticated } = useAuth();
   const { data: profile } = useGetProfile();
   const { activeRegion } = useActiveRegion();
-  const [view, setView] = useState<"clusters" | "regions">("clusters");
+  const [view, setView] = useState<"clusters" | "regions">(() => {
+    try { return (localStorage.getItem("compass_view") as "clusters" | "regions") || "clusters"; } catch { return "clusters"; }
+  });
   const [searchQuery, setSearchQuery] = useState("");
 
   const tier = (profile?.subscription_tier ?? "guest") as SubscriptionTier;
@@ -134,7 +136,7 @@ export default function Compass() {
       {/* View Toggle */}
       <div className="inline-flex rounded-sm border border-border bg-muted/40 p-1 gap-1" role="group" aria-label="View mode">
         <button
-          onClick={() => setView("clusters")}
+          onClick={() => { setView("clusters"); try { localStorage.setItem("compass_view", "clusters"); } catch {} }}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[3px] transition-all ${
             view === "clusters"
               ? "bg-background text-foreground shadow-sm border border-border/60"
@@ -146,7 +148,7 @@ export default function Compass() {
           {t("compass.view_clusters")}
         </button>
         <button
-          onClick={() => setView("regions")}
+          onClick={() => { setView("regions"); try { localStorage.setItem("compass_view", "regions"); } catch {} }}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[3px] transition-all ${
             view === "regions"
               ? "bg-background text-foreground shadow-sm border border-border/60"

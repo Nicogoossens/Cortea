@@ -82,8 +82,8 @@ router.get("/learning-tracks/next", requireAuthUser, async (req, res) => {
     if (!tierAllows(register, user.subscription_tier ?? "guest")) {
       return res.status(403).json({
         error: register === "elite"
-          ? "The elite learning track requires an Ambassador subscription."
-          : "Learning tracks require a Traveller or Ambassador subscription.",
+          ? "The elite learning track requires an Ambassador or Founding subscription."
+          : "Learning tracks require a Traveller, Ambassador, or Founding subscription.",
       });
     }
 
@@ -159,8 +159,8 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     if (!tierAllows(register, user.subscription_tier ?? "guest")) {
       return res.status(403).json({
         error: register === "elite"
-          ? "The elite learning track requires an Ambassador subscription."
-          : "Learning tracks require a Traveller or Ambassador subscription.",
+          ? "The elite learning track requires an Ambassador or Founding subscription."
+          : "Learning tracks require a Traveller, Ambassador, or Founding subscription.",
       });
     }
 
@@ -555,8 +555,8 @@ router.post("/learning-tracks/answer", requireAuthUser, async (req, res) => {
     if (!tierAllows(register, userTier?.subscription_tier ?? "guest")) {
       return res.status(403).json({
         error: register === "elite"
-          ? "The elite learning track requires an Ambassador subscription."
-          : "Learning tracks require a Traveller or Ambassador subscription.",
+          ? "The elite learning track requires an Ambassador or Founding subscription."
+          : "Learning tracks require a Traveller, Ambassador, or Founding subscription.",
       });
     }
 

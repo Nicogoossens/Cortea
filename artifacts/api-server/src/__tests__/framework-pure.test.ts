@@ -11,6 +11,7 @@ import {
   weightedArchetypeProgress,
   blendCompassScores,
   updateBehaviorProfileFromSession,
+  tierAllows,
   type PureBehaviorProfile,
   type PureRegisterBiasSignal,
 } from "../lib/learning-engine-pure";
@@ -337,5 +338,45 @@ describe("stripPrivateFields", () => {
   it("preserves non-private fields when elite_privacy_mode=true", () => {
     const result = stripPrivateFields(fullProfile, true);
     expect(result.username).toBe("test_user");
+  });
+});
+
+// ─── tierAllows ───────────────────────────────────────────────────────────────
+
+describe("tierAllows", () => {
+  describe("middle_class register", () => {
+    it("allows traveller tier", () => {
+      expect(tierAllows("middle_class", "traveller")).toBe(true);
+    });
+    it("allows ambassador tier", () => {
+      expect(tierAllows("middle_class", "ambassador")).toBe(true);
+    });
+    it("allows founding tier", () => {
+      expect(tierAllows("middle_class", "founding")).toBe(true);
+    });
+    it("blocks guest tier", () => {
+      expect(tierAllows("middle_class", "guest")).toBe(false);
+    });
+    it("blocks empty string tier", () => {
+      expect(tierAllows("middle_class", "")).toBe(false);
+    });
+    it("blocks unknown tier", () => {
+      expect(tierAllows("middle_class", "premium")).toBe(false);
+    });
+  });
+
+  describe("elite register", () => {
+    it("allows ambassador tier", () => {
+      expect(tierAllows("elite", "ambassador")).toBe(true);
+    });
+    it("allows founding tier", () => {
+      expect(tierAllows("elite", "founding")).toBe(true);
+    });
+    it("blocks traveller tier (elite requires ambassador or founding)", () => {
+      expect(tierAllows("elite", "traveller")).toBe(false);
+    });
+    it("blocks guest tier", () => {
+      expect(tierAllows("elite", "guest")).toBe(false);
+    });
   });
 });

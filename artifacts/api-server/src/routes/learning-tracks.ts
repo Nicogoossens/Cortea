@@ -30,6 +30,7 @@ import {
   projectBehaviorToCompass,
   blendCompassScores,
   updateBehaviorProfileFromSession,
+  tierAllows,
   type PureBehaviorProfile,
 } from "../lib/learning-engine-pure";
 import { compassHistoryTable } from "@workspace/db";
@@ -54,12 +55,6 @@ const AnswerBodySchema = z.object({
   /** Optional in v1; required once the new flow is fully rolled out. */
   session_id: z.number().int().positive().optional(),
 });
-
-function tierAllows(register: Register, tier: string): boolean {
-  if (tier !== "traveller" && tier !== "ambassador" && tier !== "founding") return false;
-  if (register === "elite" && tier !== "ambassador" && tier !== "founding") return false;
-  return true;
-}
 
 // ─── GET /learning-tracks/next ───────────────────────────────────────────────
 // Returns the next prescribed slot (phase + research_pillar) the student

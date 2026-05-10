@@ -315,3 +315,17 @@ export function updateBehaviorProfileFromSession(
     nonverbal_awareness: clamp(profile.nonverbal_awareness + delta),
   };
 }
+
+/**
+ * §10 Subscription gate — pure tier check shared by learning-tracks and
+ * placement routes.
+ *
+ * Allowed tiers for any learning track / placement session:
+ *   traveller, ambassador, founding
+ * Elite register additionally requires ambassador or founding.
+ */
+export function tierAllows(register: Register, tier: string): boolean {
+  if (tier !== "traveller" && tier !== "ambassador" && tier !== "founding") return false;
+  if (register === "elite" && tier !== "ambassador" && tier !== "founding") return false;
+  return true;
+}

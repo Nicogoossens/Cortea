@@ -20,6 +20,7 @@ import {
 } from "../lib/learning-engine";
 import {
   projectBehaviorToCompass,
+  tierAllows,
   type PureBehaviorProfile,
 } from "../lib/learning-engine-pure";
 import { enforceElitePrivacy } from "../middleware/elite-privacy";
@@ -51,11 +52,6 @@ const CompleteBodySchema = z.object({
   session_id: z.number().int().positive(),
 });
 
-function tierAllows(register: Register, tier: string): boolean {
-  if (tier !== "traveller" && tier !== "ambassador" && tier !== "founding") return false;
-  if (register === "elite" && tier !== "ambassador" && tier !== "founding") return false;
-  return true;
-}
 
 interface PlacementSession {
   id: number;

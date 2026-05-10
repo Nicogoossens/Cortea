@@ -140,6 +140,8 @@ defaultBucketID = "replit-objstore-311b79c7-9f4b-42a0-9b23-3623379fc65e"
 [userenv.shared]
 CLOSED_BETA = "true"
 BETA_INVITE_CODE = "DEV-BDA41371471CA2C7"
+DRIVE_IMPORT_TODO_FOLDER_ID = "1DLe3E3XMxXFHLAge7kA4bggMmnU2j4Qt"
+DRIVE_IMPORT_DONE_FOLDER_ID = "1yhaSbrCf5nh8fo0ukm1gbHGT2oqQMjRJ"
 
 [userenv.production]
 APP_PUBLIC_URL = "https://sowiso-01.replit.app"

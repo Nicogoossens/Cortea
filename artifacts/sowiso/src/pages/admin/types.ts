@@ -32,7 +32,7 @@ export interface ContentStatus {
 }
 
 export type ActionState = "idle" | "loading" | "done" | "error";
-export type AdminTab = "users" | "content" | "cc_screening" | "integrations" | "use_cases" | "attribution" | "onboarding" | "translation" | "counsel_seeds" | "votes";
+export type AdminTab = "users" | "content" | "cc_screening" | "integrations" | "use_cases" | "attribution" | "onboarding" | "translation" | "counsel_seeds" | "votes" | "import";
 
 export interface CounselSeedRow {
   id: number;

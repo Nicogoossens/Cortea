@@ -10,7 +10,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import { Link } from "wouter";
 import {
   Shield, Lock, Search, Loader2, AlertTriangle, Mail, ArrowRight,
-  Users, BarChart3, TrendingUp, Database, Briefcase, Cpu, KeyRound, Languages, Vote,
+  Users, BarChart3, TrendingUp, Database, Briefcase, Cpu, KeyRound, Languages, Vote, Upload,
 } from "lucide-react";
 
 import { UserRow } from "./UserRow";
@@ -23,6 +23,7 @@ import { AttributionTab } from "./AttributionTab";
 import { CountryVotesTab } from "./CountryVotesTab";
 import { CounselSeedsTab } from "./CounselSeedsTab";
 import { IntegrationsPanel } from "./IntegrationsPanel";
+import { ImportTab } from "./ImportTab";
 import type { AdminTab, AdminUser } from "./types";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -154,6 +155,7 @@ export default function Admin() {
           { key: "translation" as const,   label: "Vertalingen",         icon: Languages },
           { key: "counsel_seeds" as const, label: "Atelier-distillaten", icon: Database },
           { key: "votes" as const,         label: "Country Votes",       icon: Vote },
+          { key: "import" as const,         label: "Import",              icon: Upload },
         ]).map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setActiveTab(key)}
             className={`flex items-center gap-2 shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-mono transition-colors border-b-2 -mb-px ${activeTab === key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
@@ -221,6 +223,7 @@ export default function Admin() {
       {activeTab === "translation"  && <TranslationHealthTab />}
       {activeTab === "counsel_seeds"&& <CounselSeedsTab authHeaders={authHeaders} />}
       {activeTab === "votes"        && <CountryVotesTab authHeaders={authHeaders} />}
+      {activeTab === "import"       && <ImportTab />}
     </div>
   );
 }

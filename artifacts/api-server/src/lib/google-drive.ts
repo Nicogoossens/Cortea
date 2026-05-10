@@ -32,6 +32,23 @@ export async function listFilesInFolder(folderId: string): Promise<DriveFile[]> 
 }
 
 /**
+ * List all subfolders directly inside a Drive folder.
+ */
+export async function listFoldersInFolder(folderId: string): Promise<DriveFile[]> {
+  const connectors = getConnectors();
+  const q = encodeURIComponent(
+    `'${folderId}' in parents and trashed=false and mimeType='application/vnd.google-apps.folder'`,
+  );
+  const resp = await connectors.proxy(
+    "google-drive",
+    `/drive/v3/files?q=${q}&fields=files(id,name,mimeType)&pageSize=100`,
+    { method: "GET" },
+  );
+  const data = (await resp.json()) as { files?: DriveFile[] };
+  return data.files ?? [];
+}
+
+/**
  * Download a Drive file and return its full text content.
  */
 export async function downloadFileAsText(fileId: string): Promise<string> {
@@ -74,4 +91,25 @@ export async function moveFileToFolder(fileId: string, newFolderId: string): Pro
       body: "{}",
     },
   );
+}
+
+/**
+ * Given a source country folder (e.g. to-do/BE), finds the corresponding
+ * done/ sibling folder (done/BE) by:
+ *   1. Reading the source folder's name (e.g. "BE")
+ *   2. Reading the env var DRIVE_IMPORT_DONE_FOLDER_ID as the done/ root
+ *   3. Listing subfolders of done/ and returning the one whose name matches
+ *
+ * Returns null when the done root is unset or no matching subfolder exists.
+ */
+export async function resolveDoneFolder(sourceFolderId: string): Promise<string | null> {
+  const doneRoot = process.env.DRIVE_IMPORT_DONE_FOLDER_ID;
+  if (!doneRoot) return null;
+
+  const sourceMeta = await getFileMetadata(sourceFolderId);
+  const folderName = sourceMeta.name;
+
+  const subs = await listFoldersInFolder(doneRoot);
+  const match = subs.find((f) => f.name === folderName);
+  return match?.id ?? null;
 }

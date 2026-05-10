@@ -12,18 +12,20 @@
  *   pnpm --filter @workspace/api-server exec tsx src/scripts/import-ltq.ts \
  *     --file <drive-file-id> [--done-folder <id>]
  *
- * Env vars:
- *   DRIVE_IMPORT_DONE_FOLDER_ID  — default done/ country folder
- *                                   (overridden by --done-folder flag)
+ * done-folder resolution (highest priority first):
+ *   1. --done-folder <id>           explicit flag
+ *   2. DRIVE_IMPORT_DONE_FOLDER_ID  env var (treated as done/ root — the
+ *                                   matching country subfolder is found automatically)
+ *   3. Auto-derived from --folder   looks up the done/<CC> sibling via Drive API
  *
  * Google Drive folder structure:
  *   My Drive/cortea/import/
- *     to-do/<CC>/   ← place new MD files here (CC = ISO country code, e.g. BE)
+ *     to-do/<CC>/   ← place new MD files here  (CC = ISO country code, e.g. BE)
  *     done/<CC>/    ← files are moved here after a successful import
  *
- * Known folder IDs (saved for reference):
- *   to-do root : 1DLe3E3XMxXFHLAge7kA4bggMmnU2j4Qt
- *   done  root : 1yhaSbrCf5nh8fo0ukm1gbHGT2oqQMjRJ
+ * Known folder IDs:
+ *   to-do root : 1DLe3E3XMxXFHLAge7kA4bggMmnU2j4Qt   (DRIVE_IMPORT_TODO_FOLDER_ID)
+ *   done  root : 1yhaSbrCf5nh8fo0ukm1gbHGT2oqQMjRJ   (DRIVE_IMPORT_DONE_FOLDER_ID)
  *   to-do/BE   : 1ulQLkZoELNG1bKSjUoJYzPi_HQz_5IfY
  *   done/BE    : 1igOihIBrjTN4sC6UPXEHCPgQ5jWDYn8c
  */
@@ -31,7 +33,12 @@
 import { db, pool, learningTrackQuestionsTable } from "@workspace/db";
 import type { InsertLearningTrackQuestion } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
-import { listFilesInFolder, downloadFileAsText, moveFileToFolder } from "../lib/google-drive.js";
+import {
+  listFilesInFolder,
+  downloadFileAsText,
+  moveFileToFolder,
+  resolveDoneFolder,
+} from "../lib/google-drive.js";
 import { parseLtqYaml } from "../lib/parse-ltq-yaml.js";
 
 // ── CLI argument parsing ──────────────────────────────────────────────────────
@@ -45,7 +52,7 @@ function getArg(flag: string): string | null {
 
 const targetFolder = getArg("--folder");
 const targetFile   = getArg("--file");
-const doneFolderId = getArg("--done-folder") ?? process.env.DRIVE_IMPORT_DONE_FOLDER_ID ?? null;
+const explicitDone = getArg("--done-folder");
 
 if (!targetFolder && !targetFile) {
   console.error("Usage:");
@@ -54,11 +61,43 @@ if (!targetFolder && !targetFile) {
   process.exit(1);
 }
 
+// ── Done-folder resolution ────────────────────────────────────────────────────
+// Resolved once (lazily) the first time it is needed.
+// For --folder mode the env-var done-root is treated as a root and the matching
+// country subfolder is found automatically; an explicit --done-folder always wins.
+
+let _resolvedDoneFolder: string | null | undefined = undefined;
+
+async function getDoneFolder(sourceFolderId: string | null): Promise<string | null> {
+  if (_resolvedDoneFolder !== undefined) return _resolvedDoneFolder;
+
+  if (explicitDone) {
+    _resolvedDoneFolder = explicitDone;
+    return _resolvedDoneFolder;
+  }
+
+  // Auto-derive: find done/<CC> sibling via API (requires sourceFolderId)
+  if (sourceFolderId) {
+    const auto = await resolveDoneFolder(sourceFolderId);
+    if (auto) {
+      console.log(`  ℹ️  Auto-resolved done/ folder: ${auto}`);
+      _resolvedDoneFolder = auto;
+      return _resolvedDoneFolder;
+    }
+  }
+
+  // Fallback: use DRIVE_IMPORT_DONE_FOLDER_ID as-is (done/ root, not country subfolder)
+  _resolvedDoneFolder = process.env.DRIVE_IMPORT_DONE_FOLDER_ID ?? null;
+  return _resolvedDoneFolder;
+}
+
 // ── Batch insert (idempotent) ─────────────────────────────────────────────────
 
 const BATCH_SIZE = 500;
 
-async function batchInsert(questions: InsertLearningTrackQuestion[]): Promise<{ inserted: number; skipped: number }> {
+async function batchInsert(
+  questions: InsertLearningTrackQuestion[],
+): Promise<{ inserted: number; skipped: number }> {
   let inserted = 0;
   let skipped  = 0;
   for (let i = 0; i < questions.length; i += BATCH_SIZE) {
@@ -87,7 +126,11 @@ interface FileResult {
   moved:    boolean;
 }
 
-async function processFile(fileId: string, fileName: string): Promise<FileResult> {
+async function processFile(
+  fileId: string,
+  fileName: string,
+  sourceFolderId: string | null,
+): Promise<FileResult> {
   console.log(`\n  📄 ${fileName}`);
 
   const content = await downloadFileAsText(fileId);
@@ -96,13 +139,11 @@ async function processFile(fileId: string, fileName: string): Promise<FileResult
   let parseErrors: string[];
 
   if (content.includes("```yaml")) {
-    // YAML-block format (new LangSmith / compact output)
     const result = parseLtqYaml(content);
     questions   = result.questions;
     parseErrors = result.parseErrors;
     console.log(`     Format: YAML-block`);
   } else {
-    // Canonical markdown format
     const result = parseLearningTrackMd(content);
     questions   = result.questions;
     parseErrors = result.parseErrors;
@@ -126,16 +167,19 @@ async function processFile(fileId: string, fileName: string): Promise<FileResult
   console.log(`     ✅ Inserted: ${inserted}  |  Skipped (dup): ${skipped}`);
 
   let moved = false;
-  if (doneFolderId) {
+  const doneFolder = await getDoneFolder(sourceFolderId);
+  if (doneFolder) {
     try {
-      await moveFileToFolder(fileId, doneFolderId);
+      await moveFileToFolder(fileId, doneFolder);
       console.log(`     📁 Moved to done/`);
       moved = true;
     } catch (err) {
       console.warn(`     ⚠️  Could not move file: ${err}`);
     }
   } else {
-    console.warn(`     ⚠️  --done-folder not set and DRIVE_IMPORT_DONE_FOLDER_ID is unset — file NOT moved`);
+    console.warn(
+      `     ⚠️  No done-folder resolved — set --done-folder or DRIVE_IMPORT_DONE_FOLDER_ID`,
+    );
   }
 
   return { parsed: questions.length, inserted, skipped, warnings: parseErrors.length, moved };
@@ -147,6 +191,9 @@ async function main() {
   console.log("╔══════════════════════════════════════════╗");
   console.log("║  LTQ Import — Google Drive → Postgres    ║");
   console.log("╚══════════════════════════════════════════╝");
+
+  // sourceFolderId is the actual country folder used for auto done-derivation
+  const sourceFolderId = targetFolder ?? null;
 
   let files: { id: string; name: string }[];
 
@@ -169,7 +216,7 @@ async function main() {
 
   for (const file of files) {
     try {
-      const result = await processFile(file.id, file.name);
+      const result = await processFile(file.id, file.name, sourceFolderId);
       totals.parsed   += result.parsed;
       totals.inserted += result.inserted;
       totals.skipped  += result.skipped;

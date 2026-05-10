@@ -2,20 +2,31 @@
  * Shared parser for canonical Learning Track Markdown files.
  *
  * File format (one .md file per pillar):
- *   - Metadata header (first ~15 lines):
+ *   - Metadata header (bold keys, before the first level heading):
  *       **Region:** BE
- *       **Register:** middle_class
+ *       **Register:** middle_class  (or elite)
  *       **Phase:** 1
  *       **Pillar:** P1
  *       **Lang:** en
  *       **Demographic:** common
- *   - Level sections:  ## Level N: Title
+ *   - Fallback: if bold keys are absent, metadata is derived from the first
+ *       heading line, e.g.  "# BE Elite Phase 1 — P1 Voice"
+ *   - Level sections (any of):
+ *       ## Level N: Title   |  # Level N  |  ## L1  |  ## The Foundation
  *   - Question blocks: ### QN: Title
  *       **Scenario:** ...
  *       **A) ✅ Good** / **B) 🟡 Slightly different** / **C) ❌ Would not do that**
  *       > option text
  *       *motivation text*
  *       **Historical Context:** ...
+ *
+ * Elite vs. middle_class pillar/research_pillar semantics
+ * ────────────────────────────────────────────────────────
+ * middle_class: **Pillar:** → research_pillar (P1–P4); phase comes from **Phase:**
+ * elite:        **Pillar:** → phase derivation only (P1→phase 1 … P5→phase 5);
+ *               research_pillar is stored as NULL so the selection engine's
+ *               `research_pillar IS NULL` filter for elite sessions matches.
+ *               If **Phase:** is also present it wins over the pillar-derived value.
  *
  * Exactly one tier-1 (✅) option is required per question.
  * Emoji → answer_tier: ✅ = 1 (Good), 🟡 = 2 (Slightly different), ❌ = 3 (Would not do that)
@@ -28,24 +39,129 @@ export interface ParseResult {
   parseErrors: string[];
 }
 
+// ── Level heading helpers ─────────────────────────────────────────────────────
+
+/**
+ * Maps level-title keywords to their 1-based level integer.
+ * Covers both elite ("The Initiate"…"The Master") and
+ * middle-class ("The Foundation"…"The Mastery") naming.
+ */
+const LEVEL_TITLE_MAP: Record<string, number> = {
+  initiate: 1, apprentice: 2, practitioner: 3, specialist: 4, master: 5,
+  foundation: 1, practice: 2, confidence: 3, fluency: 4, mastery: 5,
+};
+
+/**
+ * Detects whether a (already-trimmed) line is a level heading and returns the
+ * 1-based level number, or null if not a level heading.
+ *
+ * Recognised forms (any heading depth # / ## / ###):
+ *   ## Level 3          # Level 3: Title    ### Level 3 — …
+ *   ## L3               # L3:               ### L3 — …
+ *   ## The Foundation   # The Mastery       ### Foundation
+ */
+function detectLevel(line: string): number | null {
+  if (!/^#{1,3}\s/.test(line)) return null;
+  const body = line.replace(/^#{1,3}\s+/, "").trim();
+
+  // "Level N" variants
+  const numM = body.match(/^Level\s+(\d+)\b/i);
+  if (numM) return parseInt(numM[1], 10);
+
+  // "LN" shorthand: L1, L2, …, L5
+  const shortM = body.match(/^L([1-5])\b/i);
+  if (shortM) return parseInt(shortM[1], 10);
+
+  // Title-based: "The Foundation", "Foundation", "The Master", …
+  // First word after optional "The " must be in the title map.
+  const titleM = body.match(/^(?:The\s+)?(\w+)\b/i);
+  if (titleM) {
+    const word = titleM[1].toLowerCase();
+    if (LEVEL_TITLE_MAP[word] !== undefined) return LEVEL_TITLE_MAP[word];
+  }
+
+  return null;
+}
+
+/** Returns true when a line could be the start of a level section. */
+function isLevelLine(line: string): boolean {
+  return detectLevel(line) !== null;
+}
+
+// ── Title-line metadata fallback ──────────────────────────────────────────────
+
+const VALID_REGIONS = [
+  "GB", "US", "AE", "CN", "JP", "FR", "DE", "NL", "AU", "CA",
+  "IT", "IN", "ES", "PT", "SG", "BR", "ZA", "MX", "CO", "BE", "CH",
+];
+const VALID_PILLARS = ["P1", "P2", "P3", "P4", "P5"];
+
+interface TitleMeta {
+  region_code?: string;
+  register?: "middle_class" | "elite";
+  phase?: number;
+  pillar?: string;
+  demographic?: string;
+}
+
+/**
+ * Scans the first few lines for a heading line (# …) and tries to extract
+ * metadata that is absent from the bold-key block.  Used as a last-resort
+ * fallback so files without bold headers can still be imported.
+ */
+function extractMetadataFromTitle(lines: string[]): TitleMeta {
+  for (const line of lines.slice(0, 8)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("#")) continue;
+    const text = trimmed.replace(/^#+\s*/, "").trim();
+    if (!text) continue;
+
+    const result: TitleMeta = {};
+
+    // Region
+    const regionM = text.match(
+      /\b(GB|US|AE|CN|JP|FR|DE|NL|AU|CA|IT|IN|ES|PT|SG|BR|ZA|MX|CO|BE|CH)\b/i,
+    );
+    if (regionM) result.region_code = regionM[1].toUpperCase();
+
+    // Register
+    if (/\belite\b/i.test(text)) result.register = "elite";
+    else if (/\bmiddle[_\s-]?class\b/i.test(text)) result.register = "middle_class";
+
+    // Phase
+    const phaseM = text.match(/\bPhase\s+(\d+)\b/i);
+    if (phaseM) result.phase = parseInt(phaseM[1], 10);
+
+    // Pillar (P1–P5)
+    const pillarM = text.match(/\bP([1-5])\b/);
+    if (pillarM) result.pillar = `P${pillarM[1]}`;
+
+    if (Object.keys(result).length > 0) return result;
+  }
+  return {};
+}
+
+// ── Main parser ───────────────────────────────────────────────────────────────
+
 export function parseLearningTrackMd(content: string): ParseResult {
   const lines = content.split(/\r?\n/);
   const parseErrors: string[] = [];
   const questions: InsertLearningTrackQuestion[] = [];
 
-  // ── Header metadata defaults ───────────────────────────────────────────────
+  // ── Header metadata defaults ─────────────────────────────────────────────
   let region_code = "";
   let register: "middle_class" | "elite" = "middle_class";
-  let phaseRaw: string | null = null;  // null = not found in header
+  let phaseRaw: string | null = null;
   let phase = 1;
-  let research_pillar: string | null = null;
+  let pillarRaw: string | null = null; // raw value from **Pillar:** key
   let lang = "en";
   let demographic = "common";
 
-  // Scan until the first level-heading (## Level N) or end of file — no hard cap.
+  // Find where the header ends: first level heading or EOF.
+  const firstLevelIdx = lines.findIndex((l) => isLevelLine(l.trim()));
+  const headerEnd = firstLevelIdx >= 0 ? firstLevelIdx : lines.length;
+
   const META_RE = /^\s*\*\*([A-Za-z_]+):\*\*\s+(.+?)\s*$/;
-  const firstLevelLine = lines.findIndex((l) => /^##\s+Level\s+\d+\b/i.test(l));
-  const headerEnd = firstLevelLine >= 0 ? firstLevelLine : lines.length;
   for (let i = 0; i < headerEnd; i++) {
     const m = lines[i].match(META_RE);
     if (!m) continue;
@@ -54,44 +170,74 @@ export function parseLearningTrackMd(content: string): ParseResult {
     if (key === "region") region_code = val.toUpperCase();
     else if (key === "register") register = val as "middle_class" | "elite";
     else if (key === "phase") { phaseRaw = val; phase = parseInt(val, 10); }
-    else if (key === "pillar") research_pillar = val;
+    else if (key === "pillar") pillarRaw = val;
     else if (key === "lang") lang = val.toLowerCase();
     else if (key === "demographic") demographic = val;
   }
 
-  // ── Required metadata validation ──────────────────────────────────────────
-  const VALID_REGIONS = [
-    "GB", "US", "AE", "CN", "JP", "FR", "DE", "NL", "AU", "CA",
-    "IT", "IN", "ES", "PT", "SG", "BR", "ZA", "MX", "CO", "BE", "CH",
-  ];
-  const VALID_PILLARS = ["P1", "P2", "P3", "P4", "P5"];
+  // ── Title-line fallback ───────────────────────────────────────────────────
+  // Apply title-derived values only when the bold-key block is silent.
+  const titleMeta = extractMetadataFromTitle(lines);
+  if (!region_code && titleMeta.region_code) region_code = titleMeta.region_code;
+  if (register === "middle_class" && titleMeta.register) register = titleMeta.register;
+  if (phaseRaw === null && titleMeta.phase !== undefined) {
+    phase = titleMeta.phase;
+    phaseRaw = String(titleMeta.phase);
+  }
+  if (!pillarRaw && titleMeta.pillar) pillarRaw = titleMeta.pillar;
 
+  // ── Elite: derive phase from pillar if Phase header was absent ───────────
+  // For elite, **Pillar:** encodes the phase number (P1 = phase 1, …, P5 = phase 5).
+  // research_pillar is always NULL for elite (the selection engine filters IS NULL).
+  let research_pillar: string | null = null;
+  if (register === "elite") {
+    if (phaseRaw === null && pillarRaw && VALID_PILLARS.includes(pillarRaw)) {
+      phase = parseInt(pillarRaw.slice(1), 10);
+      phaseRaw = String(phase);
+    }
+    // research_pillar stays null for elite — intentional
+  } else {
+    // middle_class: pillar maps directly to research_pillar
+    research_pillar = pillarRaw;
+  }
+
+  // ── Validation ────────────────────────────────────────────────────────────
   if (!region_code) {
     parseErrors.push("Missing required metadata: **Region:**");
   } else if (!VALID_REGIONS.includes(region_code)) {
     parseErrors.push(`Unrecognised **Region:** "${region_code}" — must be one of ${VALID_REGIONS.join(", ")}`);
   }
 
-  if (!research_pillar) {
-    parseErrors.push("Missing required metadata: **Pillar:**");
-  } else if (!VALID_PILLARS.includes(research_pillar)) {
-    parseErrors.push(`Invalid **Pillar:** "${research_pillar}" — must be one of ${VALID_PILLARS.join(", ")}`);
+  // Pillar required for middle_class; optional (for phase derivation) for elite
+  if (register === "middle_class") {
+    if (!research_pillar) {
+      parseErrors.push("Missing required metadata: **Pillar:** (required for middle_class)");
+    } else if (!VALID_PILLARS.includes(research_pillar)) {
+      parseErrors.push(`Invalid **Pillar:** "${research_pillar}" — must be one of ${VALID_PILLARS.join(", ")}`);
+    }
   }
 
   if (phaseRaw === null) {
-    parseErrors.push("Missing required metadata: **Phase:**");
+    parseErrors.push("Missing required metadata: **Phase:** (or derivable from **Pillar:** on elite)");
   } else if (isNaN(phase) || phase < 1) {
     parseErrors.push(`Invalid **Phase:** "${phaseRaw}" — must be a positive integer`);
   }
 
-  // Abort early if required metadata is absent or invalid — questions would be un-insertable.
   const regionInvalid = !!region_code && !VALID_REGIONS.includes(region_code);
-  const pillarInvalid = research_pillar !== null && !VALID_PILLARS.includes(research_pillar);
-  if (!region_code || regionInvalid || !research_pillar || pillarInvalid || phaseRaw === null || isNaN(phase) || phase < 1) {
+  const pillarInvalid =
+    register === "middle_class" &&
+    !!research_pillar &&
+    !VALID_PILLARS.includes(research_pillar);
+
+  if (!region_code || regionInvalid || pillarInvalid || phaseRaw === null || isNaN(phase) || phase < 1) {
+    return { questions: [], parseErrors };
+  }
+  // middle_class also requires a valid pillar
+  if (register === "middle_class" && !research_pillar) {
     return { questions: [], parseErrors };
   }
 
-  // ── State machine ──────────────────────────────────────────────────────────
+  // ── State machine ─────────────────────────────────────────────────────────
   const EMOJI_TIER: Record<string, 1 | 2 | 3> = { "✅": 1, "🟡": 2, "❌": 3 };
 
   let currentLevel = 1;
@@ -169,11 +315,11 @@ export function parseLearningTrackMd(content: string): ParseResult {
       line.startsWith("## Levels in")
     ) continue;
 
-    const levelM = line.match(/^##\s+Level\s+(\d+)\b/i);
-    if (levelM) {
+    const level = detectLevel(line);
+    if (level !== null) {
       commitQuestion();
       resetQuestion();
-      currentLevel = parseInt(levelM[1], 10);
+      currentLevel = level;
       continue;
     }
 
@@ -199,7 +345,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
 
     const quoteM = line.match(/^>\s*(.*)/);
     if (quoteM && optTier !== null) {
-      let t = quoteM[1].trim().replace(/^["\u201C]|["\u201D]$/g, "").trim();
+      const t = quoteM[1].trim().replace(/^["\u201C]|["\u201D]$/g, "").trim();
       optText = optText ? `${optText} ${t}` : t;
       continue;
     }

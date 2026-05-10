@@ -7,6 +7,14 @@
  * Demographic normalisation:
  *   common_age_neutral → common
  *   men_19_30 / women_30_50 / … → kept as-is (already canonical)
+ *
+ * Elite vs. middle_class pillar/research_pillar semantics
+ * ────────────────────────────────────────────────────────
+ * middle_class: research_pillar set from YAML `research_pillar` field (P1–P4)
+ * elite:        research_pillar forced to NULL; phase is derived from the
+ *               numeric suffix of the pillar field when `phase` is absent
+ *               (P1 → phase 1, …, P5 → phase 5).  This aligns with the
+ *               selection engine's `research_pillar IS NULL` filter for elite.
  */
 import yaml from "js-yaml";
 import type { InsertLearningTrackQuestion } from "@workspace/db";
@@ -52,6 +60,16 @@ function normaliseDemographic(raw: unknown): string {
 function str(v: unknown, fallback = ""): string {
   if (v == null) return fallback;
   return String(v).trim();
+}
+
+/**
+ * Derive phase number from a pillar string like "P1" → 1.
+ * Returns null if the string doesn't match the pattern.
+ */
+function phaseFromPillar(pillar: unknown): number | null {
+  if (!pillar || typeof pillar !== "string") return null;
+  const m = pillar.trim().match(/^P([1-5])$/i);
+  return m ? parseInt(m[1], 10) : null;
 }
 
 export function parseLtqYaml(content: string): ParseResult {
@@ -115,10 +133,24 @@ export function parseLtqYaml(content: string): ParseResult {
       continue;
     }
 
+    const register = (str(parsed.register, "middle_class")) as "middle_class" | "elite";
+    const rawPillar = str(parsed.research_pillar);
+
+    // Phase: explicit > derived from pillar (elite only) > default 1
+    let phase = Number(parsed.phase) || 0;
+    if (!phase && register === "elite") {
+      phase = phaseFromPillar(rawPillar) ?? 1;
+    }
+    if (!phase) phase = 1;
+
+    // research_pillar: null for elite; pillar string for middle_class
+    const research_pillar =
+      register === "elite" ? null : (rawPillar || null);
+
     questions.push({
-      register: (str(parsed.register, "middle_class")) as "middle_class" | "elite",
-      research_pillar: str(parsed.research_pillar) || null,
-      phase: Number(parsed.phase) || 1,
+      register,
+      research_pillar,
+      phase,
       level: Number(parsed.level) || 1,
       region_code: regionCode,
       demographic: normaliseDemographic(parsed.demographic),

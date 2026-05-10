@@ -116,6 +116,16 @@ export function parseLtqYaml(content: string): ParseResult {
       continue;
     }
 
+    // Strict answer_tier validation: each option must be 1, 2, or 3
+    const VALID_TIERS = new Set([1, 2, 3]);
+    const invalidTier = rawOptions.find((o) => !VALID_TIERS.has(Number(o.answer_tier)));
+    if (invalidTier) {
+      parseErrors.push(
+        `Block ${blockIndex}: "${questionText.slice(0, 40)}" — invalid answer_tier "${invalidTier.answer_tier}" (must be 1, 2, or 3)`,
+      );
+      continue;
+    }
+
     const tier1Count = rawOptions.filter((o) => Number(o.answer_tier) === 1).length;
     if (tier1Count !== 1) {
       parseErrors.push(`Block ${blockIndex}: "${questionText.slice(0, 40)}" — ${tier1Count} Good answers (need exactly 1)`);
@@ -124,7 +134,7 @@ export function parseLtqYaml(content: string): ParseResult {
 
     const options = rawOptions.map((o) => ({
       text: str(o.text),
-      answer_tier: (Number(o.answer_tier) ?? 2) as 1 | 2 | 3,
+      answer_tier: Number(o.answer_tier) as 1 | 2 | 3,
       motivation: str(o.motivation),
     }));
 
@@ -135,6 +145,12 @@ export function parseLtqYaml(content: string): ParseResult {
 
     const register = (str(parsed.register, "middle_class")) as "middle_class" | "elite";
     const rawPillar = str(parsed.research_pillar);
+
+    // research_pillar required for middle_class
+    if (register === "middle_class" && !rawPillar) {
+      parseErrors.push(`Block ${blockIndex}: "${questionText.slice(0, 40)}" — missing research_pillar (required for middle_class)`);
+      continue;
+    }
 
     // Phase: explicit > derived from pillar (elite only) > default 1
     let phase = Number(parsed.phase) || 0;

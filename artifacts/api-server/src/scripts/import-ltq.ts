@@ -192,12 +192,24 @@ async function main() {
   console.log("║  LTQ Import — Google Drive → Postgres    ║");
   console.log("╚══════════════════════════════════════════╝");
 
-  // sourceFolderId is the actual country folder used for auto done-derivation
-  const sourceFolderId = targetFolder ?? null;
+  // sourceFolderId is the actual country folder used for auto done-derivation.
+  // In --file mode we fetch the file's parent folder so resolveDoneFolder still
+  // locates the correct done/<CC> sibling automatically.
+  let sourceFolderId: string | null = targetFolder ?? null;
 
   let files: { id: string; name: string }[];
 
   if (targetFile) {
+    // Fetch parent folder so resolveDoneFolder can locate the done/<CC> sibling
+    if (!sourceFolderId) {
+      try {
+        const { getFileMetadata } = await import("../lib/google-drive.js");
+        const meta = await getFileMetadata(targetFile);
+        sourceFolderId = meta.parents?.[0] ?? null;
+      } catch {
+        // Non-fatal: fallback to env-var done-folder
+      }
+    }
     files = [{ id: targetFile, name: `(single file: ${targetFile})` }];
   } else {
     console.log(`\nListing files in folder: ${targetFolder}`);

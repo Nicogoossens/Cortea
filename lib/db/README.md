@@ -17,3 +17,20 @@ Drizzle migrations live in `drizzle/`. The `scripts/post-merge.sh` at the repo r
 ## Compass country import
 
 The canonical method for importing Compass country data (culture protocols, compass scores, pillar scores) is the **Google Drive importer** in the admin panel → Compass tab → "Import from Drive". This replaces all previous manual `.mjs` import scripts. Do not create new standalone import scripts at the `lib/db/` root.
+
+## Atelier (LTQ) import
+
+The canonical method for importing Learning Track Questions is the **Drive CLI pipeline** added in Task #310:
+
+```bash
+pnpm --filter @workspace/api-server exec tsx src/scripts/import-ltq.ts \
+  --folder <drive-to-do-country-folder-id> \
+  [--done-folder <drive-done-country-folder-id>]
+```
+
+Place new `.md` files in `My Drive/cortea/import/to-do/<CC>/` (CC = ISO country code, e.g. `BE`).  
+After a successful import the file is automatically moved to `done/<CC>/`.  
+Supported file formats: canonical Markdown (`**Scenario:**`) and YAML-block (`` ```yaml `` fences).  
+Known env vars: `DRIVE_IMPORT_TODO_FOLDER_ID`, `DRIVE_IMPORT_DONE_FOLDER_ID`.
+
+Do **not** create new standalone seed scripts for LTQ data at `lib/db/` or `scripts/` root.

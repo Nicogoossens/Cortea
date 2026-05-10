@@ -259,6 +259,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
   let qApplicableArchetypes: string[] = [];
   let qSocialCircleTags: string[] = [];
   let qCulturalInterestTags: string[] = [];
+  let qRegisterRelevance: string[] = [];
 
   function commitOption() {
     if (optTier !== null) {
@@ -302,6 +303,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
       applicable_archetypes:  qApplicableArchetypes,
       social_circle_tags:     qSocialCircleTags,
       cultural_interest_tags: qCulturalInterestTags,
+      register_relevance:     qRegisterRelevance,
     });
   }
 
@@ -319,6 +321,7 @@ export function parseLearningTrackMd(content: string): ParseResult {
     qApplicableArchetypes = [];
     qSocialCircleTags = [];
     qCulturalInterestTags = [];
+    qRegisterRelevance = [];
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -403,6 +406,9 @@ export function parseLearningTrackMd(content: string): ParseResult {
 
     const ciM = line.match(/^\*\*Cultural Interests?:\*\*\s*(.*)/i);
     if (ciM) { qCulturalInterestTags = parseTagList(ciM[1]); continue; }
+
+    const rrM = line.match(/^\*\*Register Relevance:\*\*\s*(.*)/i);
+    if (rrM) { qRegisterRelevance = parseTagList(rrM[1]); continue; }
   }
 
   commitQuestion();

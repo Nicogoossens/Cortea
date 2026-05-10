@@ -24,11 +24,16 @@ options            : lijst van 3 antwoordopties (zie formaat hieronder)
 
 == PERSONALISATIEVELDEN (geef ALTIJD in — ook als lege lijst []) ==
 
-secondary_dimension     : optioneel — zelfde waarden als primary_dimension
-interest_tags           : YAML-array van situationele interesses (zie catalogus)
-applicable_archetypes   : YAML-array van gebruikersarchetypes (zie catalogus)
-social_circle_tags      : YAML-array van sociale contexten (zie catalogus)
-cultural_interest_tags  : YAML-array van culturele interesses (zie catalogus)
+secondary_dimension    : optioneel — zelfde waarden als primary_dimension
+interest_tags          : YAML-array van situationele interesses (zie catalogus)
+applicable_archetypes  : YAML-array van gebruikersarchetypes (zie catalogus)
+social_circle_tags     : YAML-array van sociale contexten (zie catalogus)
+cultural_interest_tags : YAML-array van culturele interesses (zie catalogus)
+register_relevance     : YAML-array — geef aan voor welk register de vraag het sterkst relevant is
+                         Waarden: "elite" en/of "middle_class"
+                         Voorbeeld: [elite] of [middle_class] of [elite, middle_class]
+                         Dit is ANDERS dan het veld "register" (hard filter).
+                         register_relevance is een zachte boost (+8 score) in het aanbevelingssysteem.
 
 == COMPASS-DIMENSIES ==
 
@@ -106,6 +111,7 @@ demographic: common
 primary_dimension: discernment
 secondary_dimension: composure
 applicable_archetypes: [diplomate, aesthete]
+register_relevance: [elite]
 interest_tags: [ga_wine_appreciation, ga_fine_dining]
 social_circle_tags: [sc_private_members_club, sc_wine_society]
 cultural_interest_tags: [ci_gastronomy_culture]
@@ -131,6 +137,7 @@ historical_context: "Optionele achtergrondinfo over de historische of culturele 
 6. Geef ALTIJD interest_tags, social_circle_tags en cultural_interest_tags mee — ook als het maar 1 tag is. Geef [] als er echt geen passende tag bestaat.
 7. primary_dimension is VERPLICHT. Kies de dimensie die de vraag het meest traint.
 8. applicable_archetypes: kies max 3, kies alleen degenen waarvoor de vraag écht relevant is.
+9. register_relevance: geef ALTIJD mee. Voor een elite-vraag typisch [elite], voor middle_class typisch [middle_class]. Sommige vragen zijn voor beide relevant: [elite, middle_class].
 ```
 
 ---
@@ -163,11 +170,23 @@ Genereer 5 YAML-vragen voor:
 | secondary_dimension | nee | zelfde als primary_dimension |
 | research_pillar | alleen middle_class | P1, P2, P3, P4, P5 |
 | answer_tier | ja (3x per vraag) | 1, 2, 3 — precies één tier-1 per vraag |
-| interest_tags | nee maar gewenst | zie catalogus hierboven |
-| applicable_archetypes | nee maar gewenst | diplomate, urbanist, aesthete, scholar, cosmopolite |
-| social_circle_tags | nee maar gewenst | zie catalogus hierboven |
-| cultural_interest_tags | nee maar gewenst | zie catalogus hierboven |
+| register_relevance | gewenst | elite, middle_class (array — één of beide) |
+| interest_tags | gewenst | zie interest catalogus |
+| applicable_archetypes | gewenst | diplomate, urbanist, aesthete, scholar, cosmopolite |
+| social_circle_tags | gewenst | zie social circle catalogus |
+| cultural_interest_tags | gewenst | zie cultural interest catalogus |
 
 ---
 
-*Gegenereerd voor Cortéa LTQ-importpipeline. Parser-versie: 2.0 (ondersteunt alle personalisatievelden).*
+## Hoe register vs register_relevance verschilt
+
+| Veld | Functie | Effect |
+|---|---|---|
+| `register` | Hard filter — welke vragen worden überhaupt opgehaald | Alleen elite-vragen verschijnen voor elite-gebruikers |
+| `register_relevance` | Zachte boost — welke vragen scoren hoger binnen de pool | +8 punten als de vraag overeenkomt met het register-profiel van de gebruiker |
+
+Een elite-vraag over wijnkennis die ook nuttig is voor aspirerende middle-class gebruikers kan `register_relevance: [elite, middle_class]` krijgen terwijl `register: elite` blijft.
+
+---
+
+*Gegenereerd voor Cortéa LTQ-importpipeline. Parser-versie: 2.1 (alle personalisatievelden inclusief register_relevance).*

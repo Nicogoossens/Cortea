@@ -48,6 +48,7 @@ interface RawQuestion {
   applicable_archetypes?: unknown;
   social_circle_tags?: unknown;
   cultural_interest_tags?: unknown;
+  register_relevance?: unknown;
 }
 
 const DEMOGRAPHIC_ALIASES: Record<string, string> = {
@@ -193,6 +194,7 @@ export function parseLtqYaml(content: string): ParseResult {
       applicable_archetypes:   parseTagArray(parsed.applicable_archetypes),
       social_circle_tags:      parseTagArray(parsed.social_circle_tags),
       cultural_interest_tags:  parseTagArray(parsed.cultural_interest_tags),
+      register_relevance:      parseTagArray(parsed.register_relevance),
     });
   }
 

@@ -28,7 +28,9 @@
     "seed:be": "tsx src/seed-learning-tracks.ts ../../data/be-learning-tracks.json",
     "seed:be-md": "tsx src/seed-learning-tracks.ts ../../attached_assets/Belgie_middenklasse_Phase1_Pillar1_1777563340991.md",
     "validate:be": "node ../../scripts/validate-be-learning-tracks.mjs",
-    "seed-cultural-origins": "tsx src/seed-cultural-origins.ts"
+    "seed-cultural-origins": "tsx src/seed-cultural-origins.ts",
+    "migrate-cultural-tags": "tsx src/migrate-cultural-tags-schema.ts",
+    "seed-cultural-tags": "tsx src/seed-cultural-tags.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

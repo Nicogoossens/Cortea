@@ -52,6 +52,16 @@ export const learningTrackQuestionsTable = pgTable(
      */
     cultural_interest_tags:  jsonb("cultural_interest_tags").$type<string[]>().notNull().default([]),
     /**
+     * Cultural tag IDs from the canonical tag registry (cultural_tags table).
+     * Array of tag_id strings, e.g. ["pda-couples-public", "alcohol-consumption-social-norm"].
+     * Used by the learning engine for:
+     *   - Laag A (country filter): excluded tags → hard remove; recommended → +6; not_recommended → −5
+     *   - Laag B (profile boost): overlap with user interest slugs → +8 per match (max +24)
+     * Populated by the auto-tagger script or manually in the YAML source file.
+     * Default [] = not yet tagged (auto-tagger processes these).
+     */
+    cultural_tags:           jsonb("cultural_tags").$type<string[]>().notNull().default([]),
+    /**
      * Primary Refinement Compass dimension this question trains.
      * One of: attentiveness | composure | discernment | diplomacy | presence
      * REQUIRED on every question (import pipeline enforces non-null).

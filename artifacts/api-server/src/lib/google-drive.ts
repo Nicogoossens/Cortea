@@ -102,6 +102,42 @@ export async function moveFileToFolder(fileId: string, newFolderId: string): Pro
  *
  * Returns null when the done root is unset or no matching subfolder exists.
  */
+/**
+ * Upload a plain-text or markdown file to a Drive folder.
+ * Uses the multipart upload API (uploadType=multipart).
+ * Returns the created file's Drive ID.
+ */
+export async function uploadTextFile(
+  folderId: string,
+  fileName: string,
+  content: string,
+  mimeType: string = "text/markdown",
+): Promise<string> {
+  const connectors = getConnectors();
+  const boundary = "cortea_boundary_" + Date.now();
+  const metadata = JSON.stringify({ name: fileName, parents: [folderId] });
+  const body =
+    `--${boundary}\r\n` +
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+    `${metadata}\r\n` +
+    `--${boundary}\r\n` +
+    `Content-Type: ${mimeType}\r\n\r\n` +
+    `${content}\r\n` +
+    `--${boundary}--`;
+
+  const resp = await connectors.proxy(
+    "google-drive",
+    `/upload/drive/v3/files?uploadType=multipart&fields=id,name`,
+    {
+      method: "POST",
+      headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+      body,
+    },
+  );
+  const data = (await resp.json()) as { id: string; name: string };
+  return data.id;
+}
+
 export async function resolveDoneFolder(sourceFolderId: string): Promise<string | null> {
   const doneRoot = process.env.DRIVE_IMPORT_DONE_FOLDER_ID;
   if (!doneRoot) return null;

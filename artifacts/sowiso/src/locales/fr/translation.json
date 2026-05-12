@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Le Tir aux Oiseaux",
   "interests.sp_hunting_deer_stalking": "L'Affût du Cerf",
   "interests.sp_hunting_falconry": "La Fauconnerie",
-  "profile.picker_confirm_clear": "Effacer la sélection"
+  "profile.picker_confirm_clear": "Effacer la sélection",
+  "profile_completeness.banner_title": "Complétez votre profil d'intérêts",
+  "profile_completeness.banner_body_one": "L'une de vos cinq catégories d'intérêts est vide. Ajoutez quelques intérêts pour que Cortéa puisse personnaliser ses conseils.",
+  "profile_completeness.banner_body_two": "Deux de vos cinq catégories d'intérêts sont vides. Ajoutez quelques intérêts pour que Cortéa puisse personnaliser ses conseils.",
+  "profile_completeness.banner_body_many": "Plusieurs de vos catégories d'intérêts sont encore vides. Ajoutez quelques intérêts pour que Cortéa puisse personnaliser ses conseils.",
+  "profile_completeness.cta": "Compléter mes intérêts",
+  "profile_completeness.dismiss": "Ignorer",
+  "interests.category.sports": "Sports",
+  "interests.category.cuisine": "Cuisine",
+  "interests.category.dress_code": "Code vestimentaire",
+  "interests.category.social_circles": "Cercles sociaux",
+  "interests.category.cultural_interests": "Intérêts culturels"
 }

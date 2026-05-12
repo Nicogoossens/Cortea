@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ChevronLeft, ChevronRight, CheckCircle2, Users, MessageSquare, Send,
 } from "lucide-react";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 import { Link } from "wouter";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -170,6 +171,8 @@ export default function RoleplayScenario() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <IncompleteProfileBanner />
+
       <div className="flex items-center gap-3">
         <Link href="/atelier">
           <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-mono uppercase tracking-widest">

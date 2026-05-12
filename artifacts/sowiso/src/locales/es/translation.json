@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Tiro de Ave",
   "interests.sp_hunting_deer_stalking": "Acecho de Venado",
   "interests.sp_hunting_falconry": "Cetrería",
-  "profile.picker_confirm_clear": "Borrar selección"
+  "profile.picker_confirm_clear": "Borrar selección",
+  "profile_completeness.banner_title": "Complete su perfil de intereses",
+  "profile_completeness.banner_body_one": "Una de sus cinco categorías de intereses está vacía. Añada algunos intereses para que Cortéa pueda personalizar su orientación.",
+  "profile_completeness.banner_body_two": "Dos de sus cinco categorías de intereses están vacías. Añada algunos intereses para que Cortéa pueda personalizar su orientación.",
+  "profile_completeness.banner_body_many": "Varias de sus categorías de intereses siguen vacías. Añada algunos intereses para que Cortéa pueda personalizar su orientación.",
+  "profile_completeness.cta": "Completar mis intereses",
+  "profile_completeness.dismiss": "Ignorar",
+  "interests.category.sports": "Deportes",
+  "interests.category.cuisine": "Cocina",
+  "interests.category.dress_code": "Código de vestimenta",
+  "interests.category.social_circles": "Círculos sociales",
+  "interests.category.cultural_interests": "Intereses culturales"
 }

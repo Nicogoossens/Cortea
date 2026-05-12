@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "ウィングシューティング",
   "interests.sp_hunting_deer_stalking": "鹿狩り",
   "interests.sp_hunting_falconry": "鷹狩り",
-  "profile.picker_confirm_clear": "選択をクリア"
+  "profile.picker_confirm_clear": "選択をクリア",
+  "profile_completeness.banner_title": "興味プロフィールを完成させてください",
+  "profile_completeness.banner_body_one": "5つの興味カテゴリのうち1つが空です。Cortéaがあなたに合ったアドバイスを提供できるよう、いくつかの興味を追加してください。",
+  "profile_completeness.banner_body_two": "5つの興味カテゴリのうち2つが空です。Cortéaがあなたに合ったアドバイスを提供できるよう、いくつかの興味を追加してください。",
+  "profile_completeness.banner_body_many": "複数の興味カテゴリがまだ空です。Cortéaがあなたに合ったアドバイスを提供できるよう、いくつかの興味を追加してください。",
+  "profile_completeness.cta": "興味を完成させる",
+  "profile_completeness.dismiss": "閉じる",
+  "interests.category.sports": "スポーツ",
+  "interests.category.cuisine": "料理",
+  "interests.category.dress_code": "ドレスコード",
+  "interests.category.social_circles": "社交の場",
+  "interests.category.cultural_interests": "文化的関心"
 }

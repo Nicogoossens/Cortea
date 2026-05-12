@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Flugwildschießen",
   "interests.sp_hunting_deer_stalking": "Hirschpirschen",
   "interests.sp_hunting_falconry": "Falknerei",
-  "profile.picker_confirm_clear": "Auswahl löschen"
+  "profile.picker_confirm_clear": "Auswahl löschen",
+  "profile_completeness.banner_title": "Vervollständigen Sie Ihr Interessenprofil",
+  "profile_completeness.banner_body_one": "Eine Ihrer fünf Interessenkategorien ist leer. Fügen Sie einige Interessen hinzu, damit Cortéa seine Beratung auf Sie abstimmen kann.",
+  "profile_completeness.banner_body_two": "Zwei Ihrer fünf Interessenkategorien sind leer. Fügen Sie einige Interessen hinzu, damit Cortéa seine Beratung auf Sie abstimmen kann.",
+  "profile_completeness.banner_body_many": "Mehrere Ihrer Interessenkategorien sind noch leer. Fügen Sie einige Interessen hinzu, damit Cortéa seine Beratung auf Sie abstimmen kann.",
+  "profile_completeness.cta": "Meine Interessen ergänzen",
+  "profile_completeness.dismiss": "Schließen",
+  "interests.category.sports": "Sport",
+  "interests.category.cuisine": "Küche",
+  "interests.category.dress_code": "Dresscode",
+  "interests.category.social_circles": "Soziale Kreise",
+  "interests.category.cultural_interests": "Kulturelle Interessen"
 }

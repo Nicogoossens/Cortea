@@ -23,6 +23,7 @@ import { DOMAIN_KEYS, type DomainKey, DOMAIN_KEY_TO_LOG_DOMAIN, getSituationChip
 import { OBJECTIVE_OPTIONS, SPHERE_OPTIONS } from "@/lib/profile-options";
 import { hasFullAccess as tierHasFullAccess, hasBasicAccess as tierHasBasicAccess, isCounselDomainAccessible } from "@/lib/tier-access";
 import { CounselRegionPicker } from "@/components/CounselRegionPicker";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const BASIC_QUESTION_LIMIT = 5;
@@ -440,6 +441,8 @@ export default function Counsel() {
 
       {/* ── Standard counsel mode — wrap all standard content ── */}
       {counselMode === "standard" && (<>
+
+      <IncompleteProfileBanner />
 
       {/* ── Context chips (language + region) ── */}
       <div className="flex justify-center">

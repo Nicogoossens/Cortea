@@ -16,6 +16,7 @@ import { useState } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { hasFullAccess as tierHasFullAccess, isCompassRegionLocked as calcRegionLocked, type SubscriptionTier } from "@/lib/tier-access";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
 const GUEST_UNLOCKED_REGIONS = ["GB"];
 
@@ -132,6 +133,8 @@ export default function Compass() {
 
       {/* Active context chips */}
       <ActiveContextChips />
+
+      <IncompleteProfileBanner />
 
       {/* View Toggle */}
       <div className="inline-flex rounded-sm border border-border bg-muted/40 p-1 gap-1" role="group" aria-label="View mode">

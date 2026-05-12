@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Wing Shooting",
   "interests.sp_hunting_deer_stalking": "Deer Stalking",
   "interests.sp_hunting_falconry": "Falconry",
-  "profile.picker_confirm_clear": "Clear selection"
+  "profile.picker_confirm_clear": "Clear selection",
+  "profile_completeness.banner_title": "Complete your interest profile",
+  "profile_completeness.banner_body_one": "One of your five interest categories is empty. Add a few interests so Cortéa can tailor its guidance to you.",
+  "profile_completeness.banner_body_two": "Two of your five interest categories are empty. Add a few interests so Cortéa can tailor its guidance to you.",
+  "profile_completeness.banner_body_many": "Several of your interest categories are still empty. Add a few interests so Cortéa can tailor its guidance to you.",
+  "profile_completeness.cta": "Complete my interests",
+  "profile_completeness.dismiss": "Dismiss",
+  "interests.category.sports": "Sports",
+  "interests.category.cuisine": "Cuisine",
+  "interests.category.dress_code": "Dress code",
+  "interests.category.social_circles": "Social circles",
+  "interests.category.cultural_interests": "Cultural interests"
 }

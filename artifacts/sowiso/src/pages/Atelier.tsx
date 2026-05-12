@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import { ActiveContextChips } from "@/components/ActiveContextChips";
 import { AtelierLearningTrack } from "@/components/AtelierLearningTrack";
 import { PlacementTest } from "@/components/PlacementTest";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -213,6 +214,8 @@ export default function Atelier() {
           {t("atelier.subtitle")}
         </p>
       </div>
+
+      <IncompleteProfileBanner />
 
       {/* Active context chips */}
       <ActiveContextChips />

@@ -13,6 +13,7 @@ import { levelKey } from "@/lib/content-labels";
 import { COMPASS_REGIONS, FlagEmoji } from "@/lib/active-region";
 import { GarmentAvatar } from "@/components/GarmentAvatar";
 import { WelcomeBanner } from "@/components/WelcomeBanner";
+import { IncompleteProfileBanner } from "@/components/IncompleteProfileBanner";
 
 import { NAVIGATOR_KEY, NavigatorTrip, daysUntil } from "@/lib/navigator-utils";
 
@@ -317,6 +318,7 @@ export default function Home() {
         dismissLabel={t("home.welcome_back_dismiss")}
       />
 
+      <IncompleteProfileBanner />
 
       {isAuthenticated && isAmbassador && alertTrips.length > 0 && !tripAlertDismissed && (
         <div className="relative group">

@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Staande hond jacht",
   "interests.sp_hunting_deer_stalking": "Hertenstalking",
   "interests.sp_hunting_falconry": "Valkerij",
-  "profile.picker_confirm_clear": "Selectie wissen"
+  "profile.picker_confirm_clear": "Selectie wissen",
+  "profile_completeness.banner_title": "Voltooi uw interesseprofiel",
+  "profile_completeness.banner_body_one": "Één van uw vijf interessecategorieën is leeg. Voeg enkele interesses toe zodat Cortéa zijn begeleiding op u kan afstemmen.",
+  "profile_completeness.banner_body_two": "Twee van uw vijf interessecategorieën zijn leeg. Voeg enkele interesses toe zodat Cortéa zijn begeleiding op u kan afstemmen.",
+  "profile_completeness.banner_body_many": "Meerdere interessecategorieën zijn nog leeg. Voeg enkele interesses toe zodat Cortéa zijn begeleiding op u kan afstemmen.",
+  "profile_completeness.cta": "Mijn interesses aanvullen",
+  "profile_completeness.dismiss": "Sluiten",
+  "interests.category.sports": "Sport",
+  "interests.category.cuisine": "Keuken",
+  "interests.category.dress_code": "Kledingcode",
+  "interests.category.social_circles": "Sociale kringen",
+  "interests.category.cultural_interests": "Culturele interesses"
 }

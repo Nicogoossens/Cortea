@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "Disparo de Aves em Voo",
   "interests.sp_hunting_deer_stalking": "Espreita de Cervos",
   "interests.sp_hunting_falconry": "Falcoaria",
-  "profile.picker_confirm_clear": "Limpar seleção"
+  "profile.picker_confirm_clear": "Limpar seleção",
+  "profile_completeness.banner_title": "Complete o seu perfil de interesses",
+  "profile_completeness.banner_body_one": "Uma das suas cinco categorias de interesses está vazia. Adicione alguns interesses para que o Cortéa possa personalizar a sua orientação.",
+  "profile_completeness.banner_body_two": "Duas das suas cinco categorias de interesses estão vazias. Adicione alguns interesses para que o Cortéa possa personalizar a sua orientação.",
+  "profile_completeness.banner_body_many": "Várias das suas categorias de interesses ainda estão vazias. Adicione alguns interesses para que o Cortéa possa personalizar a sua orientação.",
+  "profile_completeness.cta": "Completar os meus interesses",
+  "profile_completeness.dismiss": "Ignorar",
+  "interests.category.sports": "Desporto",
+  "interests.category.cuisine": "Gastronomia",
+  "interests.category.dress_code": "Código de vestuário",
+  "interests.category.social_circles": "Círculos sociais",
+  "interests.category.cultural_interests": "Interesses culturais"
 }

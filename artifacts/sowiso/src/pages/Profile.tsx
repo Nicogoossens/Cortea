@@ -39,6 +39,7 @@ import { CountryProgressOverview } from "@/components/CountryProgressOverview";
 import { RefineCompass, type CompassHistoryPoint } from "@/components/RefineCompass";
 import { useSavedVenues } from "@/lib/saved-venues";
 import { HierarchicalInterestPicker } from "@/components/HierarchicalInterestPicker";
+import { resetProfileCompletenessDismiss } from "@/hooks/useProfileCompleteness";
 import React, { useState, useEffect, useCallback, useRef, useMemo, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -626,6 +627,21 @@ export default function Profile() {
   // a refresh does not keep flashing.
   const [focusRegion, setFocusRegion] = useState(false);
   const [focusLanguage, setFocusLanguage] = useState(false);
+
+  // scroll-to: when navigated here with state { scrollTo: "my-interests" }
+  // (e.g. from the IncompleteProfileBanner CTA), scroll to that section
+  // and clear the history state so a hard refresh does not re-trigger.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const state = window.history.state as { scrollTo?: string } | null;
+    if (state?.scrollTo !== "my-interests") return;
+    navigate(window.location.pathname + window.location.search, { replace: true });
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById("my-interests");
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // focus=language: scroll to and briefly highlight the language selector
   useEffect(() => {
@@ -1923,7 +1939,9 @@ export default function Profile() {
                           const existing = (profileData?.interests_extended ?? {}) as Record<string, string[]>;
                           const updated = { ...existing, [taxonomy]: slugs };
                           if (profileData) setProfileData({ ...profileData, interests_extended: updated });
-                          void patchProfile({ interests_extended: updated }, setCatalogSave);
+                          patchProfile({ interests_extended: updated }, setCatalogSave).then((ok) => {
+                            if (ok) resetProfileCompletenessDismiss();
+                          });
                         }}
                         t={t}
                       />

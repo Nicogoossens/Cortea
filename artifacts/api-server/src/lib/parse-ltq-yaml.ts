@@ -49,6 +49,8 @@ interface RawQuestion {
   social_circle_tags?: unknown;
   cultural_interest_tags?: unknown;
   register_relevance?: unknown;
+  // Cultural tag-matrix IDs — used by engine Laag A (country filter) + Laag B (profile boost)
+  cultural_tags?: unknown;
 }
 
 const DEMOGRAPHIC_ALIASES: Record<string, string> = {
@@ -195,6 +197,7 @@ export function parseLtqYaml(content: string): ParseResult {
       social_circle_tags:      parseTagArray(parsed.social_circle_tags),
       cultural_interest_tags:  parseTagArray(parsed.cultural_interest_tags),
       register_relevance:      parseTagArray(parsed.register_relevance),
+      cultural_tags:           parseTagArray(parsed.cultural_tags),
     });
   }
 

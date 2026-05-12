@@ -2199,5 +2199,11 @@
   "interests.religious-hindu": "Hindoeïst",
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Joods (Orthodox/Conservatief/Reformed)",
-  "interests.religious-secular-non-religious": "Secular / Niet-religieus"
+  "interests.religious-secular-non-religious": "Secular / Niet-religieus",
+  "profile.picker_confirm": "Bevestig selectie",
+  "interests.sp_hunting": "Jacht",
+  "interests.sp_hunting_game_shooting": "Drijfjacht",
+  "interests.sp_hunting_wing_shooting": "Staande hond jacht",
+  "interests.sp_hunting_deer_stalking": "Hertenstalking",
+  "interests.sp_hunting_falconry": "Valkerij"
 }

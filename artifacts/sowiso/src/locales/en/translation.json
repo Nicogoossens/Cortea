@@ -2199,5 +2199,11 @@
   "interests.religious-hindu": "Hindu",
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
-  "interests.religious-secular-non-religious": "Secular / Non-religious"
+  "interests.religious-secular-non-religious": "Secular / Non-religious",
+  "profile.picker_confirm": "Confirm selection",
+  "interests.sp_hunting": "Hunting",
+  "interests.sp_hunting_game_shooting": "Game Shooting",
+  "interests.sp_hunting_wing_shooting": "Wing Shooting",
+  "interests.sp_hunting_deer_stalking": "Deer Stalking",
+  "interests.sp_hunting_falconry": "Falconry"
 }

@@ -38,6 +38,7 @@ import { ReferralCard } from "@/components/ReferralCard";
 import { CountryProgressOverview } from "@/components/CountryProgressOverview";
 import { RefineCompass, type CompassHistoryPoint } from "@/components/RefineCompass";
 import { useSavedVenues } from "@/lib/saved-venues";
+import { HierarchicalInterestPicker } from "@/components/HierarchicalInterestPicker";
 import React, { useState, useEffect, useCallback, useRef, useMemo, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -205,23 +206,6 @@ const GENDER_OPTIONS: { value: string; labelKey: string }[] = [
   { value: "prefer_not_to_say", labelKey: "profile.gender_prefer_not" },
 ];
 
-const INTEREST_PRESETS: Record<"sports" | "cuisine" | "dress_code", string[]> = {
-  sports: [
-    "Tennis", "Golf", "Polo", "Equestrian", "Sailing", "Cricket",
-    "Croquet", "Fencing", "Skiing", "Rowing", "Squash", "Shooting",
-    "Hunting", "Swimming", "Cycling", "Yachting",
-  ],
-  cuisine: [
-    "French", "Italian", "Japanese", "British", "Spanish", "Mediterranean",
-    "Indian", "Chinese", "Mexican", "Turkish", "Scandinavian",
-    "Wine & Sommellerie", "Fine Dining", "Tea Ceremony", "Champagne", "Gastronomy",
-  ],
-  dress_code: [
-    "White Tie", "Black Tie", "Morning Dress", "Lounge Suit",
-    "Business Formal", "Business Casual", "Smart Casual",
-    "Cocktail Attire", "Country Casual", "Resort Formal",
-  ],
-};
 
 function getInitials(name: string | null | undefined): string {
   if (!name?.trim()) return "SO";
@@ -565,12 +549,8 @@ export default function Profile() {
   const [countryInputCourse, setCountryInputCourse] = useState("");
   const [countryDropdownOpenCourse, setCountryDropdownOpenCourse] = useState(false);
   const [objectivesSave, setObjectivesSave] = useState<SaveState>("idle");
-  const [sportsSave, setSportsSave] = useState<SaveState>("idle");
-  const [cuisineSave, setCuisineSave] = useState<SaveState>("idle");
-  const [dressCodeSave, setDressCodeSave] = useState<SaveState>("idle");
   const [spheresSave, setSpheresSave] = useState<SaveState>("idle");
   const [catalogSave, setCatalogSave] = useState<SaveState>("idle");
-  const [catalogSearch, setCatalogSearch] = useState("");
 
   interface CatalogItem {
     slug: string;
@@ -578,6 +558,7 @@ export default function Profile() {
     label_i18n_key: string;
     registers: string[];
     display_order: number;
+    parent_slug: string | null;
   }
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
 
@@ -964,27 +945,6 @@ export default function Profile() {
     const ok = await patchProfile({ country_of_origin: countryInputCourse.trim() || null }, setCountrySave);
     if (ok) { setShowCourseChangeWarning(true); setCountryInput(countryInputCourse.trim()); }
     setEditingCountryCourse(false);
-  }
-
-  async function handleTagAdd(
-    field: "sports" | "cuisine" | "dress_code",
-    value: string,
-    clearInput: () => void,
-  ) {
-    const key = `interests_${field}` as keyof UserProfileData;
-    const setSave = field === "sports" ? setSportsSave : field === "cuisine" ? setCuisineSave : setDressCodeSave;
-    const current = (profileData?.[key] as string[] | null | undefined) ?? [];
-    const trimmed = value.trim();
-    if (!trimmed || current.includes(trimmed)) { clearInput(); return; }
-    clearInput();
-    await patchProfile({ [key]: [...current, trimmed] }, setSave);
-  }
-
-  async function handleTagRemove(field: "sports" | "cuisine" | "dress_code", value: string) {
-    const key = `interests_${field}` as keyof UserProfileData;
-    const setSave = field === "sports" ? setSportsSave : field === "cuisine" ? setCuisineSave : setDressCodeSave;
-    const current = (profileData?.[key] as string[] | null | undefined) ?? [];
-    await patchProfile({ [key]: current.filter((v) => v !== value) }, setSave);
   }
 
   async function handleSphereToggle(sphere: string) {
@@ -1861,55 +1821,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Sports & Leisure */}
-            <InterestSelector
-              label={t("profile.sports_leisure_label")}
-              presets={INTEREST_PRESETS.sports}
-              tags={profileData?.interests_sports ?? []}
-              saveState={sportsSave}
-              onTogglePreset={(v) => {
-                const active = (profileData?.interests_sports ?? []).includes(v);
-                if (active) handleTagRemove("sports", v);
-                else handleTagAdd("sports", v, () => {});
-              }}
-              onRemove={(v) => handleTagRemove("sports", v)}
-              t={t}
-            />
-
-            {/* Dress Code Preferences */}
-            <InterestSelector
-              label={t("profile.dress_code_prefs_label")}
-              presets={INTEREST_PRESETS.dress_code}
-              tags={profileData?.interests_dress_code ?? []}
-              saveState={dressCodeSave}
-              onTogglePreset={(v) => {
-                const active = (profileData?.interests_dress_code ?? []).includes(v);
-                if (active) handleTagRemove("dress_code", v);
-                else handleTagAdd("dress_code", v, () => {});
-              }}
-              onRemove={(v) => handleTagRemove("dress_code", v)}
-              t={t}
-            />
-          </CollapsibleSubsection>
-
-          <CollapsibleSubsection
-            icon={<UtensilsCrossed className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-            title={t("profile.culinary_interests_label")}
-            storageKey="culinary"
-          >
-            <InterestSelector
-              label={t("profile.culinary_interests_label")}
-              presets={INTEREST_PRESETS.cuisine}
-              tags={profileData?.interests_cuisine ?? []}
-              saveState={cuisineSave}
-              onTogglePreset={(v) => {
-                const active = (profileData?.interests_cuisine ?? []).includes(v);
-                if (active) handleTagRemove("cuisine", v);
-                else handleTagAdd("cuisine", v, () => {});
-              }}
-              onRemove={(v) => handleTagRemove("cuisine", v)}
-              t={t}
-            />
           </CollapsibleSubsection>
 
           <CollapsibleSubsection
@@ -1970,122 +1881,59 @@ export default function Profile() {
               </div>
             ) : (
               <>
-                {/* Search bar */}
-                <div className="relative mb-1 pt-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" aria-hidden="true" />
-                  <input
-                    type="search"
-                    value={catalogSearch}
-                    onChange={(e) => setCatalogSearch(e.target.value)}
-                    placeholder={t("profile.interests_search_placeholder")}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-muted/30 border border-border/40 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground/40"
-                  />
-                  {catalogSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setCatalogSearch("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-                      aria-label={t("profile.interests_search_clear")}
+                {TAXONOMY_ORDER.map((taxonomy) => {
+                  const taxItems = catalogItems.filter((item) => item.taxonomy === taxonomy);
+                  const visibleItems = taxItems.filter(canSeeInterestItem);
+                  if (visibleItems.length === 0) return null;
+                  const selections = getCatalogSelections(taxonomy);
+                  const selectedCount = selections.length;
+                  const TaxonomyIcon =
+                    taxonomy === "goals"               ? Target
+                    : taxonomy === "spheres"            ? Globe
+                    : taxonomy === "social_circles"     ? Users2Icon
+                    : taxonomy === "cultural_interests" ? Bookmark
+                    : taxonomy === "sport_leisure"      ? Target
+                    : taxonomy === "dresscode"          ? Shirt
+                    : taxonomy === "wardrobe_philosophy"? Shirt
+                    : taxonomy === "cuisines"           ? UtensilsCrossed
+                    : taxonomy === "culinary_techniques"? ChefHat
+                    : taxonomy === "beverages"          ? Wine
+                    : taxonomy === "foods"              ? Leaf
+                    : taxonomy === "food_philosophy"    ? Leaf
+                    : taxonomy === "travel_styles"      ? Plane
+                    : taxonomy === "vehicle_preferences"? Car
+                    : taxonomy === "residence_style"    ? Home
+                    : taxonomy === "education_tradition"? GraduationCap
+                    : taxonomy === "religious_tradition"? Star
+                    : Layers;
+                  const subsectionTitle = selectedCount > 0
+                    ? `${t(`profile.taxonomy.${taxonomy}`)} · ${selectedCount}`
+                    : t(`profile.taxonomy.${taxonomy}`);
+                  return (
+                    <CollapsibleSubsection
+                      key={taxonomy}
+                      icon={<TaxonomyIcon className="w-4 h-4 text-primary/60" aria-hidden="true" />}
+                      title={subsectionTitle}
+                      storageKey={`catalog_${taxonomy}`}
                     >
-                      <X className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Taxonomy subsections */}
-                {(() => {
-                  const query = catalogSearch.trim().toLowerCase();
-                  const anyResult = TAXONOMY_ORDER.some((taxonomy) => {
-                    const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
-                    const visibleItems = items.filter(canSeeInterestItem);
-                    return visibleItems.some((item) => !query || t(item.label_i18n_key).toLowerCase().includes(query));
-                  });
-                  if (query && !anyResult) {
-                    return (
-                      <div className="py-6 text-center text-muted-foreground/40">
-                        <Search className="w-5 h-5 mx-auto mb-2 opacity-30" aria-hidden="true" />
-                        <p className="text-xs font-light">{t("profile.interests_search_empty")}</p>
+                      <HierarchicalInterestPicker
+                        taxonomy={taxonomy}
+                        items={visibleItems}
+                        selected={selections}
+                        onChange={(slugs) => {
+                          const existing = (profileData?.interests_extended ?? {}) as Record<string, string[]>;
+                          const updated = { ...existing, [taxonomy]: slugs };
+                          if (profileData) setProfileData({ ...profileData, interests_extended: updated });
+                          void patchProfile({ interests_extended: updated }, setCatalogSave);
+                        }}
+                        t={t}
+                      />
+                      <div className="mt-2 h-4 flex items-center">
+                        <SaveIndicator state={catalogSave} t={t} />
                       </div>
-                    );
-                  }
-                  return TAXONOMY_ORDER.map((taxonomy) => {
-                    const items = catalogItems.filter((item) => item.taxonomy === taxonomy);
-                    const visibleItems = items.filter(canSeeInterestItem);
-                    const hiddenCount = items.length - visibleItems.length;
-                    const filteredItems = query
-                      ? visibleItems.filter((item) => t(item.label_i18n_key).toLowerCase().includes(query))
-                      : visibleItems;
-                    if (filteredItems.length === 0 && (hiddenCount === 0 || query)) return null;
-                    const selections = getCatalogSelections(taxonomy);
-                    const selectedCount = visibleItems.filter((item) => selections.includes(item.slug)).length;
-                    const TaxonomyIcon =
-                      taxonomy === "goals"               ? Target
-                      : taxonomy === "spheres"            ? Globe
-                      : taxonomy === "social_circles"     ? Users2Icon
-                      : taxonomy === "cultural_interests" ? Bookmark
-                      : taxonomy === "sport_leisure"      ? Target
-                      : taxonomy === "dresscode"          ? Shirt
-                      : taxonomy === "wardrobe_philosophy"? Shirt
-                      : taxonomy === "cuisines"           ? UtensilsCrossed
-                      : taxonomy === "culinary_techniques"? ChefHat
-                      : taxonomy === "beverages"          ? Wine
-                      : taxonomy === "foods"              ? Leaf
-                      : taxonomy === "food_philosophy"    ? Leaf
-                      : taxonomy === "travel_styles"      ? Plane
-                      : taxonomy === "vehicle_preferences"? Car
-                      : taxonomy === "residence_style"    ? Home
-                      : taxonomy === "education_tradition"? GraduationCap
-                      : taxonomy === "religious_tradition"? Star
-                      : Layers;
-                    const subsectionTitle = selectedCount > 0
-                      ? `${t(`profile.taxonomy.${taxonomy}`)} · ${selectedCount}`
-                      : t(`profile.taxonomy.${taxonomy}`);
-                    return (
-                      <CollapsibleSubsection
-                        key={taxonomy}
-                        icon={<TaxonomyIcon className="w-4 h-4 text-primary/60" aria-hidden="true" />}
-                        title={subsectionTitle}
-                        storageKey={`catalog_${taxonomy}`}
-                        forceOpen={!!query}
-                      >
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {filteredItems.map((item) => {
-                            const isSelected = selections.includes(item.slug);
-                            const isEliteOnly = !(item.registers as string[]).includes("middle_class");
-                            return (
-                              <button
-                                key={item.slug}
-                                onClick={() => handleCatalogInterestToggle(taxonomy, item.slug)}
-                                disabled={catalogSave === "saving"}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-sm transition-all ${
-                                  isSelected
-                                    ? "bg-primary/10 border-primary/40 text-primary font-medium"
-                                    : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30 hover:text-foreground"
-                                }`}
-                              >
-                                {t(item.label_i18n_key)}
-                                {isEliteOnly && (
-                                  <span className="text-[9px] font-mono uppercase tracking-wider text-primary/50 border border-primary/20 rounded-full px-1 py-px leading-none">
-                                    {t("profile.interests_elite_only")}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                          {!query && hiddenCount > 0 && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs text-muted-foreground/50 font-light italic">
-                              <Lock className="w-3 h-3" aria-hidden="true" />
-                              +{hiddenCount} {t("profile.interests_elite_only")}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-2 h-4 flex items-center">
-                          <SaveIndicator state={catalogSave} t={t} />
-                        </div>
-                      </CollapsibleSubsection>
-                    );
-                  });
-                })()}
+                    </CollapsibleSubsection>
+                  );
+                })}
               </>
             )}
           </CardContent>
@@ -3045,75 +2893,6 @@ function MyVenuesSection({ isAuthenticated, t }: MyVenuesSectionProps) {
   );
 }
 
-/* ── Interest selector sub-component ── preset chips only ── */
-interface InterestSelectorProps {
-  label: string;
-  presets: string[];
-  tags: string[];
-  saveState: SaveState;
-  onTogglePreset: (v: string) => void;
-  onRemove: (v: string) => void;
-  t: (k: string) => string;
-}
-
-function InterestSelector({
-  label, presets, tags, saveState,
-  onTogglePreset, onRemove, t,
-}: InterestSelectorProps) {
-  const customTags = tags.filter((tag) => !presets.includes(tag));
-
-  return (
-    <div className="space-y-3 pt-1 border-t border-border/30 first:border-0 first:pt-0">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground/70">{label}</label>
-        <SaveIndicator state={saveState} t={t} />
-      </div>
-
-      {/* Preset options — all visible, click to select/deselect */}
-      <div className="flex flex-wrap gap-1.5">
-        {presets.map((preset) => {
-          const isActive = tags.includes(preset);
-          return (
-            <button
-              key={preset}
-              onClick={() => onTogglePreset(preset)}
-              disabled={saveState === "saving"}
-              className={`px-3 py-1 rounded-sm text-xs border transition-all ${
-                isActive
-                  ? "bg-primary/10 text-primary border-primary/35 font-medium"
-                  : "border-border/40 text-muted-foreground/70 hover:border-primary/30 hover:text-foreground hover:bg-muted/30"
-              }`}
-            >
-              {preset}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Custom tags (not in presets) shown with remove × */}
-      {customTags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {customTags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-sm bg-muted/40 text-foreground/70 text-xs border border-border/40 italic"
-            >
-              {tag}
-              <button
-                onClick={() => onRemove(tag)}
-                className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5"
-                aria-label={`Remove ${tag}`}
-              >
-                <X className="w-3 h-3" aria-hidden="true" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-    </div>
-  );
-}
 
 /**
  * Collapsible card section — header is always visible; body toggles on click.

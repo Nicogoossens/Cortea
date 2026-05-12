@@ -30,7 +30,8 @@
     "validate:be": "node ../../scripts/validate-be-learning-tracks.mjs",
     "seed-cultural-origins": "tsx src/seed-cultural-origins.ts",
     "migrate-cultural-tags": "tsx src/migrate-cultural-tags-schema.ts",
-    "seed-cultural-tags": "tsx src/seed-cultural-tags.ts"
+    "seed-cultural-tags": "tsx src/seed-cultural-tags.ts",
+    "migrate-interest-hierarchy": "tsx src/migrate-interest-hierarchy.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

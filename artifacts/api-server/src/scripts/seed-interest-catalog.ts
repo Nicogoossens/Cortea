@@ -19,6 +19,7 @@ interface SeedItem {
   registers: string[];
   region_codes: string[] | null;
   display_order: number;
+  parent_slug?: string | null;
 }
 
 const ITEMS: SeedItem[] = [
@@ -57,8 +58,8 @@ const ITEMS: SeedItem[] = [
   { slug: "ci_gastronomy_culture",     taxonomy: "cultural_interests", label_i18n_key: "interests.ci_gastronomy_culture",     registers: ["middle_class", "elite"], region_codes: null,   display_order: 150 },
 
   // ── sports ────────────────────────────────────────────────────────────────
-  { slug: "sp_cycling",                taxonomy: "sports", label_i18n_key: "interests.sp_cycling",                registers: ["middle_class"],           region_codes: ["BE"], display_order: 10 },
-  { slug: "sp_cycling_road",           taxonomy: "sports", label_i18n_key: "interests.sp_cycling_road",           registers: ["middle_class"],           region_codes: null,   display_order: 20 },
+  { slug: "sp_cycling",                taxonomy: "sports", label_i18n_key: "interests.sp_cycling",                registers: ["middle_class"],           region_codes: ["BE"], display_order: 10, parent_slug: null },
+  { slug: "sp_cycling_road",           taxonomy: "sports", label_i18n_key: "interests.sp_cycling_road",           registers: ["middle_class"],           region_codes: null,   display_order: 20, parent_slug: "sp_cycling" },
   { slug: "sp_tennis",                 taxonomy: "sports", label_i18n_key: "interests.sp_tennis",                 registers: ["middle_class", "elite"], region_codes: null,   display_order: 30 },
   { slug: "sp_polo",                   taxonomy: "sports", label_i18n_key: "interests.sp_polo",                   registers: ["elite"],                  region_codes: null,   display_order: 40 },
   { slug: "sp_golf",                   taxonomy: "sports", label_i18n_key: "interests.sp_golf",                   registers: ["elite"],                  region_codes: null,   display_order: 50 },
@@ -72,6 +73,11 @@ const ITEMS: SeedItem[] = [
   { slug: "sp_hiking",                 taxonomy: "sports", label_i18n_key: "interests.sp_hiking",                 registers: ["middle_class", "elite"], region_codes: null,   display_order: 130 },
   { slug: "sp_rowing",                 taxonomy: "sports", label_i18n_key: "interests.sp_rowing",                 registers: ["middle_class", "elite"], region_codes: null,   display_order: 140 },
   { slug: "sp_fencing",                taxonomy: "sports", label_i18n_key: "interests.sp_fencing",                registers: ["elite"],                  region_codes: null,   display_order: 150 },
+  { slug: "sp_hunting",                taxonomy: "sports", label_i18n_key: "interests.sp_hunting",                registers: ["elite"],                  region_codes: null,   display_order: 160, parent_slug: null },
+  { slug: "sp_hunting_game_shooting",  taxonomy: "sports", label_i18n_key: "interests.sp_hunting_game_shooting",  registers: ["elite"],                  region_codes: null,   display_order: 161, parent_slug: "sp_hunting" },
+  { slug: "sp_hunting_wing_shooting",  taxonomy: "sports", label_i18n_key: "interests.sp_hunting_wing_shooting",  registers: ["elite"],                  region_codes: null,   display_order: 162, parent_slug: "sp_hunting" },
+  { slug: "sp_hunting_deer_stalking",  taxonomy: "sports", label_i18n_key: "interests.sp_hunting_deer_stalking",  registers: ["elite"],                  region_codes: null,   display_order: 163, parent_slug: "sp_hunting" },
+  { slug: "sp_hunting_falconry",       taxonomy: "sports", label_i18n_key: "interests.sp_hunting_falconry",       registers: ["elite"],                  region_codes: null,   display_order: 164, parent_slug: "sp_hunting" },
 
   // ── gastronomy ────────────────────────────────────────────────────────────
   { slug: "ga_fine_dining",            taxonomy: "gastronomy", label_i18n_key: "interests.ga_fine_dining",            registers: ["elite"],                  region_codes: null,   display_order: 10 },
@@ -121,6 +127,7 @@ async function main() {
         registers:      item.registers,
         region_codes:   item.region_codes,
         display_order:  item.display_order,
+        parent_slug:    item.parent_slug ?? null,
       })
       .onConflictDoUpdate({
         target: interestCatalogTable.slug,
@@ -130,6 +137,7 @@ async function main() {
           registers:      sql`excluded.registers`,
           region_codes:   sql`excluded.region_codes`,
           display_order:  sql`excluded.display_order`,
+          parent_slug:    sql`excluded.parent_slug`,
         },
       });
   }

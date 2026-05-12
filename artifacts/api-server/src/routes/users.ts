@@ -63,7 +63,7 @@ router.get("/users/profile", requireAuthUser, async (req, res) => {
       const privacyOn = user.elite_privacy_mode ?? false;
       return res.json({
         id: user.id,
-        display_name: user.display_name,
+        display_name: user.full_name,
         elite_privacy_mode: privacyOn,
         ...(privacyOn ? {} : { noble_score: user.noble_score }),
         age_group: computeAgeGroup(user.birth_year, privacyOn ? undefined : user.noble_score),
@@ -608,6 +608,7 @@ router.get("/catalog/interests", async (req: Request, res: Response) => {
         label_i18n_key: interestCatalogTable.label_i18n_key,
         registers:      interestCatalogTable.registers,
         display_order:  interestCatalogTable.display_order,
+        parent_slug:    interestCatalogTable.parent_slug,
       })
       .from(interestCatalogTable)
       .orderBy(interestCatalogTable.display_order);
@@ -732,18 +733,24 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
 
     // ── Interest weight maps for signal construction ─────────────────────────
     const CIRCLE_WEIGHTS: Record<string, number> = {
-      old_money: 20, diplomatic_corps: 20, landed_gentry: 15, yacht_set: 20,
-      hunting_set: 10, arts_patronage: 10, fashion_world: 10, haute_cuisine: 5,
-      philanthropy: 5, corporate_executive: 5, academia: 0, religious_leadership: 0,
+      sc_private_members_club: 20, sc_diplomatic_reception: 20, sc_golf_club: 15,
+      sc_wine_society: 15, sc_charity_gala: 10, sc_cultural_salon: 10,
+      sc_alumni_network: 5, sc_academic_conference: 5, sc_professional_assoc: 5,
+      sc_corporate_networking: 5, sc_sports_club: 0, sc_book_club: 0,
+      sc_family_dinner: 0, sc_neighbourhood: 0, sc_volunteer_group: 0,
     };
     const CULTURE_WEIGHTS: Record<string, number> = {
-      horology: 20, wine_culture: 15, antiquities: 15, fine_art: 10, opera: 10,
-      interior_design: 10, gastronomy: 10, classical_music: 5, ballet: 5,
-      architecture: 5, heritage_travel: 5, literature: 0,
+      ci_classical_music: 15, ci_fine_art_collecting: 20, ci_ballet: 15,
+      ci_theatre_opera: 15, ci_gastronomy_culture: 10, ci_contemporary_art: 10,
+      ci_arthouse_cinema: 5, ci_jazz_music: 5, ci_architecture_design: 5,
+      ci_heritage_museums: 5, ci_literature: 5, ci_photography: 0,
+      ci_street_art: 0, ci_comics_bd: 0, ci_folklore_traditions: 0,
     };
     const SPORTS_WEIGHTS: Record<string, number> = {
-      polo: 25, horse_riding: 20, sailing: 20, hunting: 20, fencing: 15,
-      rowing: 10, golf: 10, tennis: 5, squash: 5,
+      sp_polo: 25, sp_equestrian: 20, sp_sailing: 18, sp_fencing: 15,
+      sp_rowing: 12, sp_golf: 10, sp_tennis: 8, sp_skiing: 8,
+      sp_padel: 5, sp_swimming: 5, sp_running: 3, sp_cycling: 3,
+      sp_hiking: 2, sp_football: 0,
     };
 
     function avgWeight(ids: string[], map: Record<string, number>): number {

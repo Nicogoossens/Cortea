@@ -2199,5 +2199,6 @@
   "interests.religious-hindu": "Hindu",
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
-  "interests.religious-secular-non-religious": "Secular / Non-religious"
+  "interests.religious-secular-non-religious": "Secular / Non-religious",
+  "profile.picker_confirm": "Confirmar selección"
 }

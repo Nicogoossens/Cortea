@@ -23,6 +23,8 @@ export const interestCatalogTable = pgTable(
     /** universal | cluster_dependent | country_specific */
     relevance_scope: text("relevance_scope"),
     notes:          text("notes"),
+    /** Slug of the parent item; null means this is a top-level item. */
+    parent_slug:    text("parent_slug"),
     created_at:     timestamp("created_at").defaultNow(),
   },
   (table) => [

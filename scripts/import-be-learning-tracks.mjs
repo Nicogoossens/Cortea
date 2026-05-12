@@ -12,8 +12,10 @@
  *   attached_assets/belgie_compas_1777029671936.md
  *     → Dutch scenario questions from the CSV tables (lang: "nl")
  *     → English reference scenarios from the "Belgian Protocol" section (lang: "en")
- *   attached_assets/Blueprint_2_Middleclass_Fullrollout_1777029609666.md
+ *   Blueprint_2_Middleclass_Fullrollout_1777029609666.md (archived to Drive)
  *     → Phase / module metadata used to classify Phase 4 questions
+ *     → Now on Google Drive: cortea/Bibliotheek/02_Blauwdrukken/blueprint-middleclass-fullrollout.md
+ *     → Download locally before running this script if re-import is needed
  *
  * Usage:
  *   node scripts/import-be-learning-tracks.mjs
@@ -1195,8 +1197,8 @@ function buildBrusselsQuestions() {
 
 const middenklassePath = resolve(ROOT, "attached_assets/Belgie_middenklasse_1777029671936.md");
 const compassPath     = resolve(ROOT, "attached_assets/belgie_compas_1777029671936.md");
-// Blueprint_2 is archived on Google Drive (cortea/Bibliotheek/02_Blauwdrukken/).
-// If absent locally, parseBlueprintFile falls back to empty metadata.
+// Blueprint_2 is archived on Google Drive: cortea/Bibliotheek/02_Blauwdrukken/blueprint-middleclass-fullrollout.md
+// parseBlueprintFile throws a clear error if the file is absent; download from Drive before re-running.
 const blueprintPath   = resolve(ROOT, "attached_assets/Blueprint_2_Middleclass_Fullrollout_1777029609666.md");
 const outDir          = resolve(ROOT, "data");
 const outPath         = resolve(outDir, "be-learning-tracks.json");

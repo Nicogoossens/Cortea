@@ -1,31 +1,42 @@
 import { useGetProfile } from "@workspace/api-client-react";
 
-const INTEREST_CATEGORIES = [
-  "interests_sports",
-  "interests_cuisine",
-  "interests_dress_code",
-  "social_circles",
-  "cultural_interests",
+const CATEGORY_MAP = [
+  { key: "interests_sports",     i18nKey: "interests.category.sports" },
+  { key: "interests_cuisine",    i18nKey: "interests.category.cuisine" },
+  { key: "interests_dress_code", i18nKey: "interests.category.dress_code" },
+  { key: "social_circles",       i18nKey: "interests.category.social_circles" },
+  { key: "cultural_interests",   i18nKey: "interests.category.cultural_interests" },
 ] as const;
 
 const DISMISS_KEY = "profile_completeness_dismissed_at";
 const DISMISS_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
-export function useProfileCompleteness() {
-  const { data: profile } = useGetProfile();
+export function useProfileCompleteness(): {
+  isIncomplete: boolean;
+  emptyCategories: string[];
+  isLoading: boolean;
+} {
+  const { data: profile, isLoading } = useGetProfile();
 
-  if (!profile || !profile.onboarding_completed) {
-    return { isIncomplete: false, emptyCount: 0 };
+  if (isLoading) {
+    return { isIncomplete: false, emptyCategories: [], isLoading: true };
   }
 
-  const emptyCategories = INTEREST_CATEGORIES.filter((cat) => {
-    const val = profile[cat as keyof typeof profile];
-    return !Array.isArray(val) || (val as string[]).length === 0;
-  });
+  if (!profile || !profile.onboarding_completed) {
+    return { isIncomplete: false, emptyCategories: [], isLoading: false };
+  }
+
+  const emptyCategories = CATEGORY_MAP
+    .filter(({ key }) => {
+      const val = (profile as Record<string, unknown>)[key];
+      return !Array.isArray(val) || (val as unknown[]).length === 0;
+    })
+    .map(({ i18nKey }) => i18nKey);
 
   return {
     isIncomplete: emptyCategories.length >= 2,
-    emptyCount: emptyCategories.length,
+    emptyCategories,
+    isLoading: false,
   };
 }
 

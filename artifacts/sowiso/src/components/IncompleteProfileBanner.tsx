@@ -7,10 +7,10 @@ import { useProfileCompleteness, isDismissed, setDismissed } from "@/hooks/usePr
 export function IncompleteProfileBanner() {
   const { t } = useLanguage();
   const [, navigate] = useLocation();
-  const { isIncomplete, emptyCount } = useProfileCompleteness();
+  const { isIncomplete, emptyCategories, isLoading } = useProfileCompleteness();
   const [dismissed, setLocalDismissed] = useState(() => isDismissed());
 
-  if (!isIncomplete || dismissed) return null;
+  if (isLoading || !isIncomplete || dismissed) return null;
 
   function handleDismiss() {
     setDismissed();
@@ -21,18 +21,21 @@ export function IncompleteProfileBanner() {
     navigate("/profile", { state: { scrollTo: "my-interests" } });
   }
 
-  const bodyKey =
-    emptyCount === 1
-      ? "profile_completeness.banner_body_one"
-      : emptyCount === 2
-        ? "profile_completeness.banner_body_two"
-        : "profile_completeness.banner_body_many";
+  const count = emptyCategories.length;
+  const cat1 = t(emptyCategories[0] as Parameters<typeof t>[0]);
+  const cat2 = count >= 2 ? t(emptyCategories[1] as Parameters<typeof t>[0]) : "";
+
+  let body: string;
+  if (count === 1) {
+    body = t("profile_completeness.banner_body_one", { category: cat1 });
+  } else if (count === 2) {
+    body = t("profile_completeness.banner_body_two", { cat1, cat2 });
+  } else {
+    body = t("profile_completeness.banner_body_many", { cat1, cat2, n: count - 2 });
+  }
 
   return (
-    <div
-      role="alert"
-      className="relative flex items-start gap-3 rounded-sm border border-amber-400/40 bg-amber-500/[0.07] px-4 py-3 text-sm animate-in fade-in duration-300"
-    >
+    <div className="relative flex items-start gap-3 rounded-sm border border-amber-400/40 bg-amber-500/[0.07] px-4 py-3 text-sm animate-in fade-in duration-300">
       <AlertTriangle
         className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
         aria-hidden="true"
@@ -42,9 +45,7 @@ export function IncompleteProfileBanner() {
         <p className="font-medium text-amber-900/90 dark:text-amber-200 text-xs uppercase tracking-widest font-mono mb-0.5">
           {t("profile_completeness.banner_title")}
         </p>
-        <p className="text-foreground/80 font-light leading-snug">
-          {t(bodyKey as Parameters<typeof t>[0])}
-        </p>
+        <p className="text-foreground/80 font-light leading-snug">{body}</p>
         <button
           type="button"
           onClick={handleCta}

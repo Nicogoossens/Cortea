@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "飛禽射擊",
   "interests.sp_hunting_deer_stalking": "鹿類獵蹤",
   "interests.sp_hunting_falconry": "鷹獵",
-  "profile.picker_confirm_clear": "清除选择"
+  "profile.picker_confirm_clear": "清除选择",
+  "profile_completeness.banner_title": "完善您的兴趣档案",
+  "profile_completeness.banner_body_one": "您的五个兴趣类别中有一个为空。请添加几项兴趣，以便Cortéa能够为您提供个性化的指导。",
+  "profile_completeness.banner_body_two": "您的五个兴趣类别中有两个为空。请添加几项兴趣，以便Cortéa能够为您提供个性化的指导。",
+  "profile_completeness.banner_body_many": "您的若干兴趣类别仍然为空。请添加几项兴趣，以便Cortéa能够为您提供个性化的指导。",
+  "profile_completeness.cta": "完善我的兴趣",
+  "profile_completeness.dismiss": "关闭",
+  "interests.category.sports": "体育运动",
+  "interests.category.cuisine": "烹饪美食",
+  "interests.category.dress_code": "衣着礼仪",
+  "interests.category.social_circles": "社交圈层",
+  "interests.category.cultural_interests": "文化品味"
 }

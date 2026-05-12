@@ -2206,5 +2206,16 @@
   "interests.sp_hunting_wing_shooting": "إطلاق النار على الطير",
   "interests.sp_hunting_deer_stalking": "تعقب الغزلان",
   "interests.sp_hunting_falconry": "الصقارة",
-  "profile.picker_confirm_clear": "مسح التحديد"
+  "profile.picker_confirm_clear": "مسح التحديد",
+  "profile_completeness.banner_title": "أكمل ملف اهتماماتك",
+  "profile_completeness.banner_body_one": "إحدى فئات اهتماماتك الخمس خالية. أضف عدداً من الاهتمامات لكي يتسنى لـ Cortéa تخصيص إرشاداتها وفقاً لاحتياجاتك.",
+  "profile_completeness.banner_body_two": "اثنتان من فئات اهتماماتك الخمس خاليتان. أضف عدداً من الاهتمامات لكي يتسنى لـ Cortéa تخصيص إرشاداتها وفقاً لاحتياجاتك.",
+  "profile_completeness.banner_body_many": "عدة فئات من اهتماماتك لا تزال خالية. أضف عدداً من الاهتمامات لكي يتسنى لـ Cortéa تخصيص إرشاداتها وفقاً لاحتياجاتك.",
+  "profile_completeness.cta": "إكمال اهتماماتي",
+  "profile_completeness.dismiss": "إغلاق",
+  "interests.category.sports": "الرياضة",
+  "interests.category.cuisine": "فنون الطهي",
+  "interests.category.dress_code": "قواعد اللباس",
+  "interests.category.social_circles": "الدوائر الاجتماعية",
+  "interests.category.cultural_interests": "الاهتمامات الثقافية"
 }

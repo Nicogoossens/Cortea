@@ -17,6 +17,14 @@
  *     → Now on Google Drive: cortea/Bibliotheek/02_Blauwdrukken/blueprint-middleclass-fullrollout.md
  *     → Download locally before running this script if re-import is needed
  *
+ * Re-running this script (runbook):
+ *   Before executing, download the archived blueprint from Google Drive:
+ *     cortea/Bibliotheek/02_Blauwdrukken/blueprint-middleclass-fullrollout.md
+ *   Save it to:
+ *     attached_assets/Blueprint_2_Middleclass_Fullrollout_1777029609666.md
+ *   Then run:
+ *     node scripts/import-be-learning-tracks.mjs
+ *
  * Usage:
  *   node scripts/import-be-learning-tracks.mjs
  *

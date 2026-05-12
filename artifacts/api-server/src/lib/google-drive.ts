@@ -94,15 +94,6 @@ export async function moveFileToFolder(fileId: string, newFolderId: string): Pro
 }
 
 /**
- * Given a source country folder (e.g. to-do/BE), finds the corresponding
- * done/ sibling folder (done/BE) by:
- *   1. Reading the source folder's name (e.g. "BE")
- *   2. Reading the env var DRIVE_IMPORT_DONE_FOLDER_ID as the done/ root
- *   3. Listing subfolders of done/ and returning the one whose name matches
- *
- * Returns null when the done root is unset or no matching subfolder exists.
- */
-/**
  * Upload a plain-text or markdown file to a Drive folder.
  * Uses the multipart upload API (uploadType=multipart).
  * Returns the created file's Drive ID.

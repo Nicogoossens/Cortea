@@ -1002,9 +1002,11 @@ function parseBlueprintFile(filePath) {
   try {
     text = readFileSync(filePath, "utf8");
   } catch {
-    console.warn(`  ⚠ Blueprint file not found (archived to Drive): ${filePath}`);
-    console.warn("    Returning empty metadata — Phase 4 questions will use default classification.");
-    return { phases: new Map(), modules: {} };
+    throw new Error(
+      `Blueprint file not found: ${filePath}\n` +
+      "This file has been archived to Google Drive: cortea/Bibliotheek/02_Blauwdrukken/blueprint-middleclass-fullrollout.md\n" +
+      "Download it locally before running this import script."
+    );
   }
   const meta = {
     phases: new Map(),

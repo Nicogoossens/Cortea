@@ -13,6 +13,8 @@ const router = Router();
 // ── CC Screening Worker ────────────────────────────────────────────────────────
 
 function loadCCHandbook(): string {
+  // CC_Screening_Worker.md is archived on Google Drive (cortea/Bibliotheek/01_Workflows/).
+  // Fallback prompt is used when the local copy is absent.
   const handbookPath = path.resolve(process.cwd(), "../../docs/CC_Screening_Worker.md");
   try {
     const handbookContent = readFileSync(handbookPath, "utf-8");

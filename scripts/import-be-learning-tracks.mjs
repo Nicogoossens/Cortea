@@ -998,7 +998,14 @@ function buildDutchKnowledgeQuestions(points) {
  * Returns an object: { phases: Map<number, { modules: string[] }> }
  */
 function parseBlueprintFile(filePath) {
-  const text = readFileSync(filePath, "utf8");
+  let text;
+  try {
+    text = readFileSync(filePath, "utf8");
+  } catch {
+    console.warn(`  ⚠ Blueprint file not found (archived to Drive): ${filePath}`);
+    console.warn("    Returning empty metadata — Phase 4 questions will use default classification.");
+    return { phases: new Map(), modules: {} };
+  }
   const meta = {
     phases: new Map(),
     modules: {},
@@ -1186,6 +1193,8 @@ function buildBrusselsQuestions() {
 
 const middenklassePath = resolve(ROOT, "attached_assets/Belgie_middenklasse_1777029671936.md");
 const compassPath     = resolve(ROOT, "attached_assets/belgie_compas_1777029671936.md");
+// Blueprint_2 is archived on Google Drive (cortea/Bibliotheek/02_Blauwdrukken/).
+// If absent locally, parseBlueprintFile falls back to empty metadata.
 const blueprintPath   = resolve(ROOT, "attached_assets/Blueprint_2_Middleclass_Fullrollout_1777029609666.md");
 const outDir          = resolve(ROOT, "data");
 const outPath         = resolve(outDir, "be-learning-tracks.json");

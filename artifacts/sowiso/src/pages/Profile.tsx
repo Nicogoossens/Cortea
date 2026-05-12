@@ -20,7 +20,7 @@ import {
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Compass, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
-  Search,
+  Search, Plane, Car, Home, GraduationCap, Wine, Leaf, ChefHat, Coffee, Shirt, Star,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja, zhCN } from "date-fns/locale";
@@ -119,6 +119,7 @@ interface UserProfileData {
   interests_dress_code?: string[] | null;
   social_circles?: string[] | null;
   cultural_interests?: string[] | null;
+  interests_extended?: Record<string, string[]> | null;
   onboarding_completed?: boolean | null;
   situational_interests?: string[] | null;
   profiling_consent?: boolean | null;
@@ -1037,24 +1038,29 @@ export default function Profile() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  const TAXONOMY_ORDER = ["social_circles", "cultural_interests", "sports", "gastronomy", "dress_codes"] as const;
+  const TAXONOMY_ORDER = [
+    "goals",
+    "spheres",
+    "social_circles",
+    "cultural_interests",
+    "sport_leisure",
+    "dresscode",
+    "wardrobe_philosophy",
+    "cuisines",
+    "culinary_techniques",
+    "beverages",
+    "foods",
+    "food_philosophy",
+    "travel_styles",
+    "vehicle_preferences",
+    "residence_style",
+    "education_tradition",
+    "religious_tradition",
+  ] as const;
 
   function getCatalogSelections(taxonomy: string): string[] {
-    if (taxonomy === "social_circles")    return profileData?.social_circles    ?? [];
-    if (taxonomy === "cultural_interests") return profileData?.cultural_interests ?? [];
-    if (taxonomy === "sports")            return profileData?.interests_sports   ?? [];
-    if (taxonomy === "gastronomy")        return profileData?.interests_cuisine  ?? [];
-    if (taxonomy === "dress_codes")       return profileData?.interests_dress_code ?? [];
-    return [];
-  }
-
-  function taxonomyToProfileField(taxonomy: string): string {
-    if (taxonomy === "social_circles")    return "social_circles";
-    if (taxonomy === "cultural_interests") return "cultural_interests";
-    if (taxonomy === "sports")            return "interests_sports";
-    if (taxonomy === "gastronomy")        return "interests_cuisine";
-    if (taxonomy === "dress_codes")       return "interests_dress_code";
-    return taxonomy;
+    const ext = (profileData?.interests_extended ?? {}) as Record<string, string[]>;
+    return ext[taxonomy] ?? [];
   }
 
   function canSeeInterestItem(item: CatalogItem): boolean {
@@ -1072,8 +1078,13 @@ export default function Profile() {
     const next = current.includes(slug)
       ? current.filter((s) => s !== slug)
       : [...current, slug];
-    const field = taxonomyToProfileField(taxonomy);
-    await patchProfile({ [field]: next }, setCatalogSave);
+    const existing = (profileData?.interests_extended ?? {}) as Record<string, string[]>;
+    const updated = { ...existing, [taxonomy]: next };
+    // Optimistic update
+    if (profileData) {
+      setProfileData({ ...profileData, interests_extended: updated });
+    }
+    await patchProfile({ interests_extended: updated }, setCatalogSave);
   }
 
   async function toggleInterestRegion(code: string) {
@@ -2008,10 +2019,23 @@ export default function Profile() {
                     const selections = getCatalogSelections(taxonomy);
                     const selectedCount = visibleItems.filter((item) => selections.includes(item.slug)).length;
                     const TaxonomyIcon =
-                      taxonomy === "social_circles"    ? Users2Icon
+                      taxonomy === "goals"               ? Target
+                      : taxonomy === "spheres"            ? Globe
+                      : taxonomy === "social_circles"     ? Users2Icon
                       : taxonomy === "cultural_interests" ? Bookmark
-                      : taxonomy === "sports"           ? Target
-                      : taxonomy === "gastronomy"       ? UtensilsCrossed
+                      : taxonomy === "sport_leisure"      ? Target
+                      : taxonomy === "dresscode"          ? Shirt
+                      : taxonomy === "wardrobe_philosophy"? Shirt
+                      : taxonomy === "cuisines"           ? UtensilsCrossed
+                      : taxonomy === "culinary_techniques"? ChefHat
+                      : taxonomy === "beverages"          ? Wine
+                      : taxonomy === "foods"              ? Leaf
+                      : taxonomy === "food_philosophy"    ? Leaf
+                      : taxonomy === "travel_styles"      ? Plane
+                      : taxonomy === "vehicle_preferences"? Car
+                      : taxonomy === "residence_style"    ? Home
+                      : taxonomy === "education_tradition"? GraduationCap
+                      : taxonomy === "religious_tradition"? Star
                       : Layers;
                     const subsectionTitle = selectedCount > 0
                       ? `${t(`profile.taxonomy.${taxonomy}`)} · ${selectedCount}`

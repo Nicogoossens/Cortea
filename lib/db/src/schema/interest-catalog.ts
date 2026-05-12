@@ -20,6 +20,9 @@ export const interestCatalogTable = pgTable(
      */
     region_codes:   jsonb("region_codes").$type<string[] | null>().default(null),
     display_order:  integer("display_order").notNull().default(0),
+    /** universal | cluster_dependent | country_specific */
+    relevance_scope: text("relevance_scope"),
+    notes:          text("notes"),
     created_at:     timestamp("created_at").defaultNow(),
   },
   (table) => [

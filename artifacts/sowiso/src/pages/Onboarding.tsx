@@ -318,7 +318,7 @@ export default function Onboarding() {
   useEffect(() => {
     if (step === 8) {
       if (catalogSports === null) {
-        fetch(`${API_BASE}/api/catalog/interests?taxonomy=sports`)
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=sport_leisure`)
           .then((r) => (r.ok ? r.json() : []))
           .then((rows: unknown) => {
             const arr = Array.isArray(rows) && rows.length > 0
@@ -330,7 +330,7 @@ export default function Onboarding() {
           .catch(() => setCatalogSports([]));
       }
       if (catalogCuisine === null) {
-        fetch(`${API_BASE}/api/catalog/interests?taxonomy=gastronomy`)
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=cuisines`)
           .then((r) => (r.ok ? r.json() : []))
           .then((rows: unknown) => {
             const arr = Array.isArray(rows) && rows.length > 0
@@ -342,7 +342,7 @@ export default function Onboarding() {
           .catch(() => setCatalogCuisine([]));
       }
       if (catalogDress === null) {
-        fetch(`${API_BASE}/api/catalog/interests?taxonomy=dress_codes`)
+        fetch(`${API_BASE}/api/catalog/interests?taxonomy=dresscode`)
           .then((r) => (r.ok ? r.json() : []))
           .then((rows: unknown) => {
             const arr = Array.isArray(rows) && rows.length > 0
@@ -1137,6 +1137,11 @@ export default function Onboarding() {
                     interests_sports:     sports,
                     interests_cuisine:    cuisine,
                     interests_dress_code: dressCode,
+                    interests_extended: {
+                      sport_leisure: sports,
+                      cuisines:      cuisine,
+                      dresscode:     dressCode,
+                    },
                   }).catch(() => {});
                   setStep(9);
                 }}

@@ -163,6 +163,7 @@ const UpdateProfileBodySchema = z.object({
     "music_entertainment", "formal_events", "lifestyle_wellness", "travel_hospitality",
   ])).optional(),
   calling_card_tagline: z.string().max(100).optional().nullable(),
+  interests_extended: z.record(z.string(), z.array(z.string())).optional(),
 });
 
 async function handleUpdateProfile(req: Request, res: Response): Promise<Response | void> {
@@ -265,6 +266,7 @@ async function handleUpdateProfile(req: Request, res: Response): Promise<Respons
         ...(data.onboarding_completed !== undefined && { onboarding_completed: data.onboarding_completed }),
         ...(data.situational_interests !== undefined && { situational_interests: data.situational_interests }),
         ...(data.calling_card_tagline !== undefined && { calling_card_tagline: data.calling_card_tagline }),
+        ...(data.interests_extended !== undefined && { interests_extended: data.interests_extended }),
       })
       .where(eq(usersTable.id, userId))
       .returning();
@@ -635,6 +637,7 @@ const OnboardingBodySchema = z.object({
   interests_sports:     z.array(z.string()).optional(),
   interests_cuisine:    z.array(z.string()).optional(),
   interests_dress_code: z.array(z.string()).optional(),
+  interests_extended:   z.record(z.string(), z.array(z.string())).optional(),
   learning_intent:      z.record(z.string(), z.enum(["surface", "competent", "mastery"])).optional(),
   onboarding_completed: z.boolean().optional(),
 });
@@ -783,6 +786,10 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
     if (data.interests_sports !== undefined)     updates.interests_sports     = data.interests_sports;
     if (data.interests_cuisine !== undefined)    updates.interests_cuisine    = data.interests_cuisine;
     if (data.interests_dress_code !== undefined) updates.interests_dress_code = data.interests_dress_code;
+    if (data.interests_extended !== undefined) {
+      const existingExt = (existing.interests_extended ?? {}) as Record<string, string[]>;
+      updates.interests_extended = { ...existingExt, ...data.interests_extended };
+    }
 
     // After step 8: add sports signal then re-run inferRegisterBias on all accumulated signals.
     if (data.selected_interests !== undefined) {

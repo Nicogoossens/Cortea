@@ -180,6 +180,11 @@ export const usersTable = pgTable("users", {
   register_bias_signals: jsonb("register_bias_signals").$type<RegisterBiasSignal[]>().notNull().default([]),
   register_bias_locked:  boolean("register_bias_locked").notNull().default(false),
 
+  // ── U1 interest catalog selections (all 17 taxonomies) ──────────────────────
+  // Stored as { [taxonomy]: slug[] } — the single source of truth for all
+  // catalog-backed interest selections in the Profile and Onboarding flows.
+  interests_extended: jsonb("interests_extended").$type<Record<string, string[]>>().notNull().default({}),
+
   // Elite privacy mode: when true, noble_score / Compass / badges are never
   // exposed on public views.
   elite_privacy_mode:   boolean("elite_privacy_mode").notNull().default(false),

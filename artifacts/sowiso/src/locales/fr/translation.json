@@ -2200,5 +2200,10 @@
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
   "interests.religious-secular-non-religious": "Secular / Non-religious",
-  "profile.picker_confirm": "Confirmer la sélection"
+  "profile.picker_confirm": "Confirmer la sélection",
+  "interests.sp_hunting": "La Chasse",
+  "interests.sp_hunting_game_shooting": "Le Tir de Gibier",
+  "interests.sp_hunting_wing_shooting": "Le Tir aux Oiseaux",
+  "interests.sp_hunting_deer_stalking": "L'Affût du Cerf",
+  "interests.sp_hunting_falconry": "La Fauconnerie"
 }

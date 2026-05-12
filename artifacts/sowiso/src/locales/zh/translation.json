@@ -2200,5 +2200,10 @@
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
   "interests.religious-secular-non-religious": "Secular / Non-religious",
-  "profile.picker_confirm": "确认选择"
+  "profile.picker_confirm": "确认选择",
+  "interests.sp_hunting": "狩獵",
+  "interests.sp_hunting_game_shooting": "獵禽射擊",
+  "interests.sp_hunting_wing_shooting": "飛禽射擊",
+  "interests.sp_hunting_deer_stalking": "鹿類獵蹤",
+  "interests.sp_hunting_falconry": "鷹獵"
 }

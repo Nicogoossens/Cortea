@@ -747,10 +747,12 @@ router.put("/users/me/onboarding", requireAuthUser, async (req: Request, res: Re
       ci_street_art: 0, ci_comics_bd: 0, ci_folklore_traditions: 0,
     };
     const SPORTS_WEIGHTS: Record<string, number> = {
+      // Elite ladder: polo > equestrian > sailing > fencing > rowing > golf > tennis
       sp_polo: 25, sp_equestrian: 20, sp_sailing: 18, sp_fencing: 15,
-      sp_rowing: 12, sp_golf: 10, sp_tennis: 8, sp_skiing: 8,
-      sp_padel: 5, sp_swimming: 5, sp_running: 3, sp_cycling: 3,
-      sp_hiking: 2, sp_football: 0,
+      sp_rowing: 12, sp_golf: 10, sp_tennis: 8,
+      // Below-ladder: must remain < tennis (8)
+      sp_skiing: 6, sp_padel: 4, sp_swimming: 3, sp_running: 2,
+      sp_cycling: 1, sp_hiking: 1, sp_football: 0,
     };
 
     function avgWeight(ids: string[], map: Record<string, number>): number {

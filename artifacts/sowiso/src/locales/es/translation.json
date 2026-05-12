@@ -2200,5 +2200,10 @@
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
   "interests.religious-secular-non-religious": "Secular / Non-religious",
-  "profile.picker_confirm": "Confirmar selección"
+  "profile.picker_confirm": "Confirmar selección",
+  "interests.sp_hunting": "Caza",
+  "interests.sp_hunting_game_shooting": "Tiro de Caza Mayor",
+  "interests.sp_hunting_wing_shooting": "Tiro de Ave",
+  "interests.sp_hunting_deer_stalking": "Acecho de Venado",
+  "interests.sp_hunting_falconry": "Cetrería"
 }

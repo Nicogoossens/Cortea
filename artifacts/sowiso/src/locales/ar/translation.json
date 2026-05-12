@@ -2200,5 +2200,10 @@
   "interests.religious-sikh": "Sikh",
   "interests.religious-jewish": "Jewish (Orthodox/Conservative/Reform)",
   "interests.religious-secular-non-religious": "Secular / Non-religious",
-  "profile.picker_confirm": "تأكيد الاختيار"
+  "profile.picker_confirm": "تأكيد الاختيار",
+  "interests.sp_hunting": "الصيد",
+  "interests.sp_hunting_game_shooting": "إطلاق النار على الفريسة",
+  "interests.sp_hunting_wing_shooting": "إطلاق النار على الطير",
+  "interests.sp_hunting_deer_stalking": "تعقب الغزلان",
+  "interests.sp_hunting_falconry": "الصقارة"
 }

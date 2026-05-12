@@ -70,8 +70,9 @@ export function HierarchicalInterestPicker({
     if (!expandedParent) return;
     const children = getChildren(expandedParent);
     const childSlugs = children.map((c) => c.slug);
-    const withoutOld = selected.filter((s) => !childSlugs.includes(s));
-    const next = [...withoutOld, ...pendingChildren].slice(0, max);
+    // Remove old children AND the parent slug itself (mutually exclusive)
+    const withoutGroup = selected.filter((s) => !childSlugs.includes(s) && s !== expandedParent);
+    const next = [...withoutGroup, ...pendingChildren].slice(0, max);
     onChange(next);
     setExpandedParent(null);
     setPendingChildren([]);
@@ -79,8 +80,14 @@ export function HierarchicalInterestPicker({
 
   function handleSkipSubcategory() {
     if (!expandedParent) return;
-    if (!selected.includes(expandedParent) && selected.length < max) {
-      onChange([...selected, expandedParent]);
+    const children = getChildren(expandedParent);
+    const childSlugs = children.map((c) => c.slug);
+    // Remove any previously selected children for this parent (mutually exclusive)
+    const withoutChildren = selected.filter((s) => !childSlugs.includes(s));
+    if (!withoutChildren.includes(expandedParent) && withoutChildren.length < max) {
+      onChange([...withoutChildren, expandedParent]);
+    } else {
+      onChange(withoutChildren);
     }
     setExpandedParent(null);
     setPendingChildren([]);

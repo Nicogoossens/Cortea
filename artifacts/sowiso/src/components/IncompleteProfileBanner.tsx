@@ -9,12 +9,16 @@ export function IncompleteProfileBanner() {
   const [, navigate] = useLocation();
   const { isIncomplete, emptyCategories, isLoading } = useProfileCompleteness();
   const [dismissed, setLocalDismissed] = useState(() => isDismissed());
+  const [isClosing, setIsClosing] = useState(false);
 
   if (isLoading || !isIncomplete || dismissed) return null;
 
   function handleDismiss() {
-    setDismissed();
-    setLocalDismissed(true);
+    setIsClosing(true);
+    setTimeout(() => {
+      setDismissed();
+      setLocalDismissed(true);
+    }, 250);
   }
 
   function handleCta() {
@@ -35,7 +39,13 @@ export function IncompleteProfileBanner() {
   }
 
   return (
-    <div className="relative flex items-start gap-3 rounded-sm border border-amber-400/40 bg-amber-500/[0.07] px-4 py-3 text-sm animate-in fade-in duration-300">
+    <div
+      className={`relative flex items-start gap-3 rounded-sm border border-amber-400/40 bg-amber-500/[0.07] px-4 py-3 text-sm transition-all duration-250 ${
+        isClosing
+          ? "opacity-0 -translate-y-1 pointer-events-none"
+          : "animate-in fade-in slide-in-from-top-1 duration-300"
+      }`}
+    >
       <AlertTriangle
         className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
         aria-hidden="true"

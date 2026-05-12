@@ -11,7 +11,6 @@ export interface CatalogItem {
 }
 
 interface Props {
-  taxonomy: string;
   items: CatalogItem[];
   selected: string[];
   onChange: (slugs: string[]) => void;
@@ -191,10 +190,11 @@ export function HierarchicalInterestPicker({
           <button
             type="button"
             onClick={handleConfirmChildren}
-            disabled={pendingChildren.length === 0}
-            className="flex-1 px-3 py-2 rounded-sm border border-primary/30 bg-primary/5 text-sm text-primary hover:bg-primary/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 px-3 py-2 rounded-sm border border-primary/30 bg-primary/5 text-sm text-primary hover:bg-primary/10 transition-all"
           >
-            {t("profile.picker_confirm")} ({pendingChildren.length})
+            {pendingChildren.length === 0
+              ? t("profile.picker_confirm_clear")
+              : `${t("profile.picker_confirm")} (${pendingChildren.length})`}
           </button>
         </div>
       </div>

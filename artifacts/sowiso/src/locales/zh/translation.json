@@ -2205,5 +2205,6 @@
   "interests.sp_hunting_game_shooting": "獵禽射擊",
   "interests.sp_hunting_wing_shooting": "飛禽射擊",
   "interests.sp_hunting_deer_stalking": "鹿類獵蹤",
-  "interests.sp_hunting_falconry": "鷹獵"
+  "interests.sp_hunting_falconry": "鷹獵",
+  "profile.picker_confirm_clear": "清除选择"
 }

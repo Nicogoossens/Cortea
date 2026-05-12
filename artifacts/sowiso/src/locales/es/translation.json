@@ -2205,5 +2205,6 @@
   "interests.sp_hunting_game_shooting": "Tiro de Caza Mayor",
   "interests.sp_hunting_wing_shooting": "Tiro de Ave",
   "interests.sp_hunting_deer_stalking": "Acecho de Venado",
-  "interests.sp_hunting_falconry": "Cetrería"
+  "interests.sp_hunting_falconry": "Cetrería",
+  "profile.picker_confirm_clear": "Borrar selección"
 }

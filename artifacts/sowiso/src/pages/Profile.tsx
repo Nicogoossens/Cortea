@@ -1917,7 +1917,6 @@ export default function Profile() {
                       storageKey={`catalog_${taxonomy}`}
                     >
                       <HierarchicalInterestPicker
-                        taxonomy={taxonomy}
                         items={visibleItems}
                         selected={selections}
                         onChange={(slugs) => {

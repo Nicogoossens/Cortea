@@ -2205,5 +2205,6 @@
   "interests.sp_hunting_game_shooting": "Game Shooting",
   "interests.sp_hunting_wing_shooting": "Wing Shooting",
   "interests.sp_hunting_deer_stalking": "Deer Stalking",
-  "interests.sp_hunting_falconry": "Falconry"
+  "interests.sp_hunting_falconry": "Falconry",
+  "profile.picker_confirm_clear": "Clear selection"
 }

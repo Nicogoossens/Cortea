@@ -2205,5 +2205,6 @@
   "interests.sp_hunting_game_shooting": "Drijfjacht",
   "interests.sp_hunting_wing_shooting": "Staande hond jacht",
   "interests.sp_hunting_deer_stalking": "Hertenstalking",
-  "interests.sp_hunting_falconry": "Valkerij"
+  "interests.sp_hunting_falconry": "Valkerij",
+  "profile.picker_confirm_clear": "Selectie wissen"
 }

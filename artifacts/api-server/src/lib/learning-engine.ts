@@ -12,7 +12,7 @@
  * always return values, leaving HTTP error mapping to the route layer.
  */
 
-import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable, learningTrackProgressTable } from "@workspace/db";
+import { db, learningTrackQuestionsTable, learningTrackAttemptsTable, learningTrackSessionsTable, learningTrackProgressTable, culturalTagMatrixTable } from "@workspace/db";
 import { and, eq, sql, desc, gte, ne, isNull, inArray, notInArray } from "drizzle-orm";
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -198,6 +198,9 @@ export interface SelectionContext {
   userCultural?: string[];
   /** Current Compass scores — used to boost questions whose primary_dimension matches the user's weakest dimension */
   compass_scores?: { attentiveness: number; composure: number; discernment: number; diplomacy: number; presence: number } | null;
+  /** Union of all profile interest slugs (interests_sports + interests_cuisine + interests_dress_code + social_circles + cultural_interests).
+   *  Used by Laag B cultural tag boost: +8 per cultural_tag that appears in this set, capped at +24. */
+  userInterestSlugs?: string[];
 }
 
 export interface SelectedQuestion {
@@ -225,6 +228,8 @@ interface RawQuestion {
   applicable_archetypes?: unknown;
   register_relevance?: unknown;
   primary_dimension?: string | null;
+  /** Tag-matrix IDs for Laag A (country filter/boost) and Laag B (profile interest boost). */
+  cultural_tags?: unknown;
 }
 
 function sanitize(q: RawQuestion, source: SelectedQuestion["source"], isRepetition: boolean): SelectedQuestion {
@@ -263,11 +268,14 @@ function weakestCompassDimension(
  *   5. social_circle_tags × userCircles              → +6 per overlap
  *   6. cultural_interest_tags × userCultural         → +6 per overlap
  *   7. primary_dimension matches weakest Compass dim  → +10
+ *   8. cultural_tags × userInterestSlugs (Laag B)    → +8 per overlap, capped +24
+ *   9. cultural_tags country boost (Laag A)          → passed in via tagBoosts map
  * Ties broken by id for determinism.
  */
 function reRankByInterestAndContrast(
   pool: RawQuestion[],
   ctx: SelectionContext,
+  tagBoosts?: Map<number, number>,
 ): { question: RawQuestion; source: SelectedQuestion["source"] }[] {
   const interests    = new Set(ctx.situationalInterests.map((s) => s.toLowerCase()));
   const circles      = new Set((ctx.userCircles ?? []).map((s) => s.toLowerCase()));
@@ -370,6 +378,28 @@ function reRankByInterestAndContrast(
       if (source === "match") source = "interest_boost";
     }
 
+    // 8. Laag B — cultural tag × profile interest overlap
+    //    userInterestSlugs = union of interests_sports, interests_cuisine,
+    //    interests_dress_code, social_circles, cultural_interests.
+    //    +8 per overlapping tag, capped at +24 (max 3 overlaps counted).
+    const slugSet = new Set((ctx.userInterestSlugs ?? []).map((s) => s.toLowerCase()));
+    if (slugSet.size > 0) {
+      const ctags = Array.isArray(q.cultural_tags)
+        ? (q.cultural_tags as string[]).map((t) => String(t).toLowerCase())
+        : [];
+      const overlap = Math.min(ctags.filter((t) => slugSet.has(t)).length, 3);
+      if (overlap > 0) {
+        s += overlap * 8;
+        if (source === "match") source = "interest_boost";
+      }
+    }
+
+    // 9. Laag A — country cultural boost/penalty (pre-computed by applyCulturalTagFilter)
+    if (tagBoosts?.has(q.id)) {
+      s += tagBoosts.get(q.id)!;
+      if (source === "match") source = "interest_boost";
+    }
+
     return { score: s, source };
   }
 
@@ -377,6 +407,66 @@ function reRankByInterestAndContrast(
     .map((q) => ({ question: q, ...score(q) }))
     .sort((a, b) => b.score - a.score || a.question.id - b.question.id)
     .map(({ question, source }) => ({ question, source }));
+}
+
+/**
+ * Laag A — Cultural tag filter.
+ *
+ * 1. Collects all unique tag_ids from the pool's cultural_tags arrays.
+ * 2. Does ONE batch lookup on cultural_tag_matrix for the target country.
+ * 3. Hard-removes questions where any tag is "excluded" for this country.
+ * 4. Pre-computes a boost score per question (+6 per recommended, −5 per
+ *    not_recommended, clamped to ±20). The boost is applied later in
+ *    reRankByInterestAndContrast as scoring component 9.
+ *
+ * Fast path: if the whole pool has no cultural_tags, returns the pool unchanged.
+ * Missing (tag, country) pair is treated as "free" — not as "excluded"
+ * because world-v2 covers 199 countries and the default-deny policy is
+ * encoded explicitly in the CSV rather than via absence.
+ */
+async function applyCulturalTagFilter(
+  pool: RawQuestion[],
+  regionCode: string,
+): Promise<{ filtered: RawQuestion[]; tagBoosts: Map<number, number> }> {
+  const allTags = pool.flatMap((q) =>
+    Array.isArray(q.cultural_tags) ? (q.cultural_tags as string[]) : [],
+  );
+  const uniqueTags = [...new Set(allTags)];
+
+  if (uniqueTags.length === 0) {
+    return { filtered: pool, tagBoosts: new Map() };
+  }
+
+  const rows = await db
+    .select({ tag_id: culturalTagMatrixTable.tag_id, status: culturalTagMatrixTable.status })
+    .from(culturalTagMatrixTable)
+    .where(
+      and(
+        eq(culturalTagMatrixTable.country_iso, regionCode.toUpperCase()),
+        inArray(culturalTagMatrixTable.tag_id, uniqueTags),
+      ),
+    );
+  const statusMap = new Map(rows.map((r) => [r.tag_id, r.status]));
+
+  const filtered: RawQuestion[] = [];
+  const tagBoosts = new Map<number, number>();
+
+  for (const q of pool) {
+    const tags = Array.isArray(q.cultural_tags) ? (q.cultural_tags as string[]) : [];
+    if (tags.some((t) => statusMap.get(t) === "excluded")) continue;
+
+    let boost = 0;
+    for (const t of tags) {
+      const s = statusMap.get(t);
+      if (s === "recommended")     boost += 6;
+      else if (s === "not_recommended") boost -= 5;
+    }
+    boost = Math.max(-20, Math.min(20, boost));
+    if (boost !== 0) tagBoosts.set(q.id, boost);
+    filtered.push(q);
+  }
+
+  return { filtered, tagBoosts };
 }
 
 /**
@@ -457,6 +547,7 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
       applicable_archetypes: learningTrackQuestionsTable.applicable_archetypes,
       register_relevance: learningTrackQuestionsTable.register_relevance,
       primary_dimension: learningTrackQuestionsTable.primary_dimension,
+      cultural_tags: learningTrackQuestionsTable.cultural_tags,
     };
     const primary = await executor.select(cols)
       .from(learningTrackQuestionsTable)
@@ -491,7 +582,9 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   const primaryBudget = Math.max(1, ctx.size - crossReserve - result.length);
 
   const primaryPool = await fetchPool(ctx.level, [ctx.demographic]);
-  const ranked = reRankByInterestAndContrast(primaryPool as RawQuestion[], ctx);
+  const { filtered: filtPrimary, tagBoosts: boostsPrimary } =
+    await applyCulturalTagFilter(primaryPool as RawQuestion[], ctx.regionCode);
+  const ranked = reRankByInterestAndContrast(filtPrimary, ctx, boostsPrimary);
 
   // Tier 3: if we don't have at least 60% of the primary budget from the
   // primary pool, pull common fillers — but never let primary+common exceed
@@ -500,7 +593,9 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   const primaryCapped = ranked.slice(0, primaryBudget);
   if (primaryCapped.length < sixtyPctTarget) {
     const commonPool = await fetchPool(ctx.level, ["common"]);
-    const rankedCommon = reRankByInterestAndContrast(commonPool as RawQuestion[], ctx)
+    const { filtered: filtCommon, tagBoosts: boostsCommon } =
+      await applyCulturalTagFilter(commonPool as RawQuestion[], ctx.regionCode);
+    const rankedCommon = reRankByInterestAndContrast(filtCommon, ctx, boostsCommon)
       .map(({ question }) => ({ question, source: "common_fill" as const }))
       .slice(0, primaryBudget - primaryCapped.length);
     pushAll([...primaryCapped, ...rankedCommon]);
@@ -515,7 +610,9 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   if (crossReserve > 0) {
     const crossCap = crossReserve;
     const crossPool = await fetchPool(ctx.level, siblingDemographics(ctx.demographic));
-    const rankedCross = reRankByInterestAndContrast(crossPool as RawQuestion[], ctx)
+    const { filtered: filtCross, tagBoosts: boostsCross } =
+      await applyCulturalTagFilter(crossPool as RawQuestion[], ctx.regionCode);
+    const rankedCross = reRankByInterestAndContrast(filtCross, ctx, boostsCross)
       .slice(0, crossCap)
       .map(({ question }) => ({ question, source: "cross_demographic" as const }));
     pushAll(rankedCross);
@@ -524,7 +621,9 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   // Tier 5: backfill from previous level if still short (rare)
   if (result.length < ctx.size && ctx.level > 1) {
     const backfillPool = await fetchPool(ctx.level - 1, null);
-    const rankedBackfill = reRankByInterestAndContrast(backfillPool as RawQuestion[], ctx)
+    const { filtered: filtBackfill, tagBoosts: boostsBackfill } =
+      await applyCulturalTagFilter(backfillPool as RawQuestion[], ctx.regionCode);
+    const rankedBackfill = reRankByInterestAndContrast(filtBackfill, ctx, boostsBackfill)
       .map(({ question }) => ({ question, source: "common_fill" as const }));
     pushAll(rankedBackfill);
   }

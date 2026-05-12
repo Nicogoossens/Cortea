@@ -151,6 +151,9 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
       social_circles: usersTable.social_circles,
       cultural_interests: usersTable.cultural_interests,
       behavior_profile: usersTable.behavior_profile,
+      interests_sports: usersTable.interests_sports,
+      interests_cuisine: usersTable.interests_cuisine,
+      interests_dress_code: usersTable.interests_dress_code,
     }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
     if (!user) {
@@ -356,6 +359,13 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           userCircles: (user.social_circles ?? []) as string[],
           userCultural: (user.cultural_interests ?? []) as string[],
           compass_scores: compassScoresForSelection,
+          userInterestSlugs: [
+            ...((user.interests_sports     ?? []) as string[]),
+            ...((user.interests_cuisine    ?? []) as string[]),
+            ...((user.interests_dress_code ?? []) as string[]),
+            ...((user.social_circles       ?? []) as string[]),
+            ...((user.cultural_interests   ?? []) as string[]),
+          ],
         }, tx);
 
         // Never persist an empty session — they become "phantom" rows that

@@ -156,6 +156,9 @@ async function buildSelectionContext(
       social_circles: usersTable.social_circles,
       cultural_interests: usersTable.cultural_interests,
       behavior_profile: usersTable.behavior_profile,
+      interests_sports: usersTable.interests_sports,
+      interests_cuisine: usersTable.interests_cuisine,
+      interests_dress_code: usersTable.interests_dress_code,
     })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
@@ -199,6 +202,13 @@ async function buildSelectionContext(
       userCircles: (user.social_circles ?? []) as string[],
       userCultural: (user.cultural_interests ?? []) as string[],
       compass_scores: compassScores,
+      userInterestSlugs: [
+        ...((user.interests_sports     ?? []) as string[]),
+        ...((user.interests_cuisine    ?? []) as string[]),
+        ...((user.interests_dress_code ?? []) as string[]),
+        ...((user.social_circles       ?? []) as string[]),
+        ...((user.cultural_interests   ?? []) as string[]),
+      ],
     },
     demographic,
   };

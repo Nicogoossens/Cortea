@@ -9,10 +9,10 @@
 
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { importRunsTable, learningTrackQuestionsTable } from "@workspace/db";
+import { importRunsTable, learningTrackQuestionsTable, culturalTagMatrixTable } from "@workspace/db";
 import type { InsertLearningTrackQuestion } from "@workspace/db";
 import { parseLearningTrackMd } from "@workspace/db/parse-learning-track-md";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 import { z } from "zod";
 import { requireAdmin } from "./require-admin.js";
 import {
@@ -108,6 +108,23 @@ router.get("/admin/import/runs/:id", requireAdmin, async (req, res) => {
   const [row] = await db.select().from(importRunsTable).where(eq(importRunsTable.id, id)).limit(1);
   if (!row) { res.status(404).json({ error: "Run not found." }); return; }
   res.json(row);
+});
+
+// ─── GET /api/admin/import/volatile-review-count ──────────────────────────────
+// Returns the number of cultural_tag_matrix rows with needs_review = true.
+// Displayed as a warning indicator in the admin panel.
+
+router.get("/admin/import/volatile-review-count", requireAdmin, async (_req, res) => {
+  try {
+    const [row] = await db
+      .select({ total: count() })
+      .from(culturalTagMatrixTable)
+      .where(eq(culturalTagMatrixTable.needs_review, true));
+    res.json({ needs_review_count: Number(row?.total ?? 0) });
+  } catch (err) {
+    console.error("[admin-import] volatile-review-count error:", err);
+    res.status(500).json({ error: "Failed to count volatile review items.", detail: String(err) });
+  }
 });
 
 // ─── Async import job ─────────────────────────────────────────────────────────

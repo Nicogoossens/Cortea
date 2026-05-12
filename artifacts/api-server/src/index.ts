@@ -7,6 +7,7 @@ import { startRegisterUiAuditSweeper } from "./lib/register-ui-audit-sweeper";
 import { startTrialReminderSweeper } from "./lib/trial-reminder-sweeper";
 import { startBiasEvolutionSweeper } from "./lib/bias-evolution-sweeper";
 import { startCompassHistoryCron } from "./lib/compass-history-cron";
+import { startVolatilitySweeper } from "./lib/volatility-sweeper";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,6 +70,11 @@ app.listen(port, (err) => {
   // §9.4 Master Framework: write daily Compass-score snapshots into
   // compass_history for the 30-day radar evolution overlay.
   startCompassHistoryCron();
+
+  // Task #392: periodically flag volatile cultural_tag_matrix rows that
+  // haven't been reviewed in VOLATILE_REVIEW_MONTHS months (default: 6).
+  // Count visible in admin panel via GET /api/admin/import/volatile-review-count.
+  startVolatilitySweeper();
 
   // Step-5 dev smoketest: after startup, run the i18n-audit script once and
   // log its summary so missing-key drift is visible in the dev console.

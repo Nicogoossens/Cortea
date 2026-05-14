@@ -182,7 +182,13 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
 
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.
-    let session = await findOpenSession(userId, register, regionCode, pillar, phase, lang);
+    // Exception: when a context_id is provided the session is built for a
+    // specific demographic override — never reuse a session that may have been
+    // built with a different (or no) context, as that would serve the wrong
+    // question pool.
+    let session = context_id
+      ? null
+      : await findOpenSession(userId, register, regionCode, pillar, phase, lang);
 
     // ── Race-safe session creation ─────────────────────────────────────────
     // We wrap the entire (lock → re-check open → check limits → INSERT)
@@ -237,7 +243,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           ))
           .orderBy(desc(learningTrackSessionsTable.id))
           .limit(1);
-        if (reuse) {
+        if (reuse && !context_id) {
           // Defensive content-lang check (mirrors findOpenSession guard).
           let contentOk = true;
           if (Array.isArray(reuse.served_question_ids) && (reuse.served_question_ids as string[]).length > 0) {
@@ -1203,7 +1209,26 @@ router.get("/users/country-interests", requireAuthUser, async (req, res) => {
       }
     }
 
-    return res.json(rows);
+    // Task #404: attach learning contexts to each interest row in a single
+    // additional query (avoids N+1 fetches from the frontend).
+    const ctxRows = rows.length > 0
+      ? await db.select()
+          .from(userCountryContextsTable)
+          .where(eq(userCountryContextsTable.user_id, userId))
+          .orderBy(userCountryContextsTable.created_at)
+      : [];
+
+    const ctxByRegion: Record<string, typeof ctxRows> = {};
+    for (const ctx of ctxRows) {
+      (ctxByRegion[ctx.region_code] ??= []).push(ctx);
+    }
+
+    const response = rows.map((r) => ({
+      ...r,
+      contexts: ctxByRegion[r.region_code] ?? [],
+    }));
+
+    return res.json(response);
   } catch (err) {
     req.log.error({ err }, "Failed to fetch country interests");
     return res.status(500).json({ error: "Interest data is momentarily unavailable." });

@@ -33,3 +33,16 @@ export const userCountryContextsTable = pgTable(
 );
 
 export type UserCountryContext = typeof userCountryContextsTable.$inferSelect;
+
+/**
+ * Extended interest row returned by GET /api/users/country-interests.
+ * Contexts are joined server-side so the frontend never needs N+1 fetches.
+ */
+export type UserCountryInterestWithContexts = {
+  id: number;
+  user_id: string;
+  region_code: string;
+  added_at: Date;
+  hidden_at: Date | null;
+  contexts: UserCountryContext[];
+};

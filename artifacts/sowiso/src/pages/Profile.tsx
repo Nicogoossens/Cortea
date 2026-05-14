@@ -997,23 +997,12 @@ export default function Profile() {
     if (!isAuthenticated) return;
     fetch(`${API_BASE}/api/users/country-interests`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : [])
-      .then(async (rows: { region_code: string }[]) => {
+      .then((rows: { region_code: string; contexts?: UserCountryContext[] }[]) => {
         setInterestsList(rows);
-        if (rows.length > 0) {
-          const contextResults = await Promise.all(
-            rows.map((r) =>
-              fetch(
-                `${API_BASE}/api/users/country-interests/${encodeURIComponent(r.region_code)}/contexts`,
-                { credentials: "include" },
-              )
-                .then((res) => res.ok ? res.json() as Promise<UserCountryContext[]> : [])
-                .catch(() => [] as UserCountryContext[]),
-            ),
-          );
-          const map: Record<string, UserCountryContext[]> = {};
-          rows.forEach((r, i) => { map[r.region_code] = contextResults[i]; });
-          setCountryContexts(map);
-        }
+        // Server now returns contexts inline — no N+1 fetches needed.
+        const map: Record<string, UserCountryContext[]> = {};
+        rows.forEach((r) => { map[r.region_code] = r.contexts ?? []; });
+        setCountryContexts(map);
       })
       .catch(() => setInterestsList([]));
     fetch(`${API_BASE}/api/learning-tracks/progress`, { credentials: "include" })
@@ -1081,6 +1070,21 @@ export default function Profile() {
       setProfileData({ ...profileData, interests_extended: updated });
     }
     await patchProfile({ interests_extended: updated }, setCatalogSave);
+  }
+
+  async function deleteContextInline(regionCode: string, contextId: number) {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/users/country-interests/${encodeURIComponent(regionCode)}/contexts/${contextId}`,
+        { method: "DELETE", credentials: "include" },
+      );
+      if (res.ok) {
+        setCountryContexts((prev) => ({
+          ...prev,
+          [regionCode]: (prev[regionCode] ?? []).filter((c) => c.id !== contextId),
+        }));
+      }
+    } catch { /* silently ignore */ }
   }
 
   async function toggleInterestRegion(code: string) {
@@ -2096,12 +2100,20 @@ export default function Profile() {
                       {ctxs.length > 0 && (
                         <div className="flex flex-wrap gap-1 pl-1">
                           {ctxs.map((ctx) => (
-                            <span
+                            <div
                               key={ctx.id}
-                              className="text-[10px] px-1.5 py-0.5 rounded-sm bg-secondary/40 border border-border/40 text-muted-foreground"
+                              className="flex items-center gap-0.5 text-[10px] pl-1.5 pr-0.5 py-0.5 rounded-sm bg-secondary/40 border border-border/40 text-muted-foreground"
                             >
-                              {formatContextLabel(ctx, t)}
-                            </span>
+                              <span>{formatContextLabel(ctx, t)}</span>
+                              <button
+                                type="button"
+                                onClick={() => deleteContextInline(interest.region_code, ctx.id)}
+                                aria-label={t("leercontext.delete_label", "Context verwijderen")}
+                                className="ml-0.5 p-0.5 rounded-sm hover:bg-primary/20 hover:text-primary transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5" aria-hidden="true" />
+                              </button>
+                            </div>
                           ))}
                         </div>
                       )}
@@ -2185,12 +2197,20 @@ export default function Profile() {
                       {ctxs.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {ctxs.map((ctx) => (
-                            <span
+                            <div
                               key={ctx.id}
-                              className="text-[10px] px-1.5 py-0.5 rounded-sm bg-primary/8 border border-primary/20 text-primary/80"
+                              className="flex items-center gap-0.5 text-[10px] pl-1.5 pr-0.5 py-0.5 rounded-sm bg-primary/8 border border-primary/20 text-primary/80"
                             >
-                              {formatContextLabel(ctx, t)}
-                            </span>
+                              <span>{formatContextLabel(ctx, t)}</span>
+                              <button
+                                type="button"
+                                onClick={() => deleteContextInline(interest.region_code, ctx.id)}
+                                aria-label={t("leercontext.delete_label", "Context verwijderen")}
+                                className="ml-0.5 p-0.5 rounded-sm hover:bg-primary/20 hover:text-primary transition-colors"
+                              >
+                                <X className="w-2.5 h-2.5" aria-hidden="true" />
+                              </button>
+                            </div>
                           ))}
                         </div>
                       )}

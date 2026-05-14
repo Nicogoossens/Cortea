@@ -31,7 +31,8 @@
     "seed-cultural-origins": "tsx src/seed-cultural-origins.ts",
     "migrate-cultural-tags": "tsx src/migrate-cultural-tags-schema.ts",
     "seed-cultural-tags": "tsx src/seed-cultural-tags.ts",
-    "migrate-interest-hierarchy": "tsx src/migrate-interest-hierarchy.ts"
+    "migrate-interest-hierarchy": "tsx src/migrate-interest-hierarchy.ts",
+    "migrate-country-contexts": "tsx src/migrate-country-contexts.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

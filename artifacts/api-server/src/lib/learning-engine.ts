@@ -201,6 +201,15 @@ export interface SelectionContext {
   /** Union of all profile interest slugs (interests_sports + interests_cuisine + interests_dress_code + social_circles + cultural_interests).
    *  Used by Laag B cultural tag boost: +8 per cultural_tag that appears in this set, capped at +24. */
   userInterestSlugs?: string[];
+  /**
+   * Task #404 — Leercontext override.
+   * When the caller provides an explicit context demographic (from a saved
+   * user_country_context row), this value replaces `demographic` as the
+   * primary Tier-1 filter AND suppresses the automatic sibling-demographics
+   * cross-mix in Tier 4. Without this field the engine behaves identically
+   * to its pre-#404 state.
+   */
+  contextDemographic?: string | null;
 }
 
 export interface SelectedQuestion {
@@ -569,19 +578,26 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
     }
   }
 
+  // Task #404: when caller supplies an explicit context demographic, use it
+  // as the primary demographic and suppress the automatic sibling-mix so the
+  // session targets exactly the requested persona.
+  const effectiveDemographic = ctx.contextDemographic ?? ctx.demographic;
+
   // Reserve a guaranteed slot count for cross-demographic at level ≥ threshold
   // so the requirement is honoured even when the primary pool is large.
-  // Source of truth for the reservation count is the pure helper exercised
-  // by the cross-package test suite.
-  const crossReserve = pureComputeReserve(
-    ctx.size,
-    ctx.level,
-    cfg.crossDemographicFromLevel,
-    ctx.demographic,
-  );
+  // If a context demographic is explicitly set we skip the auto sibling-mix
+  // entirely — the user has already chosen their target persona.
+  const crossReserve = ctx.contextDemographic
+    ? 0
+    : pureComputeReserve(
+        ctx.size,
+        ctx.level,
+        cfg.crossDemographicFromLevel,
+        ctx.demographic,
+      );
   const primaryBudget = Math.max(1, ctx.size - crossReserve - result.length);
 
-  const primaryPool = await fetchPool(ctx.level, [ctx.demographic]);
+  const primaryPool = await fetchPool(ctx.level, [effectiveDemographic]);
   const { filtered: filtPrimary, tagBoosts: boostsPrimary } =
     await applyCulturalTagFilter(primaryPool as RawQuestion[], ctx.regionCode);
   const ranked = reRankByInterestAndContrast(filtPrimary, ctx, boostsPrimary);
@@ -609,7 +625,7 @@ export async function selectQuestions(ctx: SelectionContext, executor: Executor 
   // below the per-register threshold).
   if (crossReserve > 0) {
     const crossCap = crossReserve;
-    const crossPool = await fetchPool(ctx.level, siblingDemographics(ctx.demographic));
+    const crossPool = await fetchPool(ctx.level, siblingDemographics(effectiveDemographic));
     const { filtered: filtCross, tagBoosts: boostsCross } =
       await applyCulturalTagFilter(crossPool as RawQuestion[], ctx.regionCode);
     const rankedCross = reRankByInterestAndContrast(filtCross, ctx, boostsCross)

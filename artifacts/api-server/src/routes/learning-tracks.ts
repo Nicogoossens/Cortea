@@ -6,6 +6,7 @@ import {
   learningTrackAttemptsTable,
   learningTrackSessionsTable,
   userCountryInterestsTable,
+  userCountryContextsTable,
   usersTable,
 } from "@workspace/db";
 import { eq, and, sql, isNull, desc, ne } from "drizzle-orm";
@@ -44,6 +45,7 @@ const SessionQuerySchema = z.object({
   phase: z.coerce.number().int().min(1).max(5),
   region_code: z.string().min(1).max(10),
   lang: z.string().default("en"),
+  context_id: z.coerce.number().int().positive().optional(),
 });
 
 const AnswerBodySchema = z.object({
@@ -130,7 +132,7 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid session parameters.", errors: parsed.error.issues });
     }
-    const { register, research_pillar, phase, region_code, lang } = parsed.data;
+    const { register, research_pillar, phase, region_code, lang, context_id } = parsed.data;
     const regionCode = region_code.toUpperCase();
 
     if (register === "middle_class" && !research_pillar) {
@@ -297,6 +299,21 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         const demographic = deriveDemographic(user.birth_year, user.gender_identity);
         const isRemediation = remediationIds.length > 0;
 
+        // Task #404: resolve optional context_id to a target demographic.
+        let contextDemographic: string | null = null;
+        if (context_id) {
+          const [ctx404] = await tx
+            .select({ target_demographic: userCountryContextsTable.target_demographic })
+            .from(userCountryContextsTable)
+            .where(and(
+              eq(userCountryContextsTable.id, context_id),
+              eq(userCountryContextsTable.user_id, userId),
+              eq(userCountryContextsTable.region_code, regionCode),
+            ))
+            .limit(1);
+          contextDemographic = ctx404?.target_demographic ?? null;
+        }
+
         const filteredForced: number[] = [];
         const exhaustedIds: number[] = [];
         for (const qid of remediationIds) {
@@ -366,6 +383,8 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
             ...((user.social_circles       ?? []) as string[]),
             ...((user.cultural_interests   ?? []) as string[]),
           ],
+          // ── Task #404 — Leercontext override ─────────────────────────────
+          contextDemographic,
         }, tx);
 
         // Never persist an empty session — they become "phantom" rows that
@@ -1267,6 +1286,124 @@ router.delete("/users/country-interests/:region_code", requireAuthUser, async (r
   } catch (err) {
     req.log.error({ err }, "Failed to hide country interest");
     return res.status(500).json({ error: "Unable to remove this country at the moment." });
+  }
+});
+
+// ─── Leercontext endpoints — Task #404 ───────────────────────────────────────
+
+const CreateContextBodySchema = z.object({
+  context_type: z.enum(["informeel", "zakelijk", "professioneel", "romantisch", "sociaal"]),
+  target_demographic: z.enum([
+    "men_19_30", "men_30_50", "men_50plus",
+    "women_19_30", "women_30_50", "women_50plus",
+    "common",
+  ]).optional().nullable(),
+});
+
+router.get("/users/country-interests/:region_code/contexts", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const region = String(req.params.region_code ?? "").toUpperCase();
+    if (region.length < 2 || region.length > 10) {
+      return res.status(400).json({ error: "A valid region_code is required." });
+    }
+
+    const rows = await db
+      .select()
+      .from(userCountryContextsTable)
+      .where(and(
+        eq(userCountryContextsTable.user_id, userId),
+        eq(userCountryContextsTable.region_code, region),
+      ))
+      .orderBy(userCountryContextsTable.created_at);
+
+    return res.json(rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch country contexts");
+    return res.status(500).json({ error: "Context data is momentarily unavailable." });
+  }
+});
+
+router.post("/users/country-interests/:region_code/contexts", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const region = String(req.params.region_code ?? "").toUpperCase();
+    if (region.length < 2 || region.length > 10) {
+      return res.status(400).json({ error: "A valid region_code is required." });
+    }
+
+    const parsed = CreateContextBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid context data.", errors: parsed.error.issues });
+    }
+
+    const { context_type, target_demographic } = parsed.data;
+    const demographic = target_demographic ?? null;
+
+    const [existing] = await db
+      .select({ id: userCountryContextsTable.id })
+      .from(userCountryContextsTable)
+      .where(and(
+        eq(userCountryContextsTable.user_id, userId),
+        eq(userCountryContextsTable.region_code, region),
+        eq(userCountryContextsTable.context_type, context_type),
+        demographic
+          ? eq(userCountryContextsTable.target_demographic, demographic)
+          : isNull(userCountryContextsTable.target_demographic),
+      ))
+      .limit(1);
+
+    if (existing) {
+      return res.status(409).json({
+        code: "CONTEXT_DUPLICATE",
+        error: "This context already exists for the selected country.",
+      });
+    }
+
+    const [created] = await db
+      .insert(userCountryContextsTable)
+      .values({
+        user_id: userId,
+        region_code: region,
+        context_type,
+        target_demographic: demographic,
+      })
+      .returning();
+
+    return res.status(201).json(created);
+  } catch (err) {
+    req.log.error({ err }, "Failed to create country context");
+    return res.status(500).json({ error: "Unable to save this context at the moment." });
+  }
+});
+
+router.delete("/users/country-interests/:region_code/contexts/:contextId", requireAuthUser, async (req, res) => {
+  try {
+    const userId = getResolvedUserId(req);
+    const region = String(req.params.region_code ?? "").toUpperCase();
+    const contextId = Number(req.params.contextId);
+
+    if (region.length < 2 || region.length > 10 || !Number.isFinite(contextId) || contextId < 1) {
+      return res.status(400).json({ error: "Valid region_code and contextId are required." });
+    }
+
+    const deleted = await db
+      .delete(userCountryContextsTable)
+      .where(and(
+        eq(userCountryContextsTable.id, contextId),
+        eq(userCountryContextsTable.user_id, userId),
+        eq(userCountryContextsTable.region_code, region),
+      ))
+      .returning();
+
+    if (deleted.length === 0) {
+      return res.status(404).json({ error: "Context not found." });
+    }
+
+    return res.json({ deleted: deleted[0] });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete country context");
+    return res.status(500).json({ error: "Unable to remove this context at the moment." });
   }
 });
 

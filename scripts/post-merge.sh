@@ -39,6 +39,9 @@ if [ -n "$PROD_DATABASE_URL" ]; then
   echo "  PROD schema sync complete."
 fi
 
+echo "--- Task #404: user_country_contexts table (idempotent) ---"
+pnpm --filter @workspace/db migrate-country-contexts
+
 echo "--- Seeding Atelier scenarios (idempotent upsert) ---"
 pnpm --filter @workspace/db exec tsx src/seed.ts
 

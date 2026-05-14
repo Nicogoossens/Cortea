@@ -20,7 +20,7 @@ import {
   Eye, EyeOff, KeyRound, Loader2 as PasswordLoader2,
   Trophy, Medal, Shield, Compass, Download, ToggleLeft, ToggleRight, Info,
   Users2 as Users2Icon, Link2 as LinkIcon, Copy as CopyIcon, Loader2 as Loader2Icon,
-  Search, Plane, Car, Home, GraduationCap, Wine, Leaf, ChefHat, Coffee, Shirt, Star,
+  Search, Plane, Car, Home, GraduationCap, Wine, Leaf, ChefHat, Coffee, Shirt, Star, Plus,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
 import { enGB, enUS, enAU, enCA, nl, fr, de, es, pt, ptBR, it, ar, ja, zhCN } from "date-fns/locale";
@@ -40,6 +40,7 @@ import { RefineCompass, type CompassHistoryPoint } from "@/components/RefineComp
 import { useSavedVenues } from "@/lib/saved-venues";
 import { HierarchicalInterestPicker } from "@/components/HierarchicalInterestPicker";
 import { resetProfileCompletenessDismiss } from "@/hooks/useProfileCompleteness";
+import { LeercontextModal, type UserCountryContext, formatContextLabel } from "@/components/LeercontextModal";
 import React, { useState, useEffect, useCallback, useRef, useMemo, KeyboardEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -977,6 +978,8 @@ export default function Profile() {
   const [interestsList, setInterestsList] = useState<{ region_code: string }[]>([]);
   const [interestsBusy, setInterestsBusy] = useState(false);
   const [countriesPickerOpen, setCountriesPickerOpen] = useState(false);
+  const [countryContexts, setCountryContexts] = useState<Record<string, UserCountryContext[]>>({});
+  const [leercontextModalRegion, setLeercontextModalRegion] = useState<string | null>(null);
   type TrackProgressRow = {
     register: string;
     region_code: string;
@@ -994,7 +997,24 @@ export default function Profile() {
     if (!isAuthenticated) return;
     fetch(`${API_BASE}/api/users/country-interests`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : [])
-      .then((rows: { region_code: string }[]) => setInterestsList(rows))
+      .then(async (rows: { region_code: string }[]) => {
+        setInterestsList(rows);
+        if (rows.length > 0) {
+          const contextResults = await Promise.all(
+            rows.map((r) =>
+              fetch(
+                `${API_BASE}/api/users/country-interests/${encodeURIComponent(r.region_code)}/contexts`,
+                { credentials: "include" },
+              )
+                .then((res) => res.ok ? res.json() as Promise<UserCountryContext[]> : [])
+                .catch(() => [] as UserCountryContext[]),
+            ),
+          );
+          const map: Record<string, UserCountryContext[]> = {};
+          rows.forEach((r, i) => { map[r.region_code] = contextResults[i]; });
+          setCountryContexts(map);
+        }
+      })
       .catch(() => setInterestsList([]));
     fetch(`${API_BASE}/api/learning-tracks/progress`, { credentials: "include" })
       .then((r) => r.ok ? r.json() : [])
@@ -2040,33 +2060,84 @@ export default function Profile() {
               <div className="flex flex-wrap gap-2">
                 {interestsList.map((interest) => {
                   const region = COMPASS_REGIONS.find((r) => r.code === interest.region_code);
+                  const ctxs = countryContexts[interest.region_code] ?? [];
                   return (
                     <div
                       key={interest.region_code}
-                      className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-sm border border-primary/30 bg-primary/5 text-sm font-medium text-primary"
+                      className="flex flex-col gap-1"
                     >
-                      {region && <FlagEmoji code={region.flag} size="sm" />}
-                      <span>{getRegionName(interest.region_code as RegionCode)}</span>
-                      {interest.region_code === activeRegion && (
-                        <span className="text-[9px] font-mono uppercase tracking-wider text-primary/60 border border-primary/20 px-1 rounded-sm ml-0.5">
-                          {t("profile.active_label", "Actief")}
-                        </span>
+                      <div className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-sm border border-primary/30 bg-primary/5 text-sm font-medium text-primary">
+                        {region && <FlagEmoji code={region.flag} size="sm" />}
+                        <span>{getRegionName(interest.region_code as RegionCode)}</span>
+                        {interest.region_code === activeRegion && (
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-primary/60 border border-primary/20 px-1 rounded-sm ml-0.5">
+                            {t("profile.active_label", "Actief")}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setLeercontextModalRegion(interest.region_code)}
+                          aria-label={t("leercontext.add_context_button", "+ Context")}
+                          className="ml-0.5 p-0.5 rounded-sm hover:bg-primary/20 transition-colors text-primary/50 hover:text-primary"
+                          title={t("leercontext.add_context_button", "+ Context")}
+                        >
+                          <Plus className="w-3 h-3" aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleInterestRegion(interest.region_code)}
+                          disabled={interestsBusy}
+                          aria-label={`${getRegionName(interest.region_code as RegionCode)} ${t("profile.countries_remove_hint", "verwijderen")}`}
+                          className="p-0.5 rounded-sm hover:bg-primary/20 transition-colors text-primary/50 hover:text-primary disabled:opacity-40"
+                        >
+                          <X className="w-3.5 h-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                      {ctxs.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pl-1">
+                          {ctxs.map((ctx) => (
+                            <span
+                              key={ctx.id}
+                              className="text-[10px] px-1.5 py-0.5 rounded-sm bg-secondary/40 border border-border/40 text-muted-foreground"
+                            >
+                              {formatContextLabel(ctx, t)}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => toggleInterestRegion(interest.region_code)}
-                        disabled={interestsBusy}
-                        aria-label={`${getRegionName(interest.region_code as RegionCode)} ${t("profile.countries_remove_hint", "verwijderen")}`}
-                        className="ml-0.5 p-0.5 rounded-sm hover:bg-primary/20 transition-colors text-primary/50 hover:text-primary disabled:opacity-40"
-                      >
-                        <X className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
                     </div>
                   );
                 })}
               </div>
             )}
           </div>
+
+          {/* ── Leercontext modal ── */}
+          {leercontextModalRegion && (
+            <LeercontextModal
+              open={!!leercontextModalRegion}
+              onOpenChange={(open) => { if (!open) setLeercontextModalRegion(null); }}
+              regionCode={leercontextModalRegion}
+              regionName={(() => {
+                try { return getRegionName(leercontextModalRegion as RegionCode); } catch { return leercontextModalRegion; }
+              })()}
+              contexts={countryContexts[leercontextModalRegion] ?? []}
+              apiBase={API_BASE}
+              t={t}
+              onCreated={(ctx) => {
+                setCountryContexts((prev) => ({
+                  ...prev,
+                  [leercontextModalRegion]: [...(prev[leercontextModalRegion] ?? []), ctx],
+                }));
+              }}
+              onDeleted={(id) => {
+                setCountryContexts((prev) => ({
+                  ...prev,
+                  [leercontextModalRegion]: (prev[leercontextModalRegion] ?? []).filter((c) => c.id !== id),
+                }));
+              }}
+            />
+          )}
 
           {/* ── Per-country progress cards ── */}
           {interestsList.length > 0 && (
@@ -2084,6 +2155,7 @@ export default function Profile() {
                   const mcAvg = mcRows.length
                     ? Math.round(mcRows.reduce((s, r) => s + r.current_level, 0) / mcRows.length)
                     : 0;
+                  const ctxs = countryContexts[interest.region_code] ?? [];
                   return (
                     <div
                       key={interest.region_code}
@@ -2100,7 +2172,28 @@ export default function Profile() {
                             {t("profile.active_label", "Actief")}
                           </span>
                         ) : null}
+                        <button
+                          type="button"
+                          onClick={() => setLeercontextModalRegion(interest.region_code)}
+                          aria-label={t("leercontext.add_context_button", "+ Context")}
+                          className="ml-auto p-0.5 rounded-sm hover:bg-primary/15 transition-colors text-muted-foreground hover:text-primary"
+                          title={t("leercontext.add_context_button", "+ Context")}
+                        >
+                          <Plus className="w-3 h-3" aria-hidden="true" />
+                        </button>
                       </div>
+                      {ctxs.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {ctxs.map((ctx) => (
+                            <span
+                              key={ctx.id}
+                              className="text-[10px] px-1.5 py-0.5 rounded-sm bg-primary/8 border border-primary/20 text-primary/80"
+                            >
+                              {formatContextLabel(ctx, t)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="text-xs text-muted-foreground space-y-0.5">
                         <div>{t("profile.elite_level", "Elite level")}: {eliteRow?.current_level ?? 1}</div>
                         <div>{t("profile.mc_level_avg", "Middle-class avg level")}: {mcAvg || 1}</div>

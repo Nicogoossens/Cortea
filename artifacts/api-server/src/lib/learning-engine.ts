@@ -840,6 +840,7 @@ export async function findOpenSession(
   pillar: string | null,
   phase: number,
   lang = "en",
+  contextId?: number | null,
 ) {
   const conds = [
     eq(learningTrackSessionsTable.user_id, userId),
@@ -862,6 +863,12 @@ export async function findOpenSession(
     conds.push(eq(learningTrackSessionsTable.research_pillar, pillar));
   } else {
     conds.push(isNull(learningTrackSessionsTable.research_pillar));
+  }
+  // Task #404: match context_id so per-context sessions are reused correctly.
+  if (contextId != null) {
+    conds.push(eq(learningTrackSessionsTable.context_id, contextId));
+  } else {
+    conds.push(isNull(learningTrackSessionsTable.context_id));
   }
   const [row] = await db.select()
     .from(learningTrackSessionsTable)

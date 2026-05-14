@@ -182,13 +182,9 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
 
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.
-    // Exception: when a context_id is provided the session is built for a
-    // specific demographic override — never reuse a session that may have been
-    // built with a different (or no) context, as that would serve the wrong
-    // question pool.
-    let session = context_id
-      ? null
-      : await findOpenSession(userId, register, regionCode, pillar, phase, lang);
+    // context_id is passed through so only a session with the same context is
+    // reused (each context gets its own dedicated open session on reload).
+    let session = await findOpenSession(userId, register, regionCode, pillar, phase, lang, context_id ?? null);
 
     // ── Race-safe session creation ─────────────────────────────────────────
     // We wrap the entire (lock → re-check open → check limits → INSERT)
@@ -240,10 +236,14 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
               ? eq(learningTrackSessionsTable.research_pillar, pillar)
               : sql`${learningTrackSessionsTable.research_pillar} IS NULL`,
             isNull(learningTrackSessionsTable.completed_at),
+            // Task #404: only reuse a session that was built for the same context.
+            context_id != null
+              ? eq(learningTrackSessionsTable.context_id, context_id)
+              : isNull(learningTrackSessionsTable.context_id),
           ))
           .orderBy(desc(learningTrackSessionsTable.id))
           .limit(1);
-        if (reuse && !context_id) {
+        if (reuse) {
           // Defensive content-lang check (mirrors findOpenSession guard).
           let contentOk = true;
           if (Array.isArray(reuse.served_question_ids) && (reuse.served_question_ids as string[]).length > 0) {
@@ -420,6 +420,8 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
           total_questions: questions.length,
           remediates_session_id: isRemediation && failed ? failed.id : null,
           lang,
+          // Task #404: persist context_id so open-session reuse is context-aware.
+          context_id: context_id ?? null,
         }).returning();
 
         // Consume the parent failure so it is not picked up again on the

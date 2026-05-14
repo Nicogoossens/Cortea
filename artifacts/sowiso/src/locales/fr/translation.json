@@ -2236,6 +2236,9 @@
   "leercontext.active_label": "Contextes actifs",
   "leercontext.delete_aria": "Supprimer le contexte",
   "leercontext.add_context_button": "+ Contexte",
+  "leercontext.picker_label": "Contexte",
+  "leercontext.picker_auto": "Automatique",
+  "leercontext.delete_label": "Supprimer le contexte",
   "leercontext.error.duplicate": "Ce contexte existe déjà pour ce pays.",
   "leercontext.error.save_failed": "Échec de l'enregistrement.",
   "leercontext.contexts_label": "Contextes"

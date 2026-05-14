@@ -652,6 +652,8 @@ export type GetLearningTrackSessionParams = {
   phase: number;
   region_code: string;
   lang?: string;
+  /** Task #404: optional leercontext override */
+  context_id?: number;
 };
 
 export type GetLearningTrackSessionRegister =

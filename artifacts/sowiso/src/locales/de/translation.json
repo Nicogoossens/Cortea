@@ -2236,6 +2236,9 @@
   "leercontext.active_label": "Aktive Kontexte",
   "leercontext.delete_aria": "Kontext entfernen",
   "leercontext.add_context_button": "+ Kontext",
+  "leercontext.picker_label": "Kontext",
+  "leercontext.picker_auto": "Automatisch",
+  "leercontext.delete_label": "Kontext entfernen",
   "leercontext.error.duplicate": "Dieser Kontext existiert bereits für dieses Land.",
   "leercontext.error.save_failed": "Speicherung fehlgeschlagen.",
   "leercontext.contexts_label": "Kontexte"

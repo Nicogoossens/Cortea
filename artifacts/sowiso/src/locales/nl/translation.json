@@ -2236,6 +2236,9 @@
   "leercontext.active_label": "Actieve contexten",
   "leercontext.delete_aria": "Context verwijderen",
   "leercontext.add_context_button": "+ Context",
+  "leercontext.picker_label": "Context",
+  "leercontext.picker_auto": "Automatisch",
+  "leercontext.delete_label": "Context verwijderen",
   "leercontext.error.duplicate": "Deze context bestaat al voor dit land.",
   "leercontext.error.save_failed": "Opslaan mislukt.",
   "leercontext.contexts_label": "Contexten"

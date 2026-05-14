@@ -2236,6 +2236,9 @@
   "leercontext.active_label": "Contesti attivi",
   "leercontext.delete_aria": "Rimuovi contesto",
   "leercontext.add_context_button": "+ Contesto",
+  "leercontext.picker_label": "Contesto",
+  "leercontext.picker_auto": "Automatico",
+  "leercontext.delete_label": "Rimuovi contesto",
   "leercontext.error.duplicate": "Questo contesto esiste già per questo paese.",
   "leercontext.error.save_failed": "Salvataggio non riuscito.",
   "leercontext.contexts_label": "Contesti"

@@ -2236,6 +2236,9 @@
   "leercontext.active_label": "السياقات النشطة",
   "leercontext.delete_aria": "إزالة السياق",
   "leercontext.add_context_button": "+ سياق",
+  "leercontext.picker_label": "السياق",
+  "leercontext.picker_auto": "تلقائي",
+  "leercontext.delete_label": "حذف السياق",
   "leercontext.error.duplicate": "هذا السياق موجود بالفعل في هذا البلد.",
   "leercontext.error.save_failed": "فشل الحفظ.",
   "leercontext.contexts_label": "السياقات"

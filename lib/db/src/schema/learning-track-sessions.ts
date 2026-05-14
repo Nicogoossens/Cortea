@@ -45,6 +45,12 @@ export const learningTrackSessionsTable = pgTable(
      * Placement sessions write current_level directly (no pass-window).
      */
     is_placement:         boolean("is_placement").notNull().default(false),
+    /**
+     * Task #404 — Leercontext per land.
+     * When not null, this session was built for the specific user_country_context
+     * row. Used to reuse only context-matching open sessions on reload.
+     */
+    context_id:           integer("context_id"),
   },
   (table) => [
     index("lts_user_register_started_idx").on(table.user_id, table.register, table.started_at),

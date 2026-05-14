@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, index } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
 export const LEERCONTEXT_TYPES = ["informeel", "zakelijk", "professioneel", "romantisch", "sociaal"] as const;
@@ -22,12 +22,10 @@ export const userCountryContextsTable = pgTable(
     created_at:         timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("ucc_user_region_type_demo_idx").on(
-      table.user_id,
-      table.region_code,
-      table.context_type,
-      table.target_demographic,
-    ),
+    // NOTE: unique constraint on (user_id, region_code, context_type, COALESCE(target_demographic, ''))
+    // is managed by the migration script (ucc_user_region_type_demo_idx) using a COALESCE expression
+    // so that NULL target_demographic is treated as '' for uniqueness purposes.
+    // Drizzle does not support expression indexes, so no uniqueIndex is declared here.
     index("ucc_user_region_idx").on(table.user_id, table.region_code),
   ],
 );

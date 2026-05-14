@@ -11,6 +11,13 @@ import { sql } from "drizzle-orm";
 
 const steps: Array<{ name: string; query: string }> = [
   {
+    name: "ADD context_id to learning_track_sessions",
+    query: `
+      ALTER TABLE learning_track_sessions
+      ADD COLUMN IF NOT EXISTS context_id INTEGER
+    `,
+  },
+  {
     name: "CREATE user_country_contexts",
     query: `
       CREATE TABLE IF NOT EXISTS user_country_contexts (

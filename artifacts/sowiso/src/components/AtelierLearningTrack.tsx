@@ -25,6 +25,9 @@ import {
 } from "lucide-react";
 import { RegisterToggle, type RegisterChoice } from "@/components/RegisterToggle";
 import type { RegionCode } from "@/lib/active-region";
+import { type UserCountryContext, formatContextLabel } from "@/components/LeercontextModal";
+
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface Props {
   tier: "traveller" | "ambassador" | "founding";
@@ -63,6 +66,21 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const { setActiveRegion, getRegionName } = useActiveRegion();
+
+  // Task #404: load learning contexts for the active region.
+  const [regionContexts, setRegionContexts] = useState<UserCountryContext[]>([]);
+  const [selectedContextId, setSelectedContextId] = useState<number | null>(null);
+  useEffect(() => {
+    setSelectedContextId(null);
+    fetch(`${API_BASE}/api/users/country-interests/${encodeURIComponent(activeRegion)}/contexts`, { credentials: "include" })
+      .then((r) => r.ok ? r.json() as Promise<UserCountryContext[]> : [])
+      .then((ctxs) => {
+        setRegionContexts(ctxs);
+        // Auto-select the first context when exactly one exists.
+        if (ctxs.length === 1) setSelectedContextId(ctxs[0].id);
+      })
+      .catch(() => setRegionContexts([]));
+  }, [activeRegion]);
 
   const urlSearch = useSearch();
   const [register, setRegister] = useState<Register>(() => {
@@ -186,6 +204,7 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
     region_code: activeRegion,
     lang: lang.split("-")[0],
     ...(effectiveRegister === "middle_class" ? { research_pillar: researchPillar } : {}),
+    ...(selectedContextId != null ? { context_id: selectedContextId } : {}),
   };
 
   const { data: session, isLoading: sessionLoading, error: sessionError } = useGetLearningTrackSession(sessionParams, {
@@ -554,6 +573,42 @@ export function AtelierLearningTrack({ tier, activeRegion, lang, ambitionLevel =
           >
             <X className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
+        </div>
+      )}
+
+      {/* ── Task #404: learning context picker ── */}
+      {regionContexts.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs text-muted-foreground font-mono uppercase tracking-wider shrink-0">
+            {t("leercontext.picker_label", "Context")}:
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedContextId(null)}
+            className={[
+              "text-xs px-2.5 py-1 rounded-sm border transition-colors",
+              selectedContextId == null
+                ? "border-primary bg-primary/10 text-primary font-medium"
+                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+            ].join(" ")}
+          >
+            {t("leercontext.picker_auto", "Automatisch")}
+          </button>
+          {regionContexts.map((ctx) => (
+            <button
+              key={ctx.id}
+              type="button"
+              onClick={() => setSelectedContextId(ctx.id)}
+              className={[
+                "text-xs px-2.5 py-1 rounded-sm border transition-colors",
+                selectedContextId === ctx.id
+                  ? "border-primary bg-primary/10 text-primary font-medium"
+                  : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+              ].join(" ")}
+            >
+              {formatContextLabel(ctx, t)}
+            </button>
+          ))}
         </div>
       )}
 

@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "Contesto",
   "leercontext.picker_auto": "Automatico",
   "leercontext.delete_label": "Rimuovi contesto",
+  "leercontext.partial_demo_hint": "Seleziona sia un genere che una fascia d'età per una corrispondenza mirata, oppure lascia entrambi vuoti.",
   "leercontext.error.duplicate": "Questo contesto esiste già per questo paese.",
   "leercontext.error.save_failed": "Salvataggio non riuscito.",
   "leercontext.contexts_label": "Contesti"

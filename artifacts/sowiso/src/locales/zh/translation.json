@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "语境",
   "leercontext.picker_auto": "自动",
   "leercontext.delete_label": "删除语境",
+  "leercontext.partial_demo_hint": "请同时选择性别和年龄段以进行精准匹配，或将两者均留空。",
   "leercontext.error.duplicate": "此国家中已存在该语境。",
   "leercontext.error.save_failed": "保存失败。",
   "leercontext.contexts_label": "语境"

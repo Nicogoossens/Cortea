@@ -44,6 +44,27 @@ const steps: Array<{ name: string; query: string }> = [
       ON user_country_contexts (user_id, region_code)
     `,
   },
+  {
+    name: "ADD FK learning_track_sessions.context_id -> user_country_contexts.id",
+    query: `
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.table_constraints
+          WHERE constraint_type = 'FOREIGN KEY'
+            AND table_name        = 'learning_track_sessions'
+            AND constraint_name   = 'fk_lts_context_id'
+        ) THEN
+          ALTER TABLE learning_track_sessions
+            ADD CONSTRAINT fk_lts_context_id
+            FOREIGN KEY (context_id)
+            REFERENCES user_country_contexts(id)
+            ON DELETE SET NULL;
+        END IF;
+      END
+      $$
+    `,
+  },
 ];
 
 async function run() {

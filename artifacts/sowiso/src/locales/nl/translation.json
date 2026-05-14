@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "Context",
   "leercontext.picker_auto": "Automatisch",
   "leercontext.delete_label": "Context verwijderen",
+  "leercontext.partial_demo_hint": "Selecteer zowel een geslacht als een leeftijdsgroep voor een gerichte match, of laat beide leeg.",
   "leercontext.error.duplicate": "Deze context bestaat al voor dit land.",
   "leercontext.error.save_failed": "Opslaan mislukt.",
   "leercontext.contexts_label": "Contexten"

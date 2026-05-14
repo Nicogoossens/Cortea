@@ -180,6 +180,25 @@ router.get("/learning-tracks/session", requireAuthUser, async (req, res) => {
         set: { hidden_at: null },
       });
 
+    // Task #404: validate context_id ownership before touching sessions.
+    // If the caller supplies a context_id that doesn't belong to this user +
+    // region we return 400 immediately instead of silently inserting a session
+    // with a dangling foreign-key value.
+    if (context_id != null) {
+      const [ctxCheck] = await db
+        .select({ id: userCountryContextsTable.id })
+        .from(userCountryContextsTable)
+        .where(and(
+          eq(userCountryContextsTable.id, context_id),
+          eq(userCountryContextsTable.user_id, userId),
+          eq(userCountryContextsTable.region_code, regionCode),
+        ))
+        .limit(1);
+      if (!ctxCheck) {
+        return res.status(400).json({ error: "Invalid context_id: context not found for this user and region." });
+      }
+    }
+
     // Reuse an open (un-completed) session for the same track if one exists,
     // so a page reload does not double-count toward the daily limit.
     // context_id is passed through so only a session with the same context is

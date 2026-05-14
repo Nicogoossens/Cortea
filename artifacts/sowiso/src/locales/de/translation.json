@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "Kontext",
   "leercontext.picker_auto": "Automatisch",
   "leercontext.delete_label": "Kontext entfernen",
+  "leercontext.partial_demo_hint": "Wählen Sie sowohl ein Geschlecht als auch eine Altersgruppe für eine gezielte Übereinstimmung, oder lassen Sie beides leer.",
   "leercontext.error.duplicate": "Dieser Kontext existiert bereits für dieses Land.",
   "leercontext.error.save_failed": "Speicherung fehlgeschlagen.",
   "leercontext.contexts_label": "Kontexte"

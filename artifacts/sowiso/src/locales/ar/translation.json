@@ -2241,5 +2241,6 @@
   "leercontext.delete_label": "حذف السياق",
   "leercontext.error.duplicate": "هذا السياق موجود بالفعل في هذا البلد.",
   "leercontext.error.save_failed": "فشل الحفظ.",
-  "leercontext.contexts_label": "السياقات"
+  "leercontext.contexts_label": "السياقات",
+  "leercontext.partial_demo_hint": "يُرجى اختيار كل من النوع والفئة العمرية لتحقيق توافق مدقّق، أو ترك كليهما خالياً."
 }

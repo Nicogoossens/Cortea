@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "Contexte",
   "leercontext.picker_auto": "Automatique",
   "leercontext.delete_label": "Supprimer le contexte",
+  "leercontext.partial_demo_hint": "Sélectionnez un genre et un groupe d'âge pour une correspondance ciblée, ou laissez les deux vides.",
   "leercontext.error.duplicate": "Ce contexte existe déjà pour ce pays.",
   "leercontext.error.save_failed": "Échec de l'enregistrement.",
   "leercontext.contexts_label": "Contextes"

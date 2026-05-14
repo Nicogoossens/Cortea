@@ -2239,6 +2239,7 @@
   "leercontext.picker_label": "文脈",
   "leercontext.picker_auto": "自動",
   "leercontext.delete_label": "文脈を削除",
+  "leercontext.partial_demo_hint": "絞り込んだマッチングには性別と年齢層の両方を選択するか、両方とも空白にしてください。",
   "leercontext.error.duplicate": "この国に対して、この文脈は既に存在しております。",
   "leercontext.error.save_failed": "保存に失敗いたしました。",
   "leercontext.contexts_label": "文脈"

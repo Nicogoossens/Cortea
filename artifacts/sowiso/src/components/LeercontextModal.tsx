@@ -206,6 +206,16 @@ export function LeercontextModal({
             </div>
           </div>
 
+          {/* ── Partial demographic hint ── */}
+          {(selectedGender !== null) !== (selectedAge !== null) && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+              {t(
+                "leercontext.partial_demo_hint",
+                "Selecteer zowel een geslacht als een leeftijdsgroep voor een gerichte match, of laat beide leeg.",
+              )}
+            </p>
+          )}
+
           {/* ── Error ── */}
           {error && (
             <p className="text-xs text-destructive">{error}</p>
